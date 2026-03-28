@@ -2,6 +2,16 @@
 
 All notable repository changes are recorded here.
 
+## v0.1.35 - 2026-03-28
+
+Purpose:
+- Fix the drag runtime error in Notes and Todos so card reordering works reliably inside the Tauri WebView.
+
+Contents:
+- Remove the drag overlay modifier's hard dependency on global `TouchEvent`, `MouseEvent`, and `PointerEvent` constructors.
+- Switch drag coordinate extraction to safe shape-based event detection so dragging works in environments where those constructors are unavailable.
+- Add unit coverage for pointer-like events, touch-like events, and the no-coordinate fallback path.
+
 ## v0.1.34 - 2026-03-28
 
 Purpose:
