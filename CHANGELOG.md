@@ -2,6 +2,17 @@
 
 All notable repository changes are recorded here.
 
+## v0.1.11 - 2026-03-28
+
+Purpose:
+- Rework Todos into a tighter, more efficient row-style list while keeping drag feedback and completion behavior visually clear.
+
+Contents:
+- Convert todos from tall stacked cards into compact horizontal rows with smaller controls and less vertical chrome.
+- Replace the always-visible reminder input with a clock trigger that opens the native date-time picker and only shows reminder text after selection.
+- Add live drag sorting for open todos with a drag overlay preview, while pinning completed todos to the bottom and making them non-draggable.
+- Move restored todos back to the end of the open section, strengthen the completion strike effect, and extend store and layout tests around the new behavior.
+
 ## v0.1.0 - 2026-03-28
 
 Purpose:

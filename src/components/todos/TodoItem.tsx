@@ -1,8 +1,10 @@
-import { motion } from "framer-motion";
+import { useSortable } from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
 import { format, isPast, isToday } from "date-fns";
+import { motion } from "framer-motion";
 import type { TodoItem as TodoItemModel } from "../../lib/models";
 import { useTodosStore } from "../../store/todosStore";
-import { CircleCheckBigIcon, Clock3Icon, Trash2Icon } from "../icons/AppIcons";
+import { CircleCheckBigIcon, Trash2Icon } from "../icons/AppIcons";
 import { ReminderPicker } from "./ReminderPicker";
 
 type TodoItemProps = {
@@ -11,24 +13,42 @@ type TodoItemProps = {
   onToggle: (id: string, target: DOMRect, nextDone: boolean) => void;
 };
 
+type TodoRowBodyProps = {
+  todo: TodoItemModel;
+  onDelete?: (target: DOMRect) => void;
+  onToggle?: (target: DOMRect, nextDone: boolean) => void;
+  preview?: boolean;
+  isDraggingPlaceholder?: boolean;
+};
+
 function getStatusMeta(todo: TodoItemModel) {
   if (todo.done) {
     return {
       label: "done",
-      textClass: "text-[var(--status-done)]",
-      pillClass: "bg-[var(--status-done-soft)] text-[var(--status-done)]",
-      tone: "bg-[linear-gradient(180deg,rgba(93,141,104,0.98),rgba(72,112,82,0.92))] text-white",
-      rail: "linear-gradient(180deg, rgba(93,141,104,0.95), rgba(93,141,104,0.28))",
+      reminderLabel: todo.reminderAt ? `Done · ${format(new Date(todo.reminderAt), "MMM d, HH:mm")}` : "Done",
+      reminderClass:
+        "border-[rgba(93,141,104,0.16)] bg-[var(--status-done-soft)] text-[var(--status-done)]",
+      toggleClass:
+        "border-[rgba(93,141,104,0.22)] bg-[linear-gradient(180deg,rgba(93,141,104,0.96),rgba(72,112,82,0.92))] text-white",
+      strikeClass: "bg-[rgba(93,141,104,0.92)] shadow-[0_0_0_1px_rgba(93,141,104,0.16)]",
+      cardClass:
+        "border-[rgba(192,208,188,0.86)] bg-[linear-gradient(180deg,rgba(247,252,247,0.98),rgba(237,246,239,0.96))]",
+      accent: "rgba(93,141,104,0.92)",
     };
   }
 
   if (!todo.reminderAt) {
     return {
       label: "open",
-      textClass: "text-[var(--status-open)]",
-      pillClass: "bg-[var(--status-open-soft)] text-[var(--status-open)]",
-      tone: "bg-[rgba(255,255,255,0.72)] text-transparent",
-      rail: "linear-gradient(180deg, rgba(138,97,63,0.9), rgba(138,97,63,0.2))",
+      reminderLabel: "",
+      reminderClass:
+        "border-[rgba(213,198,180,0.92)] bg-[rgba(255,255,255,0.86)] text-[var(--muted)]",
+      toggleClass:
+        "border-[rgba(213,198,180,0.98)] bg-[rgba(255,255,255,0.82)] text-[var(--brown-strong)]",
+      strikeClass: "bg-[rgba(138,97,63,0.88)]",
+      cardClass:
+        "border-[rgba(213,198,180,0.92)] bg-[linear-gradient(180deg,rgba(255,252,248,0.98),rgba(255,247,239,0.95))]",
+      accent: "rgba(156,126,94,0.86)",
     };
   }
 
@@ -36,102 +56,214 @@ function getStatusMeta(todo: TodoItemModel) {
   if (isPast(date) && !isToday(date)) {
     return {
       label: "overdue",
-      textClass: "text-[var(--status-overdue)]",
-      pillClass: "bg-[var(--status-overdue-soft)] text-[var(--status-overdue)]",
-      tone: "bg-[rgba(255,255,255,0.72)] text-transparent",
-      rail: "linear-gradient(180deg, rgba(181,74,77,0.95), rgba(181,74,77,0.22))",
+      reminderLabel: `Overdue · ${format(date, "MMM d, HH:mm")}`,
+      reminderClass:
+        "border-[rgba(181,74,77,0.16)] bg-[var(--status-overdue-soft)] text-[var(--status-overdue)]",
+      toggleClass:
+        "border-[rgba(181,74,77,0.18)] bg-[rgba(255,255,255,0.82)] text-[var(--status-overdue)]",
+      strikeClass: "bg-[rgba(181,74,77,0.92)]",
+      cardClass:
+        "border-[rgba(232,198,200,0.92)] bg-[linear-gradient(180deg,rgba(255,251,251,0.98),rgba(255,241,241,0.95))]",
+      accent: "rgba(181,74,77,0.9)",
     };
   }
 
   if (isToday(date)) {
     return {
       label: "today",
-      textClass: "text-[var(--status-today)]",
-      pillClass: "bg-[var(--status-today-soft)] text-[var(--status-today)]",
-      tone: "bg-[rgba(255,255,255,0.72)] text-transparent",
-      rail: "linear-gradient(180deg, rgba(185,102,50,0.95), rgba(185,102,50,0.22))",
+      reminderLabel: `Today · ${format(date, "HH:mm")}`,
+      reminderClass:
+        "border-[rgba(192,120,80,0.16)] bg-[var(--status-today-soft)] text-[var(--status-today)]",
+      toggleClass:
+        "border-[rgba(192,120,80,0.18)] bg-[rgba(255,255,255,0.82)] text-[var(--status-today)]",
+      strikeClass: "bg-[rgba(192,120,80,0.92)]",
+      cardClass:
+        "border-[rgba(231,205,188,0.92)] bg-[linear-gradient(180deg,rgba(255,252,248,0.98),rgba(255,244,235,0.95))]",
+      accent: "rgba(192,120,80,0.9)",
     };
   }
 
   return {
     label: "upcoming",
-    textClass: "text-[var(--status-upcoming)]",
-    pillClass: "bg-[var(--status-upcoming-soft)] text-[var(--status-upcoming)]",
-    tone: "bg-[rgba(255,255,255,0.72)] text-transparent",
-    rail: "linear-gradient(180deg, rgba(81,127,145,0.95), rgba(81,127,145,0.22))",
+    reminderLabel: format(date, "MMM d, HH:mm"),
+    reminderClass:
+      "border-[rgba(81,127,145,0.16)] bg-[var(--status-upcoming-soft)] text-[var(--status-upcoming)]",
+    toggleClass:
+      "border-[rgba(81,127,145,0.18)] bg-[rgba(255,255,255,0.82)] text-[var(--status-upcoming)]",
+    strikeClass: "bg-[rgba(81,127,145,0.92)]",
+    cardClass:
+      "border-[rgba(193,214,220,0.92)] bg-[linear-gradient(180deg,rgba(249,252,252,0.98),rgba(239,248,249,0.95))]",
+    accent: "rgba(81,127,145,0.9)",
   };
 }
 
-export function TodoItem({ todo, onDelete, onToggle }: TodoItemProps) {
+function TodoRowBody({
+  todo,
+  onDelete,
+  onToggle,
+  preview = false,
+  isDraggingPlaceholder = false,
+}: TodoRowBodyProps) {
   const setReminder = useTodosStore((state) => state.setReminder);
   const status = getStatusMeta(todo);
-  const reminderText = todo.reminderAt ? format(new Date(todo.reminderAt), "MMM d, HH:mm") : "No reminder set";
+  const reminderButtonLabel = status.label === "open" ? undefined : status.reminderLabel;
+  const isInteractive = !preview;
+
+  return (
+    <>
+      <div
+        className="pointer-events-none absolute inset-0 opacity-32"
+        style={{
+          backgroundImage:
+            "radial-gradient(rgba(30,25,21,0.04) 0.8px, transparent 0.8px), linear-gradient(140deg, rgba(255,255,255,0.28), transparent 58%)",
+          backgroundSize: "18px 18px, 100% 100%",
+        }}
+      />
+      <div
+        className="pointer-events-none absolute inset-y-2 left-2 w-1.5 rounded-full opacity-88"
+        style={{ background: `linear-gradient(180deg, ${status.accent}, rgba(255,255,255,0.16))` }}
+      />
+      {isDraggingPlaceholder ? (
+        <div className="absolute inset-0 rounded-[22px] border-2 border-dashed border-[rgba(161,136,113,0.42)] bg-[rgba(255,255,255,0.12)]" />
+      ) : null}
+
+      <div className={`todo-row-grid relative z-10 pl-3 ${isDraggingPlaceholder ? "opacity-0" : ""}`}>
+        <motion.button
+          type="button"
+          aria-label="Mark todo as done"
+          aria-pressed={todo.done}
+          className={`todo-row-toggle inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full border text-[11px] font-bold shadow-[0_8px_18px_rgba(61,49,34,0.08)] ${status.toggleClass}`}
+          whileHover={isInteractive ? { scale: 1.06 } : undefined}
+          whileTap={isInteractive ? { scale: 0.93 } : undefined}
+          onPointerDown={isInteractive ? (event) => event.stopPropagation() : undefined}
+          onClick={
+            onToggle
+              ? (event) => onToggle(event.currentTarget.getBoundingClientRect(), !todo.done)
+              : undefined
+          }
+        >
+          <CircleCheckBigIcon size={14} />
+        </motion.button>
+
+        <div className="todo-row-text">
+          <div className="relative min-w-0">
+            <p
+              className={`wrap-anywhere pr-1 text-[13px] font-semibold leading-5 text-[var(--dark-text)] ${
+                todo.done ? "text-[rgba(61,50,40,0.72)]" : ""
+              }`}
+            >
+              {todo.text}
+            </p>
+            <motion.span
+              aria-hidden="true"
+              initial={false}
+              animate={{
+                opacity: todo.done ? 1 : 0,
+                scaleX: todo.done ? 1 : 0,
+              }}
+              transition={{ duration: 0.18, ease: [0.22, 1, 0.36, 1] }}
+              className={`pointer-events-none absolute left-0 right-0 top-1/2 h-[2.5px] origin-left rounded-full ${status.strikeClass}`}
+              style={{ transform: "translateY(-50%) rotate(-1.5deg)" }}
+            />
+          </div>
+        </div>
+
+        <div className="todo-row-reminder">
+          <ReminderPicker
+            reminderAt={todo.reminderAt}
+            displayValue={reminderButtonLabel}
+            className={status.reminderClass}
+            onChange={(value) => setReminder(todo.id, value)}
+          />
+        </div>
+
+        <div className="todo-row-delete">
+          <motion.button
+            type="button"
+            aria-label="Delete todo"
+            title="Delete todo"
+            className="paper-icon-button paper-button-danger inline-flex h-8 w-8 min-h-0 min-w-0 items-center justify-center rounded-full"
+            whileHover={isInteractive ? { y: -1.5, scale: 1.03 } : undefined}
+            whileTap={isInteractive ? { scale: 0.97 } : undefined}
+            onPointerDown={isInteractive ? (event) => event.stopPropagation() : undefined}
+            onClick={
+              onDelete
+                ? (event) => onDelete(event.currentTarget.getBoundingClientRect())
+                : undefined
+            }
+          >
+            <Trash2Icon size={14} />
+          </motion.button>
+        </div>
+      </div>
+    </>
+  );
+}
+
+export function TodoItemPreview({ todo }: { todo: TodoItemModel }) {
+  return (
+    <div
+      className={`paper-card cq-card relative w-[min(360px,calc(100vw-48px))] overflow-hidden rounded-[22px] p-3 shadow-[0_24px_48px_rgba(61,49,34,0.2)] ${getStatusMeta(todo).cardClass}`}
+    >
+      <TodoRowBody todo={todo} preview />
+    </div>
+  );
+}
+
+export function TodoItem({ todo, onDelete, onToggle }: TodoItemProps) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
+    id: todo.id,
+  });
+  const status = getStatusMeta(todo);
+
+  return (
+    <motion.article
+      ref={setNodeRef}
+      layout
+      initial={{ opacity: 0, y: 12, scale: 0.98 }}
+      animate={{ opacity: 1, y: 0, scale: 1 }}
+      exit={{ opacity: 0, y: -14, scale: 0.94 }}
+      transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
+      style={{
+        transform: CSS.Transform.toString(transform),
+        transition,
+      }}
+      {...attributes}
+      {...listeners}
+      data-testid="todo-item"
+      aria-label="Reorder todo"
+      className={`paper-card cq-card relative overflow-hidden rounded-[22px] p-3 shadow-[0_12px_28px_rgba(61,49,34,0.08)] cursor-grab active:cursor-grabbing ${status.cardClass} ${
+        isDragging ? "border-dashed border-[rgba(161,136,113,0.42)] bg-[rgba(255,255,255,0.12)] shadow-none" : ""
+      }`}
+    >
+      <TodoRowBody
+        todo={todo}
+        onDelete={(target) => onDelete(todo.id, target)}
+        onToggle={(target, nextDone) => onToggle(todo.id, target, nextDone)}
+        isDraggingPlaceholder={isDragging}
+      />
+    </motion.article>
+  );
+}
+
+export function CompletedTodoItem({ todo, onDelete, onToggle }: TodoItemProps) {
+  const status = getStatusMeta(todo);
 
   return (
     <motion.article
       layout
-      initial={{ opacity: 0, y: 14, scale: 0.97 }}
+      initial={{ opacity: 0, y: 10, scale: 0.985 }}
       animate={{ opacity: 1, y: 0, scale: 1 }}
-      exit={{ opacity: 0, y: -18, scale: 0.92 }}
-      transition={{ duration: 0.24, ease: [0.22, 1, 0.36, 1] }}
-      data-state={todo.done ? "done" : "open"}
+      exit={{ opacity: 0, y: -12, scale: 0.96 }}
+      transition={{ duration: 0.2, ease: [0.22, 1, 0.36, 1] }}
       data-testid="todo-item"
-      className={`paper-card cq-card relative rounded-[26px] p-4 ${todo.done ? "opacity-65" : ""}`}
+      className={`paper-card cq-card relative overflow-hidden rounded-[22px] p-3 shadow-[0_10px_24px_rgba(61,49,34,0.06)] opacity-78 ${status.cardClass}`}
     >
-      <div className="absolute inset-y-4 left-0 w-1 rounded-r-full" style={{ background: status.rail }} />
-
-      <div className="todo-card-layout pl-2">
-        <div className="todo-card-main">
-          <motion.button
-            type="button"
-            aria-label="Mark todo as done"
-            aria-pressed={todo.done}
-            className={`mt-0.5 inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-[var(--border)] text-[12px] font-bold shadow-[0_10px_18px_rgba(61,49,34,0.08)] ${status.tone}`}
-            whileHover={{ scale: 1.08 }}
-            whileTap={{ scale: 0.92 }}
-            onClick={(event) => onToggle(todo.id, event.currentTarget.getBoundingClientRect(), !todo.done)}
-          >
-            <CircleCheckBigIcon size={16} />
-          </motion.button>
-
-          <div className="todo-card-copy">
-            <p className={`wrap-anywhere text-[15px] font-semibold leading-6 text-[var(--dark-text)] ${todo.done ? "line-through" : ""}`}>
-              {todo.text}
-            </p>
-
-            <div className="todo-card-status-row">
-              <div className="todo-card-meta">
-                <span className="status-chip" data-tone="neutral">
-                  Task
-                </span>
-                <span className={`status-chip ${status.pillClass}`}>
-                  {status.label}
-                </span>
-              </div>
-              <p className={`wrap-anywhere inline-flex items-center gap-1.5 text-[11px] font-medium ${status.textClass}`}>
-                <Clock3Icon size={13} />
-                <span>{reminderText}</span>
-              </p>
-            </div>
-
-            <ReminderPicker reminderAt={todo.reminderAt} onChange={(value) => setReminder(todo.id, value)} />
-          </div>
-        </div>
-
-        <div className="todo-card-delete-row">
-          <motion.button
-            type="button"
-            aria-label="Delete todo"
-            className="paper-button paper-button-danger inline-flex items-center justify-center gap-2 rounded-[14px] px-3 py-2 text-[11px] font-semibold"
-            whileHover={{ y: -2, scale: 1.03 }}
-            whileTap={{ scale: 0.97 }}
-            onClick={(event) => onDelete(todo.id, event.currentTarget.getBoundingClientRect())}
-          >
-            <Trash2Icon size={15} />
-            <span className="wrap-anywhere">Delete</span>
-          </motion.button>
-        </div>
-      </div>
+      <TodoRowBody
+        todo={todo}
+        onDelete={(target) => onDelete(todo.id, target)}
+        onToggle={(target, nextDone) => onToggle(todo.id, target, nextDone)}
+      />
     </motion.article>
   );
 }

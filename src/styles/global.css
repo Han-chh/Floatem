@@ -362,41 +362,34 @@
     gap: 6px;
   }
 
-  .todo-card-layout {
+  .todo-row-grid {
     display: grid;
-    gap: 12px;
-  }
-
-  .todo-card-main {
-    display: grid;
-    grid-template-columns: auto minmax(0, 1fr);
-    gap: 12px;
-    align-items: start;
-  }
-
-  .todo-card-copy {
-    min-width: 0;
-    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto auto;
+    grid-template-areas: "toggle text reminder delete";
     gap: 10px;
+    align-items: center;
   }
 
-  .todo-card-meta {
+  .todo-row-toggle {
+    grid-area: toggle;
+  }
+
+  .todo-row-text {
+    grid-area: text;
+    min-width: 0;
+  }
+
+  .todo-row-reminder {
+    grid-area: reminder;
+    min-width: 0;
     display: flex;
-    flex-wrap: wrap;
-    gap: 6px;
+    justify-content: flex-end;
   }
 
-  .todo-card-status-row {
-    display: grid;
-    gap: 8px;
-  }
-
-  .todo-card-delete-row {
+  .todo-row-delete {
+    grid-area: delete;
     display: flex;
-  }
-
-  .todo-card-delete-row > * {
-    width: 100%;
+    justify-content: flex-end;
   }
 
   .quick-add-grid {
@@ -460,19 +453,20 @@
       width: max-content;
       max-width: 100%;
     }
+  }
 
-    .todo-card-status-row {
-      grid-template-columns: auto minmax(0, 1fr);
-      align-items: center;
+  @container card (max-width: 331px) {
+    .todo-row-grid {
+      grid-template-columns: auto minmax(0, 1fr) auto;
+      grid-template-areas:
+        "toggle text delete"
+        ". reminder reminder";
+      align-items: start;
+      row-gap: 8px;
     }
 
-    .todo-card-delete-row {
-      justify-content: flex-end;
-    }
-
-    .todo-card-delete-row > * {
-      width: max-content;
-      max-width: 100%;
+    .todo-row-reminder {
+      justify-content: flex-start;
     }
   }
 }

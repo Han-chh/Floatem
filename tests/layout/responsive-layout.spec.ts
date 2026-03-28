@@ -77,7 +77,7 @@ for (const viewport of VIEWPORTS) {
       await expectNoHorizontalOverflow(page);
     });
 
-    test("todos layout keeps text, picker, and actions visible", async ({ page }) => {
+    test("todos layout keeps text, reminder control, and actions visible", async ({ page }) => {
       await bootPreview(page);
 
       await page.getByRole("tab", { name: "Todos" }).click();
@@ -90,7 +90,7 @@ for (const viewport of VIEWPORTS) {
 
       await expectWithinViewport(page, page.getByRole("button", { name: "Mark todo as done" }));
       await expectWithinViewport(page, page.getByRole("button", { name: "Delete todo" }));
-      await expectWithinViewport(page, page.locator("input[type='datetime-local']").first());
+      await expectWithinViewport(page, page.getByRole("button", { name: "Set reminder" }));
       await expectNoSelfOverflow(draft);
       await expectNoHorizontalOverflow(page);
     });
