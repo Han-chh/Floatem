@@ -36,18 +36,18 @@ function formatCompactEditedLabel(updatedAt: number) {
   const day = hour * 24;
 
   if (elapsed < minute) {
-    return "<1min";
+    return "<1min ago";
   }
 
   if (elapsed < hour) {
-    return `${Math.floor(elapsed / minute)}min`;
+    return `${Math.floor(elapsed / minute)}min ago`;
   }
 
   if (elapsed < day) {
-    return `${Math.floor(elapsed / hour)}h`;
+    return `${Math.floor(elapsed / hour)}h ago`;
   }
 
-  return `${Math.floor(elapsed / day)}d`;
+  return `${Math.floor(elapsed / day)}d ago`;
 }
 
 function NoteCardBody({

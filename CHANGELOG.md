@@ -2,6 +2,14 @@
 
 All notable repository changes are recorded here.
 
+## v0.1.26 - 2026-03-28
+
+Purpose:
+- Make the compact note edit-time label read more clearly by restoring the relative-time suffix.
+
+Contents:
+- Append `ago` to the shortened note edit-time labels so chips read like `<1min ago`, `2min ago`, `1h ago`, and `1d ago`.
+
 ## v0.1.25 - 2026-03-28
 
 Purpose:
