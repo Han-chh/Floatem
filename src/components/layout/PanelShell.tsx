@@ -22,9 +22,11 @@ export function PanelShell({ activeTab, onTabChange, children, onToggleSettings 
       >
         <div className="window-shell-content cq-panel">
           <div className="pointer-events-none absolute inset-[18px] overflow-hidden rounded-[24px]">
-            <div className="absolute -left-14 top-12 h-52 w-52 rounded-full bg-[rgba(255,122,89,0.15)] blur-3xl" />
-            <div className="absolute right-[-4.5rem] top-24 h-56 w-56 rounded-full bg-[rgba(47,107,255,0.1)] blur-3xl" />
-            <div className="absolute bottom-[-3.5rem] left-1/3 h-64 w-64 rounded-full bg-[rgba(31,168,122,0.09)] blur-3xl" />
+            <div className="absolute -left-14 top-10 h-56 w-56 rounded-full bg-[rgba(255,122,89,0.18)] blur-3xl" />
+            <div className="absolute left-10 top-1/2 h-36 w-36 rounded-full bg-[rgba(244,185,66,0.12)] blur-3xl" />
+            <div className="absolute right-[-4.5rem] top-24 h-56 w-56 rounded-full bg-[rgba(47,107,255,0.14)] blur-3xl" />
+            <div className="absolute right-12 top-1/2 h-40 w-40 rounded-full bg-[rgba(123,92,250,0.12)] blur-3xl" />
+            <div className="absolute bottom-[-3.5rem] left-1/3 h-64 w-64 rounded-full bg-[rgba(31,168,122,0.11)] blur-3xl" />
           </div>
 
           <motion.header

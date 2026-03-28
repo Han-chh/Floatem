@@ -2,6 +2,16 @@
 
 All notable repository changes are recorded here.
 
+## v0.1.27 - 2026-03-28
+
+Purpose:
+- Push the rounded shell toward a richer, higher-contrast multicolor gradient treatment without adding any visible outer border.
+
+Contents:
+- Expand the shell background from a mostly warm gradient into a stronger orange, gold, blue, jade, and plum blend with more obvious internal contrast.
+- Add extra interior reflective highlight bands so the shell reads glossier and more dimensional inside the rounded body.
+- Enrich the panel’s ambient glow field with additional gold and plum color pockets to give the frame more color depth around the content.
+
 ## v0.1.26 - 2026-03-28
 
 Purpose:
