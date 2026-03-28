@@ -13,6 +13,9 @@ export type ParticleBurst = {
     dy: number;
     size: number;
     delay: number;
+    rotation: number;
+    stretchX: number;
+    stretchY: number;
   }>;
 };
 
@@ -34,21 +37,32 @@ function random(min: number, max: number) {
 }
 
 function createBurst(x: number, y: number, tone: BurstTone): ParticleBurst {
+  const config =
+    tone === "rose"
+      ? { count: 26, distanceMin: 36, distanceMax: 96, sizeMin: 5, sizeMax: 15 }
+      : tone === "paper"
+        ? { count: 18, distanceMin: 22, distanceMax: 62, sizeMin: 4, sizeMax: 10 }
+        : { count: 18, distanceMin: 24, distanceMax: 72, sizeMin: 5, sizeMax: 12 };
+
   return {
     id: createId(),
     tone,
     x,
     y,
-    particles: Array.from({ length: 14 }, (_, index) => {
-      const angle = (Math.PI * 2 * index) / 14 + random(-0.18, 0.18);
-      const distance = random(24, 66);
+    particles: Array.from({ length: config.count }, (_, index) => {
+      const angle = (Math.PI * 2 * index) / config.count + random(-0.16, 0.16);
+      const distance = random(config.distanceMin, config.distanceMax);
+      const isShard = tone === "rose" ? Math.random() > 0.25 : Math.random() > 0.62;
 
       return {
         id: createId(),
         dx: Math.cos(angle) * distance,
         dy: Math.sin(angle) * distance,
-        size: random(5, 11),
-        delay: random(0, 0.08),
+        size: random(config.sizeMin, config.sizeMax),
+        delay: random(0, tone === "rose" ? 0.05 : 0.08),
+        rotation: random(-140, 140),
+        stretchX: isShard ? random(1.6, 2.4) : 1,
+        stretchY: isShard ? random(0.32, 0.52) : 1,
       };
     }),
   };

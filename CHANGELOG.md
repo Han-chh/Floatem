@@ -2,6 +2,17 @@
 
 All notable repository changes are recorded here.
 
+## v0.1.12 - 2026-03-28
+
+Purpose:
+- Compress the Todo list further, replace the reminder picker with a richer dropdown editor, and make completion and deletion feedback more pronounced.
+
+Contents:
+- Reduce todo row padding, control sizes, and spacing so more tasks fit on screen without losing clarity.
+- Replace the native reminder picker with a custom dropdown panel that supports date, hour, minute, and quick preset selection.
+- Turn completed todos into a greyer, penciled-over state with a stronger strike animation across the task text.
+- Amplify rose-tone delete bursts so note and todo removal feels more visible and energetic.
+
 ## v0.1.11 - 2026-03-28
 
 Purpose:
