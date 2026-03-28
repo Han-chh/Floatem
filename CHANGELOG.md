@@ -2,6 +2,14 @@
 
 All notable repository changes are recorded here.
 
+## v0.1.19 - 2026-03-28
+
+Purpose:
+- Make completed todo text read as clearly grey instead of staying too close to the active text color.
+
+Contents:
+- Shift completed todo body text to a stronger neutral grey while keeping the rest of the finished-card treatment intact.
+
 ## v0.1.18 - 2026-03-28
 
 Purpose:
