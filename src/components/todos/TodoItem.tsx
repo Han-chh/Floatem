@@ -167,8 +167,8 @@ function TodoRowBody({
         <div className="todo-row-text">
           <div className="relative min-w-0">
             <p
-              className={`wrap-anywhere pr-1 text-[12px] font-semibold leading-[1.3] text-[var(--dark-text)] ${
-                todo.done ? "text-[rgba(136,141,137,0.92)]" : ""
+              className={`wrap-anywhere pr-1 text-[12px] font-semibold leading-[1.3] ${
+                todo.done ? "text-[rgba(136,141,137,0.92)]" : "text-[var(--dark-text)]"
               }`}
             >
               {todo.text}

@@ -2,6 +2,14 @@
 
 All notable repository changes are recorded here.
 
+## v0.1.20 - 2026-03-28
+
+Purpose:
+- Fix the completed todo text color so it actually switches away from the active black text tone.
+
+Contents:
+- Replace the overlapping black-and-gray text utility combination with a single conditional text color branch for completed todos.
+
 ## v0.1.19 - 2026-03-28
 
 Purpose:
