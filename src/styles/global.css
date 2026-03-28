@@ -10,18 +10,29 @@
   body,
   #root {
     height: 100%;
+    background: transparent;
   }
 
   body {
     margin: 0;
-    background:
-      radial-gradient(circle at top left, rgba(255, 255, 255, 0.55), transparent 35%),
-      linear-gradient(180deg, #f8f5ef 0%, #eee7dd 100%);
+    background: transparent;
     color: var(--dark-text);
+    font-family: var(--font-body);
     font-size: 13.5px;
     line-height: 1.7;
     -webkit-font-smoothing: antialiased;
     text-rendering: optimizeLegibility;
+  }
+
+  h1,
+  h2,
+  h3,
+  .font-display {
+    font-family: var(--font-display);
+  }
+
+  .font-accent {
+    font-family: var(--font-accent);
   }
 
   button,
@@ -32,6 +43,26 @@
 
   button {
     cursor: pointer;
+    transition:
+      transform 220ms cubic-bezier(0.22, 1, 0.36, 1),
+      box-shadow 220ms cubic-bezier(0.22, 1, 0.36, 1),
+      border-color 220ms cubic-bezier(0.22, 1, 0.36, 1),
+      background-color 220ms cubic-bezier(0.22, 1, 0.36, 1),
+      color 220ms cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  input,
+  textarea {
+    transition:
+      border-color 220ms cubic-bezier(0.22, 1, 0.36, 1),
+      box-shadow 220ms cubic-bezier(0.22, 1, 0.36, 1),
+      background-color 220ms cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  input:focus,
+  textarea:focus {
+    border-color: var(--border-strong);
+    box-shadow: 0 0 0 4px rgba(214, 180, 138, 0.18);
   }
 
   ::selection {
@@ -58,5 +89,74 @@
     border-radius: 999px;
     background: rgba(156, 126, 94, 0.35);
     background-clip: content-box;
+  }
+
+  .paper-panel {
+    background:
+      linear-gradient(180deg, rgba(255, 250, 241, 0.96), rgba(245, 235, 221, 0.92)),
+      var(--cream);
+    border: 1.5px solid rgba(200, 183, 159, 0.9);
+    box-shadow: var(--shadow-soft);
+    backdrop-filter: blur(14px);
+  }
+
+  .paper-card {
+    background:
+      linear-gradient(180deg, rgba(255, 252, 246, 0.96), rgba(248, 241, 229, 0.92)),
+      var(--cream);
+    border: 1.5px solid rgba(200, 183, 159, 0.85);
+    box-shadow: var(--shadow-card);
+  }
+
+  .paper-button {
+    background:
+      linear-gradient(180deg, rgba(255, 250, 242, 0.98), rgba(241, 229, 212, 0.95)),
+      var(--cream);
+    border: 1.5px solid rgba(200, 183, 159, 0.9);
+    box-shadow:
+      0 10px 18px rgba(108, 82, 58, 0.1),
+      inset 0 1px 0 rgba(255, 255, 255, 0.8);
+  }
+
+  .paper-button:hover {
+    transform: translateY(-2px);
+    border-color: var(--border-strong);
+    box-shadow:
+      0 16px 24px rgba(108, 82, 58, 0.12),
+      inset 0 1px 0 rgba(255, 255, 255, 0.88);
+  }
+
+  .paper-button:active {
+    transform: translateY(1px) scale(0.985);
+  }
+
+  .window-shell {
+    position: relative;
+    height: 100%;
+    overflow: hidden;
+    border: 1.5px solid rgba(200, 183, 159, 0.82);
+    border-radius: 34px;
+    background:
+      radial-gradient(circle at top left, rgba(255, 255, 255, 0.72), transparent 32%),
+      radial-gradient(circle at 82% 10%, rgba(214, 180, 138, 0.38), transparent 24%),
+      radial-gradient(circle at 25% 100%, rgba(190, 111, 71, 0.16), transparent 30%),
+      linear-gradient(180deg, #f6edde 0%, #ead8c0 100%);
+    box-shadow:
+      0 28px 60px rgba(58, 36, 22, 0.24),
+      0 8px 20px rgba(94, 66, 42, 0.18),
+      inset 0 1px 0 rgba(255, 255, 255, 0.72);
+  }
+
+  .window-shell::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    opacity: 0.3;
+    background-image:
+      linear-gradient(rgba(255, 255, 255, 0.2) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255, 255, 255, 0.12) 1px, transparent 1px);
+    background-size: 24px 24px;
+    mask-image: radial-gradient(circle at center, black, transparent 82%);
   }
 }

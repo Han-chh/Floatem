@@ -1,4 +1,5 @@
 import clsx from "clsx";
+import { motion } from "framer-motion";
 import type { TabId } from "../../lib/models";
 
 type TabBarProps = {
@@ -13,23 +14,36 @@ const TABS: Array<{ id: TabId; label: string }> = [
 
 export function TabBar({ activeTab, onTabChange }: TabBarProps) {
   return (
-    <div className="mx-[14px] rounded-[10px] border border-[var(--border)]/60 bg-black/[0.055] p-[3px]" role="tablist" aria-label="QuickNote sections">
+    <div
+      className="mx-[14px] rounded-[18px] border border-[var(--border)]/70 bg-[linear-gradient(180deg,rgba(255,255,255,0.45),rgba(120,86,52,0.05))] p-[4px] shadow-[inset_0_1px_0_rgba(255,255,255,0.55)]"
+      role="tablist"
+      aria-label="QuickNote sections"
+    >
       <div className="grid grid-cols-2 gap-[3px]">
         {TABS.map((tab) => (
-          <button
+          <motion.button
             key={tab.id}
             type="button"
             role="tab"
             aria-selected={activeTab === tab.id}
             className={clsx(
-              "rounded-[7px] px-4 py-2 text-[12px] font-medium text-[var(--muted)] transition",
+              "relative rounded-[14px] px-4 py-2.5 text-[12px] font-semibold tracking-[0.01em] text-[var(--muted)]",
               activeTab === tab.id &&
-                "bg-[var(--cream)] text-[var(--dark-text)] shadow-[0_1px_3px_rgba(0,0,0,0.08)]",
+                "text-[var(--dark-text)] shadow-[0_10px_20px_rgba(108,82,58,0.12)]",
             )}
+            whileHover={{ y: -1 }}
+            whileTap={{ scale: 0.985 }}
             onClick={() => onTabChange(tab.id)}
           >
-            {tab.label}
-          </button>
+            {activeTab === tab.id ? (
+              <motion.span
+                layoutId="tab-pill"
+                className="absolute inset-0 rounded-[14px] bg-[linear-gradient(180deg,rgba(255,252,247,0.98),rgba(245,236,224,0.94))] shadow-[inset_0_1px_0_rgba(255,255,255,0.9)]"
+                transition={{ type: "spring", stiffness: 340, damping: 30 }}
+              />
+            ) : null}
+            <span className="relative z-10">{tab.label}</span>
+          </motion.button>
         ))}
       </div>
     </div>

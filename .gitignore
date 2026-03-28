@@ -7,10 +7,25 @@ yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
 
+# Package manager caches
+.pnpm-store/
+
+# Build output
 node_modules
 dist
 dist-ssr
+coverage
+*.tsbuildinfo
 *.local
+vite.config.d.ts
+
+# Rust / Tauri build artifacts
+src-tauri/target/
+target/
+
+# Local app data
+src-tauri/.tauri/
+.cargo/
 
 # Editor directories and files
 .vscode/*

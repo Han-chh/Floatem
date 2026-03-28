@@ -1,24 +1,56 @@
 :root {
-  --cream: #F5F2EC;
-  --sand: #EDE8DF;
-  --border: #CFC9BF;
-  --border-strong: #B0A89E;
-  --muted: #A09890;
-  --brown: #9C7E5E;
-  --dark-text: #3D3228;
-  --green-dot: #7BAF88;
-  --orange-dot: #C07850;
+  --cream: #f8f2e8;
+  --cream-strong: #fffaf1;
+  --sand: #ece0cf;
+  --sand-deep: #dbc5aa;
+  --shell: #e9dbc7;
+  --border: #c8b79f;
+  --border-strong: #a58769;
+  --muted: #6f6153;
+  --brown: #7a5940;
+  --brown-strong: #4e3424;
+  --dark-text: #231911;
+  --green-dot: #6f9b76;
+  --orange-dot: #be6f47;
+  --rose: #cb7a63;
+  --highlight: #d6b48a;
 
-  --panel-radius: 20px;
-  --card-radius: 14px;
-  --button-radius: 8px;
-  --tab-radius: 10px;
+  --panel-radius: 30px;
+  --card-radius: 24px;
+  --button-radius: 16px;
+  --tab-radius: 18px;
 
-  font-family:
+  --shadow-soft: 0 18px 40px rgba(108, 82, 58, 0.14);
+  --shadow-card: 0 14px 26px rgba(108, 82, 58, 0.09);
+  --status-open: #8a613f;
+  --status-open-soft: rgba(138, 97, 63, 0.12);
+  --status-done: #5d8d68;
+  --status-done-soft: rgba(93, 141, 104, 0.13);
+  --status-today: #b96632;
+  --status-today-soft: rgba(185, 102, 50, 0.14);
+  --status-upcoming: #517f91;
+  --status-upcoming-soft: rgba(81, 127, 145, 0.14);
+  --status-overdue: #b54a4d;
+  --status-overdue-soft: rgba(181, 74, 77, 0.14);
+
+  --font-body:
     "Inter",
     "PingFang SC",
     -apple-system,
     BlinkMacSystemFont,
     "Helvetica Neue",
     sans-serif;
+  --font-display:
+    ui-rounded,
+    "SF Pro Rounded",
+    "Avenir Next",
+    "PingFang SC",
+    "Hiragino Sans GB",
+    sans-serif;
+  --font-accent:
+    "Iowan Old Style",
+    "Palatino",
+    "Times New Roman",
+    "PingFang SC",
+    serif;
 }

@@ -12,7 +12,7 @@ export function ReminderPicker({ reminderAt, onChange }: ReminderPickerProps) {
       <input
         type="datetime-local"
         value={reminderAt ? format(new Date(reminderAt), "yyyy-MM-dd'T'HH:mm") : ""}
-        className="w-full rounded-[8px] border border-[var(--border)] bg-[var(--cream)] px-2 py-1 text-[11px] text-[var(--muted)] outline-none"
+        className="w-full rounded-[16px] border border-[var(--border)] bg-[rgba(255,255,255,0.68)] px-3 py-2 text-[11px] font-medium text-[var(--dark-text)] outline-none"
         onChange={(event) => {
           const nextValue = event.currentTarget.value
             ? new Date(event.currentTarget.value).getTime()
