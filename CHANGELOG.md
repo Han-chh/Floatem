@@ -111,3 +111,13 @@ Contents:
 - Move Fold and Delete into the same metadata row as the card chips to free more vertical space for editing.
 - Add larger circular color decoration, tape-like accents, and stronger card styling so notes feel closer to lively sticky cards.
 - Add a drag overlay preview while leaving a transparent placeholder frame in the original slot during note dragging.
+
+## v0.1.10 - 2026-03-28
+
+Purpose:
+- Further tighten the Note card header and editing controls so each card spends less space on chrome and more on content.
+
+Contents:
+- Reduce note title field height, title font size, chip spacing, and card action button size.
+- Compress the note toolbar container and icon buttons so formatting controls occupy less vertical space.
+- Slightly reduce the editor surface padding and minimum height while preserving it as the primary editable area.

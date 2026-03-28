@@ -59,14 +59,14 @@ function NoteCardBody({
         }}
       />
       <div
-        className="pointer-events-none absolute -right-7 top-4 h-24 w-24 rounded-full border-[10px] opacity-28"
+        className="pointer-events-none absolute -right-6 top-4 h-20 w-20 rounded-full border-[8px] opacity-24"
         style={{ borderColor: note.dotColor }}
       />
       <div
-        className="pointer-events-none absolute left-5 top-3 h-4 w-14 -rotate-[10deg] rounded-[5px] border border-white/65 bg-[rgba(255,255,255,0.48)]"
+        className="pointer-events-none absolute left-5 top-2.5 h-3.5 w-12 -rotate-[10deg] rounded-[5px] border border-white/65 bg-[rgba(255,255,255,0.48)]"
       />
       <div
-        className="pointer-events-none absolute right-12 top-3 h-4 w-12 rotate-[12deg] rounded-[5px] border border-white/60"
+        className="pointer-events-none absolute right-12 top-2.5 h-3.5 w-10 rotate-[12deg] rounded-[5px] border border-white/60"
         style={{ backgroundColor: `${note.dotColor}26` }}
       />
       <div
@@ -80,13 +80,13 @@ function NoteCardBody({
         <div className="absolute inset-0 rounded-[28px] border-2 border-dashed border-[rgba(161,136,113,0.44)] bg-[rgba(255,255,255,0.12)]" />
       ) : null}
 
-      <div className={`relative rounded-t-[28px] px-4 py-4 ${isDraggingPlaceholder ? "opacity-0" : ""}`}>
+      <div className={`relative rounded-t-[28px] px-3.5 py-3 ${isDraggingPlaceholder ? "opacity-0" : ""}`}>
         <div className="note-card-header-grid">
           <div className="note-card-title-row">
             <div className="relative mt-0.5 shrink-0">
               <motion.button
                 type="button"
-                className="paper-button inline-flex h-11 w-11 items-center justify-center rounded-full"
+                className="paper-button inline-flex h-9 w-9 items-center justify-center rounded-full"
                 aria-label="Change note color"
                 whileHover={isInteractive ? { scale: 1.08 } : undefined}
                 whileTap={isInteractive ? { scale: 0.94 } : undefined}
@@ -94,11 +94,11 @@ function NoteCardBody({
                 onClick={isInteractive && setShowPalette ? () => setShowPalette(!showPalette) : undefined}
                 style={{
                   borderColor: `${note.dotColor}8c`,
-                  boxShadow: `0 0 0 6px ${note.dotColor}18, 0 10px 18px rgba(61,49,34,0.08), inset 0 1px 0 rgba(255,255,255,0.88)`,
+                  boxShadow: `0 0 0 5px ${note.dotColor}16, 0 8px 14px rgba(61,49,34,0.08), inset 0 1px 0 rgba(255,255,255,0.88)`,
                 }}
               >
                 <span
-                  className="inline-flex h-5 w-5 rounded-full border border-white/70 shadow-[0_4px_10px_rgba(0,0,0,0.08)]"
+                  className="inline-flex h-4 w-4 rounded-full border border-white/70 shadow-[0_4px_8px_rgba(0,0,0,0.08)]"
                   style={{ backgroundColor: note.dotColor }}
                 />
                 <span className="sr-only">Change note color</span>
@@ -132,7 +132,7 @@ function NoteCardBody({
 
             <div className="note-card-title-block">
               {preview ? (
-                <div className="surface-field wrap-anywhere min-h-[58px] rounded-[20px] px-4 py-3 text-[15px] font-semibold leading-6 tracking-[-0.02em] text-[var(--dark-text)]">
+                <div className="surface-field wrap-anywhere min-h-[46px] rounded-[18px] px-3.5 py-2.5 text-[14px] font-semibold leading-5 tracking-[-0.02em] text-[var(--dark-text)]">
                   {note.title || "Untitled note"}
                 </div>
               ) : (
@@ -146,7 +146,7 @@ function NoteCardBody({
                   onInput={(event) => syncTextareaHeight(event.currentTarget)}
                   onPointerDown={(event) => event.stopPropagation()}
                   placeholder="Untitled note"
-                  className="textarea-reset surface-field wrap-anywhere min-h-[58px] w-full rounded-[20px] px-4 py-3 text-[15px] font-semibold leading-6 tracking-[-0.02em] text-[var(--dark-text)] outline-none placeholder:text-[var(--muted)]"
+                  className="textarea-reset surface-field wrap-anywhere min-h-[46px] w-full rounded-[18px] px-3.5 py-2.5 text-[14px] font-semibold leading-5 tracking-[-0.02em] text-[var(--dark-text)] outline-none placeholder:text-[var(--muted)]"
                 />
               )}
 
@@ -168,7 +168,7 @@ function NoteCardBody({
                   <motion.button
                     type="button"
                     aria-label="Collapse note"
-                    className="paper-icon-button group relative h-9 min-h-0 min-w-0 w-9 rounded-[12px]"
+                    className="paper-icon-button group relative h-8 min-h-0 min-w-0 w-8 rounded-[10px]"
                     whileHover={isInteractive ? { y: -1.5, scale: 1.03 } : undefined}
                     whileTap={isInteractive ? { scale: 0.97 } : undefined}
                     onPointerDown={isInteractive ? (event) => event.stopPropagation() : undefined}
@@ -183,7 +183,7 @@ function NoteCardBody({
                     type="button"
                     data-action="delete"
                     aria-label="Delete note"
-                    className="paper-icon-button paper-button-danger group relative h-9 min-h-0 min-w-0 w-9 rounded-[12px]"
+                    className="paper-icon-button paper-button-danger group relative h-8 min-h-0 min-w-0 w-8 rounded-[10px]"
                     whileHover={isInteractive ? { y: -1.5, scale: 1.03 } : undefined}
                     whileTap={isInteractive ? { scale: 0.97 } : undefined}
                     onPointerDown={isInteractive ? (event) => event.stopPropagation() : undefined}
@@ -206,10 +206,10 @@ function NoteCardBody({
       </div>
 
       {note.collapsed ? null : (
-        <div className={`relative space-y-3 px-4 pb-4 pt-1 ${isDraggingPlaceholder ? "opacity-0" : ""}`}>
+        <div className={`relative space-y-2.5 px-3.5 pb-3.5 pt-0.5 ${isDraggingPlaceholder ? "opacity-0" : ""}`}>
           <Toolbar />
           {preview ? (
-            <div className="surface-field min-h-[260px] rounded-[24px] px-4 py-5 text-[13px] leading-7 text-[var(--muted)]">
+            <div className="surface-field min-h-[220px] rounded-[22px] px-4 py-4 text-[12.5px] leading-6 text-[var(--muted)]">
               {note.title ? "Editing preview of this card while dragging." : "Drag preview."}
             </div>
           ) : (

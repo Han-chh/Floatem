@@ -319,26 +319,26 @@
 
   .note-card-header-grid {
     display: grid;
-    gap: 10px;
+    gap: 8px;
   }
 
   .note-card-title-block {
     min-width: 0;
     display: grid;
-    gap: 8px;
+    gap: 6px;
   }
 
   .note-card-title-row {
     display: grid;
     grid-template-columns: auto minmax(0, 1fr);
-    gap: 10px;
+    gap: 8px;
     align-items: start;
   }
 
   .note-card-meta {
     display: flex;
     flex-wrap: wrap;
-    gap: 8px;
+    gap: 6px;
     align-items: center;
     justify-content: space-between;
   }
@@ -346,20 +346,20 @@
   .note-card-actions {
     display: flex;
     flex-wrap: wrap;
-    gap: 8px;
+    gap: 6px;
   }
 
   .note-card-chip-group {
     min-width: 0;
     display: flex;
     flex-wrap: wrap;
-    gap: 6px;
+    gap: 5px;
   }
 
   .note-toolbar-grid {
     display: flex;
     flex-wrap: wrap;
-    gap: 8px;
+    gap: 6px;
   }
 
   .todo-card-layout {
