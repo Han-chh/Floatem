@@ -2,6 +2,14 @@
 
 All notable repository changes are recorded here.
 
+## v0.1.32 - 2026-03-28
+
+Purpose:
+- Make the close-button cross read more clearly inside the macOS-style stoplight.
+
+Contents:
+- Increase the stoplight `X` icon size and stroke weight so it appears bolder and more legible on hover.
+
 ## v0.1.31 - 2026-03-28
 
 Purpose:
