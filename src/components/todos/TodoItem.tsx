@@ -73,12 +73,13 @@ export function TodoItem({ todo, onDelete, onToggle }: TodoItemProps) {
       exit={{ opacity: 0, y: -18, scale: 0.92 }}
       transition={{ duration: 0.24, ease: [0.22, 1, 0.36, 1] }}
       data-state={todo.done ? "done" : "open"}
-      className={`paper-card relative overflow-hidden rounded-[24px] p-4 ${todo.done ? "opacity-65" : ""}`}
+      data-testid="todo-item"
+      className={`paper-card cq-card relative rounded-[24px] p-4 ${todo.done ? "opacity-65" : ""}`}
     >
       <div className="absolute inset-y-4 left-0 w-1 rounded-r-full" style={{ background: status.rail }} />
 
-      <div className="flex flex-col gap-3 pl-2">
-        <div className="flex items-start gap-3">
+      <div className="todo-card-layout pl-2">
+        <div className="todo-card-main">
           <motion.button
             type="button"
             aria-label="Mark todo as done"
@@ -91,29 +92,30 @@ export function TodoItem({ todo, onDelete, onToggle }: TodoItemProps) {
             ✓
           </motion.button>
 
-          <div className="min-w-0 flex-1">
-            <div className="mb-2 flex flex-wrap items-center gap-2">
-              <span className="rounded-full bg-[rgba(122,89,64,0.08)] px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.12em] text-[var(--brown)]">
-                Task
-              </span>
-              <span className={`rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.12em] ${status.pillClass}`}>
-                {status.label}
-              </span>
-            </div>
-
-            <p className={`break-words text-[14px] font-medium text-[var(--dark-text)] ${todo.done ? "line-through" : ""}`}>
+          <div className="todo-card-copy">
+            <p className={`wrap-anywhere text-[14px] font-medium text-[var(--dark-text)] ${todo.done ? "line-through" : ""}`}>
               {todo.text}
             </p>
-            <p className={`mt-1 text-[11px] font-medium ${status.textClass}`}>
-              {todo.reminderAt ? format(new Date(todo.reminderAt), "MMM d, HH:mm") : "No reminder set"}
-            </p>
-            <div className="mt-3">
-              <ReminderPicker reminderAt={todo.reminderAt} onChange={(value) => setReminder(todo.id, value)} />
+
+            <div className="todo-card-status-row">
+              <div className="todo-card-meta">
+                <span className="rounded-full bg-[rgba(122,89,64,0.08)] px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.12em] text-[var(--brown)]">
+                  Task
+                </span>
+                <span className={`rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.12em] ${status.pillClass}`}>
+                  {status.label}
+                </span>
+              </div>
+              <p className={`wrap-anywhere text-[11px] font-medium ${status.textClass}`}>
+                {todo.reminderAt ? format(new Date(todo.reminderAt), "MMM d, HH:mm") : "No reminder set"}
+              </p>
             </div>
+
+            <ReminderPicker reminderAt={todo.reminderAt} onChange={(value) => setReminder(todo.id, value)} />
           </div>
         </div>
 
-        <div className="flex justify-end">
+        <div className="todo-card-delete-row">
           <motion.button
             type="button"
             aria-label="Delete todo"

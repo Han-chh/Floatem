@@ -15,7 +15,7 @@ const TABS: Array<{ id: TabId; label: string }> = [
 export function TabBar({ activeTab, onTabChange }: TabBarProps) {
   return (
     <div
-      className="mx-[14px] rounded-[18px] border border-[var(--border)]/70 bg-[linear-gradient(180deg,rgba(255,255,255,0.45),rgba(120,86,52,0.05))] p-[4px] shadow-[inset_0_1px_0_rgba(255,255,255,0.55)]"
+      className="w-full rounded-[18px] border border-[var(--border)]/70 bg-[linear-gradient(180deg,rgba(255,255,255,0.45),rgba(120,86,52,0.05))] p-[4px] shadow-[inset_0_1px_0_rgba(255,255,255,0.55)]"
       role="tablist"
       aria-label="QuickNote sections"
     >
@@ -27,7 +27,7 @@ export function TabBar({ activeTab, onTabChange }: TabBarProps) {
             role="tab"
             aria-selected={activeTab === tab.id}
             className={clsx(
-              "relative rounded-[14px] px-4 py-2.5 text-[12px] font-semibold tracking-[0.01em] text-[var(--muted)]",
+              "relative min-w-0 rounded-[14px] px-3 py-2.5 text-[12px] font-semibold tracking-[0.01em] text-[var(--muted)]",
               activeTab === tab.id &&
                 "text-[var(--dark-text)] shadow-[0_10px_20px_rgba(108,82,58,0.12)]",
             )}
@@ -42,7 +42,7 @@ export function TabBar({ activeTab, onTabChange }: TabBarProps) {
                 transition={{ type: "spring", stiffness: 340, damping: 30 }}
               />
             ) : null}
-            <span className="relative z-10">{tab.label}</span>
+            <span className="relative z-10 wrap-anywhere">{tab.label}</span>
           </motion.button>
         ))}
       </div>

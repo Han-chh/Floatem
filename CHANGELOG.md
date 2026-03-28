@@ -34,3 +34,15 @@ Contents:
 - Disable the transparent Tauri window mode and remove the macOS private transparent-window setting.
 - Remove the outer application border so the content fills the full window surface.
 - Switch the root surface back to an opaque background to avoid any visible transparent edge.
+
+## v0.1.3 - 2026-03-28
+
+Purpose:
+- Rebuild the panel layout system so every core surface remains readable and space-efficient from 300px to 560px wide.
+
+Contents:
+- Add container-query based layout rules for panel, module, and card surfaces.
+- Rework the panel header, notes module, todos module, and settings overlay to stack and wrap instead of squeezing text.
+- Convert note titles and quick-add input to auto-resizing textareas so long content stays visible while editing.
+- Add Playwright responsive layout coverage across compact, regular, wide, and expanded viewports using system Chrome.
+- Keep existing interaction tests green while adding real-browser assertions for horizontal overflow and clipped controls.

@@ -22,6 +22,7 @@ export function PanelShell({
   onToggleSettings,
 }: PanelShellProps) {
   const { platformLabel } = usePlatform();
+  const compactMetaLabel = `${platformLabel} · Washi Warm`;
 
   return (
     <main className="h-screen overflow-hidden bg-[linear-gradient(180deg,#f6edde_0%,#ead8c0_100%)] text-[13.5px] text-[var(--dark-text)]">
@@ -29,7 +30,7 @@ export function PanelShell({
         initial={{ opacity: 0, y: 16, scale: 0.98 }}
         animate={{ opacity: 1, y: 0, scale: 1 }}
         transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
-        className="window-shell flex h-full flex-col p-[12px]"
+        className="window-shell cq-panel flex h-full min-h-0 flex-col p-[12px]"
       >
         <div className="pointer-events-none absolute inset-0 overflow-hidden">
           <div className="absolute -left-16 top-10 h-56 w-56 rounded-full bg-[rgba(214,180,138,0.28)] blur-3xl" />
@@ -43,33 +44,40 @@ export function PanelShell({
           transition={{ duration: 0.45, delay: 0.06, ease: [0.22, 1, 0.36, 1] }}
           className="paper-panel mb-3 rounded-[30px] px-5 py-4"
         >
-          <div className="mb-4 flex flex-col gap-4">
-            <div data-tauri-drag-region className="min-w-0">
-              <div className="mb-2 flex flex-wrap items-center gap-2">
-                <span className="rounded-full border border-[rgba(165,135,105,0.35)] bg-[rgba(255,255,255,0.48)] px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.16em] text-[var(--brown-strong)]">
-                  Washi Warm
+          <div className="panel-header-grid">
+            <div data-tauri-drag-region className="panel-header-top min-w-0">
+              <div className="min-w-0">
+                <div className="panel-meta-full mb-2 items-center">
+                  <span className="rounded-full border border-[rgba(165,135,105,0.35)] bg-[rgba(255,255,255,0.48)] px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.16em] text-[var(--brown-strong)]">
+                    Washi Warm
+                  </span>
+                  <span className="rounded-full border border-[rgba(165,135,105,0.3)] bg-[rgba(122,89,64,0.08)] px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.16em] text-[var(--muted)]">
+                    {platformLabel}
+                  </span>
+                </div>
+                <span className="panel-meta-compact mb-2 rounded-full border border-[rgba(165,135,105,0.3)] bg-[rgba(255,255,255,0.5)] px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-[var(--muted)]">
+                  {compactMetaLabel}
                 </span>
-                <span className="rounded-full border border-[rgba(165,135,105,0.3)] bg-[rgba(122,89,64,0.08)] px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.16em] text-[var(--muted)]">
-                  {platformLabel}
-                </span>
+                <p className="font-display text-[clamp(var(--font-display-compact),5.8vw,var(--font-display-regular))] font-semibold tracking-[-0.03em] text-[var(--brown-strong)]">
+                  QuickNote
+                </p>
+                <p className="panel-summary mt-1 text-[12px] text-[var(--muted)]">
+                  Notes and todos that stay readable at every window size.
+                </p>
               </div>
-              <p className="font-display text-[22px] font-semibold tracking-[-0.03em] text-[var(--brown-strong)]">QuickNote</p>
-              <p className="mt-1 max-w-[18rem] text-[12px] text-[var(--muted)]">
-                Fast capture for notes and todos, with layered paper surfaces and animated macOS-style feedback.
-              </p>
-            </div>
 
-            <motion.button
-              type="button"
-              className="paper-button self-start rounded-[16px] px-4 py-2 text-[11px] font-semibold tracking-[0.08em] text-[var(--brown-strong)] uppercase"
-              whileHover={{ y: -2, scale: 1.02 }}
-              whileTap={{ scale: 0.985 }}
-              onClick={onToggleSettings}
-            >
-              Settings
-            </motion.button>
+              <motion.button
+                type="button"
+                className="paper-button self-start rounded-[16px] px-4 py-2 text-[11px] font-semibold tracking-[0.08em] text-[var(--brown-strong)] uppercase"
+                whileHover={{ y: -2, scale: 1.02 }}
+                whileTap={{ scale: 0.985 }}
+                onClick={onToggleSettings}
+              >
+                Settings
+              </motion.button>
+            </div>
+            <TabBar activeTab={activeTab} onTabChange={onTabChange} />
           </div>
-          <TabBar activeTab={activeTab} onTabChange={onTabChange} />
         </motion.header>
 
         <motion.section
@@ -98,7 +106,10 @@ export function PanelShell({
             ) : null}
           </AnimatePresence>
 
-          <div className="paper-scroll relative h-full overflow-y-auto rounded-[24px] bg-[linear-gradient(180deg,rgba(255,251,246,0.35),rgba(255,251,246,0.08))] p-1">
+          <div
+            data-testid="panel-scroll-region"
+            className="paper-scroll relative h-full overflow-y-auto rounded-[24px] bg-[linear-gradient(180deg,rgba(255,251,246,0.35),rgba(255,251,246,0.08))] p-1"
+          >
             {children}
           </div>
         </motion.section>

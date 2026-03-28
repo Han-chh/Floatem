@@ -1,13 +1,14 @@
 {
   "name": "quicknote",
   "private": true,
-  "version": "0.1.2",
+  "version": "0.1.3",
   "type": "module",
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",
     "preview": "vite preview",
     "test": "vitest",
+    "test:layout": "playwright test",
     "tauri": "PATH=\"$HOME/.rustup/toolchains/stable-aarch64-apple-darwin/bin:/opt/homebrew/opt/rustup/bin:$PATH\" tauri"
   },
   "dependencies": {
@@ -31,6 +32,7 @@
     "zustand": "^5.0.12"
   },
   "devDependencies": {
+    "@playwright/test": "^1.58.2",
     "@tailwindcss/vite": "^4.2.2",
     "@tauri-apps/cli": "^2",
     "@testing-library/jest-dom": "^6.9.1",

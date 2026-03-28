@@ -153,4 +153,235 @@
     background-size: 24px 24px;
     mask-image: radial-gradient(circle at center, black, transparent 82%);
   }
+
+  .cq-panel {
+    container: panel / inline-size;
+  }
+
+  .cq-module {
+    container: module / inline-size;
+  }
+
+  .cq-card {
+    container: card / inline-size;
+  }
+
+  .wrap-anywhere {
+    overflow-wrap: anywhere;
+    word-break: break-word;
+  }
+
+  .textarea-reset {
+    resize: none;
+    overflow: hidden;
+  }
+
+  .panel-header-grid {
+    display: grid;
+    gap: 12px;
+  }
+
+  .panel-header-top {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 12px;
+    align-items: start;
+  }
+
+  .panel-meta-full {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .panel-meta-compact {
+    display: none;
+  }
+
+  .panel-summary {
+    overflow-wrap: anywhere;
+  }
+
+  .module-header-grid {
+    display: grid;
+    gap: 12px;
+  }
+
+  .module-header-copy {
+    min-width: 0;
+  }
+
+  .module-header-summary {
+    overflow-wrap: anywhere;
+  }
+
+  .module-primary-action {
+    width: max-content;
+    max-width: 100%;
+  }
+
+  .note-card-header-grid {
+    display: grid;
+    gap: 10px;
+  }
+
+  .note-card-title-block {
+    min-width: 0;
+    display: grid;
+    gap: 8px;
+  }
+
+  .note-card-title-row {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    gap: 10px;
+    align-items: start;
+  }
+
+  .note-card-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+
+  .note-card-actions {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+  }
+
+  .note-card-actions [data-action="delete"] {
+    grid-column: 1 / -1;
+  }
+
+  .note-toolbar-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 8px;
+  }
+
+  .todo-card-layout {
+    display: grid;
+    gap: 12px;
+  }
+
+  .todo-card-main {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    gap: 12px;
+    align-items: start;
+  }
+
+  .todo-card-copy {
+    min-width: 0;
+    display: grid;
+    gap: 10px;
+  }
+
+  .todo-card-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+
+  .todo-card-status-row {
+    display: grid;
+    gap: 8px;
+  }
+
+  .todo-card-delete-row {
+    display: flex;
+  }
+
+  .todo-card-delete-row > * {
+    width: 100%;
+  }
+
+  .quick-add-grid {
+    display: grid;
+    gap: 10px;
+  }
+
+  .settings-grid {
+    display: grid;
+    gap: 12px;
+  }
+
+  @container panel (max-width: 331px) {
+    .panel-header-top {
+      grid-template-columns: minmax(0, 1fr) auto;
+    }
+
+    .panel-meta-full,
+    .panel-summary {
+      display: none;
+    }
+
+    .panel-meta-compact {
+      display: inline-flex;
+      max-width: 100%;
+    }
+  }
+
+  @container panel (min-width: 420px) {
+    .panel-header-grid {
+      gap: 14px;
+    }
+  }
+
+  @container module (max-width: 331px) {
+    .module-header-summary,
+    .settings-summary,
+    .note-secondary-chip {
+      display: none;
+    }
+
+    .module-primary-action,
+    .quick-add-submit {
+      width: 100%;
+    }
+  }
+
+  @container module (min-width: 420px) {
+    .settings-grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      align-items: start;
+    }
+  }
+
+  @container card (min-width: 332px) {
+    .note-card-actions {
+      display: flex;
+      flex-wrap: wrap;
+    }
+
+    .note-card-actions > * {
+      width: max-content;
+      max-width: 100%;
+    }
+
+    .note-toolbar-grid {
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+
+    .todo-card-status-row {
+      grid-template-columns: auto minmax(0, 1fr);
+      align-items: center;
+    }
+
+    .todo-card-delete-row {
+      justify-content: flex-end;
+    }
+
+    .todo-card-delete-row > * {
+      width: max-content;
+      max-width: 100%;
+    }
+  }
+
+  @container card (min-width: 420px) {
+    .note-toolbar-grid {
+      grid-template-columns: repeat(7, minmax(0, 1fr));
+    }
+  }
 }

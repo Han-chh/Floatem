@@ -1,7 +1,8 @@
 import { AnimatePresence, motion } from "framer-motion";
-import { useRef, useState, type FormEvent } from "react";
+import { useEffect, useRef, useState, type FormEvent, type KeyboardEvent } from "react";
 import { ParticleField } from "../feedback/ParticleField";
 import { useParticleField } from "../../hooks/useParticleField";
+import { syncTextareaHeight } from "../../lib/resizeTextarea";
 import { useTodosStore } from "../../store/todosStore";
 import { TodoItem } from "./TodoItem";
 
@@ -13,6 +14,7 @@ export function TodoList() {
   const [draft, setDraft] = useState("");
   const [removingIds, setRemovingIds] = useState<string[]>([]);
   const formRef = useRef<HTMLFormElement>(null);
+  const draftRef = useRef<HTMLTextAreaElement | null>(null);
   const { bursts, fieldRef, spawnBurst } = useParticleField();
 
   const openCount = todos.filter((todo) => !todo.done).length;
@@ -52,16 +54,29 @@ export function TodoList() {
     }
   };
 
+  const handleDraftKeyDown = (event: KeyboardEvent<HTMLTextAreaElement>) => {
+    if (event.key === "Enter" && !event.shiftKey) {
+      event.preventDefault();
+      formRef.current?.requestSubmit();
+    }
+  };
+
+  useEffect(() => {
+    if (draftRef.current) {
+      syncTextareaHeight(draftRef.current);
+    }
+  }, [draft]);
+
   return (
-    <section className="flex h-full flex-col gap-4">
+    <section className="cq-module flex h-full min-h-0 flex-col gap-3">
       <motion.div
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
         className="paper-card relative overflow-hidden rounded-[24px] px-4 py-4"
       >
         <div className="absolute -left-6 top-0 h-20 w-20 rounded-full bg-[rgba(111,155,118,0.18)] blur-2xl" />
-        <div className="relative flex flex-col gap-4">
-          <div>
+        <div className="module-header-grid relative">
+          <div className="module-header-copy">
             <div className="mb-2 flex flex-wrap items-center gap-2">
               <span className="rounded-full bg-[rgba(122,89,64,0.08)] px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.16em] text-[var(--brown)]">
                 Todo flow
@@ -73,15 +88,17 @@ export function TodoList() {
                 {completedCount} done
               </span>
             </div>
-            <h2 className="font-display text-[18px] font-semibold tracking-[-0.02em] text-[var(--brown-strong)]">Animated task board</h2>
-            <p className="mt-1 max-w-[18rem] text-[12px] text-[var(--muted)]">
-              Stronger typography, tactile controls, and motion-rich feedback for every add, delete, and complete action.
+            <h2 className="font-display text-[clamp(var(--font-section-compact),4.4vw,var(--font-section-expanded))] font-semibold tracking-[-0.02em] text-[var(--brown-strong)]">
+              Animated task board
+            </h2>
+            <p className="module-header-summary mt-1 text-[12px] text-[var(--muted)]">
+              Status-first tasks with reminders and controls that stack cleanly in narrow windows.
             </p>
           </div>
         </div>
       </motion.div>
 
-      <div ref={fieldRef} className="relative flex-1">
+      <div ref={fieldRef} className="relative min-h-0 flex-1">
         <ParticleField bursts={bursts} />
 
         <div className="paper-scroll flex h-full flex-col gap-4 overflow-y-auto">
@@ -114,17 +131,21 @@ export function TodoList() {
         <label htmlFor="todo-input" className="mb-2 block text-[11px] font-semibold uppercase tracking-[0.12em] text-[var(--muted)]">
           Quick add
         </label>
-        <div className="flex flex-col gap-2">
-          <input
+        <div className="quick-add-grid">
+          <textarea
+            ref={draftRef}
             id="todo-input"
+            rows={1}
             value={draft}
             onChange={(event) => setDraft(event.currentTarget.value)}
-            placeholder="Press Enter to add the next task..."
-            className="w-full rounded-[18px] border border-[var(--border)] bg-[rgba(255,255,255,0.68)] px-4 py-3 text-[13px] font-medium text-[var(--dark-text)] outline-none placeholder:text-[var(--muted)]"
+            onInput={(event) => syncTextareaHeight(event.currentTarget)}
+            onKeyDown={handleDraftKeyDown}
+            placeholder="Type a task and press Enter..."
+            className="textarea-reset wrap-anywhere min-h-[52px] w-full rounded-[18px] border border-[var(--border)] bg-[rgba(255,255,255,0.68)] px-4 py-3 text-[13px] font-medium text-[var(--dark-text)] outline-none placeholder:text-[var(--muted)]"
           />
           <motion.button
             type="submit"
-            className="paper-button self-start rounded-[18px] px-4 py-3 text-[12px] font-semibold text-[var(--brown-strong)]"
+            className="quick-add-submit paper-button self-start rounded-[18px] px-4 py-3 text-[12px] font-semibold text-[var(--brown-strong)]"
             whileHover={{ y: -2, scale: 1.03 }}
             whileTap={{ scale: 0.97 }}
           >

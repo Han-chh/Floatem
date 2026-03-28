@@ -20,6 +20,29 @@
   --button-radius: 16px;
   --tab-radius: 18px;
 
+  --space-compact-1: 10px;
+  --space-compact-2: 12px;
+  --space-compact-3: 14px;
+  --space-regular-1: 12px;
+  --space-regular-2: 14px;
+  --space-regular-3: 16px;
+  --space-expanded-1: 14px;
+  --space-expanded-2: 16px;
+  --space-expanded-3: 20px;
+
+  --font-display-compact: 20px;
+  --font-display-regular: 22px;
+  --font-display-expanded: 24px;
+  --font-section-compact: 16px;
+  --font-section-regular: 17px;
+  --font-section-expanded: 18px;
+  --font-body-compact: 12.5px;
+  --font-body-regular: 13px;
+  --font-body-expanded: 13.5px;
+  --font-meta-compact: 10.5px;
+  --font-meta-regular: 11px;
+  --font-meta-expanded: 11.5px;
+
   --shadow-soft: 0 18px 40px rgba(108, 82, 58, 0.14);
   --shadow-card: 0 14px 26px rgba(108, 82, 58, 0.09);
   --status-open: #8a613f;

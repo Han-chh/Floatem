@@ -59,15 +59,15 @@ export function NotesList() {
   };
 
   return (
-    <section className="flex h-full flex-col gap-4">
+    <section className="cq-module flex h-full min-h-0 flex-col gap-3">
       <motion.div
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
         className="paper-card relative overflow-hidden rounded-[24px] px-4 py-4"
       >
         <div className="absolute -right-6 top-0 h-24 w-24 rounded-full bg-[rgba(214,180,138,0.22)] blur-2xl" />
-        <div className="relative flex flex-col gap-4">
-          <div>
+        <div className="module-header-grid relative">
+          <div className="module-header-copy">
             <div className="mb-2 flex flex-wrap items-center gap-2">
               <span className="rounded-full bg-[rgba(122,89,64,0.08)] px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.16em] text-[var(--brown)]">
                 Notes studio
@@ -76,15 +76,17 @@ export function NotesList() {
                 {cards.length} cards
               </span>
             </div>
-            <h2 className="font-display text-[18px] font-semibold tracking-[-0.02em] text-[var(--brown-strong)]">Layered note cards</h2>
-            <p className="mt-1 max-w-[18rem] text-[12px] text-[var(--muted)]">
-              Rounded, tactile note surfaces with clearer contrast, stronger depth, and animated paper feedback.
+            <h2 className="font-display text-[clamp(var(--font-section-compact),4.4vw,var(--font-section-expanded))] font-semibold tracking-[-0.02em] text-[var(--brown-strong)]">
+              Layered note cards
+            </h2>
+            <p className="module-header-summary mt-1 text-[12px] text-[var(--muted)]">
+              Flexible cards, readable titles, and controls that reflow instead of colliding.
             </p>
           </div>
 
           <motion.button
             type="button"
-            className="paper-button self-start rounded-[16px] px-4 py-2 text-[12px] font-semibold text-[var(--brown-strong)]"
+            className="module-primary-action paper-button self-start rounded-[16px] px-4 py-2 text-[12px] font-semibold text-[var(--brown-strong)]"
             whileHover={{ y: -2, scale: 1.03 }}
             whileTap={{ scale: 0.97 }}
             onClick={(event) => handleAddCard(event.currentTarget.getBoundingClientRect())}
@@ -94,7 +96,7 @@ export function NotesList() {
         </div>
       </motion.div>
 
-      <div ref={fieldRef} className="relative flex-1">
+      <div ref={fieldRef} className="relative min-h-0 flex-1">
         <ParticleField bursts={bursts} />
 
         {visibleCards.length === 0 ? (
