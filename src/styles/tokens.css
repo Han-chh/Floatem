@@ -1,0 +1,24 @@
+:root {
+  --cream: #F5F2EC;
+  --sand: #EDE8DF;
+  --border: #CFC9BF;
+  --border-strong: #B0A89E;
+  --muted: #A09890;
+  --brown: #9C7E5E;
+  --dark-text: #3D3228;
+  --green-dot: #7BAF88;
+  --orange-dot: #C07850;
+
+  --panel-radius: 20px;
+  --card-radius: 14px;
+  --button-radius: 8px;
+  --tab-radius: 10px;
+
+  font-family:
+    "Inter",
+    "PingFang SC",
+    -apple-system,
+    BlinkMacSystemFont,
+    "Helvetica Neue",
+    sans-serif;
+}
