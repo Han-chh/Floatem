@@ -170,56 +170,56 @@ function NoteCardBody({
                 />
               )}
             </div>
+          </div>
 
-            <div className="note-card-meta">
-              <div className="note-card-chip-group">
-                <span
-                  className="status-chip"
-                  style={{ color: note.dotColor, backgroundColor: `${note.dotColor}1f` }}
-                >
-                  <PaletteIcon size={12} />
-                  Focus card
-                </span>
-                <span className="note-secondary-chip status-chip" data-tone="neutral">
-                  {editedLabel}
-                </span>
-              </div>
+          <div className="note-card-meta">
+            <div className="note-card-chip-group">
+              <span
+                className="status-chip"
+                style={{ color: note.dotColor, backgroundColor: `${note.dotColor}1f` }}
+              >
+                <PaletteIcon size={12} />
+                Focus card
+              </span>
+              <span className="note-secondary-chip status-chip" data-tone="neutral">
+                {editedLabel}
+              </span>
+            </div>
 
-              <div className="note-card-actions">
-                <motion.button
-                  type="button"
-                  aria-label="Collapse note"
-                  className="paper-icon-button group relative h-7 min-h-0 min-w-0 w-7 rounded-[9px]"
-                  whileHover={isInteractive ? { y: -1.5, scale: 1.03 } : undefined}
-                  whileTap={isInteractive ? { scale: 0.97 } : undefined}
-                  onPointerDown={isInteractive ? (event) => event.stopPropagation() : undefined}
-                  onClick={onToggleCollapsed}
-                >
-                  <ChevronsUpDownIcon size={13} />
-                  <span className="pointer-events-none absolute -top-8 left-1/2 z-10 -translate-x-1/2 rounded-full bg-[rgba(30,25,21,0.94)] px-2 py-1 text-[10px] font-semibold leading-none whitespace-nowrap text-white opacity-0 shadow-[0_10px_20px_rgba(30,25,21,0.18)] transition-all duration-75 ease-out group-hover:-translate-y-1 group-hover:opacity-100">
-                    {note.collapsed ? "Open" : "Fold"}
-                  </span>
-                </motion.button>
-                <motion.button
-                  type="button"
-                  data-action="delete"
-                  aria-label="Delete note"
-                  className="paper-icon-button paper-button-danger group relative h-7 min-h-0 min-w-0 w-7 rounded-[9px]"
-                  whileHover={isInteractive ? { y: -1.5, scale: 1.03 } : undefined}
-                  whileTap={isInteractive ? { scale: 0.97 } : undefined}
-                  onPointerDown={isInteractive ? (event) => event.stopPropagation() : undefined}
-                  onClick={
-                    onDelete
-                      ? (event) => onDelete(event.currentTarget.getBoundingClientRect())
-                      : undefined
-                  }
-                >
-                  <Trash2Icon size={13} />
-                  <span className="pointer-events-none absolute -top-8 left-1/2 z-10 -translate-x-1/2 rounded-full bg-[rgba(30,25,21,0.94)] px-2 py-1 text-[10px] font-semibold leading-none whitespace-nowrap text-white opacity-0 shadow-[0_10px_20px_rgba(30,25,21,0.18)] transition-all duration-75 ease-out group-hover:-translate-y-1 group-hover:opacity-100">
-                    Delete
-                  </span>
-                </motion.button>
-              </div>
+            <div className="note-card-actions">
+              <motion.button
+                type="button"
+                aria-label="Collapse note"
+                className="paper-icon-button group relative h-7 min-h-0 min-w-0 w-7 rounded-[9px]"
+                whileHover={isInteractive ? { y: -1.5, scale: 1.03 } : undefined}
+                whileTap={isInteractive ? { scale: 0.97 } : undefined}
+                onPointerDown={isInteractive ? (event) => event.stopPropagation() : undefined}
+                onClick={onToggleCollapsed}
+              >
+                <ChevronsUpDownIcon size={13} />
+                <span className="pointer-events-none absolute -top-8 left-1/2 z-10 -translate-x-1/2 rounded-full bg-[rgba(30,25,21,0.94)] px-2 py-1 text-[10px] font-semibold leading-none whitespace-nowrap text-white opacity-0 shadow-[0_10px_20px_rgba(30,25,21,0.18)] transition-all duration-75 ease-out group-hover:-translate-y-1 group-hover:opacity-100">
+                  {note.collapsed ? "Open" : "Fold"}
+                </span>
+              </motion.button>
+              <motion.button
+                type="button"
+                data-action="delete"
+                aria-label="Delete note"
+                className="paper-icon-button paper-button-danger group relative h-7 min-h-0 min-w-0 w-7 rounded-[9px]"
+                whileHover={isInteractive ? { y: -1.5, scale: 1.03 } : undefined}
+                whileTap={isInteractive ? { scale: 0.97 } : undefined}
+                onPointerDown={isInteractive ? (event) => event.stopPropagation() : undefined}
+                onClick={
+                  onDelete
+                    ? (event) => onDelete(event.currentTarget.getBoundingClientRect())
+                    : undefined
+                }
+              >
+                <Trash2Icon size={13} />
+                <span className="pointer-events-none absolute -top-8 left-1/2 z-10 -translate-x-1/2 rounded-full bg-[rgba(30,25,21,0.94)] px-2 py-1 text-[10px] font-semibold leading-none whitespace-nowrap text-white opacity-0 shadow-[0_10px_20px_rgba(30,25,21,0.18)] transition-all duration-75 ease-out group-hover:-translate-y-1 group-hover:opacity-100">
+                  Delete
+                </span>
+              </motion.button>
             </div>
           </div>
         </div>

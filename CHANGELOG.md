@@ -2,6 +2,15 @@
 
 All notable repository changes are recorded here.
 
+## v0.1.36 - 2026-03-28
+
+Purpose:
+- Restore the note title width after the metadata alignment change accidentally pushed the title field too far to the right.
+
+Contents:
+- Move the note metadata row fully out of the two-column title grid so the left chip stack no longer widens the color-button column.
+- Let the note title field use the full intended content width again while keeping `Focus card`, edit time, fold, and delete on the compact row below.
+
 ## v0.1.35 - 2026-03-28
 
 Purpose:
