@@ -2,6 +2,16 @@
 
 All notable repository changes are recorded here.
 
+## v0.1.41 - 2026-03-28
+
+Purpose:
+- Refine the floating window close control so it feels more polished and premium without losing the macOS stoplight cue.
+
+Contents:
+- Restyle the shared `WindowCloseButton` with a richer lacquered red gradient, inner highlight ring, and a softer outer glow.
+- Tighten the close glyph styling so the `X` reads more crisply at rest and becomes clearer on hover.
+- Add a stronger focus-visible treatment so keyboard focus on the close control is easier to track.
+
 ## v0.1.40 - 2026-03-28
 
 Purpose:

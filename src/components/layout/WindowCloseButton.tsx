@@ -17,9 +17,9 @@ export function WindowCloseButton({ onClick }: WindowCloseButtonProps) {
       onClick={onClick}
     >
       <XIcon
-        size={10.5}
-        strokeWidth={3.2}
-        className="relative z-10 text-[#210907] opacity-40 transition-opacity duration-150 group-hover:opacity-100"
+        size={9.5}
+        strokeWidth={3.1}
+        className="mac-window-close-glyph"
       />
     </motion.button>
   );
