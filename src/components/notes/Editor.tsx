@@ -55,7 +55,7 @@ export function Editor({ content, onChange }: EditorProps) {
   return (
     <Slate editor={editor} initialValue={content.length > 0 ? content : DEFAULT_NOTE_CONTENT} onChange={onChange}>
       <Editable
-        className="wrap-anywhere min-h-28 rounded-[18px] bg-[var(--cream)] px-3 py-3 text-[13.5px] leading-[1.7] outline-none"
+        className="surface-field wrap-anywhere min-h-28 rounded-[22px] px-4 py-4 text-[13.5px] leading-[1.7] outline-none"
         placeholder="Capture the note while it is fresh..."
         renderElement={renderElement}
         renderLeaf={renderLeaf}

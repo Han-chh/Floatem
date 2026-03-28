@@ -2,6 +2,7 @@ import { motion } from "framer-motion";
 import { format, isPast, isToday } from "date-fns";
 import type { TodoItem as TodoItemModel } from "../../lib/models";
 import { useTodosStore } from "../../store/todosStore";
+import { CircleCheckBigIcon, Clock3Icon, Trash2Icon } from "../icons/AppIcons";
 import { ReminderPicker } from "./ReminderPicker";
 
 type TodoItemProps = {
@@ -64,6 +65,7 @@ function getStatusMeta(todo: TodoItemModel) {
 export function TodoItem({ todo, onDelete, onToggle }: TodoItemProps) {
   const setReminder = useTodosStore((state) => state.setReminder);
   const status = getStatusMeta(todo);
+  const reminderText = todo.reminderAt ? format(new Date(todo.reminderAt), "MMM d, HH:mm") : "No reminder set";
 
   return (
     <motion.article
@@ -74,7 +76,7 @@ export function TodoItem({ todo, onDelete, onToggle }: TodoItemProps) {
       transition={{ duration: 0.24, ease: [0.22, 1, 0.36, 1] }}
       data-state={todo.done ? "done" : "open"}
       data-testid="todo-item"
-      className={`paper-card cq-card relative rounded-[24px] p-4 ${todo.done ? "opacity-65" : ""}`}
+      className={`paper-card cq-card relative rounded-[26px] p-4 ${todo.done ? "opacity-65" : ""}`}
     >
       <div className="absolute inset-y-4 left-0 w-1 rounded-r-full" style={{ background: status.rail }} />
 
@@ -84,30 +86,31 @@ export function TodoItem({ todo, onDelete, onToggle }: TodoItemProps) {
             type="button"
             aria-label="Mark todo as done"
             aria-pressed={todo.done}
-            className={`mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full border border-[var(--border)] text-[12px] font-bold ${status.tone}`}
+            className={`mt-0.5 inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-[var(--border)] text-[12px] font-bold shadow-[0_10px_18px_rgba(61,49,34,0.08)] ${status.tone}`}
             whileHover={{ scale: 1.08 }}
             whileTap={{ scale: 0.92 }}
             onClick={(event) => onToggle(todo.id, event.currentTarget.getBoundingClientRect(), !todo.done)}
           >
-            ✓
+            <CircleCheckBigIcon size={16} />
           </motion.button>
 
           <div className="todo-card-copy">
-            <p className={`wrap-anywhere text-[14px] font-medium text-[var(--dark-text)] ${todo.done ? "line-through" : ""}`}>
+            <p className={`wrap-anywhere text-[15px] font-semibold leading-6 text-[var(--dark-text)] ${todo.done ? "line-through" : ""}`}>
               {todo.text}
             </p>
 
             <div className="todo-card-status-row">
               <div className="todo-card-meta">
-                <span className="rounded-full bg-[rgba(122,89,64,0.08)] px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.12em] text-[var(--brown)]">
+                <span className="status-chip" data-tone="neutral">
                   Task
                 </span>
-                <span className={`rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.12em] ${status.pillClass}`}>
+                <span className={`status-chip ${status.pillClass}`}>
                   {status.label}
                 </span>
               </div>
-              <p className={`wrap-anywhere text-[11px] font-medium ${status.textClass}`}>
-                {todo.reminderAt ? format(new Date(todo.reminderAt), "MMM d, HH:mm") : "No reminder set"}
+              <p className={`wrap-anywhere inline-flex items-center gap-1.5 text-[11px] font-medium ${status.textClass}`}>
+                <Clock3Icon size={13} />
+                <span>{reminderText}</span>
               </p>
             </div>
 
@@ -119,12 +122,13 @@ export function TodoItem({ todo, onDelete, onToggle }: TodoItemProps) {
           <motion.button
             type="button"
             aria-label="Delete todo"
-            className="paper-button rounded-[14px] px-3 py-1.5 text-[11px] font-semibold text-[var(--orange-dot)]"
+            className="paper-button paper-button-danger inline-flex items-center justify-center gap-2 rounded-[14px] px-3 py-2 text-[11px] font-semibold"
             whileHover={{ y: -2, scale: 1.03 }}
             whileTap={{ scale: 0.97 }}
             onClick={(event) => onDelete(todo.id, event.currentTarget.getBoundingClientRect())}
           >
-            Delete
+            <Trash2Icon size={15} />
+            <span className="wrap-anywhere">Delete</span>
           </motion.button>
         </div>
       </div>

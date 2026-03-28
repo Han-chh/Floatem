@@ -1,24 +1,36 @@
 :root {
-  --cream: #f8f2e8;
-  --cream-strong: #fffaf1;
-  --sand: #ece0cf;
-  --sand-deep: #dbc5aa;
-  --shell: #e9dbc7;
-  --border: #c8b79f;
-  --border-strong: #a58769;
-  --muted: #6f6153;
-  --brown: #7a5940;
-  --brown-strong: #4e3424;
-  --dark-text: #231911;
-  --green-dot: #6f9b76;
-  --orange-dot: #be6f47;
-  --rose: #cb7a63;
-  --highlight: #d6b48a;
+  --base-bg: #f7f2e8;
+  --base-bg-deep: #efe5d4;
+  --cream: #fff9f0;
+  --cream-strong: #fffdf8;
+  --sand: #f3eadc;
+  --sand-deep: #e8d7c3;
+  --shell: #f0e6d7;
+  --border: #d5c6b4;
+  --border-strong: #c79a75;
+  --muted: #5e554d;
+  --brown: #8e5b44;
+  --brown-strong: #1e1915;
+  --dark-text: #1e1915;
+  --green-dot: #1fa87a;
+  --orange-dot: #ff7a59;
+  --rose: #ff7a59;
+  --highlight: #f4b942;
+  --accent-coral: #ff7a59;
+  --accent-cobalt: #2f6bff;
+  --accent-jade: #1fa87a;
+  --accent-marigold: #f4b942;
+  --accent-plum: #7b5cfa;
+  --accent-coral-soft: rgba(255, 122, 89, 0.12);
+  --accent-cobalt-soft: rgba(47, 107, 255, 0.11);
+  --accent-jade-soft: rgba(31, 168, 122, 0.12);
+  --accent-marigold-soft: rgba(244, 185, 66, 0.14);
+  --accent-plum-soft: rgba(123, 92, 250, 0.12);
 
-  --panel-radius: 30px;
-  --card-radius: 24px;
+  --panel-radius: 32px;
+  --card-radius: 26px;
   --button-radius: 16px;
-  --tab-radius: 18px;
+  --tab-radius: 20px;
 
   --space-compact-1: 10px;
   --space-compact-2: 12px;
@@ -43,20 +55,22 @@
   --font-meta-regular: 11px;
   --font-meta-expanded: 11.5px;
 
-  --shadow-soft: 0 18px 40px rgba(108, 82, 58, 0.14);
-  --shadow-card: 0 14px 26px rgba(108, 82, 58, 0.09);
-  --status-open: #8a613f;
-  --status-open-soft: rgba(138, 97, 63, 0.12);
-  --status-done: #5d8d68;
-  --status-done-soft: rgba(93, 141, 104, 0.13);
-  --status-today: #b96632;
-  --status-today-soft: rgba(185, 102, 50, 0.14);
-  --status-upcoming: #517f91;
-  --status-upcoming-soft: rgba(81, 127, 145, 0.14);
-  --status-overdue: #b54a4d;
-  --status-overdue-soft: rgba(181, 74, 77, 0.14);
+  --shadow-soft: 0 24px 56px rgba(61, 49, 34, 0.13);
+  --shadow-card: 0 16px 34px rgba(61, 49, 34, 0.08);
+  --shadow-button: 0 12px 24px rgba(61, 49, 34, 0.08);
+  --status-open: #8b5b44;
+  --status-open-soft: rgba(139, 91, 68, 0.12);
+  --status-done: #1f8d67;
+  --status-done-soft: rgba(31, 141, 103, 0.13);
+  --status-today: #c45c34;
+  --status-today-soft: rgba(196, 92, 52, 0.14);
+  --status-upcoming: #2f6bff;
+  --status-upcoming-soft: rgba(47, 107, 255, 0.12);
+  --status-overdue: #c13d47;
+  --status-overdue-soft: rgba(193, 61, 71, 0.14);
 
   --font-body:
+    "Manrope",
     "Inter",
     "PingFang SC",
     -apple-system,
@@ -64,8 +78,8 @@
     "Helvetica Neue",
     sans-serif;
   --font-display:
+    "Sora",
     ui-rounded,
-    "SF Pro Rounded",
     "Avenir Next",
     "PingFang SC",
     "Hiragino Sans GB",

@@ -38,12 +38,12 @@ export type LoadAllResult = {
 };
 
 export const NOTE_DOT_COLORS = [
-  "#9C7E5E",
-  "#C07850",
-  "#7BAF88",
-  "#E2B66B",
-  "#8E7DBE",
-  "#5C8D89",
+  "#FF7A59",
+  "#2F6BFF",
+  "#1FA87A",
+  "#F4B942",
+  "#7B5CFA",
+  "#3F9CA8",
 ] as const;
 
 export const DEFAULT_NOTE_CONTENT: Descendant[] = [

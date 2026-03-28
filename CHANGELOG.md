@@ -57,3 +57,14 @@ Contents:
 - Build an icon-rich Notes home board with tokens, components, responsive frames, textures, and a clickable prototype section.
 - Add local SVG icon components to model the intended Lucide-style action language across tabs, hero actions, note cards, and settings.
 - Export review screenshots locally because a real Figma MCP workspace is still unavailable in this environment.
+
+## v0.1.5 - 2026-03-28
+
+Purpose:
+- Apply the approved icon-rich Notes Home design language to the production QuickNote interface.
+
+Contents:
+- Migrate the main panel shell and segmented tabs to the higher-contrast, texture-light, icon-first visual system.
+- Restyle Notes, Todos, and Settings with richer chips, stronger accent colors, upgraded action buttons, and more expressive cards.
+- Promote the preview icon set into a shared app icon library and update the default note color palette to the brighter scheme.
+- Keep existing store and interaction behavior intact while re-running unit, integration, build, and responsive layout coverage.

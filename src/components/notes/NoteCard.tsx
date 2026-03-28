@@ -1,10 +1,12 @@
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
+import { formatDistanceToNow } from "date-fns";
 import { motion } from "framer-motion";
 import { useEffect, useRef, useState } from "react";
 import { NOTE_DOT_COLORS, type NoteCard as NoteCardModel } from "../../lib/models";
 import { syncTextareaHeight } from "../../lib/resizeTextarea";
 import { useNotesStore } from "../../store/notesStore";
+import { ChevronsUpDownIcon, GripVerticalIcon, PaletteIcon, Trash2Icon } from "../icons/AppIcons";
 import { Editor } from "./Editor";
 import { Toolbar } from "./Toolbar";
 
@@ -30,6 +32,8 @@ export function NoteCard({ note, onDelete }: NoteCardProps) {
     }
   }, [note.id, note.title]);
 
+  const editedLabel = `Edited ${formatDistanceToNow(note.updatedAt, { addSuffix: true })}`;
+
   return (
     <motion.article
       ref={setNodeRef}
@@ -52,25 +56,30 @@ export function NoteCard({ note, onDelete }: NoteCardProps) {
         }}
       />
 
-      <div className="rounded-t-[24px] border-b border-[rgba(200,183,159,0.75)] bg-[linear-gradient(180deg,rgba(236,224,207,0.92),rgba(248,242,232,0.72))] px-4 py-3">
+      <div className="rounded-t-[24px] border-b border-[rgba(213,198,180,0.76)] bg-[linear-gradient(180deg,rgba(251,245,236,0.96),rgba(255,249,240,0.74))] px-4 py-4">
         <div className="note-card-header-grid">
           <div className="note-card-title-row">
             <div className="relative mt-0.5 shrink-0">
               <motion.button
                 type="button"
-                className="h-5 w-5 rounded-full border border-[var(--border)] shadow-[0_6px_12px_rgba(108,82,58,0.12)]"
-                style={{ backgroundColor: note.dotColor }}
+                className="paper-button inline-flex h-10 w-10 items-center justify-center rounded-[14px]"
                 aria-label="Change note color"
                 whileHover={{ scale: 1.08 }}
                 whileTap={{ scale: 0.94 }}
                 onClick={() => setShowPalette((current) => !current)}
-              />
+              >
+                <span
+                  className="inline-flex h-4 w-4 rounded-full border border-white/70 shadow-[0_4px_10px_rgba(0,0,0,0.08)]"
+                  style={{ backgroundColor: note.dotColor }}
+                />
+                <span className="sr-only">Change note color</span>
+              </motion.button>
               {showPalette ? (
                 <motion.div
                   initial={{ opacity: 0, y: 6, scale: 0.96 }}
                   animate={{ opacity: 1, y: 0, scale: 1 }}
                   exit={{ opacity: 0, y: 4, scale: 0.98 }}
-                  className="paper-card absolute left-0 top-8 z-10 grid max-w-[164px] grid-cols-3 gap-1.5 rounded-[18px] p-2"
+                  className="paper-card absolute left-0 top-12 z-10 grid w-[min(220px,calc(100vw-64px))] grid-cols-3 gap-1.5 rounded-[18px] p-2"
                 >
                   {NOTE_DOT_COLORS.map((color) => (
                     <motion.button
@@ -104,17 +113,18 @@ export function NoteCard({ note, onDelete }: NoteCardProps) {
                 }}
                 onInput={(event) => syncTextareaHeight(event.currentTarget)}
                 placeholder="Untitled note"
-                className="textarea-reset wrap-anywhere min-h-[28px] w-full bg-transparent text-[14px] font-semibold tracking-[-0.01em] text-[var(--dark-text)] outline-none placeholder:text-[var(--muted)]"
+                className="textarea-reset surface-field wrap-anywhere min-h-[56px] w-full rounded-[18px] px-3 py-3 text-[15px] font-semibold leading-6 tracking-[-0.02em] text-[var(--dark-text)] outline-none placeholder:text-[var(--muted)]"
               />
               <div className="note-card-meta">
                 <span
-                  className="rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.12em]"
-                  style={{ color: note.dotColor, backgroundColor: `${note.dotColor}1a` }}
+                  className="status-chip"
+                  style={{ color: note.dotColor, backgroundColor: `${note.dotColor}1f` }}
                 >
-                  Rich card
+                  <PaletteIcon size={12} />
+                  Focus card
                 </span>
-                <span className="note-secondary-chip rounded-full bg-[rgba(255,255,255,0.55)] px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.12em] text-[var(--muted)]">
-                  draggable
+                <span className="note-secondary-chip status-chip" data-tone="neutral">
+                  {editedLabel}
                 </span>
               </div>
             </div>
@@ -123,35 +133,38 @@ export function NoteCard({ note, onDelete }: NoteCardProps) {
           <div className="note-card-actions">
             <motion.button
               type="button"
-              className="paper-button rounded-[14px] px-3 py-1.5 text-[11px] font-semibold text-[var(--brown-strong)]"
+              className="paper-button inline-flex items-center justify-center gap-2 rounded-[14px] px-3 py-2 text-[11px] font-semibold text-[var(--brown-strong)]"
               aria-label="Drag note"
               whileHover={{ y: -2, scale: 1.03 }}
               whileTap={{ scale: 0.97 }}
               {...attributes}
               {...listeners}
             >
-              Drag
+              <GripVerticalIcon size={15} />
+              <span className="wrap-anywhere">Move</span>
             </motion.button>
             <motion.button
               type="button"
-              className="paper-button rounded-[14px] px-3 py-1.5 text-[11px] font-semibold text-[var(--brown-strong)]"
+              className="paper-button inline-flex items-center justify-center gap-2 rounded-[14px] px-3 py-2 text-[11px] font-semibold text-[var(--brown-strong)]"
               aria-label="Collapse note"
               whileHover={{ y: -2, scale: 1.03 }}
               whileTap={{ scale: 0.97 }}
               onClick={() => toggleCollapsed(note.id)}
             >
-              {note.collapsed ? "Expand" : "Fold"}
+              <ChevronsUpDownIcon size={15} />
+              <span className="wrap-anywhere">{note.collapsed ? "Open" : "Fold"}</span>
             </motion.button>
             <motion.button
               type="button"
               data-action="delete"
-              className="paper-button rounded-[14px] px-3 py-1.5 text-[11px] font-semibold text-[var(--orange-dot)]"
+              className="paper-button paper-button-danger inline-flex items-center justify-center gap-2 rounded-[14px] px-3 py-2 text-[11px] font-semibold"
               aria-label="Delete note"
               whileHover={{ y: -2, scale: 1.03 }}
               whileTap={{ scale: 0.97 }}
               onClick={(event) => onDelete(note.id, event.currentTarget.getBoundingClientRect())}
             >
-              Delete
+              <Trash2Icon size={15} />
+              <span className="wrap-anywhere">Delete</span>
             </motion.button>
           </div>
         </div>
