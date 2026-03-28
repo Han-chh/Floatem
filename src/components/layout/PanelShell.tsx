@@ -1,5 +1,6 @@
 import { motion } from "framer-motion";
 import type { ReactNode } from "react";
+import { startWindowDrag } from "../../hooks/useWindowDrag";
 import { SlidersHorizontalIcon } from "../icons/AppIcons";
 import type { TabId } from "../../lib/models";
 import { TabBar } from "./TabBar";
@@ -33,10 +34,11 @@ export function PanelShell({ activeTab, onTabChange, children, onToggleSettings 
             initial={{ opacity: 0, y: -12 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.22, delay: 0.03, ease: [0.22, 1, 0.36, 1] }}
+            onPointerDown={startWindowDrag}
             className="paper-panel mb-3 rounded-[30px] px-4 py-3"
           >
             <div className="space-y-3">
-              <div data-tauri-drag-region className="flex min-w-0 items-center justify-between gap-3">
+              <div className="flex min-w-0 items-center justify-between gap-3">
                 <p className="font-display text-[clamp(22px,6vw,28px)] font-semibold tracking-[-0.05em] text-[var(--brown-strong)]">
                   QuickNote
                 </p>

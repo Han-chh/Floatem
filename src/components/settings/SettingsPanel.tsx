@@ -1,5 +1,6 @@
 import { motion } from "framer-motion";
 import { useEffect, useState, type ReactNode } from "react";
+import { startWindowDrag } from "../../hooks/useWindowDrag";
 import { useSettingsStore } from "../../store/settingsStore";
 import {
   CircleCheckBigIcon,
@@ -144,7 +145,7 @@ export function SettingsPanel({ onClose }: SettingsPanelProps) {
       >
         <div className="window-shell-content">
           <div className="paper-panel flex h-full min-h-0 flex-col rounded-[32px] p-4">
-            <div className="mb-4 flex items-start justify-between gap-4">
+            <div className="mb-4 flex items-start justify-between gap-4" onPointerDown={startWindowDrag}>
               <div className="min-w-0">
                 <div className="mb-2 flex flex-wrap items-center gap-2">
                   <span className="status-chip" data-tone="blue">

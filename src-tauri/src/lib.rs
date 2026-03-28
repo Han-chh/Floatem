@@ -4,6 +4,7 @@ use commands::{
     hotkey::{handle_shortcut_event, register_hotkey, sync_hotkey_registration},
     notification::{cancel_reminder, schedule_reminder},
     storage::{load_all, load_settings_data, save_notes, save_settings, save_todos},
+    window::show_main_window,
 };
 use tauri::Manager;
 
@@ -26,6 +27,8 @@ pub fn run() {
                 .map_err(|error| -> Box<dyn std::error::Error> { error.into() })?;
 
             sync_hotkey_registration(&app.handle(), settings.hotkey.as_str())
+                .map_err(|error| -> Box<dyn std::error::Error> { error.into() })?;
+            show_main_window(&app.handle())
                 .map_err(|error| -> Box<dyn std::error::Error> { error.into() })?;
 
             Ok(())

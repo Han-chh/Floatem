@@ -2,6 +2,16 @@
 
 All notable repository changes are recorded here.
 
+## v0.1.28 - 2026-03-28
+
+Purpose:
+- Restore draggable frameless-window behavior and make the panel reopen at the same saved position while showing automatically on launch.
+
+Contents:
+- Add explicit Tauri window dragging from the Notes/Todos header and the Settings header so the frameless panel can be repositioned again.
+- Refactor the Rust window logic so startup and hotkey-based showing both restore the saved `panelPosition` before focusing the window.
+- Show the panel automatically during app setup instead of waiting for the first shortcut press, while keeping shortcut toggling intact.
+
 ## v0.1.27 - 2026-03-28
 
 Purpose:
