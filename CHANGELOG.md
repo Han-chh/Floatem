@@ -46,3 +46,14 @@ Contents:
 - Convert note titles and quick-add input to auto-resizing textareas so long content stays visible while editing.
 - Add Playwright responsive layout coverage across compact, regular, wide, and expanded viewports using system Chrome.
 - Keep existing interaction tests green while adding real-browser assertions for horizontal overflow and clipped controls.
+
+## v0.1.4 - 2026-03-28
+
+Purpose:
+- Add a reviewable, Figma-style Notes home preview so the next visual direction can be inspected before applying it to the main app shell.
+
+Contents:
+- Add a standalone design-preview route at `?preview=figma-notes-home` without changing the production QuickNote flow.
+- Build an icon-rich Notes home board with tokens, components, responsive frames, textures, and a clickable prototype section.
+- Add local SVG icon components to model the intended Lucide-style action language across tabs, hero actions, note cards, and settings.
+- Export review screenshots locally because a real Figma MCP workspace is still unavailable in this environment.

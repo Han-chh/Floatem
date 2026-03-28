@@ -2,6 +2,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import { startTransition, useEffect, useState } from "react";
 import { PanelShell } from "./components/layout/PanelShell";
 import { NotesList } from "./components/notes/NotesList";
+import { FigmaNotesHomePreview } from "./components/preview/FigmaNotesHomePreview";
 import { SettingsPanel } from "./components/settings/SettingsPanel";
 import { TodoList } from "./components/todos/TodoList";
 import { useAutoSave } from "./hooks/useAutoSave";
@@ -11,7 +12,15 @@ import { useNotesStore } from "./store/notesStore";
 import { useSettingsStore } from "./store/settingsStore";
 import { useTodosStore } from "./store/todosStore";
 
-function App() {
+function isDesignPreviewMode() {
+  if (typeof window === "undefined") {
+    return false;
+  }
+
+  return new URLSearchParams(window.location.search).get("preview") === "figma-notes-home";
+}
+
+function QuickNoteApp() {
   const activeTab = useSettingsStore((state) => state.activeTab);
   const hotkey = useSettingsStore((state) => state.hotkey);
   const setActiveTab = useSettingsStore((state) => state.setActiveTab);
@@ -87,6 +96,14 @@ function App() {
       )}
     </PanelShell>
   );
+}
+
+function App() {
+  if (isDesignPreviewMode()) {
+    return <FigmaNotesHomePreview />;
+  }
+
+  return <QuickNoteApp />;
 }
 
 export default App;
