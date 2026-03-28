@@ -13,6 +13,7 @@ import { ParticleField } from "../feedback/ParticleField";
 import { NotebookPenIcon, SparklesIcon, SquarePenIcon } from "../icons/AppIcons";
 import { useParticleField } from "../../hooks/useParticleField";
 import { useNotesStore } from "../../store/notesStore";
+import { useSettingsStore } from "../../store/settingsStore";
 import { NoteCard } from "./NoteCard";
 
 export function NotesList() {
@@ -20,6 +21,7 @@ export function NotesList() {
   const addCard = useNotesStore((state) => state.addCard);
   const moveCard = useNotesStore((state) => state.moveCard);
   const removeCard = useNotesStore((state) => state.removeCard);
+  const enableParticles = useSettingsStore((state) => state.enableParticles);
   const [removingIds, setRemovingIds] = useState<string[]>([]);
   const { bursts, fieldRef, spawnBurst } = useParticleField();
   const sensors = useSensors(
@@ -32,7 +34,9 @@ export function NotesList() {
 
   const handleAddCard = (target: DOMRect) => {
     const card = addCard();
-    spawnBurst(target, "paper");
+    if (enableParticles) {
+      spawnBurst(target, "paper");
+    }
     window.requestAnimationFrame(() => {
       document.getElementById(`note-title-${card.id}`)?.focus();
     });
@@ -43,7 +47,9 @@ export function NotesList() {
       return;
     }
 
-    spawnBurst(target, "rose");
+    if (enableParticles) {
+      spawnBurst(target, "rose");
+    }
     setRemovingIds((current) => [...current, id]);
     window.setTimeout(() => {
       removeCard(id);
@@ -109,7 +115,7 @@ export function NotesList() {
       </motion.div>
 
       <div ref={fieldRef} className="relative min-h-0 flex-1">
-        <ParticleField bursts={bursts} />
+        <ParticleField bursts={enableParticles ? bursts : []} />
 
         {visibleCards.length === 0 ? (
           <motion.div

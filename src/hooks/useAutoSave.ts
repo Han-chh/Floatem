@@ -64,6 +64,9 @@ export function useAutoSave() {
         activeTab: state.activeTab,
         hotkey: state.hotkey,
         panelPosition: state.panelPosition,
+        transitionStyle: state.transitionStyle,
+        animationSpeed: state.animationSpeed,
+        enableParticles: state.enableParticles,
         isLoaded: state.isLoaded,
       }),
       (nextState) => {
@@ -85,6 +88,9 @@ export function useAutoSave() {
             activeTab: nextState.activeTab,
             hotkey: nextState.hotkey,
             panelPosition: nextState.panelPosition,
+            transitionStyle: nextState.transitionStyle,
+            animationSpeed: nextState.animationSpeed,
+            enableParticles: nextState.enableParticles,
           });
         }, SAVE_DELAY);
       },

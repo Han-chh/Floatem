@@ -1,6 +1,13 @@
 import { create } from "zustand";
 import { subscribeWithSelector } from "zustand/middleware";
-import { DEFAULT_SETTINGS, type AppSettings, type PanelPosition, type TabId } from "../lib/models";
+import {
+  DEFAULT_SETTINGS,
+  type AnimationSpeed,
+  type AppSettings,
+  type PanelPosition,
+  type TabId,
+  type TransitionStyle,
+} from "../lib/models";
 
 type SettingsState = AppSettings & {
   isLoaded: boolean;
@@ -8,6 +15,9 @@ type SettingsState = AppSettings & {
   setActiveTab: (tab: TabId) => void;
   setHotkey: (hotkey: string) => void;
   setPanelPosition: (position: PanelPosition | null) => void;
+  setTransitionStyle: (transitionStyle: TransitionStyle) => void;
+  setAnimationSpeed: (animationSpeed: AnimationSpeed) => void;
+  setEnableParticles: (enableParticles: boolean) => void;
   reset: () => void;
 };
 
@@ -36,6 +46,15 @@ export const useSettingsStore = create<SettingsState>()(
     },
     setPanelPosition: (panelPosition) => {
       set({ panelPosition });
+    },
+    setTransitionStyle: (transitionStyle) => {
+      set({ transitionStyle });
+    },
+    setAnimationSpeed: (animationSpeed) => {
+      set({ animationSpeed });
+    },
+    setEnableParticles: (enableParticles) => {
+      set({ enableParticles });
     },
     reset: () => {
       set(initialState());

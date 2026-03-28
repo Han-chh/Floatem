@@ -68,3 +68,14 @@ Contents:
 - Restyle Notes, Todos, and Settings with richer chips, stronger accent colors, upgraded action buttons, and more expressive cards.
 - Promote the preview icon set into a shared app icon library and update the default note color palette to the brighter scheme.
 - Keep existing store and interaction behavior intact while re-running unit, integration, build, and responsive layout coverage.
+
+## v0.1.6 - 2026-03-28
+
+Purpose:
+- Expand the working space of the main panel and turn settings into a full-page destination with real motion and behavior controls.
+
+Contents:
+- Remove the QuickNote intro copy from the main shell so Notes and Todos get more vertical space.
+- Replace the old settings overlay with a full-window settings view that includes product introduction and broader option controls.
+- Add persisted settings for transition style, transition speed, and particle effects, and wire them into the live app.
+- Speed up Notes/Todos switching and add an optional page-turn transition style as the default behavior.

@@ -1,6 +1,8 @@
 import type { Descendant } from "slate";
 
 export type TabId = "notes" | "todos";
+export type TransitionStyle = "page" | "slide";
+export type AnimationSpeed = "faster" | "fast";
 
 export type PanelPosition = {
   x: number;
@@ -29,6 +31,9 @@ export type AppSettings = {
   hotkey: string;
   panelPosition: PanelPosition | null;
   activeTab: TabId;
+  transitionStyle: TransitionStyle;
+  animationSpeed: AnimationSpeed;
+  enableParticles: boolean;
 };
 
 export type LoadAllResult = {
@@ -57,6 +62,9 @@ export const DEFAULT_SETTINGS: AppSettings = {
   hotkey: "Alt+Space",
   panelPosition: null,
   activeTab: "notes",
+  transitionStyle: "page",
+  animationSpeed: "faster",
+  enableParticles: true,
 };
 
 function createId(prefix: string) {

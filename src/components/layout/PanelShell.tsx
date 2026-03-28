@@ -1,7 +1,6 @@
-import { AnimatePresence, motion } from "framer-motion";
+import { motion } from "framer-motion";
 import type { ReactNode } from "react";
-import { SlidersHorizontalIcon, SparklesIcon } from "../icons/AppIcons";
-import { usePlatform } from "../../hooks/usePlatform";
+import { SlidersHorizontalIcon } from "../icons/AppIcons";
 import type { TabId } from "../../lib/models";
 import { TabBar } from "./TabBar";
 
@@ -9,28 +8,16 @@ type PanelShellProps = {
   activeTab: TabId;
   onTabChange: (tab: TabId) => void;
   children: ReactNode;
-  settingsPanel: ReactNode;
-  showSettings: boolean;
   onToggleSettings: () => void;
 };
 
-export function PanelShell({
-  activeTab,
-  onTabChange,
-  children,
-  settingsPanel,
-  showSettings,
-  onToggleSettings,
-}: PanelShellProps) {
-  const { platformLabel } = usePlatform();
-  const compactMetaLabel = `${platformLabel} · Visual mode`;
-
+export function PanelShell({ activeTab, onTabChange, children, onToggleSettings }: PanelShellProps) {
   return (
     <main className="h-screen overflow-hidden bg-[linear-gradient(180deg,var(--base-bg)_0%,var(--base-bg-deep)_100%)] text-[13.5px] text-[var(--dark-text)]">
       <motion.div
         initial={{ opacity: 0, y: 16, scale: 0.98 }}
         animate={{ opacity: 1, y: 0, scale: 1 }}
-        transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+        transition={{ duration: 0.32, ease: [0.22, 1, 0.36, 1] }}
         className="window-shell cq-panel flex h-full min-h-0 flex-col p-[12px]"
       >
         <div className="pointer-events-none absolute inset-0 overflow-hidden">
@@ -40,41 +27,21 @@ export function PanelShell({
         </div>
 
         <motion.header
-          initial={{ opacity: 0, y: -14 }}
+          initial={{ opacity: 0, y: -12 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.45, delay: 0.06, ease: [0.22, 1, 0.36, 1] }}
-          className="paper-panel mb-3 rounded-[32px] px-4 py-4"
+          transition={{ duration: 0.22, delay: 0.03, ease: [0.22, 1, 0.36, 1] }}
+          className="paper-panel mb-3 rounded-[30px] px-4 py-3"
         >
-          <div className="panel-header-grid">
-            <div data-tauri-drag-region className="panel-header-top min-w-0">
-              <div className="min-w-0">
-                <div className="panel-meta-full mb-2 items-center">
-                  <span className="status-chip" data-tone="coral">
-                    QuickNote
-                  </span>
-                  <span className="status-chip" data-tone="neutral">
-                    <SparklesIcon size={12} />
-                    Notes home
-                  </span>
-                  <span className="status-chip" data-tone="blue">
-                    {platformLabel}
-                  </span>
-                </div>
-                <span className="panel-meta-compact status-chip mb-2" data-tone="neutral">
-                  {compactMetaLabel}
-                </span>
-                <p className="font-display text-[clamp(var(--font-display-compact),5.8vw,var(--font-display-expanded))] font-semibold tracking-[-0.05em] text-[var(--brown-strong)]">
-                  QuickNote
-                </p>
-                <p className="panel-summary mt-1 text-[12px] text-[var(--muted)]">
-                  Fast notes with visual clarity, richer color, and controls that stay legible while the panel resizes.
-                </p>
-              </div>
+          <div className="space-y-3">
+            <div data-tauri-drag-region className="flex min-w-0 items-center justify-between gap-3">
+              <p className="font-display text-[clamp(22px,6vw,28px)] font-semibold tracking-[-0.05em] text-[var(--brown-strong)]">
+                QuickNote
+              </p>
 
               <motion.button
                 type="button"
                 aria-label="Settings"
-                className="paper-icon-button self-start"
+                className="paper-icon-button shrink-0"
                 whileHover={{ y: -2, scale: 1.02 }}
                 whileTap={{ scale: 0.985 }}
                 onClick={onToggleSettings}
@@ -82,14 +49,15 @@ export function PanelShell({
                 <SlidersHorizontalIcon size={18} />
               </motion.button>
             </div>
+
             <TabBar activeTab={activeTab} onTabChange={onTabChange} />
           </div>
         </motion.header>
 
         <motion.section
-          initial={{ opacity: 0, y: 14 }}
+          initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.45, delay: 0.12, ease: [0.22, 1, 0.36, 1] }}
+          transition={{ duration: 0.22, delay: 0.06, ease: [0.22, 1, 0.36, 1] }}
           className="paper-panel relative min-h-0 flex-1 rounded-[32px] p-3"
         >
           <div className="pointer-events-none absolute inset-0 overflow-hidden rounded-[32px]">
@@ -97,20 +65,6 @@ export function PanelShell({
             <div className="absolute -right-8 top-14 h-32 w-32 rounded-full bg-[rgba(255,122,89,0.14)] blur-2xl" />
             <div className="absolute bottom-10 left-8 h-24 w-24 rounded-full bg-[rgba(47,107,255,0.1)] blur-2xl" />
           </div>
-
-          <AnimatePresence>
-            {showSettings ? (
-              <motion.div
-                initial={{ opacity: 0, y: 12, scale: 0.96 }}
-                animate={{ opacity: 1, y: 0, scale: 1 }}
-                exit={{ opacity: 0, y: 8, scale: 0.98 }}
-                transition={{ duration: 0.26, ease: [0.22, 1, 0.36, 1] }}
-                className="paper-card absolute inset-3 z-10 rounded-[28px]"
-              >
-                {settingsPanel}
-              </motion.div>
-            ) : null}
-          </AnimatePresence>
 
           <div
             data-testid="panel-scroll-region"

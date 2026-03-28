@@ -4,6 +4,7 @@ import { ParticleField } from "../feedback/ParticleField";
 import { CircleCheckBigIcon, PlusIcon, SparklesIcon } from "../icons/AppIcons";
 import { useParticleField } from "../../hooks/useParticleField";
 import { syncTextareaHeight } from "../../lib/resizeTextarea";
+import { useSettingsStore } from "../../store/settingsStore";
 import { useTodosStore } from "../../store/todosStore";
 import { TodoItem } from "./TodoItem";
 
@@ -12,6 +13,7 @@ export function TodoList() {
   const addTodo = useTodosStore((state) => state.addTodo);
   const toggleTodo = useTodosStore((state) => state.toggleTodo);
   const removeTodo = useTodosStore((state) => state.removeTodo);
+  const enableParticles = useSettingsStore((state) => state.enableParticles);
   const [draft, setDraft] = useState("");
   const [removingIds, setRemovingIds] = useState<string[]>([]);
   const formRef = useRef<HTMLFormElement>(null);
@@ -30,7 +32,7 @@ export function TodoList() {
     }
 
     setDraft("");
-    if (formRef.current) {
+    if (enableParticles && formRef.current) {
       spawnBurst(formRef.current.getBoundingClientRect(), "amber");
     }
   };
@@ -40,7 +42,9 @@ export function TodoList() {
       return;
     }
 
-    spawnBurst(target, "rose");
+    if (enableParticles) {
+      spawnBurst(target, "rose");
+    }
     setRemovingIds((current) => [...current, id]);
     window.setTimeout(() => {
       removeTodo(id);
@@ -50,7 +54,7 @@ export function TodoList() {
 
   const handleToggleTodo = (id: string, target: DOMRect, nextDone: boolean) => {
     toggleTodo(id);
-    if (nextDone) {
+    if (enableParticles && nextDone) {
       spawnBurst(target, "green");
     }
   };
@@ -102,7 +106,7 @@ export function TodoList() {
       </motion.div>
 
       <div ref={fieldRef} className="relative min-h-0 flex-1">
-        <ParticleField bursts={bursts} />
+        <ParticleField bursts={enableParticles ? bursts : []} />
 
         <div className="paper-scroll flex h-full flex-col gap-4 overflow-y-auto">
           {visibleTodos.length === 0 ? (

@@ -58,6 +58,12 @@ pub struct Settings {
     pub panel_position: Option<PanelPosition>,
     #[serde(default = "default_active_tab")]
     pub active_tab: String,
+    #[serde(default = "default_transition_style")]
+    pub transition_style: String,
+    #[serde(default = "default_animation_speed")]
+    pub animation_speed: String,
+    #[serde(default = "default_enable_particles")]
+    pub enable_particles: bool,
 }
 
 impl Default for Settings {
@@ -66,6 +72,9 @@ impl Default for Settings {
             hotkey: default_hotkey(),
             panel_position: None,
             active_tab: default_active_tab(),
+            transition_style: default_transition_style(),
+            animation_speed: default_animation_speed(),
+            enable_particles: default_enable_particles(),
         }
     }
 }
@@ -78,8 +87,20 @@ fn default_active_tab() -> String {
     "notes".to_string()
 }
 
+fn default_transition_style() -> String {
+    "page".to_string()
+}
+
+fn default_animation_speed() -> String {
+    "faster".to_string()
+}
+
+fn default_enable_particles() -> bool {
+    true
+}
+
 fn default_dot_color() -> String {
-    "#9C7E5E".to_string()
+    "#FF7A59".to_string()
 }
 
 fn default_note_content() -> Value {

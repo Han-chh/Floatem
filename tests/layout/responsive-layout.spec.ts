@@ -95,7 +95,7 @@ for (const viewport of VIEWPORTS) {
       await expectNoHorizontalOverflow(page);
     });
 
-    test("settings overlay stays readable without horizontal overflow", async ({ page }) => {
+    test("settings view stays readable without horizontal overflow", async ({ page }) => {
       await bootPreview(page);
 
       await page.getByRole("button", { name: "Settings" }).click();
