@@ -6,7 +6,6 @@ import type { RenderElementProps, RenderLeafProps } from "slate-react";
 import { useState } from "react";
 import { DEFAULT_NOTE_CONTENT } from "../../lib/models";
 import { withColorMark } from "../../lib/slate-plugins/withColorMark";
-import { withFormatBrush } from "../../lib/slate-plugins/withFormatBrush";
 import { withImages } from "../../lib/slate-plugins/withImages";
 
 type EditorProps = {
@@ -49,13 +48,14 @@ function renderLeaf(props: RenderLeafProps) {
 
 export function Editor({ content, onChange }: EditorProps) {
   const [editor] = useState(() =>
-    withFormatBrush(withColorMark(withImages(withHistory(withReact(createEditor()))))),
+    withColorMark(withImages(withHistory(withReact(createEditor())))),
   );
 
   return (
     <Slate editor={editor} initialValue={content.length > 0 ? content : DEFAULT_NOTE_CONTENT} onChange={onChange}>
       <Editable
-        className="surface-field wrap-anywhere min-h-28 rounded-[22px] px-4 py-4 text-[13.5px] leading-[1.7] outline-none"
+        onPointerDown={(event) => event.stopPropagation()}
+        className="surface-field wrap-anywhere min-h-[220px] rounded-[24px] px-4 py-4 text-[13.5px] leading-[1.7] outline-none"
         placeholder="Capture the note while it is fresh..."
         renderElement={renderElement}
         renderLeaf={renderLeaf}

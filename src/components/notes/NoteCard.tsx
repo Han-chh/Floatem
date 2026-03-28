@@ -6,7 +6,7 @@ import { useEffect, useRef, useState } from "react";
 import { NOTE_DOT_COLORS, type NoteCard as NoteCardModel } from "../../lib/models";
 import { syncTextareaHeight } from "../../lib/resizeTextarea";
 import { useNotesStore } from "../../store/notesStore";
-import { ChevronsUpDownIcon, GripVerticalIcon, PaletteIcon, Trash2Icon } from "../icons/AppIcons";
+import { ChevronsUpDownIcon, PaletteIcon, Trash2Icon } from "../icons/AppIcons";
 import { Editor } from "./Editor";
 import { Toolbar } from "./Toolbar";
 
@@ -46,9 +46,26 @@ export function NoteCard({ note, onDelete }: NoteCardProps) {
         transform: CSS.Transform.toString(transform),
         transition,
       }}
+      {...attributes}
+      {...listeners}
+      aria-label="Reorder note"
       data-testid="note-card"
-      className={`paper-card cq-card relative rounded-[24px] ${isDragging ? "opacity-85" : ""}`}
+      className={`paper-card cq-card relative overflow-hidden rounded-[28px] border border-[rgba(213,198,180,0.92)] bg-[linear-gradient(180deg,rgba(255,252,248,0.98),rgba(255,247,239,0.95))] shadow-[0_18px_36px_rgba(61,49,34,0.10)] ${isDragging ? "z-20 opacity-92 shadow-[0_28px_56px_rgba(61,49,34,0.18)]" : ""} cursor-grab active:cursor-grabbing`}
     >
+      <div
+        className="pointer-events-none absolute inset-0 opacity-35"
+        style={{
+          backgroundImage:
+            "radial-gradient(rgba(30,25,21,0.038) 0.8px, transparent 0.8px), radial-gradient(rgba(255,255,255,0.24) 0.6px, transparent 0.6px)",
+          backgroundPosition: "0 0, 14px 14px",
+          backgroundSize: "18px 18px, 28px 28px",
+          maskImage: "linear-gradient(180deg, black, rgba(0,0,0,0.3))",
+        }}
+      />
+      <div
+        className="pointer-events-none absolute -right-8 top-6 h-28 w-28 rounded-full blur-3xl"
+        style={{ backgroundColor: `${note.dotColor}1a` }}
+      />
       <div
         className="absolute inset-x-6 top-0 h-1.5 rounded-b-full opacity-90"
         style={{
@@ -56,7 +73,7 @@ export function NoteCard({ note, onDelete }: NoteCardProps) {
         }}
       />
 
-      <div className="rounded-t-[24px] border-b border-[rgba(213,198,180,0.76)] bg-[linear-gradient(180deg,rgba(251,245,236,0.96),rgba(255,249,240,0.74))] px-4 py-4">
+      <div className="rounded-t-[28px] px-4 py-4">
         <div className="note-card-header-grid">
           <div className="note-card-title-row">
             <div className="relative mt-0.5 shrink-0">
@@ -66,6 +83,7 @@ export function NoteCard({ note, onDelete }: NoteCardProps) {
                 aria-label="Change note color"
                 whileHover={{ scale: 1.08 }}
                 whileTap={{ scale: 0.94 }}
+                onPointerDown={(event) => event.stopPropagation()}
                 onClick={() => setShowPalette((current) => !current)}
               >
                 <span
@@ -90,6 +108,7 @@ export function NoteCard({ note, onDelete }: NoteCardProps) {
                       aria-label={`Use ${color} for note`}
                       whileHover={{ scale: 1.08 }}
                       whileTap={{ scale: 0.94 }}
+                      onPointerDown={(event) => event.stopPropagation()}
                       onClick={() => {
                         updateDotColor(note.id, color);
                         setShowPalette(false);
@@ -112,8 +131,9 @@ export function NoteCard({ note, onDelete }: NoteCardProps) {
                   updateCardTitle(note.id, event.currentTarget.value);
                 }}
                 onInput={(event) => syncTextareaHeight(event.currentTarget)}
+                onPointerDown={(event) => event.stopPropagation()}
                 placeholder="Untitled note"
-                className="textarea-reset surface-field wrap-anywhere min-h-[56px] w-full rounded-[18px] px-3 py-3 text-[15px] font-semibold leading-6 tracking-[-0.02em] text-[var(--dark-text)] outline-none placeholder:text-[var(--muted)]"
+                className="textarea-reset surface-field wrap-anywhere min-h-[58px] w-full rounded-[20px] px-4 py-3 text-[15px] font-semibold leading-6 tracking-[-0.02em] text-[var(--dark-text)] outline-none placeholder:text-[var(--muted)]"
               />
               <div className="note-card-meta">
                 <span
@@ -134,21 +154,10 @@ export function NoteCard({ note, onDelete }: NoteCardProps) {
             <motion.button
               type="button"
               className="paper-button inline-flex items-center justify-center gap-2 rounded-[14px] px-3 py-2 text-[11px] font-semibold text-[var(--brown-strong)]"
-              aria-label="Drag note"
-              whileHover={{ y: -2, scale: 1.03 }}
-              whileTap={{ scale: 0.97 }}
-              {...attributes}
-              {...listeners}
-            >
-              <GripVerticalIcon size={15} />
-              <span className="wrap-anywhere">Move</span>
-            </motion.button>
-            <motion.button
-              type="button"
-              className="paper-button inline-flex items-center justify-center gap-2 rounded-[14px] px-3 py-2 text-[11px] font-semibold text-[var(--brown-strong)]"
               aria-label="Collapse note"
               whileHover={{ y: -2, scale: 1.03 }}
               whileTap={{ scale: 0.97 }}
+              onPointerDown={(event) => event.stopPropagation()}
               onClick={() => toggleCollapsed(note.id)}
             >
               <ChevronsUpDownIcon size={15} />
@@ -161,6 +170,7 @@ export function NoteCard({ note, onDelete }: NoteCardProps) {
               aria-label="Delete note"
               whileHover={{ y: -2, scale: 1.03 }}
               whileTap={{ scale: 0.97 }}
+              onPointerDown={(event) => event.stopPropagation()}
               onClick={(event) => onDelete(note.id, event.currentTarget.getBoundingClientRect())}
             >
               <Trash2Icon size={15} />
@@ -171,7 +181,7 @@ export function NoteCard({ note, onDelete }: NoteCardProps) {
       </div>
 
       {note.collapsed ? null : (
-        <div className="space-y-3 p-4">
+        <div className="space-y-4 px-4 pb-4 pt-1">
           <Toolbar />
           <Editor content={note.content} onChange={(value) => updateCardContent(note.id, value)} />
         </div>

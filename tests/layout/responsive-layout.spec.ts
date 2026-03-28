@@ -70,7 +70,7 @@ for (const viewport of VIEWPORTS) {
       await title.fill(LONG_NOTE);
 
       await expectWithinViewport(page, title);
-      await expectWithinViewport(page, page.getByRole("button", { name: "Drag note" }));
+      await expectWithinViewport(page, page.getByTestId("note-card").first());
       await expectWithinViewport(page, page.getByRole("button", { name: "Collapse note" }));
       await expectWithinViewport(page, page.getByRole("button", { name: "Delete note" }));
       await expectNoSelfOverflow(title);

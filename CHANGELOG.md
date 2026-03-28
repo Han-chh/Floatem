@@ -89,3 +89,14 @@ Contents:
 - Rebuild the Notes page so the main area is the card stack, with only a short bottom control bar and a circular plus button.
 - Rebuild the Todos page so the task list owns the window body, with the quick-add input and circular plus button compressed into the bottom bar.
 - Slightly increase the default Tauri window size so more content fits before scrolling.
+
+## v0.1.8 - 2026-03-28
+
+Purpose:
+- Make Notes feel more like a true stack of independent cards while simplifying card controls and giving the editor more visual priority.
+
+Contents:
+- Restyle each note card as a more independent rounded rectangle with stronger shadow, subtle texture, and clearer card separation.
+- Remove the dedicated Move button and switch note dragging to the card surface itself, while keeping live drag feedback.
+- Compress the note toolbar into smaller icon-only controls, remove the brush action, and expose functions through hover tooltips.
+- Expand the note editor area so the body content reads as the primary surface, and increase the default window height again to show more cards.

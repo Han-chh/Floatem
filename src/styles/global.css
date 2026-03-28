@@ -342,18 +342,14 @@
   }
 
   .note-card-actions {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    display: flex;
+    flex-wrap: wrap;
     gap: 8px;
   }
 
-  .note-card-actions [data-action="delete"] {
-    grid-column: 1 / -1;
-  }
-
   .note-toolbar-grid {
-    display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+    display: flex;
+    flex-wrap: wrap;
     gap: 8px;
   }
 
@@ -451,18 +447,9 @@
   }
 
   @container card (min-width: 332px) {
-    .note-card-actions {
-      display: flex;
-      flex-wrap: wrap;
-    }
-
     .note-card-actions > * {
       width: max-content;
       max-width: 100%;
-    }
-
-    .note-toolbar-grid {
-      grid-template-columns: repeat(4, minmax(0, 1fr));
     }
 
     .todo-card-status-row {
@@ -477,12 +464,6 @@
     .todo-card-delete-row > * {
       width: max-content;
       max-width: 100%;
-    }
-  }
-
-  @container card (min-width: 420px) {
-    .note-toolbar-grid {
-      grid-template-columns: repeat(7, minmax(0, 1fr));
     }
   }
 }
