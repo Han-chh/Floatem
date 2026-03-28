@@ -110,7 +110,7 @@ export function NotesList() {
           >
             <SortableContext items={visibleCards.map((card) => card.id)} strategy={verticalListSortingStrategy}>
               <div className="paper-scroll h-full overflow-y-auto pr-1">
-                <div className="flex flex-col gap-4">
+                <div className="flex flex-col gap-3">
                   <AnimatePresence>
                     {visibleCards.map((card) => (
                       <NoteCard key={card.id} note={card} onDelete={handleDeleteCard} />

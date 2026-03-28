@@ -138,14 +138,15 @@
     border-radius: 34px;
     box-shadow:
       inset 0 1px 0 rgba(255, 255, 255, 0.26),
-      inset 0 -26px 36px rgba(191, 166, 132, 0.14);
+      inset 0 -28px 40px rgba(191, 166, 132, 0.18);
     background:
-      radial-gradient(circle at 50% -12%, rgba(255, 255, 255, 0.46), transparent 36%),
-      radial-gradient(circle at top left, rgba(255, 255, 255, 0.76), transparent 32%),
-      radial-gradient(circle at 84% 8%, rgba(255, 122, 89, 0.14), transparent 20%),
-      radial-gradient(circle at 20% 92%, rgba(47, 107, 255, 0.1), transparent 24%),
-      radial-gradient(circle at 72% 82%, rgba(31, 168, 122, 0.1), transparent 18%),
-      linear-gradient(180deg, rgba(255, 255, 255, 0.14), rgba(240, 228, 214, 0.12) 18%, rgba(214, 190, 158, 0.18) 100%),
+      radial-gradient(circle at 50% -10%, rgba(255, 255, 255, 0.62), transparent 34%),
+      radial-gradient(circle at top left, rgba(255, 255, 255, 0.82), transparent 30%),
+      radial-gradient(circle at 88% 8%, rgba(255, 122, 89, 0.2), transparent 20%),
+      radial-gradient(circle at 16% 92%, rgba(47, 107, 255, 0.16), transparent 24%),
+      radial-gradient(circle at 72% 82%, rgba(31, 168, 122, 0.14), transparent 18%),
+      linear-gradient(180deg, rgba(255, 255, 255, 0.2), rgba(240, 228, 214, 0.14) 16%, rgba(214, 190, 158, 0.22) 100%),
+      linear-gradient(135deg, rgba(255, 255, 255, 0.16) 0%, rgba(255, 255, 255, 0.02) 24%, rgba(255, 122, 89, 0.05) 48%, rgba(47, 107, 255, 0.06) 100%),
       linear-gradient(180deg, var(--base-bg) 0%, var(--base-bg-deep) 100%);
   }
 
@@ -155,12 +156,14 @@
     inset: 14px;
     border-radius: 24px;
     pointer-events: none;
-    opacity: 0.12;
+    opacity: 0.18;
     background-image:
+      linear-gradient(128deg, rgba(255, 255, 255, 0.34) 0%, rgba(255, 255, 255, 0.08) 16%, transparent 34%),
+      linear-gradient(196deg, transparent 0 56%, rgba(255, 255, 255, 0.12) 66%, transparent 78%),
       radial-gradient(rgba(30, 25, 21, 0.035) 0.8px, transparent 0.85px),
       radial-gradient(rgba(255, 255, 255, 0.18) 0.6px, transparent 0.65px);
-    background-position: 0 0, 12px 12px;
-    background-size: 18px 18px, 26px 26px;
+    background-position: 0 0, 0 0, 0 0, 12px 12px;
+    background-size: 100% 100%, 100% 100%, 18px 18px, 26px 26px;
   }
 
   .window-shell::after {
@@ -349,47 +352,48 @@
 
   .note-card-header-grid {
     display: grid;
-    gap: 8px;
+    gap: 6px;
   }
 
   .note-card-title-block {
     min-width: 0;
     display: grid;
-    gap: 6px;
+    gap: 5px;
   }
 
   .note-card-title-row {
     display: grid;
     grid-template-columns: auto minmax(0, 1fr);
-    gap: 8px;
+    gap: 7px;
     align-items: start;
   }
 
   .note-card-meta {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 6px;
-    align-items: center;
-    justify-content: space-between;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 8px;
+    align-items: start;
   }
 
   .note-card-actions {
     display: flex;
-    flex-wrap: wrap;
-    gap: 6px;
+    flex-wrap: nowrap;
+    gap: 5px;
+    align-items: flex-start;
   }
 
   .note-card-chip-group {
     min-width: 0;
     display: flex;
-    flex-wrap: wrap;
-    gap: 5px;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
   }
 
   .note-toolbar-grid {
     display: flex;
     flex-wrap: wrap;
-    gap: 6px;
+    gap: 5px;
   }
 
   .todo-row-grid {
@@ -469,8 +473,7 @@
 
   @container module (max-width: 331px) {
     .module-header-summary,
-    .settings-summary,
-    .note-secondary-chip {
+    .settings-summary {
       display: none;
     }
 
@@ -495,6 +498,12 @@
     .note-card-actions > * {
       width: max-content;
       max-width: 100%;
+    }
+  }
+
+  @container card (max-width: 331px) {
+    .note-card-meta {
+      gap: 6px;
     }
   }
 

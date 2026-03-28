@@ -19,21 +19,21 @@ const TOOL_ITEMS = [
 
 export function Toolbar() {
   return (
-    <div className="paper-card note-toolbar-grid rounded-[16px] bg-[rgba(255,250,244,0.66)] px-1.5 py-1.5">
+    <div className="paper-card note-toolbar-grid rounded-[15px] bg-[rgba(255,250,244,0.66)] px-1.25 py-1.25">
       {TOOL_ITEMS.map(({ label, icon: Icon, tone }, index) => (
         <motion.button
           key={label}
           type="button"
           aria-label={label}
           onPointerDown={(event) => event.stopPropagation()}
-          className={`group relative inline-flex h-7.5 w-7.5 items-center justify-center rounded-[10px] border border-[rgba(213,198,180,0.86)] ${tone} shadow-[0_6px_12px_rgba(61,49,34,0.05)]`}
+          className={`group relative inline-flex h-7 w-7 items-center justify-center rounded-[9px] border border-[rgba(213,198,180,0.86)] ${tone} shadow-[0_6px_12px_rgba(61,49,34,0.05)]`}
           initial={{ opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.18, delay: 0.02 * index }}
           whileHover={{ y: -1.5, scale: 1.03 }}
           whileTap={{ scale: 0.97 }}
         >
-          <Icon size={13} />
+          <Icon size={12} />
           <span className="pointer-events-none absolute -top-8 left-1/2 z-10 -translate-x-1/2 rounded-full bg-[rgba(30,25,21,0.94)] px-2 py-1 text-[10px] font-semibold leading-none tracking-[0.01em] whitespace-nowrap text-white opacity-0 shadow-[0_10px_20px_rgba(30,25,21,0.18)] transition-all duration-75 ease-out group-hover:-translate-y-1 group-hover:opacity-100 group-focus-visible:-translate-y-1 group-focus-visible:opacity-100">
             {label}
           </span>

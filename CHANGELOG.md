@@ -2,6 +2,17 @@
 
 All notable repository changes are recorded here.
 
+## v0.1.25 - 2026-03-28
+
+Purpose:
+- Tighten the Notes card layout and strengthen the rounded shell’s internal color contrast without bringing back any outer border.
+
+Contents:
+- Stack the `Focus card` and compact edit-time chips vertically, move fold/delete to the same top row on the right, and shorten note edit labels to forms like `<1min` and `2min`.
+- Compress note title, toolbar, editor padding, and inter-card spacing so Notes cards feel closer to the compact Todo density while keeping the editor as the main content area.
+- Stop hiding the note edit-time chip at narrow widths so card metadata remains visible in compact window sizes.
+- Deepen the shell’s internal warm/cool gradient contrast and add a transparent reflective highlight texture fully inside the rounded window body.
+
 ## v0.1.24 - 2026-03-28
 
 Purpose:
