@@ -222,6 +222,15 @@ export function PlusIcon(props: IconProps) {
   );
 }
 
+export function CornerDownLeftIcon(props: IconProps) {
+  return (
+    <BaseIcon {...props}>
+      <path d="M15 6v8a3 3 0 0 1-3 3H5" />
+      <path d="m9 13-4 4 4 4" />
+    </BaseIcon>
+  );
+}
+
 export function XIcon(props: IconProps) {
   return (
     <BaseIcon {...props}>

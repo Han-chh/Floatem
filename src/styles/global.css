@@ -364,9 +364,9 @@
 
   .todo-row-grid {
     display: grid;
-    grid-template-columns: auto minmax(0, 1fr) auto auto;
-    grid-template-areas: "toggle text reminder delete";
-    gap: 7px;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    grid-template-areas: "toggle text actions";
+    gap: 6px;
     align-items: center;
   }
 
@@ -381,17 +381,12 @@
     min-width: 0;
   }
 
-  .todo-row-reminder {
-    grid-area: reminder;
-    min-width: 0;
+  .todo-row-actions {
+    grid-area: actions;
     display: flex;
-    justify-content: flex-end;
-  }
-
-  .todo-row-delete {
-    grid-area: delete;
-    display: flex;
-    justify-content: flex-end;
+    flex-shrink: 0;
+    align-items: center;
+    gap: 4px;
   }
 
   .quick-add-grid {
@@ -457,18 +452,4 @@
     }
   }
 
-  @container card (max-width: 331px) {
-    .todo-row-grid {
-      grid-template-columns: auto minmax(0, 1fr) auto;
-      grid-template-areas:
-        "toggle text delete"
-        ". reminder reminder";
-      align-items: start;
-      row-gap: 5px;
-    }
-
-    .todo-row-reminder {
-      justify-content: flex-start;
-    }
-  }
 }

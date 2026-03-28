@@ -26,7 +26,7 @@ function getStatusMeta(todo: TodoItemModel) {
   if (todo.done) {
     return {
       label: "done",
-      reminderLabel: todo.reminderAt ? `Done · ${format(new Date(todo.reminderAt), "MMM d, HH:mm")}` : "Done",
+      reminderLabel: todo.reminderAt ? format(new Date(todo.reminderAt), "M/d HH:mm") : "Done",
       reminderClass:
         "border-[rgba(128,124,118,0.18)] bg-[rgba(228,226,222,0.92)] text-[rgba(102,98,93,0.92)]",
       toggleClass:
@@ -57,7 +57,7 @@ function getStatusMeta(todo: TodoItemModel) {
   if (isPast(date) && !isToday(date)) {
     return {
       label: "overdue",
-      reminderLabel: `Overdue · ${format(date, "MMM d, HH:mm")}`,
+      reminderLabel: format(date, "M/d HH:mm"),
       reminderClass:
         "border-[rgba(181,74,77,0.16)] bg-[var(--status-overdue-soft)] text-[var(--status-overdue)]",
       toggleClass:
@@ -72,7 +72,7 @@ function getStatusMeta(todo: TodoItemModel) {
   if (isToday(date)) {
     return {
       label: "today",
-      reminderLabel: `Today · ${format(date, "HH:mm")}`,
+      reminderLabel: format(date, "HH:mm"),
       reminderClass:
         "border-[rgba(192,120,80,0.16)] bg-[var(--status-today-soft)] text-[var(--status-today)]",
       toggleClass:
@@ -86,7 +86,7 @@ function getStatusMeta(todo: TodoItemModel) {
 
   return {
     label: "upcoming",
-    reminderLabel: format(date, "MMM d, HH:mm"),
+    reminderLabel: format(date, "M/d HH:mm"),
     reminderClass:
       "border-[rgba(81,127,145,0.16)] bg-[var(--status-upcoming-soft)] text-[var(--status-upcoming)]",
     toggleClass:
@@ -199,7 +199,7 @@ function TodoRowBody({
           </div>
         </div>
 
-        <div className="todo-row-reminder">
+        <div className="todo-row-actions">
           <ReminderPicker
             reminderAt={todo.reminderAt}
             displayValue={reminderButtonLabel}
@@ -207,14 +207,12 @@ function TodoRowBody({
             disabled={preview}
             onChange={(value) => setReminder(todo.id, value)}
           />
-        </div>
 
-        <div className="todo-row-delete">
           <motion.button
             type="button"
             aria-label="Delete todo"
             title="Delete todo"
-            className="paper-icon-button paper-button-danger inline-flex h-7 w-7 min-h-0 min-w-0 items-center justify-center rounded-full"
+            className="paper-icon-button paper-button-danger inline-flex h-6.5 w-6.5 min-h-0 min-w-0 items-center justify-center rounded-full"
             whileHover={isInteractive ? { y: -1.5, scale: 1.03 } : undefined}
             whileTap={isInteractive ? { scale: 0.97 } : undefined}
             onPointerDown={isInteractive ? (event) => event.stopPropagation() : undefined}
@@ -224,7 +222,7 @@ function TodoRowBody({
                 : undefined
             }
           >
-            <Trash2Icon size={14} />
+            <Trash2Icon size={13} />
           </motion.button>
         </div>
       </div>

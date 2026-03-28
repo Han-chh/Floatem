@@ -14,6 +14,7 @@ import { useState } from "react";
 import { ParticleField } from "../feedback/ParticleField";
 import { PlusIcon } from "../icons/AppIcons";
 import { useParticleField } from "../../hooks/useParticleField";
+import { centerOverlayToCursor } from "../../lib/dnd/centerOverlayToCursor";
 import { useNotesStore } from "../../store/notesStore";
 import { useSettingsStore } from "../../store/settingsStore";
 import { NoteCard, NoteCardPreview } from "./NoteCard";
@@ -119,6 +120,7 @@ export function NotesList() {
               </div>
             </SortableContext>
             <DragOverlay
+              modifiers={[centerOverlayToCursor]}
               dropAnimation={{
                 duration: 180,
                 easing: "cubic-bezier(0.22, 1, 0.36, 1)",

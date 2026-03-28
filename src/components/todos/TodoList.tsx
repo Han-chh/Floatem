@@ -12,8 +12,9 @@ import { SortableContext, verticalListSortingStrategy } from "@dnd-kit/sortable"
 import { AnimatePresence, motion } from "framer-motion";
 import { useEffect, useMemo, useRef, useState, type FormEvent, type KeyboardEvent } from "react";
 import { ParticleField } from "../feedback/ParticleField";
-import { PlusIcon } from "../icons/AppIcons";
+import { CornerDownLeftIcon } from "../icons/AppIcons";
 import { useParticleField } from "../../hooks/useParticleField";
+import { centerOverlayToCursor } from "../../lib/dnd/centerOverlayToCursor";
 import { syncTextareaHeight } from "../../lib/resizeTextarea";
 import { useSettingsStore } from "../../store/settingsStore";
 import { useTodosStore } from "../../store/todosStore";
@@ -158,6 +159,7 @@ export function TodoList() {
                 </SortableContext>
 
                 <DragOverlay
+                  modifiers={[centerOverlayToCursor]}
                   dropAnimation={{
                     duration: 180,
                     easing: "cubic-bezier(0.22, 1, 0.36, 1)",
@@ -227,11 +229,16 @@ export function TodoList() {
             <motion.button
               type="submit"
               aria-label="Add task"
-              className="paper-button paper-button-primary quick-add-submit inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full"
-              whileHover={{ y: -2, scale: 1.03 }}
-              whileTap={{ scale: 0.97 }}
+              disabled={!draft.trim()}
+              className={`quick-add-submit inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full border transition-colors ${
+                draft.trim()
+                  ? "paper-button paper-button-primary border-transparent"
+                  : "border-[rgba(213,198,180,0.94)] bg-[rgba(227,221,213,0.72)] text-[rgba(160,152,143,0.96)] shadow-none"
+              }`}
+              whileHover={draft.trim() ? { y: -2, scale: 1.03 } : undefined}
+              whileTap={draft.trim() ? { scale: 0.97 } : undefined}
             >
-              <PlusIcon size={15} />
+              <CornerDownLeftIcon size={15} />
             </motion.button>
           </div>
         </div>

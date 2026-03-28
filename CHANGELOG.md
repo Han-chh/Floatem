@@ -2,6 +2,17 @@
 
 All notable repository changes are recorded here.
 
+## v0.1.14 - 2026-03-28
+
+Purpose:
+- Tighten Todo rows into a single action line, center drag previews on the cursor, and push delete shatter effects further toward a true card-break look.
+
+Contents:
+- Rebuild todo rows so text, reminder control, and delete action stay on one compact line with no second-row button wrap.
+- Replace the todo add-plus affordance with a return-style submit button that greys out when the input is empty.
+- Add a shared drag-overlay modifier so note and todo previews keep their center aligned to the pointer through the full drag.
+- Increase rose-tone particle count, saturation, shard sharpness, burst spread, and animation duration to make card deletion feel more like a visible shatter.
+
 ## v0.1.13 - 2026-03-28
 
 Purpose:

@@ -39,7 +39,7 @@ function random(min: number, max: number) {
 function createBurst(x: number, y: number, tone: BurstTone): ParticleBurst {
   const config =
     tone === "rose"
-      ? { count: 26, distanceMin: 36, distanceMax: 96, sizeMin: 5, sizeMax: 15 }
+      ? { count: 40, distanceMin: 42, distanceMax: 128, sizeMin: 3, sizeMax: 12 }
       : tone === "paper"
         ? { count: 18, distanceMin: 22, distanceMax: 62, sizeMin: 4, sizeMax: 10 }
         : { count: 18, distanceMin: 24, distanceMax: 72, sizeMin: 5, sizeMax: 12 };
@@ -52,17 +52,17 @@ function createBurst(x: number, y: number, tone: BurstTone): ParticleBurst {
     particles: Array.from({ length: config.count }, (_, index) => {
       const angle = (Math.PI * 2 * index) / config.count + random(-0.16, 0.16);
       const distance = random(config.distanceMin, config.distanceMax);
-      const isShard = tone === "rose" ? Math.random() > 0.25 : Math.random() > 0.62;
+      const isShard = tone === "rose" ? Math.random() > 0.08 : Math.random() > 0.62;
 
       return {
         id: createId(),
         dx: Math.cos(angle) * distance,
         dy: Math.sin(angle) * distance,
         size: random(config.sizeMin, config.sizeMax),
-        delay: random(0, tone === "rose" ? 0.05 : 0.08),
-        rotation: random(-140, 140),
-        stretchX: isShard ? random(1.6, 2.4) : 1,
-        stretchY: isShard ? random(0.32, 0.52) : 1,
+        delay: random(0, tone === "rose" ? 0.09 : 0.08),
+        rotation: random(-220, 220),
+        stretchX: isShard ? random(1.9, 3.6) : 1,
+        stretchY: isShard ? random(0.18, 0.42) : 1,
       };
     }),
   };
@@ -79,11 +79,14 @@ function createBurstCluster(target: BurstTarget, bounds: DOMRect, tone: BurstTon
   }
 
   const anchorPoints = [
-    [0.18, 0.22],
+    [0.14, 0.2],
+    [0.34, 0.14],
     [0.5, 0.18],
-    [0.82, 0.22],
-    [0.28, 0.72],
-    [0.72, 0.72],
+    [0.66, 0.14],
+    [0.86, 0.22],
+    [0.26, 0.76],
+    [0.5, 0.82],
+    [0.74, 0.76],
   ];
 
   return anchorPoints.map(([xRatio, yRatio]) =>
@@ -120,7 +123,7 @@ export function useParticleField() {
       const timer = window.setTimeout(() => {
         setBursts((current) => current.filter((item) => item.id !== burst.id));
         timersRef.current = timersRef.current.filter((value) => value !== timer);
-      }, tone === "rose" ? 980 : 900);
+      }, tone === "rose" ? 1320 : 900);
 
       timersRef.current.push(timer);
     });
