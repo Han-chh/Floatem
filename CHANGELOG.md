@@ -2,6 +2,16 @@
 
 All notable repository changes are recorded here.
 
+## v0.1.18 - 2026-03-28
+
+Purpose:
+- Simplify the completed todo treatment into a cleaner greyed card with a single lighter strike line.
+
+Contents:
+- Remove the multi-line scribble and pencil-pass effect from completed todos.
+- Replace it with one shallow horizontal strike that spans the card more quietly.
+- Push the completed card surface, border, text, and secondary controls further toward a grey transparent finish while keeping the completion button green.
+
 ## v0.1.17 - 2026-03-28
 
 Purpose:

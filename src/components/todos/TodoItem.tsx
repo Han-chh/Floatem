@@ -1,7 +1,7 @@
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { format, isPast, isToday } from "date-fns";
-import { AnimatePresence, motion } from "framer-motion";
+import { motion } from "framer-motion";
 import { useRef } from "react";
 import type { TodoItem as TodoItemModel } from "../../lib/models";
 import { useTodosStore } from "../../store/todosStore";
@@ -28,13 +28,13 @@ function getStatusMeta(todo: TodoItemModel) {
       label: "done",
       reminderLabel: todo.reminderAt ? format(new Date(todo.reminderAt), "M/d HH:mm") : "Done",
       reminderClass:
-        "border-[rgba(145,149,146,0.2)] bg-[rgba(223,228,224,0.62)] text-[rgba(97,102,98,0.92)]",
+        "border-[rgba(150,154,151,0.16)] bg-[rgba(219,223,220,0.38)] text-[rgba(111,116,112,0.74)]",
       toggleClass:
         "border-[rgba(31,168,122,0.28)] bg-[linear-gradient(180deg,rgba(49,191,138,0.98),rgba(24,147,104,0.96))] text-white shadow-[0_10px_20px_rgba(31,168,122,0.22)]",
-      strikeClass: "bg-[rgba(92,88,84,0.84)]",
+      strikeClass: "bg-[rgba(132,136,133,0.48)]",
       cardClass:
-        "border-[rgba(176,182,177,0.7)] bg-[linear-gradient(180deg,rgba(233,238,234,0.72),rgba(217,222,218,0.58))]",
-      accent: "rgba(120,126,121,0.76)",
+        "border-[rgba(172,177,173,0.4)] bg-[linear-gradient(180deg,rgba(220,224,221,0.42),rgba(208,213,209,0.28))]",
+      accent: "rgba(142,147,143,0.44)",
     };
   }
 
@@ -168,7 +168,7 @@ function TodoRowBody({
           <div className="relative min-w-0">
             <p
               className={`wrap-anywhere pr-1 text-[12px] font-semibold leading-[1.3] text-[var(--dark-text)] ${
-                todo.done ? "text-[rgba(95,100,96,0.88)]" : ""
+                todo.done ? "text-[rgba(109,114,110,0.78)]" : ""
               }`}
             >
               {todo.text}
@@ -208,39 +208,16 @@ function TodoRowBody({
         </div>
       </div>
 
-      <AnimatePresence>
-        {todo.done && !isDraggingPlaceholder ? (
-          <>
-            <motion.span
-              key={`${todo.id}-card-scribble-primary`}
-              aria-hidden="true"
-              initial={{ opacity: 0, scaleX: 0.16 }}
-              animate={{ opacity: 0.94, scaleX: 1 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 0.28, ease: [0.22, 1, 0.36, 1] }}
-              className="todo-done-scribble-line todo-done-scribble-line-primary"
-            />
-            <motion.span
-              key={`${todo.id}-card-scribble-secondary`}
-              aria-hidden="true"
-              initial={{ opacity: 0, scaleX: 0.14 }}
-              animate={{ opacity: 0.76, scaleX: 1 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 0.32, delay: 0.03, ease: [0.22, 1, 0.36, 1] }}
-              className="todo-done-scribble-line todo-done-scribble-line-secondary"
-            />
-            <motion.span
-              key={`${todo.id}-card-pencil-pass`}
-              aria-hidden="true"
-              initial={{ opacity: 0, left: "-14%" }}
-              animate={{ opacity: [0, 1, 1, 0], left: "104%" }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 0.52, ease: [0.22, 1, 0.36, 1] }}
-              className="todo-done-pencil"
-            />
-          </>
-        ) : null}
-      </AnimatePresence>
+      {todo.done && !isDraggingPlaceholder ? (
+        <motion.span
+          aria-hidden="true"
+          initial={{ opacity: 0, scaleX: 0.18 }}
+          animate={{ opacity: 1, scaleX: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.24, ease: [0.22, 1, 0.36, 1] }}
+          className={`todo-done-strike-line ${status.strikeClass}`}
+        />
+      ) : null}
     </>
   );
 }
@@ -310,7 +287,7 @@ export function CompletedTodoItem({ todo, onDelete, onToggle }: TodoItemProps) {
       exit={{ opacity: 0, y: -12, scale: 0.96 }}
       transition={{ duration: 0.2, ease: [0.22, 1, 0.36, 1] }}
       data-testid="todo-item"
-      className={`paper-card cq-card relative overflow-hidden rounded-[20px] px-2 py-1.75 shadow-[0_8px_18px_rgba(61,49,34,0.05)] ${status.cardClass}`}
+      className={`paper-card cq-card relative overflow-hidden rounded-[20px] px-2 py-1.75 shadow-[0_8px_18px_rgba(61,49,34,0.04)] ${status.cardClass}`}
     >
       <TodoRowBody
         todo={todo}
