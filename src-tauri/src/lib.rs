@@ -1,18 +1,15 @@
 mod commands;
 
 use commands::{
-    hotkey::{handle_shortcut_event, register_hotkey},
+    hotkey::{handle_shortcut_event, register_hotkey, sync_hotkey_registration},
     notification::{cancel_reminder, schedule_reminder},
-    storage::{load_all, load_settings_data, save_notes, save_settings, save_todos, DEFAULT_HOTKEY},
+    storage::{load_all, load_settings_data, save_notes, save_settings, save_todos},
 };
 use tauri::Manager;
-use tauri_plugin_global_shortcut::GlobalShortcutExt;
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     let global_shortcut_plugin = tauri_plugin_global_shortcut::Builder::new()
-        .with_shortcut(DEFAULT_HOTKEY)
-        .expect("default shortcut should be valid")
         .with_handler(|app, _shortcut, event| {
             handle_shortcut_event(app, event);
         })
@@ -28,14 +25,8 @@ pub fn run() {
             let settings = load_settings_data(&app.handle())
                 .map_err(|error| -> Box<dyn std::error::Error> { error.into() })?;
 
-            if settings.hotkey != DEFAULT_HOTKEY {
-                app.global_shortcut()
-                    .unregister_all()
-                    .map_err(|error| -> Box<dyn std::error::Error> { Box::new(error) })?;
-                app.global_shortcut()
-                    .register(settings.hotkey.as_str())
-                    .map_err(|error| -> Box<dyn std::error::Error> { Box::new(error) })?;
-            }
+            sync_hotkey_registration(&app.handle(), settings.hotkey.as_str())
+                .map_err(|error| -> Box<dyn std::error::Error> { error.into() })?;
 
             Ok(())
         })

@@ -221,10 +221,14 @@ export function SettingsPanel({ onClose }: SettingsPanelProps) {
                     <span className="mb-2 block text-[12px] font-semibold text-[var(--brown-strong)]">Global shortcut</span>
                     <input
                       value={draftHotkey}
+                      placeholder="Fn+Space"
                       onChange={(event) => setDraftHotkey(event.currentTarget.value)}
                       onBlur={() => setHotkey(draftHotkey)}
                       className="surface-field w-full rounded-[18px] px-4 py-3 text-[14px] font-medium text-[var(--dark-text)] outline-none"
                     />
+                    <span className="mt-2 block text-[11px] leading-5 text-[var(--muted)]">
+                      Default launch shortcut: Fn+Space
+                    </span>
                   </label>
 
                   <div>

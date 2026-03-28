@@ -8,7 +8,8 @@ use std::{
 };
 use tauri::{AppHandle, Manager, Runtime};
 
-pub const DEFAULT_HOTKEY: &str = "Alt+Space";
+pub const DEFAULT_HOTKEY: &str = "Fn+Space";
+const LEGACY_DEFAULT_HOTKEY: &str = "Alt+Space";
 pub const MAIN_WINDOW_LABEL: &str = "main";
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -162,9 +163,15 @@ where
 
 pub fn load_settings_data<R: Runtime>(app: &AppHandle<R>) -> Result<Settings, String> {
     let path = settings_path(app)?;
-    let settings = read_json_file::<Settings>(&path)?;
+    let mut settings = read_json_file::<Settings>(&path)?;
+    let mut changed = false;
 
-    if !path.exists() {
+    if settings.hotkey.trim().eq_ignore_ascii_case(LEGACY_DEFAULT_HOTKEY) {
+        settings.hotkey = default_hotkey();
+        changed = true;
+    }
+
+    if !path.exists() || changed {
         write_json_file(&path, &settings)?;
     }
 

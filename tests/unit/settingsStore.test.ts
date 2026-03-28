@@ -23,7 +23,7 @@ describe("settingsStore", () => {
 
   it("updates individual settings fields", () => {
     useSettingsStore.getState().setActiveTab("todos");
-    useSettingsStore.getState().setHotkey("Alt+Space");
+    useSettingsStore.getState().setHotkey("Fn+Space");
     useSettingsStore.getState().setPanelPosition({ x: 12, y: 16 });
     useSettingsStore.getState().setTransitionStyle("page");
     useSettingsStore.getState().setAnimationSpeed("faster");
@@ -31,7 +31,7 @@ describe("settingsStore", () => {
 
     const state = useSettingsStore.getState();
     expect(state.activeTab).toBe("todos");
-    expect(state.hotkey).toBe("Alt+Space");
+    expect(state.hotkey).toBe("Fn+Space");
     expect(state.panelPosition).toEqual({ x: 12, y: 16 });
     expect(state.transitionStyle).toBe("page");
     expect(state.animationSpeed).toBe("faster");

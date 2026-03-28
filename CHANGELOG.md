@@ -2,6 +2,17 @@
 
 All notable repository changes are recorded here.
 
+## v0.1.15 - 2026-03-28
+
+Purpose:
+- Change the default panel shortcut to Fn+Space without breaking macOS hotkey registration.
+
+Contents:
+- Switch the frontend and persisted settings defaults from Alt+Space to Fn+Space.
+- Add a macOS-specific global key monitor for Fn+Space because the Tauri global-shortcut parser does not support the Fn modifier directly.
+- Migrate previously saved default Alt+Space settings to Fn+Space on load so existing installs move to the new default automatically.
+- Update the settings UI copy and settings store coverage to reflect the new default shortcut.
+
 ## v0.1.14 - 2026-03-28
 
 Purpose:
