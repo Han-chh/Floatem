@@ -79,3 +79,13 @@ Contents:
 - Replace the old settings overlay with a full-window settings view that includes product introduction and broader option controls.
 - Add persisted settings for transition style, transition speed, and particle effects, and wire them into the live app.
 - Speed up Notes/Todos switching and add an optional page-turn transition style as the default behavior.
+
+## v0.1.7 - 2026-03-28
+
+Purpose:
+- Push Notes and Todos to a content-first layout by removing the oversized top hero blocks and moving compact controls to the bottom.
+
+Contents:
+- Rebuild the Notes page so the main area is the card stack, with only a short bottom control bar and a circular plus button.
+- Rebuild the Todos page so the task list owns the window body, with the quick-add input and circular plus button compressed into the bottom bar.
+- Slightly increase the default Tauri window size so more content fits before scrolling.
