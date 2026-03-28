@@ -19,7 +19,7 @@ export function startWindowDrag(event: PointerEvent<HTMLElement>) {
   }
 
   event.preventDefault();
-  void getCurrentWindow().startDragging().catch(() => {
-    // Ignore drag start failures so the UI stays responsive in browser preview mode.
+  void getCurrentWindow().startDragging().catch((error) => {
+    console.warn("QuickNote window drag failed", error);
   });
 }

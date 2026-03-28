@@ -1,6 +1,6 @@
 [package]
 name = "quicknote"
-version = "0.1.28"
+version = "0.1.29"
 description = "QuickNote macOS tray note app"
 authors = ["Codex"]
 edition = "2021"

@@ -2,6 +2,15 @@
 
 All notable repository changes are recorded here.
 
+## v0.1.29 - 2026-03-28
+
+Purpose:
+- Restore actual drag permission for the frameless window so header dragging works instead of failing silently.
+
+Contents:
+- Add `core:window:allow-start-dragging` to the main capability so frontend `startDragging()` requests are permitted by Tauri.
+- Replace the silent drag-start catch with a visible warning to make future window-drag failures diagnosable during development.
+
 ## v0.1.28 - 2026-03-28
 
 Purpose:
