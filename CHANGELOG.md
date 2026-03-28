@@ -2,6 +2,15 @@
 
 All notable repository changes are recorded here.
 
+## v0.1.34 - 2026-03-28
+
+Purpose:
+- Align the note metadata chips with the note color control so the compact header reads on a cleaner left edge.
+
+Contents:
+- Move the `Focus card` and edit-time chips out from under the title field and align them with the note color button.
+- Keep fold and delete actions on the right side of the same metadata row without expanding the compact Notes card header.
+
 ## v0.1.33 - 2026-03-28
 
 Purpose:
