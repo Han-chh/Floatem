@@ -26,6 +26,7 @@ export function NotesList() {
   const enableParticles = useSettingsStore((state) => state.enableParticles);
   const [removingIds, setRemovingIds] = useState<string[]>([]);
   const [activeDragId, setActiveDragId] = useState<string | null>(null);
+  const [activeDragWidth, setActiveDragWidth] = useState<number | null>(null);
   const { bursts, fieldRef, spawnBurst } = useParticleField();
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -63,10 +64,12 @@ export function NotesList() {
 
   const handleDragStart = (event: DragStartEvent) => {
     setActiveDragId(String(event.active.id));
+    setActiveDragWidth(event.active.rect.current.initial?.width ?? null);
   };
 
   const handleDragEnd = (event: DragEndEvent) => {
     setActiveDragId(null);
+    setActiveDragWidth(null);
 
     if (!event.over || event.active.id === event.over.id) {
       return;
@@ -99,7 +102,10 @@ export function NotesList() {
             collisionDetection={closestCenter}
             onDragStart={handleDragStart}
             onDragEnd={handleDragEnd}
-            onDragCancel={() => setActiveDragId(null)}
+            onDragCancel={() => {
+              setActiveDragId(null);
+              setActiveDragWidth(null);
+            }}
           >
             <SortableContext items={visibleCards.map((card) => card.id)} strategy={verticalListSortingStrategy}>
               <div className="paper-scroll h-full overflow-y-auto pr-1">
@@ -119,8 +125,8 @@ export function NotesList() {
               }}
             >
               {activeDragCard ? (
-                <motion.div initial={{ scale: 0.98, rotate: -1.5 }} animate={{ scale: 1.02, rotate: -1.5 }}>
-                  <NoteCardPreview note={activeDragCard} />
+                <motion.div initial={{ rotate: -1.2 }} animate={{ rotate: -1.2 }}>
+                  <NoteCardPreview note={activeDragCard} width={activeDragWidth ?? undefined} />
                 </motion.div>
               ) : null}
             </DragOverlay>

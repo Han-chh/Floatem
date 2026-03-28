@@ -2,6 +2,17 @@
 
 All notable repository changes are recorded here.
 
+## v0.1.13 - 2026-03-28
+
+Purpose:
+- Extend delete and drag feedback across full cards while making Todos denser and the completion affordance easier to spot.
+
+Contents:
+- Trigger delete shatter bursts from the full note or todo card bounds instead of only from the delete button.
+- Expand rose-tone delete particles into multi-point card-wide bursts for a clearer whole-card breakup effect.
+- Tighten todo row padding and spacing again, and strengthen the completion button with a brighter halo and richer surface texture.
+- Render note and todo drag previews at the source card width so the preview stays aligned with the cursor throughout the drag.
+
 ## v0.1.12 - 2026-03-28
 
 Purpose:

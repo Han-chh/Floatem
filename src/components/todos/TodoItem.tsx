@@ -2,6 +2,7 @@ import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { format, isPast, isToday } from "date-fns";
 import { AnimatePresence, motion } from "framer-motion";
+import { useRef } from "react";
 import type { TodoItem as TodoItemModel } from "../../lib/models";
 import { useTodosStore } from "../../store/todosStore";
 import { CircleCheckBigIcon, Trash2Icon } from "../icons/AppIcons";
@@ -128,27 +129,45 @@ function TodoRowBody({
       ) : null}
 
       <div className={`todo-row-grid relative z-10 pl-3 ${isDraggingPlaceholder ? "opacity-0" : ""}`}>
-        <motion.button
-          type="button"
-          aria-label="Mark todo as done"
-          aria-pressed={todo.done}
-          className={`todo-row-toggle inline-flex h-7.5 w-7.5 shrink-0 items-center justify-center rounded-full border text-[10px] font-bold shadow-[0_7px_14px_rgba(61,49,34,0.08)] ${status.toggleClass}`}
-          whileHover={isInteractive ? { scale: 1.06 } : undefined}
-          whileTap={isInteractive ? { scale: 0.93 } : undefined}
-          onPointerDown={isInteractive ? (event) => event.stopPropagation() : undefined}
-          onClick={
-            onToggle
-              ? (event) => onToggle(event.currentTarget.getBoundingClientRect(), !todo.done)
-              : undefined
-          }
-        >
-          <CircleCheckBigIcon size={14} />
-        </motion.button>
+        <div className="todo-row-toggle relative flex items-center justify-center">
+          <span
+            className="pointer-events-none absolute inset-0 rounded-full opacity-95"
+            style={{
+              boxShadow: `0 0 0 4px ${status.accent}26`,
+              background:
+                "radial-gradient(circle at 30% 30%, rgba(255,255,255,0.78), rgba(255,255,255,0) 62%)",
+            }}
+          />
+          <motion.button
+            type="button"
+            aria-label="Mark todo as done"
+            aria-pressed={todo.done}
+            title={todo.done ? "Restore task" : "Complete task"}
+            className={`relative inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-full border text-[10px] font-bold shadow-[0_6px_12px_rgba(61,49,34,0.08)] ${status.toggleClass}`}
+            whileHover={isInteractive ? { scale: 1.06 } : undefined}
+            whileTap={isInteractive ? { scale: 0.93 } : undefined}
+            onPointerDown={isInteractive ? (event) => event.stopPropagation() : undefined}
+            onClick={
+              onToggle
+                ? (event) => onToggle(event.currentTarget.getBoundingClientRect(), !todo.done)
+                : undefined
+            }
+          >
+            <span
+              className="pointer-events-none absolute inset-[1px] rounded-full opacity-70"
+              style={{
+                background:
+                  "radial-gradient(circle at 28% 28%, rgba(255,255,255,0.82), rgba(255,255,255,0) 58%)",
+              }}
+            />
+            <CircleCheckBigIcon size={13} />
+          </motion.button>
+        </div>
 
         <div className="todo-row-text">
           <div className="relative min-w-0">
             <p
-              className={`wrap-anywhere pr-1 text-[12.25px] font-semibold leading-[1.35] text-[var(--dark-text)] ${
+              className={`wrap-anywhere pr-1 text-[12px] font-semibold leading-[1.3] text-[var(--dark-text)] ${
                 todo.done ? "text-[rgba(94,90,86,0.82)]" : ""
               }`}
             >
@@ -195,7 +214,7 @@ function TodoRowBody({
             type="button"
             aria-label="Delete todo"
             title="Delete todo"
-            className="paper-icon-button paper-button-danger inline-flex h-7.5 w-7.5 min-h-0 min-w-0 items-center justify-center rounded-full"
+            className="paper-icon-button paper-button-danger inline-flex h-7 w-7 min-h-0 min-w-0 items-center justify-center rounded-full"
             whileHover={isInteractive ? { y: -1.5, scale: 1.03 } : undefined}
             whileTap={isInteractive ? { scale: 0.97 } : undefined}
             onPointerDown={isInteractive ? (event) => event.stopPropagation() : undefined}
@@ -213,10 +232,11 @@ function TodoRowBody({
   );
 }
 
-export function TodoItemPreview({ todo }: { todo: TodoItemModel }) {
+export function TodoItemPreview({ todo, width }: { todo: TodoItemModel; width?: number }) {
   return (
     <div
-      className={`paper-card cq-card relative w-[min(360px,calc(100vw-48px))] overflow-hidden rounded-[20px] px-2.5 py-2 shadow-[0_24px_48px_rgba(61,49,34,0.2)] ${getStatusMeta(todo).cardClass}`}
+      className={`paper-card cq-card relative overflow-hidden rounded-[20px] px-2 py-1.75 shadow-[0_24px_48px_rgba(61,49,34,0.2)] ${getStatusMeta(todo).cardClass}`}
+      style={{ width: width ?? undefined, maxWidth: "calc(100vw - 48px)" }}
     >
       <TodoRowBody todo={todo} preview />
     </div>
@@ -224,14 +244,19 @@ export function TodoItemPreview({ todo }: { todo: TodoItemModel }) {
 }
 
 export function TodoItem({ todo, onDelete, onToggle }: TodoItemProps) {
+  const cardRef = useRef<HTMLElement | null>(null);
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: todo.id,
   });
   const status = getStatusMeta(todo);
+  const setArticleRef = (node: HTMLElement | null) => {
+    cardRef.current = node;
+    setNodeRef(node);
+  };
 
   return (
     <motion.article
-      ref={setNodeRef}
+      ref={setArticleRef}
       layout
       initial={{ opacity: 0, y: 12, scale: 0.98 }}
       animate={{ opacity: 1, y: 0, scale: 1 }}
@@ -245,13 +270,13 @@ export function TodoItem({ todo, onDelete, onToggle }: TodoItemProps) {
       {...listeners}
       data-testid="todo-item"
       aria-label="Reorder todo"
-      className={`paper-card cq-card relative overflow-hidden rounded-[20px] px-2.5 py-2 shadow-[0_10px_22px_rgba(61,49,34,0.08)] cursor-grab active:cursor-grabbing ${status.cardClass} ${
+      className={`paper-card cq-card relative overflow-hidden rounded-[20px] px-2 py-1.75 shadow-[0_10px_22px_rgba(61,49,34,0.08)] cursor-grab active:cursor-grabbing ${status.cardClass} ${
         isDragging ? "border-dashed border-[rgba(161,136,113,0.42)] bg-[rgba(255,255,255,0.12)] shadow-none" : ""
       }`}
     >
       <TodoRowBody
         todo={todo}
-        onDelete={(target) => onDelete(todo.id, target)}
+        onDelete={(target) => onDelete(todo.id, cardRef.current?.getBoundingClientRect() ?? target)}
         onToggle={(target, nextDone) => onToggle(todo.id, target, nextDone)}
         isDraggingPlaceholder={isDragging}
       />
@@ -261,20 +286,22 @@ export function TodoItem({ todo, onDelete, onToggle }: TodoItemProps) {
 
 export function CompletedTodoItem({ todo, onDelete, onToggle }: TodoItemProps) {
   const status = getStatusMeta(todo);
+  const cardRef = useRef<HTMLElement | null>(null);
 
   return (
     <motion.article
+      ref={cardRef}
       layout
       initial={{ opacity: 0, y: 10, scale: 0.985 }}
       animate={{ opacity: 1, y: 0, scale: 1 }}
       exit={{ opacity: 0, y: -12, scale: 0.96 }}
       transition={{ duration: 0.2, ease: [0.22, 1, 0.36, 1] }}
       data-testid="todo-item"
-      className={`paper-card cq-card relative overflow-hidden rounded-[20px] px-2.5 py-2 shadow-[0_8px_18px_rgba(61,49,34,0.06)] opacity-88 grayscale-[0.28] ${status.cardClass}`}
+      className={`paper-card cq-card relative overflow-hidden rounded-[20px] px-2 py-1.75 shadow-[0_8px_18px_rgba(61,49,34,0.06)] opacity-88 grayscale-[0.28] ${status.cardClass}`}
     >
       <TodoRowBody
         todo={todo}
-        onDelete={(target) => onDelete(todo.id, target)}
+        onDelete={(target) => onDelete(todo.id, cardRef.current?.getBoundingClientRect() ?? target)}
         onToggle={(target, nextDone) => onToggle(todo.id, target, nextDone)}
       />
     </motion.article>

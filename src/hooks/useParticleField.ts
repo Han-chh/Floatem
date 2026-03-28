@@ -68,6 +68,33 @@ function createBurst(x: number, y: number, tone: BurstTone): ParticleBurst {
   };
 }
 
+function createBurstCluster(target: BurstTarget, bounds: DOMRect, tone: BurstTone) {
+  const width = target.width ?? 0;
+  const height = target.height ?? 0;
+  const centerX = target.x + ((target.width ?? 0) / 2);
+  const centerY = target.y + ((target.height ?? 0) / 2);
+
+  if (tone !== "rose" || width < 72 || height < 72) {
+    return [createBurst(centerX - bounds.left, centerY - bounds.top, tone)];
+  }
+
+  const anchorPoints = [
+    [0.18, 0.22],
+    [0.5, 0.18],
+    [0.82, 0.22],
+    [0.28, 0.72],
+    [0.72, 0.72],
+  ];
+
+  return anchorPoints.map(([xRatio, yRatio]) =>
+    createBurst(
+      target.x + width * xRatio - bounds.left + random(-8, 8),
+      target.y + height * yRatio - bounds.top + random(-8, 8),
+      tone,
+    ),
+  );
+}
+
 export function useParticleField() {
   const fieldRef = useRef<HTMLDivElement>(null);
   const timersRef = useRef<number[]>([]);
@@ -86,18 +113,17 @@ export function useParticleField() {
       return;
     }
 
-    const centerX = target.x + ((target.width ?? 0) / 2);
-    const centerY = target.y + ((target.height ?? 0) / 2);
-    const burst = createBurst(centerX - bounds.left, centerY - bounds.top, tone);
+    const nextBursts = createBurstCluster(target, bounds, tone);
+    setBursts((current) => [...current, ...nextBursts]);
 
-    setBursts((current) => [...current, burst]);
+    nextBursts.forEach((burst) => {
+      const timer = window.setTimeout(() => {
+        setBursts((current) => current.filter((item) => item.id !== burst.id));
+        timersRef.current = timersRef.current.filter((value) => value !== timer);
+      }, tone === "rose" ? 980 : 900);
 
-    const timer = window.setTimeout(() => {
-      setBursts((current) => current.filter((item) => item.id !== burst.id));
-      timersRef.current = timersRef.current.filter((value) => value !== timer);
-    }, 900);
-
-    timersRef.current.push(timer);
+      timersRef.current.push(timer);
+    });
   };
 
   return {

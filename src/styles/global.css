@@ -366,12 +366,14 @@
     display: grid;
     grid-template-columns: auto minmax(0, 1fr) auto auto;
     grid-template-areas: "toggle text reminder delete";
-    gap: 8px;
+    gap: 7px;
     align-items: center;
   }
 
   .todo-row-toggle {
     grid-area: toggle;
+    width: 28px;
+    height: 28px;
   }
 
   .todo-row-text {
@@ -462,7 +464,7 @@
         "toggle text delete"
         ". reminder reminder";
       align-items: start;
-      row-gap: 6px;
+      row-gap: 5px;
     }
 
     .todo-row-reminder {

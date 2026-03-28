@@ -221,11 +221,14 @@ function NoteCardBody({
   );
 }
 
-export function NoteCardPreview({ note }: { note: NoteCardModel }) {
+export function NoteCardPreview({ note, width }: { note: NoteCardModel; width?: number }) {
   const editedLabel = `Edited ${formatDistanceToNow(note.updatedAt, { addSuffix: true })}`;
 
   return (
-    <div className="paper-card cq-card relative w-[min(360px,calc(100vw-48px))] overflow-hidden rounded-[28px] border border-[rgba(213,198,180,0.92)] bg-[linear-gradient(180deg,rgba(255,252,248,0.98),rgba(255,247,239,0.95))] shadow-[0_30px_60px_rgba(61,49,34,0.22)]">
+    <div
+      className="paper-card cq-card relative overflow-hidden rounded-[28px] border border-[rgba(213,198,180,0.92)] bg-[linear-gradient(180deg,rgba(255,252,248,0.98),rgba(255,247,239,0.95))] shadow-[0_30px_60px_rgba(61,49,34,0.22)]"
+      style={{ width: width ?? undefined, maxWidth: "calc(100vw - 48px)" }}
+    >
       <NoteCardBody note={note} editedLabel={editedLabel} preview />
     </div>
   );
@@ -238,9 +241,15 @@ export function NoteCard({ note, onDelete }: NoteCardProps) {
   const updateDotColor = useNotesStore((state) => state.updateDotColor);
   const [showPalette, setShowPalette] = useState(false);
   const titleRef = useRef<HTMLTextAreaElement | null>(null);
+  const cardRef = useRef<HTMLElement | null>(null);
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: note.id,
   });
+
+  const setArticleRef = (node: HTMLElement | null) => {
+    cardRef.current = node;
+    setNodeRef(node);
+  };
 
   useEffect(() => {
     if (titleRef.current) {
@@ -252,7 +261,7 @@ export function NoteCard({ note, onDelete }: NoteCardProps) {
 
   return (
     <motion.article
-      ref={setNodeRef}
+      ref={setArticleRef}
       layout
       initial={{ opacity: 0, y: 14, scale: 0.97 }}
       animate={{ opacity: 1, y: 0, scale: 1 }}
@@ -273,7 +282,7 @@ export function NoteCard({ note, onDelete }: NoteCardProps) {
       <NoteCardBody
         note={note}
         editedLabel={editedLabel}
-        onDelete={(target) => onDelete(note.id, target)}
+        onDelete={(target) => onDelete(note.id, cardRef.current?.getBoundingClientRect() ?? target)}
         onToggleCollapsed={() => toggleCollapsed(note.id)}
         onUpdateTitle={(value, element) => {
           syncTextareaHeight(element);

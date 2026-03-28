@@ -29,6 +29,7 @@ export function TodoList() {
   const [draft, setDraft] = useState("");
   const [removingIds, setRemovingIds] = useState<string[]>([]);
   const [activeDragId, setActiveDragId] = useState<string | null>(null);
+  const [activeDragWidth, setActiveDragWidth] = useState<number | null>(null);
   const formRef = useRef<HTMLFormElement>(null);
   const draftRef = useRef<HTMLTextAreaElement | null>(null);
   const { bursts, fieldRef, spawnBurst } = useParticleField();
@@ -83,10 +84,12 @@ export function TodoList() {
 
   const handleDragStart = (event: DragStartEvent) => {
     setActiveDragId(String(event.active.id));
+    setActiveDragWidth(event.active.rect.current.initial?.width ?? null);
   };
 
   const handleDragEnd = (event: DragEndEvent) => {
     setActiveDragId(null);
+    setActiveDragWidth(null);
 
     if (!event.over || event.active.id === event.over.id) {
       return;
@@ -134,7 +137,10 @@ export function TodoList() {
                 collisionDetection={closestCenter}
                 onDragStart={handleDragStart}
                 onDragEnd={handleDragEnd}
-                onDragCancel={() => setActiveDragId(null)}
+                onDragCancel={() => {
+                  setActiveDragId(null);
+                  setActiveDragWidth(null);
+                }}
               >
                 <SortableContext items={openTodos.map((todo) => todo.id)} strategy={verticalListSortingStrategy}>
                   <div className="flex flex-col gap-2">
@@ -158,8 +164,8 @@ export function TodoList() {
                   }}
                 >
                   {activeDragTodo ? (
-                    <motion.div initial={{ scale: 0.985, rotate: -1.2 }} animate={{ scale: 1.01, rotate: -1.2 }}>
-                      <TodoItemPreview todo={activeDragTodo} />
+                    <motion.div initial={{ rotate: -1.2 }} animate={{ rotate: -1.2 }}>
+                      <TodoItemPreview todo={activeDragTodo} width={activeDragWidth ?? undefined} />
                     </motion.div>
                   ) : null}
                 </DragOverlay>
