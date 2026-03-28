@@ -2,6 +2,16 @@
 
 All notable repository changes are recorded here.
 
+## v0.1.43 - 2026-03-28
+
+Purpose:
+- Align dragged note and todo previews with the mouse position instead of letting the overlay sit visibly below the cursor.
+
+Contents:
+- Rework the shared drag-overlay centering modifier to subtract the floating panel container offset introduced by the macOS-style shell layout.
+- Keep the overlay centering logic shared between Notes and Todos so both modules use the same corrected pointer anchor.
+- Expand the unit coverage for `centerOverlayToCursor` with a nested-container regression case matching the floating panel environment.
+
 ## v0.1.42 - 2026-03-28
 
 Purpose:

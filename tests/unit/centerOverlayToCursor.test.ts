@@ -36,6 +36,8 @@ describe("centerOverlayToCursor", () => {
         left: 10,
       } as DOMRect,
       overlayNodeRect: {
+        top: 20,
+        left: 10,
         width: 100,
         height: 60,
       } as DOMRect,
@@ -63,6 +65,8 @@ describe("centerOverlayToCursor", () => {
         left: 28,
       } as DOMRect,
       overlayNodeRect: {
+        top: 14,
+        left: 28,
         width: 80,
         height: 40,
       } as DOMRect,
@@ -77,6 +81,35 @@ describe("centerOverlayToCursor", () => {
     expect(transformed).toMatchObject({
       x: 20,
       y: 10,
+    });
+  });
+
+  it("subtracts the drag container offset when the overlay is positioned inside a nested shell", () => {
+    const transformed = centerOverlayToCursor(createModifierArgs({
+      activatorEvent: { clientX: 210, clientY: 240 } as unknown as Event,
+      activeNodeRect: {
+        top: 220,
+        left: 180,
+      } as DOMRect,
+      containerNodeRect: {
+        top: 210,
+        left: 160,
+      } as DOMRect,
+      overlayNodeRect: {
+        width: 80,
+        height: 40,
+      } as DOMRect,
+      transform: {
+        x: 30,
+        y: 50,
+        scaleX: 1,
+        scaleY: 1,
+      },
+    }));
+
+    expect(transformed).toMatchObject({
+      x: -140,
+      y: -160,
     });
   });
 
@@ -95,6 +128,8 @@ describe("centerOverlayToCursor", () => {
         left: 28,
       } as DOMRect,
       overlayNodeRect: {
+        top: 14,
+        left: 28,
         width: 80,
         height: 40,
       } as DOMRect,

@@ -36,6 +36,7 @@ function getEventCoordinates(event: Event | null) {
 export const centerOverlayToCursor: Modifier = ({
   activatorEvent,
   activeNodeRect,
+  containerNodeRect,
   overlayNodeRect,
   transform,
 }) => {
@@ -47,10 +48,12 @@ export const centerOverlayToCursor: Modifier = ({
 
   const offsetX = coordinates.x - activeNodeRect.left;
   const offsetY = coordinates.y - activeNodeRect.top;
+  const containerOffsetX = containerNodeRect?.left ?? 0;
+  const containerOffsetY = containerNodeRect?.top ?? 0;
 
   return {
     ...transform,
-    x: transform.x + offsetX - overlayNodeRect.width / 2,
-    y: transform.y + offsetY - overlayNodeRect.height / 2,
+    x: transform.x + offsetX - overlayNodeRect.width / 2 - containerOffsetX,
+    y: transform.y + offsetY - overlayNodeRect.height / 2 - containerOffsetY,
   };
 };
