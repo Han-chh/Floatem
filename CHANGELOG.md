@@ -2,6 +2,17 @@
 
 All notable repository changes are recorded here.
 
+## v0.1.16 - 2026-03-28
+
+Purpose:
+- Change the default panel shortcut from Fn+Space to Cmd+Shift+Space.
+
+Contents:
+- Switch the frontend and persisted settings defaults to Cmd+Shift+Space.
+- Migrate previous default shortcuts Alt+Space and Fn+Space to Cmd+Shift+Space on load.
+- Keep manual Fn+Space support intact by separating the Fn-specific macOS monitor path from the new default fallback logic.
+- Update the settings UI copy and settings-store coverage to reflect the new default shortcut.
+
 ## v0.1.15 - 2026-03-28
 
 Purpose:

@@ -59,7 +59,7 @@ export const DEFAULT_NOTE_CONTENT: Descendant[] = [
 ];
 
 export const DEFAULT_SETTINGS: AppSettings = {
-  hotkey: "Fn+Space",
+  hotkey: "Cmd+Shift+Space",
   panelPosition: null,
   activeTab: "notes",
   transitionStyle: "page",

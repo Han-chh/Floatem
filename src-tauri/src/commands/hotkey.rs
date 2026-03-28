@@ -3,6 +3,8 @@ use tauri_plugin_global_shortcut::{GlobalShortcutExt, ShortcutEvent, ShortcutSta
 
 use crate::commands::{storage::DEFAULT_HOTKEY, window::toggle_main_window};
 
+const FN_SPACE_HOTKEY: &str = "Fn+Space";
+
 pub fn handle_shortcut_event<R: Runtime>(app: &AppHandle<R>, event: ShortcutEvent) {
     if event.state == ShortcutState::Pressed {
         let _ = toggle_main_window(app);
@@ -20,8 +22,12 @@ fn is_fn_space_shortcut(shortcut: &str) -> bool {
 fn normalize_shortcut(shortcut: &str) -> String {
     let trimmed = shortcut.trim();
 
-    if trimmed.is_empty() || is_fn_space_shortcut(trimmed) {
+    if trimmed.is_empty() {
         return DEFAULT_HOTKEY.to_string();
+    }
+
+    if is_fn_space_shortcut(trimmed) {
+        return FN_SPACE_HOTKEY.to_string();
     }
 
     trimmed.to_string()
