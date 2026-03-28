@@ -45,3 +45,7 @@ export async function saveSettings(settings: AppSettings) {
 export async function registerHotkey(shortcut: string) {
   await invoke("register_hotkey", { shortcut });
 }
+
+export async function hidePanelWindow() {
+  await invoke("hide_panel_window");
+}

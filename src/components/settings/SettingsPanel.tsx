@@ -1,5 +1,6 @@
 import { motion } from "framer-motion";
 import { useEffect, useState, type ReactNode } from "react";
+import { hidePanelWindow } from "../../hooks/usePlatform";
 import { startWindowDrag } from "../../hooks/useWindowDrag";
 import { useSettingsStore } from "../../store/settingsStore";
 import {
@@ -12,6 +13,7 @@ import {
   SparklesIcon,
   XIcon,
 } from "../icons/AppIcons";
+import { WindowCloseButton } from "../layout/WindowCloseButton";
 
 type SettingsPanelProps = {
   onClose: () => void;
@@ -97,7 +99,7 @@ function SettingsCard({
   wide?: boolean;
 }) {
   return (
-    <section className={`paper-card rounded-[28px] p-5 ${wide ? "settings-wide-card" : ""}`}>
+    <section data-no-window-drag="true" className={`paper-card rounded-[28px] p-5 ${wide ? "settings-wide-card" : ""}`}>
       <div className="mb-4 flex items-start gap-3">
         <span className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-[16px] bg-[rgba(47,107,255,0.10)] text-[#2853C7]">
           {icon}
@@ -132,6 +134,10 @@ export function SettingsPanel({ onClose }: SettingsPanelProps) {
     setDraftHotkey(hotkey);
   }, [hotkey]);
 
+  const handleHideWindow = () => {
+    void hidePanelWindow();
+  };
+
   return (
     <main
       data-testid="settings-panel"
@@ -143,9 +149,30 @@ export function SettingsPanel({ onClose }: SettingsPanelProps) {
         transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
         className="window-shell h-full"
       >
-        <div className="window-shell-content">
+        <div className="window-shell-content" onPointerDownCapture={startWindowDrag}>
           <div className="paper-panel flex h-full min-h-0 flex-col rounded-[32px] p-4">
-            <div className="mb-4 flex items-start justify-between gap-4" onPointerDown={startWindowDrag}>
+            <div className="mb-5 space-y-4">
+              <div className="flex items-center justify-between gap-4">
+                <div className="flex items-center gap-3">
+                  <WindowCloseButton onClick={handleHideWindow} />
+                  <span
+                    aria-hidden="true"
+                    className="block h-2 w-14 rounded-full bg-[linear-gradient(90deg,rgba(255,255,255,0.88),rgba(245,226,206,0.5),rgba(255,255,255,0.22))] shadow-[inset_0_1px_0_rgba(255,255,255,0.68)]"
+                  />
+                </div>
+
+                <motion.button
+                  type="button"
+                  aria-label="Close"
+                  className="paper-icon-button h-10 w-10 shrink-0"
+                  whileHover={{ y: -2, scale: 1.02 }}
+                  whileTap={{ scale: 0.985 }}
+                  onClick={onClose}
+                >
+                  <XIcon size={16} />
+                </motion.button>
+              </div>
+
               <div className="min-w-0">
                 <div className="mb-2 flex flex-wrap items-center gap-2">
                   <span className="status-chip" data-tone="blue">
@@ -161,17 +188,6 @@ export function SettingsPanel({ onClose }: SettingsPanelProps) {
                   Configure how the tray panel opens, switches between Notes and Todos, and how much motion feedback you want while working.
                 </p>
               </div>
-
-              <motion.button
-                type="button"
-                aria-label="Close"
-                className="paper-icon-button shrink-0"
-                whileHover={{ y: -2, scale: 1.02 }}
-                whileTap={{ scale: 0.985 }}
-                onClick={onClose}
-              >
-                <XIcon size={16} />
-              </motion.button>
             </div>
             <div className="paper-scroll min-h-0 flex-1 overflow-y-auto pr-1">
               <div className="settings-grid">

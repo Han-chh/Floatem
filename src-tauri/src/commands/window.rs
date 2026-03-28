@@ -36,15 +36,26 @@ pub fn show_main_window<R: Runtime>(app: &AppHandle<R>) -> Result<(), String> {
     Ok(())
 }
 
+pub fn hide_main_window<R: Runtime>(app: &AppHandle<R>) -> Result<(), String> {
+    let window = main_window(app)?;
+    let position = window.outer_position().map_err(|error| error.to_string())?;
+    save_panel_position(app, position.x, position.y)?;
+    window.hide().map_err(|error| error.to_string())?;
+
+    Ok(())
+}
+
 pub fn toggle_main_window<R: Runtime>(app: &AppHandle<R>) -> Result<(), String> {
     let window = main_window(app)?;
 
     if window.is_visible().map_err(|error| error.to_string())? {
-        let position = window.outer_position().map_err(|error| error.to_string())?;
-        save_panel_position(app, position.x, position.y)?;
-        window.hide().map_err(|error| error.to_string())?;
-        return Ok(());
+        return hide_main_window(app);
     }
 
     show_main_window(app)
+}
+
+#[tauri::command]
+pub fn hide_panel_window<R: Runtime>(app: AppHandle<R>) -> Result<(), String> {
+    hide_main_window(&app)
 }

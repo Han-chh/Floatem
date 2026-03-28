@@ -258,6 +258,7 @@ export function TodoItem({ todo, onDelete, onToggle }: TodoItemProps) {
       }}
       {...attributes}
       {...listeners}
+      data-no-window-drag="true"
       data-testid="todo-item"
       aria-label="Reorder todo"
       className={`paper-card cq-card relative overflow-hidden rounded-[20px] px-2 py-1.75 shadow-[0_10px_22px_rgba(61,49,34,0.08)] cursor-grab active:cursor-grabbing ${status.cardClass} ${
@@ -286,6 +287,7 @@ export function CompletedTodoItem({ todo, onDelete, onToggle }: TodoItemProps) {
       animate={{ opacity: 1, y: 0, scale: 1 }}
       exit={{ opacity: 0, y: -12, scale: 0.96 }}
       transition={{ duration: 0.2, ease: [0.22, 1, 0.36, 1] }}
+      data-no-window-drag="true"
       data-testid="todo-item"
       className={`paper-card cq-card relative overflow-hidden rounded-[20px] px-2 py-1.75 shadow-[0_8px_18px_rgba(61,49,34,0.04)] ${status.cardClass}`}
     >

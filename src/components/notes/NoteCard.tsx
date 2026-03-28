@@ -293,6 +293,7 @@ export function NoteCard({ note, onDelete }: NoteCardProps) {
       }}
       {...attributes}
       {...listeners}
+      data-no-window-drag="true"
       aria-label="Reorder note"
       data-testid="note-card"
       className={`paper-card cq-card relative overflow-hidden rounded-[28px] border border-[rgba(213,198,180,0.92)] bg-[linear-gradient(180deg,rgba(255,252,248,0.98),rgba(255,247,239,0.95))] shadow-[0_18px_36px_rgba(61,49,34,0.10)] cursor-grab active:cursor-grabbing ${

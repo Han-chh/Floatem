@@ -2,6 +2,16 @@
 
 All notable repository changes are recorded here.
 
+## v0.1.30 - 2026-03-28
+
+Purpose:
+- Make the frameless panel draggable from most non-interactive surfaces and add a macOS-style close control that hides the app instead of quitting it.
+
+Contents:
+- Move window dragging to the full shell content layer and exclude note cards, todo cards, and settings cards with `data-no-window-drag` so editing and sorting keep working.
+- Add a shared macOS-style red close button to the top chrome of the main panel and settings view, and increase top header height to create a clearer draggable title bar.
+- Introduce a `hide_panel_window` Rust command plus frontend bridge so the close button hides the panel while persisting its current position, matching the shortcut behavior.
+
 ## v0.1.29 - 2026-03-28
 
 Purpose:

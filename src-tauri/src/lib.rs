@@ -4,7 +4,7 @@ use commands::{
     hotkey::{handle_shortcut_event, register_hotkey, sync_hotkey_registration},
     notification::{cancel_reminder, schedule_reminder},
     storage::{load_all, load_settings_data, save_notes, save_settings, save_todos},
-    window::show_main_window,
+    window::{hide_panel_window, show_main_window},
 };
 use tauri::Manager;
 
@@ -49,7 +49,8 @@ pub fn run() {
             save_settings,
             register_hotkey,
             schedule_reminder,
-            cancel_reminder
+            cancel_reminder,
+            hide_panel_window
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

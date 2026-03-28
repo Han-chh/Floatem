@@ -1,9 +1,11 @@
 import { motion } from "framer-motion";
 import type { ReactNode } from "react";
+import { hidePanelWindow } from "../../hooks/usePlatform";
 import { startWindowDrag } from "../../hooks/useWindowDrag";
 import { SlidersHorizontalIcon } from "../icons/AppIcons";
 import type { TabId } from "../../lib/models";
 import { TabBar } from "./TabBar";
+import { WindowCloseButton } from "./WindowCloseButton";
 
 type PanelShellProps = {
   activeTab: TabId;
@@ -13,6 +15,10 @@ type PanelShellProps = {
 };
 
 export function PanelShell({ activeTab, onTabChange, children, onToggleSettings }: PanelShellProps) {
+  const handleHideWindow = () => {
+    void hidePanelWindow();
+  };
+
   return (
     <main className="h-screen overflow-hidden bg-transparent text-[13.5px] text-[var(--dark-text)]">
       <motion.div
@@ -21,7 +27,7 @@ export function PanelShell({ activeTab, onTabChange, children, onToggleSettings 
         transition={{ duration: 0.32, ease: [0.22, 1, 0.36, 1] }}
         className="window-shell h-full"
       >
-        <div className="window-shell-content cq-panel">
+        <div className="window-shell-content cq-panel" onPointerDownCapture={startWindowDrag}>
           <div className="pointer-events-none absolute inset-[18px] overflow-hidden rounded-[24px]">
             <div className="absolute -left-14 top-10 h-56 w-56 rounded-full bg-[rgba(255,122,89,0.18)] blur-3xl" />
             <div className="absolute left-10 top-1/2 h-36 w-36 rounded-full bg-[rgba(244,185,66,0.12)] blur-3xl" />
@@ -34,25 +40,35 @@ export function PanelShell({ activeTab, onTabChange, children, onToggleSettings 
             initial={{ opacity: 0, y: -12 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.22, delay: 0.03, ease: [0.22, 1, 0.36, 1] }}
-            onPointerDown={startWindowDrag}
-            className="paper-panel mb-3 rounded-[30px] px-4 py-3"
+            className="paper-panel mb-3 rounded-[30px] px-4 py-4"
           >
-            <div className="space-y-3">
+            <div className="space-y-4">
               <div className="flex min-w-0 items-center justify-between gap-3">
-                <p className="font-display text-[clamp(22px,6vw,28px)] font-semibold tracking-[-0.05em] text-[var(--brown-strong)]">
-                  QuickNote
-                </p>
+                <div className="flex items-center gap-3">
+                  <WindowCloseButton onClick={handleHideWindow} />
+                  <span
+                    aria-hidden="true"
+                    className="block h-2 w-14 rounded-full bg-[linear-gradient(90deg,rgba(255,255,255,0.88),rgba(245,226,206,0.5),rgba(255,255,255,0.22))] shadow-[inset_0_1px_0_rgba(255,255,255,0.68)]"
+                  />
+                </div>
 
                 <motion.button
                   type="button"
                   aria-label="Settings"
-                  className="paper-icon-button shrink-0"
+                  className="paper-icon-button h-10 w-10 shrink-0"
                   whileHover={{ y: -2, scale: 1.02 }}
                   whileTap={{ scale: 0.985 }}
                   onClick={onToggleSettings}
                 >
                   <SlidersHorizontalIcon size={18} />
                 </motion.button>
+              </div>
+
+              <div className="flex min-w-0 items-center justify-between gap-3">
+                <p className="font-display text-[clamp(22px,6vw,28px)] font-semibold tracking-[-0.05em] text-[var(--brown-strong)]">
+                  QuickNote
+                </p>
+                <span aria-hidden="true" className="h-4 w-10 shrink-0" />
               </div>
 
               <TabBar activeTab={activeTab} onTabChange={onTabChange} />
