@@ -10,12 +10,12 @@
   body,
   #root {
     height: 100%;
-    background: transparent;
+    background: linear-gradient(180deg, #f6edde 0%, #ead8c0 100%);
   }
 
   body {
     margin: 0;
-    background: transparent;
+    background: linear-gradient(180deg, #f6edde 0%, #ead8c0 100%);
     color: var(--dark-text);
     font-family: var(--font-body);
     font-size: 13.5px;
@@ -134,17 +134,11 @@
     position: relative;
     height: 100%;
     overflow: hidden;
-    border: 1.5px solid rgba(200, 183, 159, 0.82);
-    border-radius: 34px;
     background:
       radial-gradient(circle at top left, rgba(255, 255, 255, 0.72), transparent 32%),
       radial-gradient(circle at 82% 10%, rgba(214, 180, 138, 0.38), transparent 24%),
       radial-gradient(circle at 25% 100%, rgba(190, 111, 71, 0.16), transparent 30%),
       linear-gradient(180deg, #f6edde 0%, #ead8c0 100%);
-    box-shadow:
-      0 28px 60px rgba(58, 36, 22, 0.24),
-      0 8px 20px rgba(94, 66, 42, 0.18),
-      inset 0 1px 0 rgba(255, 255, 255, 0.72);
   }
 
   .window-shell::before {

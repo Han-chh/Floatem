@@ -24,3 +24,13 @@ Contents:
 - Add motion-driven button feedback, animated transitions, and particle effects for add/remove interactions.
 - Ignore package caches and local build artifacts, and remove the tracked pnpm cache from the repository index.
 - Establish a workflow where each requested code change ends with a Git commit and a matching changelog entry.
+
+## v0.1.2 - 2026-03-28
+
+Purpose:
+- Remove the app-level transparent edge treatment and return the floating panel to a solid, borderless window shell.
+
+Contents:
+- Disable the transparent Tauri window mode and remove the macOS private transparent-window setting.
+- Remove the outer application border so the content fills the full window surface.
+- Switch the root surface back to an opaque background to avoid any visible transparent edge.

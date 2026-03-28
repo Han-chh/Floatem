@@ -24,7 +24,7 @@ export function PanelShell({
   const { platformLabel } = usePlatform();
 
   return (
-    <main className="h-screen overflow-hidden bg-transparent p-[8px] text-[13.5px] text-[var(--dark-text)]">
+    <main className="h-screen overflow-hidden bg-[linear-gradient(180deg,#f6edde_0%,#ead8c0_100%)] text-[13.5px] text-[var(--dark-text)]">
       <motion.div
         initial={{ opacity: 0, y: 16, scale: 0.98 }}
         animate={{ opacity: 1, y: 0, scale: 1 }}
