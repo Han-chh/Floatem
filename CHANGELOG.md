@@ -2,6 +2,15 @@
 
 All notable repository changes are recorded here.
 
+## v0.1.33 - 2026-03-28
+
+Purpose:
+- Push the stoplight close cross much further so it reads darker, larger, and more obvious.
+
+Contents:
+- Increase the close-button `X` icon size and stroke weight again.
+- Shift the icon color toward a darker near-black red-brown and raise its baseline opacity so it stays easier to read even before hover.
+
 ## v0.1.32 - 2026-03-28
 
 Purpose:
