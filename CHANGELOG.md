@@ -2,6 +2,16 @@
 
 All notable repository changes are recorded here.
 
+## v0.1.42 - 2026-03-28
+
+Purpose:
+- Bring the floating close button much closer to the native macOS red stoplight appearance.
+
+Contents:
+- Reduce the shared close control to a near-native stoplight size and remove the oversized glossy treatment from the previous iteration.
+- Simplify the red fill, border, and inner highlight so the resting state reads like a native macOS traffic-light dot.
+- Hide the `X` glyph by default and reveal it only on hover or keyboard focus to better match native macOS window-control behavior.
+
 ## v0.1.41 - 2026-03-28
 
 Purpose:

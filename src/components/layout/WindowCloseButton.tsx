@@ -12,13 +12,13 @@ export function WindowCloseButton({ onClick }: WindowCloseButtonProps) {
       aria-label="Hide QuickNote"
       title="Hide QuickNote"
       className="mac-window-close group"
-      whileHover={{ scale: 1.06 }}
-      whileTap={{ scale: 0.94 }}
+      whileHover={{ scale: 1.03 }}
+      whileTap={{ scale: 0.96 }}
       onClick={onClick}
     >
       <XIcon
-        size={9.5}
-        strokeWidth={3.1}
+        size={7.1}
+        strokeWidth={2.6}
         className="mac-window-close-glyph"
       />
     </motion.button>
