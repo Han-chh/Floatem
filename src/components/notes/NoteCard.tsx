@@ -169,13 +169,13 @@ function NoteCardBody({
                     initial={{ opacity: 0, y: 6, scale: 0.96 }}
                     animate={{ opacity: 1, y: 0, scale: 1 }}
                     exit={{ opacity: 0, y: 4, scale: 0.98 }}
-                    className="paper-card absolute bottom-[calc(100%+8px)] right-0 z-40 grid w-[min(220px,calc(100vw-64px))] grid-cols-3 gap-1.5 rounded-[18px] p-2"
+                    className="paper-card absolute bottom-[calc(100%+6px)] right-0 z-40 grid w-[min(168px,calc(100vw-88px))] grid-cols-3 justify-items-center gap-1 rounded-[16px] p-1.5"
                   >
                     {NOTE_DOT_COLORS.map((color) => (
                       <motion.button
                         key={color}
                         type="button"
-                        className="h-7 w-7 rounded-full border border-[var(--border)]"
+                        className="h-[22px] w-[22px] rounded-full border border-[var(--border)]"
                         style={{ backgroundColor: color }}
                         aria-label={`Use ${color} for note`}
                         whileHover={{ scale: 1.08 }}

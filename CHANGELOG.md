@@ -2,6 +2,16 @@
 
 All notable repository changes are recorded here.
 
+## v0.1.39 - 2026-03-28
+
+Purpose:
+- Even out the three note action buttons and shrink the color picker so it fits cleanly above the card without getting blocked.
+
+Contents:
+- Change the note action strip to a fixed three-column grid so the color, fold, and delete controls sit at equal spacing.
+- Shift the color control slightly left as part of the new equal-spacing action layout.
+- Reduce the color picker panel width, padding, and color-swatch size so the popup displays more cleanly in compact window widths.
+
 ## v0.1.38 - 2026-03-28
 
 Purpose:
