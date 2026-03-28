@@ -134,13 +134,13 @@ export function SettingsPanel({ onClose }: SettingsPanelProps) {
   return (
     <main
       data-testid="settings-panel"
-      className="h-screen overflow-hidden bg-[linear-gradient(180deg,var(--base-bg)_0%,var(--base-bg-deep)_100%)] text-[var(--dark-text)]"
+      className="h-screen overflow-hidden bg-transparent text-[var(--dark-text)]"
     >
       <motion.div
         initial={{ opacity: 0, y: 18, scale: 0.985 }}
         animate={{ opacity: 1, y: 0, scale: 1 }}
         transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
-        className="window-shell flex h-full min-h-0 flex-col p-3"
+        className="window-shell flex h-full min-h-0 flex-col p-[14px]"
       >
         <div className="paper-panel flex h-full min-h-0 flex-col rounded-[32px] p-4">
           <div className="mb-4 flex items-start justify-between gap-4">

@@ -1,6 +1,6 @@
 [package]
 name = "quicknote"
-version = "0.1.20"
+version = "0.1.21"
 description = "QuickNote macOS tray note app"
 authors = ["Codex"]
 edition = "2021"
@@ -18,7 +18,7 @@ crate-type = ["staticlib", "cdylib", "rlib"]
 tauri-build = { version = "2", features = [] }
 
 [dependencies]
-tauri = { version = "2", features = [] }
+tauri = { version = "2", features = ["macos-private-api"] }
 block2 = "0.6.2"
 objc2 = "0.6.4"
 objc2-app-kit = { version = "0.3.2", default-features = false, features = ["NSEvent", "block2"] }

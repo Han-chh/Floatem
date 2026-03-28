@@ -13,12 +13,12 @@ type PanelShellProps = {
 
 export function PanelShell({ activeTab, onTabChange, children, onToggleSettings }: PanelShellProps) {
   return (
-    <main className="h-screen overflow-hidden bg-[linear-gradient(180deg,var(--base-bg)_0%,var(--base-bg-deep)_100%)] text-[13.5px] text-[var(--dark-text)]">
+    <main className="h-screen overflow-hidden bg-transparent text-[13.5px] text-[var(--dark-text)]">
       <motion.div
         initial={{ opacity: 0, y: 16, scale: 0.98 }}
         animate={{ opacity: 1, y: 0, scale: 1 }}
         transition={{ duration: 0.32, ease: [0.22, 1, 0.36, 1] }}
-        className="window-shell cq-panel flex h-full min-h-0 flex-col p-[12px]"
+        className="window-shell cq-panel flex h-full min-h-0 flex-col p-[14px]"
       >
         <div className="pointer-events-none absolute inset-0 overflow-hidden">
           <div className="absolute -left-16 top-10 h-56 w-56 rounded-full bg-[rgba(255,122,89,0.16)] blur-3xl" />

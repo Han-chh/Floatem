@@ -2,6 +2,17 @@
 
 All notable repository changes are recorded here.
 
+## v0.1.21 - 2026-03-28
+
+Purpose:
+- Turn the floating panel into a visibly rounded macOS-style window and add notebook-like texture to the shell padding.
+
+Contents:
+- Enable transparent macOS window rendering so the app can present real rounded outer corners instead of a full rectangular frame.
+- Move the root webview backgrounds to transparent and let the rounded `window-shell` own the visible window shape and shadow.
+- Add a subtle ruled-paper and binding-line texture treatment inside the shell padding to make the outer margin feel more like a paper notebook.
+- Slightly increase shell padding so the new textured edge reads as intentional space rather than accidental gutter.
+
 ## v0.1.20 - 2026-03-28
 
 Purpose:
