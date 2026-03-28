@@ -2,6 +2,16 @@
 
 All notable repository changes are recorded here.
 
+## v0.1.24 - 2026-03-28
+
+Purpose:
+- Strip the last visible shell halo around the rounded window and clean up the top edge.
+
+Contents:
+- Disable the native window shadow and remove the shell’s outer drop shadow so the rounded body no longer reads like it has an external border.
+- Move shell grain and notebook accents further inward so decoration starts inside the body instead of at the top and bottom edges.
+- Pull the panel’s ambient color glows off the window perimeter and deepen the inner warm edge transition inside the shell.
+
 ## v0.1.23 - 2026-03-28
 
 Purpose:
