@@ -140,18 +140,19 @@ function NoteCardBody({
             </div>
 
             <div className="note-card-actions">
-              <div className="relative shrink-0">
+              <div className="group relative flex h-7 w-7 shrink-0 items-start">
                 <motion.button
                   type="button"
-                  className="paper-button inline-flex h-7 w-7 items-center justify-center rounded-full"
+                  className="paper-icon-button relative h-7 min-h-0 min-w-0 w-7 rounded-[9px]"
                   aria-label="Change note color"
                   whileHover={isInteractive ? { y: -1.5, scale: 1.03 } : undefined}
                   whileTap={isInteractive ? { scale: 0.97 } : undefined}
                   onPointerDown={isInteractive ? (event) => event.stopPropagation() : undefined}
                   onClick={isInteractive && setShowPalette ? () => setShowPalette(!showPalette) : undefined}
                   style={{
-                    borderColor: `${note.dotColor}8c`,
-                    boxShadow: `0 0 0 4px ${note.dotColor}14, 0 8px 14px rgba(61,49,34,0.08), inset 0 1px 0 rgba(255,255,255,0.88)`,
+                    borderColor: `${note.dotColor}72`,
+                    background: `linear-gradient(180deg, rgba(255,255,255,0.98), ${note.dotColor}14), rgba(255,255,255,0.96)`,
+                    boxShadow: `0 0 0 3px ${note.dotColor}14, 0 10px 18px rgba(61,49,34,0.08), inset 0 1px 0 rgba(255,255,255,0.88)`,
                   }}
                 >
                   <span
@@ -160,12 +161,15 @@ function NoteCardBody({
                   />
                   <span className="sr-only">Change note color</span>
                 </motion.button>
+                <span className="pointer-events-none absolute -top-8 left-1/2 z-10 -translate-x-1/2 rounded-full bg-[rgba(30,25,21,0.94)] px-2 py-1 text-[10px] font-semibold leading-none whitespace-nowrap text-white opacity-0 shadow-[0_10px_20px_rgba(30,25,21,0.18)] transition-all duration-75 ease-out group-hover:-translate-y-1 group-hover:opacity-100">
+                  Color
+                </span>
                 {isInteractive && showPalette && setShowPalette && onUpdateDotColor ? (
                   <motion.div
                     initial={{ opacity: 0, y: 6, scale: 0.96 }}
                     animate={{ opacity: 1, y: 0, scale: 1 }}
                     exit={{ opacity: 0, y: 4, scale: 0.98 }}
-                    className="paper-card absolute right-0 top-10 z-10 grid w-[min(220px,calc(100vw-64px))] grid-cols-3 gap-1.5 rounded-[18px] p-2"
+                    className="paper-card absolute bottom-[calc(100%+8px)] right-0 z-40 grid w-[min(220px,calc(100vw-64px))] grid-cols-3 gap-1.5 rounded-[18px] p-2"
                   >
                     {NOTE_DOT_COLORS.map((color) => (
                       <motion.button
@@ -295,7 +299,9 @@ export function NoteCard({ note, onDelete }: NoteCardProps) {
       data-no-window-drag="true"
       aria-label="Reorder note"
       data-testid="note-card"
-      className={`paper-card cq-card relative overflow-hidden rounded-[28px] border border-[rgba(213,198,180,0.92)] bg-[linear-gradient(180deg,rgba(255,252,248,0.98),rgba(255,247,239,0.95))] shadow-[0_18px_36px_rgba(61,49,34,0.10)] cursor-grab active:cursor-grabbing ${
+      className={`paper-card cq-card relative rounded-[28px] border border-[rgba(213,198,180,0.92)] bg-[linear-gradient(180deg,rgba(255,252,248,0.98),rgba(255,247,239,0.95))] shadow-[0_18px_36px_rgba(61,49,34,0.10)] cursor-grab active:cursor-grabbing ${
+        showPalette ? "z-30 overflow-visible" : "overflow-hidden"
+      } ${
         isDragging ? "border-dashed border-[rgba(161,136,113,0.44)] bg-[rgba(255,255,255,0.12)] shadow-none" : ""
       }`}
     >

@@ -2,6 +2,16 @@
 
 All notable repository changes are recorded here.
 
+## v0.1.38 - 2026-03-28
+
+Purpose:
+- Align the note color control cleanly with the other action buttons and stop the color palette from being clipped or covered.
+
+Contents:
+- Restyle the note color control to use the same compact icon-button geometry as fold and delete so all three actions share the same baseline and height.
+- Add a tooltip to the color control for consistency with the other action buttons.
+- Open the color palette upward and raise the active card above its neighbors while the palette is visible so the color picker is no longer blocked.
+
 ## v0.1.37 - 2026-03-28
 
 Purpose:
