@@ -140,211 +140,212 @@ export function SettingsPanel({ onClose }: SettingsPanelProps) {
         initial={{ opacity: 0, y: 18, scale: 0.985 }}
         animate={{ opacity: 1, y: 0, scale: 1 }}
         transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
-        className="window-shell flex h-full min-h-0 flex-col p-[14px]"
+        className="window-shell h-full"
       >
-        <div className="paper-panel flex h-full min-h-0 flex-col rounded-[32px] p-4">
-          <div className="mb-4 flex items-start justify-between gap-4">
-            <div className="min-w-0">
-              <div className="mb-2 flex flex-wrap items-center gap-2">
-                <span className="status-chip" data-tone="blue">
-                  <SlidersHorizontalIcon size={12} />
-                  Settings
-                </span>
-                <span className="status-chip" data-tone="neutral">local only</span>
+        <div className="window-shell-content">
+          <div className="paper-panel flex h-full min-h-0 flex-col rounded-[32px] p-4">
+            <div className="mb-4 flex items-start justify-between gap-4">
+              <div className="min-w-0">
+                <div className="mb-2 flex flex-wrap items-center gap-2">
+                  <span className="status-chip" data-tone="blue">
+                    <SlidersHorizontalIcon size={12} />
+                    Settings
+                  </span>
+                  <span className="status-chip" data-tone="neutral">local only</span>
+                </div>
+                <p className="font-display text-[26px] font-semibold tracking-[-0.05em] text-[var(--brown-strong)]">
+                  QuickNote
+                </p>
+                <p className="mt-1 max-w-[58ch] text-[13px] leading-6 text-[var(--muted)]">
+                  Configure how the tray panel opens, switches between Notes and Todos, and how much motion feedback you want while working.
+                </p>
               </div>
-              <p className="font-display text-[26px] font-semibold tracking-[-0.05em] text-[var(--brown-strong)]">
-                QuickNote
-              </p>
-              <p className="mt-1 max-w-[58ch] text-[13px] leading-6 text-[var(--muted)]">
-                Configure how the tray panel opens, switches between Notes and Todos, and how much motion feedback you want while working.
-              </p>
+
+              <motion.button
+                type="button"
+                aria-label="Close"
+                className="paper-icon-button shrink-0"
+                whileHover={{ y: -2, scale: 1.02 }}
+                whileTap={{ scale: 0.985 }}
+                onClick={onClose}
+              >
+                <XIcon size={16} />
+              </motion.button>
             </div>
-
-            <motion.button
-              type="button"
-              aria-label="Close"
-              className="paper-icon-button shrink-0"
-              whileHover={{ y: -2, scale: 1.02 }}
-              whileTap={{ scale: 0.985 }}
-              onClick={onClose}
-            >
-              <XIcon size={16} />
-            </motion.button>
-          </div>
-
-          <div className="paper-scroll min-h-0 flex-1 overflow-y-auto pr-1">
-            <div className="settings-grid">
-              <SettingsCard
-                wide
-                icon={<SparklesIcon size={18} />}
-                title="About QuickNote"
-                subtitle="A tray-first capture surface for fast notes and timed todos on macOS."
-              >
-                <div className="grid gap-3 md:grid-cols-3">
-                  <div className="rounded-[20px] border border-[rgba(213,198,180,0.88)] bg-white/84 p-4">
-                    <p className="mb-2 inline-flex items-center gap-2 text-[12px] font-semibold text-[var(--brown-strong)]">
-                      <NotebookPenIcon size={15} />
-                      Notes
-                    </p>
-                    <p className="text-[12px] leading-6 text-[var(--muted)]">
-                      Card-based notes with drag sorting, color tags, and a compact editor surface.
-                    </p>
-                  </div>
-                  <div className="rounded-[20px] border border-[rgba(213,198,180,0.88)] bg-white/84 p-4">
-                    <p className="mb-2 inline-flex items-center gap-2 text-[12px] font-semibold text-[var(--brown-strong)]">
-                      <CircleCheckBigIcon size={15} />
-                      Todos
-                    </p>
-                    <p className="text-[12px] leading-6 text-[var(--muted)]">
-                      Status-colored tasks with reminders, fast entry, and quicker scanning in narrow windows.
-                    </p>
-                  </div>
-                  <div className="rounded-[20px] border border-[rgba(213,198,180,0.88)] bg-white/84 p-4">
-                    <p className="mb-2 inline-flex items-center gap-2 text-[12px] font-semibold text-[var(--brown-strong)]">
-                      <SlidersHorizontalIcon size={15} />
-                      Tray flow
-                    </p>
-                    <p className="text-[12px] leading-6 text-[var(--muted)]">
-                      Open from the global shortcut, keep the panel floating, and tune motion to match your pace.
-                    </p>
-                  </div>
-                </div>
-              </SettingsCard>
-
-              <SettingsCard
-                icon={<KeyboardIcon size={18} />}
-                title="Launch and navigation"
-                subtitle="Control how the panel opens and which section should be ready first."
-              >
-                <div className="space-y-4">
-                  <label className="block">
-                    <span className="mb-2 block text-[12px] font-semibold text-[var(--brown-strong)]">Global shortcut</span>
-                    <input
-                      value={draftHotkey}
-                      placeholder="Cmd+Shift+Space"
-                      onChange={(event) => setDraftHotkey(event.currentTarget.value)}
-                      onBlur={() => setHotkey(draftHotkey)}
-                      className="surface-field w-full rounded-[18px] px-4 py-3 text-[14px] font-medium text-[var(--dark-text)] outline-none"
-                    />
-                    <span className="mt-2 block text-[11px] leading-5 text-[var(--muted)]">
-                      Default launch shortcut: Cmd+Shift+Space
-                    </span>
-                  </label>
-
-                  <div>
-                    <p className="mb-2 text-[12px] font-semibold text-[var(--brown-strong)]">Default section</p>
-                    <div className="grid gap-2">
-                      <OptionButton
-                        selected={activeTab === "notes"}
-                        icon={<NotebookPenIcon size={16} />}
-                        onClick={() => setActiveTab("notes")}
-                      >
-                        Open Notes by default
-                      </OptionButton>
-                      <OptionButton
-                        selected={activeTab === "todos"}
-                        icon={<CircleCheckBigIcon size={16} />}
-                        onClick={() => setActiveTab("todos")}
-                      >
-                        Open Todos by default
-                      </OptionButton>
-                    </div>
-                  </div>
-                </div>
-              </SettingsCard>
-
-              <SettingsCard
-                icon={<SparklesIcon size={18} />}
-                title="Motion and feedback"
-                subtitle="Tune transition style, switching pace, and whether particle bursts stay on."
-              >
-                <div className="space-y-4">
-                  <div>
-                    <p className="mb-2 text-[12px] font-semibold text-[var(--brown-strong)]">Tab transition style</p>
-                    <div className="grid gap-2">
-                      <OptionButton
-                        selected={transitionStyle === "page"}
-                        icon={<NotebookPenIcon size={16} />}
-                        onClick={() => setTransitionStyle("page")}
-                      >
-                        Page turn
-                      </OptionButton>
-                      <OptionButton
-                        selected={transitionStyle === "slide"}
-                        icon={<SlidersHorizontalIcon size={16} />}
-                        onClick={() => setTransitionStyle("slide")}
-                      >
-                        Slide
-                      </OptionButton>
-                    </div>
-                  </div>
-
-                  <div>
-                    <p className="mb-2 text-[12px] font-semibold text-[var(--brown-strong)]">Switch speed</p>
-                    <div className="grid gap-2">
-                      <OptionButton
-                        selected={animationSpeed === "faster"}
-                        icon={<SparklesIcon size={16} />}
-                        onClick={() => setAnimationSpeed("faster")}
-                      >
-                        Faster
-                      </OptionButton>
-                      <OptionButton
-                        selected={animationSpeed === "fast"}
-                        icon={<SparklesIcon size={16} />}
-                        onClick={() => setAnimationSpeed("fast")}
-                      >
-                        Fast
-                      </OptionButton>
-                    </div>
-                  </div>
-
-                  <div className="flex items-center justify-between gap-4 rounded-[20px] border border-[rgba(213,198,180,0.88)] bg-white/84 px-4 py-3">
-                    <div className="min-w-0">
-                      <p className="text-[13px] font-semibold text-[var(--brown-strong)]">Particle feedback</p>
-                      <p className="mt-1 text-[12px] leading-6 text-[var(--muted)]">
-                        Show burst effects when notes and todos are added, completed, or removed.
+            <div className="paper-scroll min-h-0 flex-1 overflow-y-auto pr-1">
+              <div className="settings-grid">
+                <SettingsCard
+                  wide
+                  icon={<SparklesIcon size={18} />}
+                  title="About QuickNote"
+                  subtitle="A tray-first capture surface for fast notes and timed todos on macOS."
+                >
+                  <div className="grid gap-3 md:grid-cols-3">
+                    <div className="rounded-[20px] border border-[rgba(213,198,180,0.88)] bg-white/84 p-4">
+                      <p className="mb-2 inline-flex items-center gap-2 text-[12px] font-semibold text-[var(--brown-strong)]">
+                        <NotebookPenIcon size={15} />
+                        Notes
+                      </p>
+                      <p className="text-[12px] leading-6 text-[var(--muted)]">
+                        Card-based notes with drag sorting, color tags, and a compact editor surface.
                       </p>
                     </div>
-                    <ToggleButton enabled={enableParticles} onClick={() => setEnableParticles(!enableParticles)} />
+                    <div className="rounded-[20px] border border-[rgba(213,198,180,0.88)] bg-white/84 p-4">
+                      <p className="mb-2 inline-flex items-center gap-2 text-[12px] font-semibold text-[var(--brown-strong)]">
+                        <CircleCheckBigIcon size={15} />
+                        Todos
+                      </p>
+                      <p className="text-[12px] leading-6 text-[var(--muted)]">
+                        Status-colored tasks with reminders, fast entry, and quicker scanning in narrow windows.
+                      </p>
+                    </div>
+                    <div className="rounded-[20px] border border-[rgba(213,198,180,0.88)] bg-white/84 p-4">
+                      <p className="mb-2 inline-flex items-center gap-2 text-[12px] font-semibold text-[var(--brown-strong)]">
+                        <SlidersHorizontalIcon size={15} />
+                        Tray flow
+                      </p>
+                      <p className="text-[12px] leading-6 text-[var(--muted)]">
+                        Open from the global shortcut, keep the panel floating, and tune motion to match your pace.
+                      </p>
+                    </div>
                   </div>
-                </div>
-              </SettingsCard>
+                </SettingsCard>
 
-              <SettingsCard
-                icon={<MapPinIcon size={18} />}
-                title="Panel status"
-                subtitle="Current runtime details from the desktop shell."
-              >
-                <div className="space-y-3">
-                  <div className="rounded-[20px] border border-[rgba(213,198,180,0.88)] bg-white/84 px-4 py-4">
-                    <p className="text-[12px] font-semibold text-[var(--brown-strong)]">Last saved position</p>
-                    <p className="font-display mt-2 text-[22px] font-semibold tracking-[-0.04em] text-[var(--brown-strong)]">
-                      {panelPosition ? `x ${panelPosition.x}  y ${panelPosition.y}` : "Unset"}
-                    </p>
-                  </div>
-                  <div className="rounded-[20px] border border-[rgba(213,198,180,0.88)] bg-white/84 px-4 py-4">
-                    <p className="text-[12px] font-semibold text-[var(--brown-strong)]">Data scope</p>
-                    <p className="mt-2 text-[12px] leading-6 text-[var(--muted)]">
-                      Notes, todos, and settings are stored locally in the app data directory and auto-saved after edits.
-                    </p>
-                  </div>
-                </div>
-              </SettingsCard>
+                <SettingsCard
+                  icon={<KeyboardIcon size={18} />}
+                  title="Launch and navigation"
+                  subtitle="Control how the panel opens and which section should be ready first."
+                >
+                  <div className="space-y-4">
+                    <label className="block">
+                      <span className="mb-2 block text-[12px] font-semibold text-[var(--brown-strong)]">Global shortcut</span>
+                      <input
+                        value={draftHotkey}
+                        placeholder="Cmd+Shift+Space"
+                        onChange={(event) => setDraftHotkey(event.currentTarget.value)}
+                        onBlur={() => setHotkey(draftHotkey)}
+                        className="surface-field w-full rounded-[18px] px-4 py-3 text-[14px] font-medium text-[var(--dark-text)] outline-none"
+                      />
+                      <span className="mt-2 block text-[11px] leading-5 text-[var(--muted)]">
+                        Default launch shortcut: Cmd+Shift+Space
+                      </span>
+                    </label>
 
-              <SettingsCard
-                icon={<PaletteIcon size={18} />}
-                title="Visual palette"
-                subtitle="The active surface style used by the app right now."
-              >
-                <div className="flex flex-wrap gap-3">
-                  <span className="h-10 w-10 rounded-full bg-[var(--accent-coral)] shadow-[0_10px_18px_rgba(255,122,89,0.18)]" />
-                  <span className="h-10 w-10 rounded-full bg-[var(--accent-cobalt)] shadow-[0_10px_18px_rgba(47,107,255,0.16)]" />
-                  <span className="h-10 w-10 rounded-full bg-[var(--accent-jade)] shadow-[0_10px_18px_rgba(31,168,122,0.16)]" />
-                  <span className="h-10 w-10 rounded-full bg-[var(--accent-marigold)] shadow-[0_10px_18px_rgba(244,185,66,0.18)]" />
-                  <span className="h-10 w-10 rounded-full bg-[var(--accent-plum)] shadow-[0_10px_18px_rgba(123,92,250,0.16)]" />
-                </div>
-              </SettingsCard>
+                    <div>
+                      <p className="mb-2 text-[12px] font-semibold text-[var(--brown-strong)]">Default section</p>
+                      <div className="grid gap-2">
+                        <OptionButton
+                          selected={activeTab === "notes"}
+                          icon={<NotebookPenIcon size={16} />}
+                          onClick={() => setActiveTab("notes")}
+                        >
+                          Open Notes by default
+                        </OptionButton>
+                        <OptionButton
+                          selected={activeTab === "todos"}
+                          icon={<CircleCheckBigIcon size={16} />}
+                          onClick={() => setActiveTab("todos")}
+                        >
+                          Open Todos by default
+                        </OptionButton>
+                      </div>
+                    </div>
+                  </div>
+                </SettingsCard>
+
+                <SettingsCard
+                  icon={<SparklesIcon size={18} />}
+                  title="Motion and feedback"
+                  subtitle="Tune transition style, switching pace, and whether particle bursts stay on."
+                >
+                  <div className="space-y-4">
+                    <div>
+                      <p className="mb-2 text-[12px] font-semibold text-[var(--brown-strong)]">Tab transition style</p>
+                      <div className="grid gap-2">
+                        <OptionButton
+                          selected={transitionStyle === "page"}
+                          icon={<NotebookPenIcon size={16} />}
+                          onClick={() => setTransitionStyle("page")}
+                        >
+                          Page turn
+                        </OptionButton>
+                        <OptionButton
+                          selected={transitionStyle === "slide"}
+                          icon={<SlidersHorizontalIcon size={16} />}
+                          onClick={() => setTransitionStyle("slide")}
+                        >
+                          Slide
+                        </OptionButton>
+                      </div>
+                    </div>
+
+                    <div>
+                      <p className="mb-2 text-[12px] font-semibold text-[var(--brown-strong)]">Switch speed</p>
+                      <div className="grid gap-2">
+                        <OptionButton
+                          selected={animationSpeed === "faster"}
+                          icon={<SparklesIcon size={16} />}
+                          onClick={() => setAnimationSpeed("faster")}
+                        >
+                          Faster
+                        </OptionButton>
+                        <OptionButton
+                          selected={animationSpeed === "fast"}
+                          icon={<SparklesIcon size={16} />}
+                          onClick={() => setAnimationSpeed("fast")}
+                        >
+                          Fast
+                        </OptionButton>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center justify-between gap-4 rounded-[20px] border border-[rgba(213,198,180,0.88)] bg-white/84 px-4 py-3">
+                      <div className="min-w-0">
+                        <p className="text-[13px] font-semibold text-[var(--brown-strong)]">Particle feedback</p>
+                        <p className="mt-1 text-[12px] leading-6 text-[var(--muted)]">
+                          Show burst effects when notes and todos are added, completed, or removed.
+                        </p>
+                      </div>
+                      <ToggleButton enabled={enableParticles} onClick={() => setEnableParticles(!enableParticles)} />
+                    </div>
+                  </div>
+                </SettingsCard>
+
+                <SettingsCard
+                  icon={<MapPinIcon size={18} />}
+                  title="Panel status"
+                  subtitle="Current runtime details from the desktop shell."
+                >
+                  <div className="space-y-3">
+                    <div className="rounded-[20px] border border-[rgba(213,198,180,0.88)] bg-white/84 px-4 py-4">
+                      <p className="text-[12px] font-semibold text-[var(--brown-strong)]">Last saved position</p>
+                      <p className="font-display mt-2 text-[22px] font-semibold tracking-[-0.04em] text-[var(--brown-strong)]">
+                        {panelPosition ? `x ${panelPosition.x}  y ${panelPosition.y}` : "Unset"}
+                      </p>
+                    </div>
+                    <div className="rounded-[20px] border border-[rgba(213,198,180,0.88)] bg-white/84 px-4 py-4">
+                      <p className="text-[12px] font-semibold text-[var(--brown-strong)]">Data scope</p>
+                      <p className="mt-2 text-[12px] leading-6 text-[var(--muted)]">
+                        Notes, todos, and settings are stored locally in the app data directory and auto-saved after edits.
+                      </p>
+                    </div>
+                  </div>
+                </SettingsCard>
+
+                <SettingsCard
+                  icon={<PaletteIcon size={18} />}
+                  title="Visual palette"
+                  subtitle="The active surface style used by the app right now."
+                >
+                  <div className="flex flex-wrap gap-3">
+                    <span className="h-10 w-10 rounded-full bg-[var(--accent-coral)] shadow-[0_10px_18px_rgba(255,122,89,0.18)]" />
+                    <span className="h-10 w-10 rounded-full bg-[var(--accent-cobalt)] shadow-[0_10px_18px_rgba(47,107,255,0.16)]" />
+                    <span className="h-10 w-10 rounded-full bg-[var(--accent-jade)] shadow-[0_10px_18px_rgba(31,168,122,0.16)]" />
+                    <span className="h-10 w-10 rounded-full bg-[var(--accent-marigold)] shadow-[0_10px_18px_rgba(244,185,66,0.18)]" />
+                    <span className="h-10 w-10 rounded-full bg-[var(--accent-plum)] shadow-[0_10px_18px_rgba(123,92,250,0.16)]" />
+                  </div>
+                </SettingsCard>
+              </div>
             </div>
           </div>
         </div>

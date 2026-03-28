@@ -2,6 +2,16 @@
 
 All notable repository changes are recorded here.
 
+## v0.1.23 - 2026-03-28
+
+Purpose:
+- Eliminate the last transparent shell gutters and make the inner edge treatment read more deliberately inside the rounded window.
+
+Contents:
+- Move shell padding from the outer rounded window to a full-height inner content wrapper so the visible window body reaches the true window bounds.
+- Strengthen the shell’s internal warm gradient and inset shading so the inner edge transition is more obvious without reading as an outer border.
+- Keep the notebook ruling and binding accents inside the rounded shell instead of leaving transparent margin around the window.
+
 ## v0.1.22 - 2026-03-28
 
 Purpose:
