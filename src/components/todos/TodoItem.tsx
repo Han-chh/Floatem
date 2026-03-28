@@ -28,13 +28,13 @@ function getStatusMeta(todo: TodoItemModel) {
       label: "done",
       reminderLabel: todo.reminderAt ? format(new Date(todo.reminderAt), "M/d HH:mm") : "Done",
       reminderClass:
-        "border-[rgba(128,124,118,0.18)] bg-[rgba(228,226,222,0.92)] text-[rgba(102,98,93,0.92)]",
+        "border-[rgba(145,149,146,0.2)] bg-[rgba(223,228,224,0.62)] text-[rgba(97,102,98,0.92)]",
       toggleClass:
-        "border-[rgba(128,124,118,0.2)] bg-[linear-gradient(180deg,rgba(132,128,122,0.96),rgba(101,98,94,0.92))] text-white",
-      strikeClass: "bg-[rgba(82,77,72,0.9)] shadow-[0_0_0_1px_rgba(82,77,72,0.14)]",
+        "border-[rgba(31,168,122,0.28)] bg-[linear-gradient(180deg,rgba(49,191,138,0.98),rgba(24,147,104,0.96))] text-white shadow-[0_10px_20px_rgba(31,168,122,0.22)]",
+      strikeClass: "bg-[rgba(92,88,84,0.84)]",
       cardClass:
-        "border-[rgba(209,206,201,0.92)] bg-[linear-gradient(180deg,rgba(245,244,242,0.99),rgba(233,231,228,0.97))]",
-      accent: "rgba(118,114,108,0.84)",
+        "border-[rgba(176,182,177,0.7)] bg-[linear-gradient(180deg,rgba(233,238,234,0.72),rgba(217,222,218,0.58))]",
+      accent: "rgba(120,126,121,0.76)",
     };
   }
 
@@ -168,34 +168,11 @@ function TodoRowBody({
           <div className="relative min-w-0">
             <p
               className={`wrap-anywhere pr-1 text-[12px] font-semibold leading-[1.3] text-[var(--dark-text)] ${
-                todo.done ? "text-[rgba(94,90,86,0.82)]" : ""
+                todo.done ? "text-[rgba(95,100,96,0.88)]" : ""
               }`}
             >
               {todo.text}
             </p>
-            <motion.span
-              aria-hidden="true"
-              initial={false}
-              animate={{
-                opacity: todo.done ? 1 : 0,
-                scaleX: todo.done ? 1 : 0,
-              }}
-              transition={{ duration: 0.18, ease: [0.22, 1, 0.36, 1] }}
-              className={`pointer-events-none absolute left-0 right-0 top-1/2 h-[2.5px] origin-left rounded-full ${status.strikeClass}`}
-              style={{ transform: "translateY(-50%) rotate(-1.5deg)" }}
-            />
-            <AnimatePresence>
-              {todo.done ? (
-                <motion.span
-                  key={`${todo.id}-pencil-pass`}
-                  initial={{ opacity: 0, left: "-2%" }}
-                  animate={{ opacity: [0, 1, 1, 0], left: "calc(100% - 16px)" }}
-                  exit={{ opacity: 0 }}
-                  transition={{ duration: 0.42, ease: [0.22, 1, 0.36, 1] }}
-                  className="pointer-events-none absolute top-1/2 z-10 h-[6px] w-4 -translate-y-1/2 -rotate-[12deg] rounded-full bg-[linear-gradient(90deg,rgba(228,205,150,0.96),rgba(179,138,78,0.96)_68%,rgba(57,53,49,0.96))] shadow-[0_4px_10px_rgba(57,53,49,0.14)]"
-                />
-              ) : null}
-            </AnimatePresence>
           </div>
         </div>
 
@@ -212,7 +189,11 @@ function TodoRowBody({
             type="button"
             aria-label="Delete todo"
             title="Delete todo"
-            className="paper-icon-button paper-button-danger inline-flex h-6.5 w-6.5 min-h-0 min-w-0 items-center justify-center rounded-full"
+            className={`paper-icon-button inline-flex h-6.5 w-6.5 min-h-0 min-w-0 items-center justify-center rounded-full ${
+              todo.done
+                ? "border-[rgba(151,156,152,0.24)] bg-[rgba(222,226,223,0.72)] text-[rgba(113,118,114,0.9)]"
+                : "paper-button-danger"
+            }`}
             whileHover={isInteractive ? { y: -1.5, scale: 1.03 } : undefined}
             whileTap={isInteractive ? { scale: 0.97 } : undefined}
             onPointerDown={isInteractive ? (event) => event.stopPropagation() : undefined}
@@ -226,6 +207,40 @@ function TodoRowBody({
           </motion.button>
         </div>
       </div>
+
+      <AnimatePresence>
+        {todo.done && !isDraggingPlaceholder ? (
+          <>
+            <motion.span
+              key={`${todo.id}-card-scribble-primary`}
+              aria-hidden="true"
+              initial={{ opacity: 0, scaleX: 0.16 }}
+              animate={{ opacity: 0.94, scaleX: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.28, ease: [0.22, 1, 0.36, 1] }}
+              className="todo-done-scribble-line todo-done-scribble-line-primary"
+            />
+            <motion.span
+              key={`${todo.id}-card-scribble-secondary`}
+              aria-hidden="true"
+              initial={{ opacity: 0, scaleX: 0.14 }}
+              animate={{ opacity: 0.76, scaleX: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.32, delay: 0.03, ease: [0.22, 1, 0.36, 1] }}
+              className="todo-done-scribble-line todo-done-scribble-line-secondary"
+            />
+            <motion.span
+              key={`${todo.id}-card-pencil-pass`}
+              aria-hidden="true"
+              initial={{ opacity: 0, left: "-14%" }}
+              animate={{ opacity: [0, 1, 1, 0], left: "104%" }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.52, ease: [0.22, 1, 0.36, 1] }}
+              className="todo-done-pencil"
+            />
+          </>
+        ) : null}
+      </AnimatePresence>
     </>
   );
 }
@@ -295,7 +310,7 @@ export function CompletedTodoItem({ todo, onDelete, onToggle }: TodoItemProps) {
       exit={{ opacity: 0, y: -12, scale: 0.96 }}
       transition={{ duration: 0.2, ease: [0.22, 1, 0.36, 1] }}
       data-testid="todo-item"
-      className={`paper-card cq-card relative overflow-hidden rounded-[20px] px-2 py-1.75 shadow-[0_8px_18px_rgba(61,49,34,0.06)] opacity-88 grayscale-[0.28] ${status.cardClass}`}
+      className={`paper-card cq-card relative overflow-hidden rounded-[20px] px-2 py-1.75 shadow-[0_8px_18px_rgba(61,49,34,0.05)] ${status.cardClass}`}
     >
       <TodoRowBody
         todo={todo}

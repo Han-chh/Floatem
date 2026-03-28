@@ -2,6 +2,17 @@
 
 All notable repository changes are recorded here.
 
+## v0.1.17 - 2026-03-28
+
+Purpose:
+- Make completed todos read as intentionally finished cards instead of lightly struck text rows.
+
+Contents:
+- Turn the completed-state check button into a clear green confirmation control.
+- Replace the old mid-text strike with full-card pencil scribble overlays that cut across the whole todo card.
+- Shift completed todo cards to a greyer, more transparent surface treatment and mute secondary controls so the finished state reads at a glance.
+- Keep the rest of the compact todo row layout intact while updating the completed visual hierarchy.
+
 ## v0.1.16 - 2026-03-28
 
 Purpose:
