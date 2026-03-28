@@ -2,6 +2,15 @@
 
 All notable repository changes are recorded here.
 
+## v0.1.22 - 2026-03-28
+
+Purpose:
+- Remove the remaining border-like shell marks outside the rounded window and move notebook decoration fully inside the panel shape.
+
+Contents:
+- Soften the outer shell shadow and remove edge-adjacent decorative texture that could read like an extra border.
+- Rebuild the notebook embellishment so the ruling lines, binding line, and page-hole accents sit well inside the rounded rectangle instead of near the outer edge.
+
 ## v0.1.21 - 2026-03-28
 
 Purpose:

@@ -2817,7 +2817,7 @@ dependencies = [
 
 [[package]]
 name = "quicknote"
-version = "0.1.21"
+version = "0.1.22"
 dependencies = [
  "block2",
  "objc2",
