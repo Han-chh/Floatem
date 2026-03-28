@@ -1,7 +1,7 @@
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { motion } from "framer-motion";
-import { useEffect, useRef, useState, type Ref } from "react";
+import { useEffect, useRef, useState, type CSSProperties, type Ref } from "react";
 import { NOTE_DOT_COLORS, type NoteCard as NoteCardModel } from "../../lib/models";
 import { syncTextareaHeight } from "../../lib/resizeTextarea";
 import { useNotesStore } from "../../store/notesStore";
@@ -27,6 +27,14 @@ type NoteCardBodyProps = {
   titleRef?: Ref<HTMLTextAreaElement>;
   isDraggingPlaceholder?: boolean;
   preview?: boolean;
+};
+
+const NOTE_PALETTE_COLUMNS = Math.min(5, Math.max(3, Math.ceil(Math.sqrt(NOTE_DOT_COLORS.length))));
+const NOTE_PALETTE_NATURAL_WIDTH = NOTE_PALETTE_COLUMNS * 28 + (NOTE_PALETTE_COLUMNS - 1) * 6 + 16;
+const NOTE_PALETTE_STYLE: CSSProperties = {
+  gridTemplateColumns: `repeat(${NOTE_PALETTE_COLUMNS}, minmax(0, 1fr))`,
+  width: `min(${NOTE_PALETTE_NATURAL_WIDTH}px, calc(100cqi - 96px), calc(100vw - 96px))`,
+  maxHeight: "min(240px, calc(100vh - 128px))",
 };
 
 function formatCompactEditedLabel(updatedAt: number) {
@@ -140,10 +148,10 @@ function NoteCardBody({
             </div>
 
             <div className="note-card-actions">
-              <div className="group relative flex h-7 w-7 shrink-0 items-start">
+              <div className="note-card-action-anchor group">
                 <motion.button
                   type="button"
-                  className="paper-icon-button relative h-7 min-h-0 min-w-0 w-7 rounded-[9px]"
+                  className="note-card-action-button paper-icon-button relative rounded-[9px]"
                   aria-label="Change note color"
                   whileHover={isInteractive ? { y: -1.5, scale: 1.03 } : undefined}
                   whileTap={isInteractive ? { scale: 0.97 } : undefined}
@@ -166,10 +174,11 @@ function NoteCardBody({
                 </span>
                 {isInteractive && showPalette && setShowPalette && onUpdateDotColor ? (
                   <motion.div
-                    initial={{ opacity: 0, y: 6, scale: 0.96 }}
-                    animate={{ opacity: 1, y: 0, scale: 1 }}
-                    exit={{ opacity: 0, y: 4, scale: 0.98 }}
-                    className="paper-card absolute bottom-[calc(100%+6px)] right-0 z-40 grid w-[min(168px,calc(100vw-88px))] grid-cols-3 justify-items-center gap-1 rounded-[16px] p-1.5"
+                    initial={{ opacity: 0, x: 6, scale: 0.96 }}
+                    animate={{ opacity: 1, x: 0, scale: 1 }}
+                    exit={{ opacity: 0, x: 4, scale: 0.98 }}
+                    className="note-color-popover paper-card absolute right-[calc(100%+10px)] top-[-4px] z-40 grid justify-items-center gap-1.5 rounded-[18px] p-2"
+                    style={NOTE_PALETTE_STYLE}
                   >
                     {NOTE_DOT_COLORS.map((color) => (
                       <motion.button
@@ -193,7 +202,7 @@ function NoteCardBody({
               <motion.button
                 type="button"
                 aria-label="Collapse note"
-                className="paper-icon-button group relative h-7 min-h-0 min-w-0 w-7 rounded-[9px]"
+                className="note-card-action-button paper-icon-button group relative rounded-[9px]"
                 whileHover={isInteractive ? { y: -1.5, scale: 1.03 } : undefined}
                 whileTap={isInteractive ? { scale: 0.97 } : undefined}
                 onPointerDown={isInteractive ? (event) => event.stopPropagation() : undefined}
@@ -208,7 +217,7 @@ function NoteCardBody({
                 type="button"
                 data-action="delete"
                 aria-label="Delete note"
-                className="paper-icon-button paper-button-danger group relative h-7 min-h-0 min-w-0 w-7 rounded-[9px]"
+                className="note-card-action-button paper-icon-button paper-button-danger group relative rounded-[9px]"
                 whileHover={isInteractive ? { y: -1.5, scale: 1.03 } : undefined}
                 whileTap={isInteractive ? { scale: 0.97 } : undefined}
                 onPointerDown={isInteractive ? (event) => event.stopPropagation() : undefined}

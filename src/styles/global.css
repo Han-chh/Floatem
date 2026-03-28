@@ -401,12 +401,35 @@
 
   .note-card-actions {
     display: grid;
-    grid-auto-flow: column;
-    grid-auto-columns: 28px;
+    grid-template-columns: repeat(3, 28px);
     justify-content: end;
     justify-items: center;
     align-items: start;
-    column-gap: 5px;
+    gap: 6px;
+    width: fit-content;
+    margin-inline-end: 6px;
+  }
+
+  .note-card-action-anchor {
+    position: relative;
+    display: flex;
+    width: 28px;
+    min-width: 28px;
+    flex: 0 0 28px;
+    justify-content: center;
+    align-items: flex-start;
+  }
+
+  .note-card-action-button {
+    width: 28px;
+    min-width: 28px;
+    min-height: 28px;
+  }
+
+  .note-color-popover {
+    transform-origin: top right;
+    overflow-y: auto;
+    overscroll-behavior: contain;
   }
 
   .note-card-chip-group {
@@ -521,16 +544,13 @@
     }
   }
 
-  @container card (min-width: 332px) {
-    .note-card-actions > * {
-      width: max-content;
-      max-width: 100%;
-    }
-  }
-
   @container card (max-width: 331px) {
     .note-card-meta {
       gap: 6px;
+    }
+
+    .note-card-actions {
+      margin-inline-end: 2px;
     }
   }
 

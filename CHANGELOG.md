@@ -2,6 +2,16 @@
 
 All notable repository changes are recorded here.
 
+## v0.1.40 - 2026-03-28
+
+Purpose:
+- Separate the three note action buttons cleanly and make the color palette expand safely for future color growth.
+
+Contents:
+- Remove the action-row sizing rule that let tooltips and the palette widen button wrappers and force the color, fold, and delete buttons into each other.
+- Shift the note action strip slightly left and lock each action onto a fixed 28px track so the three controls stay visually separated.
+- Rebuild the color palette as a left-expanding, multi-row grid that sizes from the number of available colors while staying inside the card and viewport.
+
 ## v0.1.39 - 2026-03-28
 
 Purpose:
