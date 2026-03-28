@@ -2,6 +2,16 @@
 
 All notable repository changes are recorded here.
 
+## v0.1.31 - 2026-03-28
+
+Purpose:
+- Move the macOS close control into the shell chrome so the title and tab card return to their previous height while the outer top band becomes taller.
+
+Contents:
+- Pull the red macOS-style hide button out of the title card and place it in a dedicated shell-top strip above the main panel header.
+- Restore the main title-and-tab card spacing to its previous compact height instead of stretching it to fit the close control.
+- Apply the same shell-top hide button treatment to the settings view so the close control stays in the outer chrome rather than inside the content header.
+
 ## v0.1.30 - 2026-03-28
 
 Purpose:

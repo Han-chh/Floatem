@@ -36,39 +36,31 @@ export function PanelShell({ activeTab, onTabChange, children, onToggleSettings 
             <div className="absolute bottom-[-3.5rem] left-1/3 h-64 w-64 rounded-full bg-[rgba(31,168,122,0.11)] blur-3xl" />
           </div>
 
+          <div className="mb-2 flex min-h-[28px] items-center px-2">
+            <WindowCloseButton onClick={handleHideWindow} />
+          </div>
+
           <motion.header
             initial={{ opacity: 0, y: -12 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.22, delay: 0.03, ease: [0.22, 1, 0.36, 1] }}
-            className="paper-panel mb-3 rounded-[30px] px-4 py-4"
+            className="paper-panel mb-3 rounded-[30px] px-4 py-3"
           >
-            <div className="space-y-4">
+            <div className="space-y-3">
               <div className="flex min-w-0 items-center justify-between gap-3">
-                <div className="flex items-center gap-3">
-                  <WindowCloseButton onClick={handleHideWindow} />
-                  <span
-                    aria-hidden="true"
-                    className="block h-2 w-14 rounded-full bg-[linear-gradient(90deg,rgba(255,255,255,0.88),rgba(245,226,206,0.5),rgba(255,255,255,0.22))] shadow-[inset_0_1px_0_rgba(255,255,255,0.68)]"
-                  />
-                </div>
-
+                <p className="font-display text-[clamp(22px,6vw,28px)] font-semibold tracking-[-0.05em] text-[var(--brown-strong)]">
+                  QuickNote
+                </p>
                 <motion.button
                   type="button"
                   aria-label="Settings"
-                  className="paper-icon-button h-10 w-10 shrink-0"
+                  className="paper-icon-button shrink-0"
                   whileHover={{ y: -2, scale: 1.02 }}
                   whileTap={{ scale: 0.985 }}
                   onClick={onToggleSettings}
                 >
                   <SlidersHorizontalIcon size={18} />
                 </motion.button>
-              </div>
-
-              <div className="flex min-w-0 items-center justify-between gap-3">
-                <p className="font-display text-[clamp(22px,6vw,28px)] font-semibold tracking-[-0.05em] text-[var(--brown-strong)]">
-                  QuickNote
-                </p>
-                <span aria-hidden="true" className="h-4 w-10 shrink-0" />
               </div>
 
               <TabBar activeTab={activeTab} onTabChange={onTabChange} />

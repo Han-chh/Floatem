@@ -18,7 +18,7 @@ export function WindowCloseButton({ onClick }: WindowCloseButtonProps) {
     >
       <XIcon
         size={7.5}
-        className="relative z-10 text-[#7a1f16] opacity-78 transition-opacity duration-150 group-hover:opacity-100"
+        className="relative z-10 text-[#7a1f16] opacity-0 transition-opacity duration-150 group-hover:opacity-100"
       />
     </motion.button>
   );
