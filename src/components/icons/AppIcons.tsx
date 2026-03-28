@@ -110,6 +110,16 @@ export function Trash2Icon(props: IconProps) {
   );
 }
 
+export function EraserIcon(props: IconProps) {
+  return (
+    <BaseIcon {...props}>
+      <path d="m7 16 7.5-7.5 3 3L10 19H7v-3Z" />
+      <path d="m13.5 9.5 2-2a1.4 1.4 0 0 1 2 0l1 1a1.4 1.4 0 0 1 0 2l-2 2" />
+      <path d="M4 20h8" />
+    </BaseIcon>
+  );
+}
+
 export function PaletteIcon(props: IconProps) {
   return (
     <BaseIcon {...props}>

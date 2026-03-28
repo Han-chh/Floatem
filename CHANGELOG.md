@@ -100,3 +100,14 @@ Contents:
 - Remove the dedicated Move button and switch note dragging to the card surface itself, while keeping live drag feedback.
 - Compress the note toolbar into smaller icon-only controls, remove the brush action, and expose functions through hover tooltips.
 - Expand the note editor area so the body content reads as the primary surface, and increase the default window height again to show more cards.
+
+## v0.1.9 - 2026-03-28
+
+Purpose:
+- Deepen the note-card interaction polish with faster tool hints, stronger card decoration, and richer drag feedback.
+
+Contents:
+- Replace the Clear toolbar icon so it no longer duplicates the card-delete icon, and switch toolbar help to fast custom hover tooltips.
+- Move Fold and Delete into the same metadata row as the card chips to free more vertical space for editing.
+- Add larger circular color decoration, tape-like accents, and stronger card styling so notes feel closer to lively sticky cards.
+- Add a drag overlay preview while leaving a transparent placeholder frame in the original slot during note dragging.

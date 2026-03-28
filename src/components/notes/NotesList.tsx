@@ -1,10 +1,12 @@
 import {
   closestCenter,
   DndContext,
+  DragOverlay,
   PointerSensor,
   useSensor,
   useSensors,
   type DragEndEvent,
+  type DragStartEvent,
 } from "@dnd-kit/core";
 import { SortableContext, verticalListSortingStrategy } from "@dnd-kit/sortable";
 import { AnimatePresence, motion } from "framer-motion";
@@ -14,7 +16,7 @@ import { PlusIcon } from "../icons/AppIcons";
 import { useParticleField } from "../../hooks/useParticleField";
 import { useNotesStore } from "../../store/notesStore";
 import { useSettingsStore } from "../../store/settingsStore";
-import { NoteCard } from "./NoteCard";
+import { NoteCard, NoteCardPreview } from "./NoteCard";
 
 export function NotesList() {
   const cards = useNotesStore((state) => state.cards);
@@ -23,6 +25,7 @@ export function NotesList() {
   const removeCard = useNotesStore((state) => state.removeCard);
   const enableParticles = useSettingsStore((state) => state.enableParticles);
   const [removingIds, setRemovingIds] = useState<string[]>([]);
+  const [activeDragId, setActiveDragId] = useState<string | null>(null);
   const { bursts, fieldRef, spawnBurst } = useParticleField();
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -31,6 +34,7 @@ export function NotesList() {
   );
 
   const visibleCards = cards.filter((card) => !removingIds.includes(card.id));
+  const activeDragCard = cards.find((card) => card.id === activeDragId) ?? null;
 
   const handleAddCard = (target: DOMRect) => {
     const card = addCard();
@@ -57,7 +61,13 @@ export function NotesList() {
     }, 220);
   };
 
+  const handleDragStart = (event: DragStartEvent) => {
+    setActiveDragId(String(event.active.id));
+  };
+
   const handleDragEnd = (event: DragEndEvent) => {
+    setActiveDragId(null);
+
     if (!event.over || event.active.id === event.over.id) {
       return;
     }
@@ -84,7 +94,13 @@ export function NotesList() {
             No notes yet. Tap the plus button below to start a new card.
           </motion.div>
         ) : (
-          <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+          <DndContext
+            sensors={sensors}
+            collisionDetection={closestCenter}
+            onDragStart={handleDragStart}
+            onDragEnd={handleDragEnd}
+            onDragCancel={() => setActiveDragId(null)}
+          >
             <SortableContext items={visibleCards.map((card) => card.id)} strategy={verticalListSortingStrategy}>
               <div className="paper-scroll h-full overflow-y-auto pr-1">
                 <div className="flex flex-col gap-4">
@@ -96,6 +112,18 @@ export function NotesList() {
                 </div>
               </div>
             </SortableContext>
+            <DragOverlay
+              dropAnimation={{
+                duration: 180,
+                easing: "cubic-bezier(0.22, 1, 0.36, 1)",
+              }}
+            >
+              {activeDragCard ? (
+                <motion.div initial={{ scale: 0.98, rotate: -1.5 }} animate={{ scale: 1.02, rotate: -1.5 }}>
+                  <NoteCardPreview note={activeDragCard} />
+                </motion.div>
+              ) : null}
+            </DragOverlay>
           </DndContext>
         )}
       </motion.div>

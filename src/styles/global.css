@@ -338,13 +338,22 @@
   .note-card-meta {
     display: flex;
     flex-wrap: wrap;
-    gap: 6px;
+    gap: 8px;
+    align-items: center;
+    justify-content: space-between;
   }
 
   .note-card-actions {
     display: flex;
     flex-wrap: wrap;
     gap: 8px;
+  }
+
+  .note-card-chip-group {
+    min-width: 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
   }
 
   .note-toolbar-grid {
