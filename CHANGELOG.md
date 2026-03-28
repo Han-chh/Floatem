@@ -2,6 +2,16 @@
 
 All notable repository changes are recorded here.
 
+## v0.1.37 - 2026-03-28
+
+Purpose:
+- Free up the full note-title row by moving the color control down into the compact action strip.
+
+Contents:
+- Remove the note color button from the title row so the title field can use the full card width.
+- Place the color control alongside fold and delete in the metadata action row.
+- Re-anchor the color palette popover under the lower action button so color changes still work in the tighter header layout.
+
 ## v0.1.36 - 2026-03-28
 
 Purpose:

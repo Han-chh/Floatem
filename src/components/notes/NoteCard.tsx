@@ -103,53 +103,6 @@ function NoteCardBody({
       <div className={`relative rounded-t-[28px] px-3 py-2.5 ${isDraggingPlaceholder ? "opacity-0" : ""}`}>
         <div className="note-card-header-grid">
           <div className="note-card-title-row">
-            <div className="relative mt-0.5 shrink-0">
-              <motion.button
-                type="button"
-                className="paper-button inline-flex h-8 w-8 items-center justify-center rounded-full"
-                aria-label="Change note color"
-                whileHover={isInteractive ? { scale: 1.08 } : undefined}
-                whileTap={isInteractive ? { scale: 0.94 } : undefined}
-                onPointerDown={isInteractive ? (event) => event.stopPropagation() : undefined}
-                onClick={isInteractive && setShowPalette ? () => setShowPalette(!showPalette) : undefined}
-                style={{
-                  borderColor: `${note.dotColor}8c`,
-                  boxShadow: `0 0 0 5px ${note.dotColor}16, 0 8px 14px rgba(61,49,34,0.08), inset 0 1px 0 rgba(255,255,255,0.88)`,
-                }}
-              >
-                <span
-                  className="inline-flex h-3.5 w-3.5 rounded-full border border-white/70 shadow-[0_4px_8px_rgba(0,0,0,0.08)]"
-                  style={{ backgroundColor: note.dotColor }}
-                />
-                <span className="sr-only">Change note color</span>
-              </motion.button>
-              {isInteractive && showPalette && setShowPalette && onUpdateDotColor ? (
-                <motion.div
-                  initial={{ opacity: 0, y: 6, scale: 0.96 }}
-                  animate={{ opacity: 1, y: 0, scale: 1 }}
-                  exit={{ opacity: 0, y: 4, scale: 0.98 }}
-                  className="paper-card absolute left-0 top-12 z-10 grid w-[min(220px,calc(100vw-64px))] grid-cols-3 gap-1.5 rounded-[18px] p-2"
-                >
-                  {NOTE_DOT_COLORS.map((color) => (
-                    <motion.button
-                      key={color}
-                      type="button"
-                      className="h-7 w-7 rounded-full border border-[var(--border)]"
-                      style={{ backgroundColor: color }}
-                      aria-label={`Use ${color} for note`}
-                      whileHover={{ scale: 1.08 }}
-                      whileTap={{ scale: 0.94 }}
-                      onPointerDown={(event) => event.stopPropagation()}
-                      onClick={() => {
-                        onUpdateDotColor(color);
-                        setShowPalette(false);
-                      }}
-                    />
-                  ))}
-                </motion.div>
-              ) : null}
-            </div>
-
             <div className="note-card-title-block">
               {preview ? (
                 <div className="surface-field wrap-anywhere min-h-[40px] rounded-[17px] px-3 py-2 text-[13px] font-semibold leading-[1.35] tracking-[-0.02em] text-[var(--dark-text)]">
@@ -187,6 +140,52 @@ function NoteCardBody({
             </div>
 
             <div className="note-card-actions">
+              <div className="relative shrink-0">
+                <motion.button
+                  type="button"
+                  className="paper-button inline-flex h-7 w-7 items-center justify-center rounded-full"
+                  aria-label="Change note color"
+                  whileHover={isInteractive ? { y: -1.5, scale: 1.03 } : undefined}
+                  whileTap={isInteractive ? { scale: 0.97 } : undefined}
+                  onPointerDown={isInteractive ? (event) => event.stopPropagation() : undefined}
+                  onClick={isInteractive && setShowPalette ? () => setShowPalette(!showPalette) : undefined}
+                  style={{
+                    borderColor: `${note.dotColor}8c`,
+                    boxShadow: `0 0 0 4px ${note.dotColor}14, 0 8px 14px rgba(61,49,34,0.08), inset 0 1px 0 rgba(255,255,255,0.88)`,
+                  }}
+                >
+                  <span
+                    className="inline-flex h-3 w-3 rounded-full border border-white/70 shadow-[0_4px_8px_rgba(0,0,0,0.08)]"
+                    style={{ backgroundColor: note.dotColor }}
+                  />
+                  <span className="sr-only">Change note color</span>
+                </motion.button>
+                {isInteractive && showPalette && setShowPalette && onUpdateDotColor ? (
+                  <motion.div
+                    initial={{ opacity: 0, y: 6, scale: 0.96 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    exit={{ opacity: 0, y: 4, scale: 0.98 }}
+                    className="paper-card absolute right-0 top-10 z-10 grid w-[min(220px,calc(100vw-64px))] grid-cols-3 gap-1.5 rounded-[18px] p-2"
+                  >
+                    {NOTE_DOT_COLORS.map((color) => (
+                      <motion.button
+                        key={color}
+                        type="button"
+                        className="h-7 w-7 rounded-full border border-[var(--border)]"
+                        style={{ backgroundColor: color }}
+                        aria-label={`Use ${color} for note`}
+                        whileHover={{ scale: 1.08 }}
+                        whileTap={{ scale: 0.94 }}
+                        onPointerDown={(event) => event.stopPropagation()}
+                        onClick={() => {
+                          onUpdateDotColor(color);
+                          setShowPalette(false);
+                        }}
+                      />
+                    ))}
+                  </motion.div>
+                ) : null}
+              </div>
               <motion.button
                 type="button"
                 aria-label="Collapse note"
