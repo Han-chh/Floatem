@@ -8,6 +8,7 @@ import { TodoList } from "./components/todos/TodoList";
 import { useAutoSave } from "./hooks/useAutoSave";
 import { useHotkey } from "./hooks/useHotkey";
 import { loadAllData } from "./hooks/usePlatform";
+import { subscribeToPanelPosition } from "./lib/nativeBridge";
 import type { AnimationSpeed, TransitionStyle } from "./lib/models";
 import { useNotesStore } from "./store/notesStore";
 import { useSettingsStore } from "./store/settingsStore";
@@ -60,6 +61,12 @@ function QuickNoteApp() {
 
   useAutoSave();
   useHotkey(hotkey);
+
+  useEffect(() => {
+    return subscribeToPanelPosition((panelPosition) => {
+      useSettingsStore.getState().setPanelPosition(panelPosition);
+    });
+  }, []);
 
   useEffect(() => {
     let cancelled = false;

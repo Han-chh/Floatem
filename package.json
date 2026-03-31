@@ -1,26 +1,21 @@
 {
   "name": "quicknote",
   "private": true,
-  "version": "0.1.43",
+  "version": "0.2.0",
   "type": "module",
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",
+    "macos:build": "pnpm build && xcodebuild -project QuickNote.xcodeproj -scheme QuickNote -configuration Debug -derivedDataPath build/DerivedData build",
+    "macos:run": "./scripts/run-macos-dev.sh",
     "preview": "vite preview",
     "test": "vitest",
-    "test:layout": "playwright test",
-    "tauri": "PATH=\"$HOME/.rustup/toolchains/stable-aarch64-apple-darwin/bin:/opt/homebrew/opt/rustup/bin:$PATH\" tauri"
+    "test:layout": "playwright test"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",
     "@dnd-kit/sortable": "^10.0.0",
     "@dnd-kit/utilities": "^3.2.2",
-    "@tauri-apps/api": "^2.10.1",
-    "@tauri-apps/plugin-dialog": "^2.6.0",
-    "@tauri-apps/plugin-fs": "^2.4.5",
-    "@tauri-apps/plugin-global-shortcut": "^2.3.1",
-    "@tauri-apps/plugin-notification": "^2.3.3",
-    "@tauri-apps/plugin-opener": "^2",
     "clsx": "^2.1.1",
     "date-fns": "^4.1.0",
     "framer-motion": "^12.38.0",
@@ -34,7 +29,6 @@
   "devDependencies": {
     "@playwright/test": "^1.58.2",
     "@tailwindcss/vite": "^4.2.2",
-    "@tauri-apps/cli": "^2",
     "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/react": "^16.3.2",
     "@testing-library/user-event": "^14.6.1",

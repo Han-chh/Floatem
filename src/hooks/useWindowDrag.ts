@@ -1,15 +1,11 @@
-import { getCurrentWindow } from "@tauri-apps/api/window";
 import type { PointerEvent } from "react";
+import { getQuickNoteBridge, isNativeQuickNoteHost } from "../lib/nativeBridge";
 
 const INTERACTIVE_SELECTOR =
   "button, input, textarea, select, option, a, [role='button'], [contenteditable='true'], [data-no-window-drag='true']";
 
-function isTauriWindow() {
-  return typeof window !== "undefined" && "__TAURI_INTERNALS__" in window;
-}
-
 export function startWindowDrag(event: PointerEvent<HTMLElement>) {
-  if (event.button !== 0 || !isTauriWindow()) {
+  if (event.button !== 0 || !isNativeQuickNoteHost()) {
     return;
   }
 
@@ -19,7 +15,7 @@ export function startWindowDrag(event: PointerEvent<HTMLElement>) {
   }
 
   event.preventDefault();
-  void getCurrentWindow().startDragging().catch((error) => {
+  void getQuickNoteBridge().startWindowDrag().catch((error) => {
     console.warn("QuickNote window drag failed", error);
   });
 }

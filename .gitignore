@@ -13,6 +13,7 @@ lerna-debug.log*
 # Build output
 node_modules
 dist
+build
 dist-ssr
 coverage
 playwright-report/
@@ -21,13 +22,10 @@ test-results/
 *.local
 vite.config.d.ts
 
-# Rust / Tauri build artifacts
-src-tauri/target/
-target/
-
-# Local app data
-src-tauri/.tauri/
-.cargo/
+# Xcode
+*.xcuserstate
+*.xcodeproj/xcuserdata/
+*.xcworkspace/xcuserdata/
 
 # Editor directories and files
 .vscode/*

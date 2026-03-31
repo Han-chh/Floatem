@@ -2,6 +2,18 @@
 
 All notable repository changes are recorded here.
 
+## v0.2.0 - 2026-03-31
+
+Purpose:
+- Replace the unstable Tauri + Rust desktop shell with a pure macOS native AppKit + WKWebView host while preserving the existing QuickNote frontend UI and interactions.
+
+Contents:
+- Remove the Tauri/Rust host layer and rebuild the desktop runtime around a native AppKit application, a single owned floating panel, and a thin `WKWebView` JavaScript bridge.
+- Keep the existing React notes and todos UI, state model, motion, styling, and interaction patterns while swapping Tauri API calls for native bridge methods plus browser-safe fallbacks.
+- Add a native menu bar item, Dock-preserving application lifecycle, Carbon-based global shortcut registration, and best-effort always-on-top/full-screen auxiliary window behavior on the main thread.
+- Add a real Xcode project, Swift host sources, native app version metadata, and new `pnpm macos:build` / `pnpm macos:run` workflows.
+- Bump the repository version to `0.2.0`.
+
 ## v0.1.43 - 2026-03-28
 
 Purpose:
