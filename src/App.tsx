@@ -7,7 +7,7 @@ import { SettingsPanel } from "./components/settings/SettingsPanel";
 import { TodoList } from "./components/todos/TodoList";
 import { useAutoSave } from "./hooks/useAutoSave";
 import { useHotkey } from "./hooks/useHotkey";
-import { loadAllData } from "./hooks/usePlatform";
+import { loadAllData, reportFrontendError, reportFrontendReady } from "./hooks/usePlatform";
 import { subscribeToPanelPosition } from "./lib/nativeBridge";
 import type { AnimationSpeed, TransitionStyle } from "./lib/models";
 import { useNotesStore } from "./store/notesStore";
@@ -63,6 +63,18 @@ function QuickNoteApp() {
   useHotkey(hotkey);
 
   useEffect(() => {
+    if (typeof document === "undefined") {
+      return;
+    }
+
+    document.documentElement.dataset.quicknoteFrontendState = "mounted";
+
+    return () => {
+      delete document.documentElement.dataset.quicknoteFrontendState;
+    };
+  }, []);
+
+  useEffect(() => {
     return subscribeToPanelPosition((panelPosition) => {
       useSettingsStore.getState().setPanelPosition(panelPosition);
     });
@@ -71,23 +83,47 @@ function QuickNoteApp() {
   useEffect(() => {
     let cancelled = false;
 
-    void loadAllData().then(({ notes, todos, settings }) => {
-      if (cancelled) {
-        return;
-      }
+    void loadAllData()
+      .then(({ notes, todos, settings }) => {
+        if (cancelled) {
+          return;
+        }
 
-      startTransition(() => {
-        useNotesStore.getState().initialize(notes);
-        useTodosStore.getState().initialize(todos);
-        useSettingsStore.getState().hydrateSettings(settings);
-        setIsBooting(false);
+        startTransition(() => {
+          useNotesStore.getState().initialize(notes);
+          useTodosStore.getState().initialize(todos);
+          useSettingsStore.getState().hydrateSettings(settings);
+          setIsBooting(false);
+        });
+      })
+      .catch((error) => {
+        const message = error instanceof Error ? error.message : String(error);
+        console.error("QuickNote failed to load initial data.", error);
+        if (typeof document !== "undefined") {
+          document.documentElement.dataset.quicknoteFrontendState = "error";
+        }
+        void reportFrontendError(`Initial data load failed: ${message}`, "loadAllData");
       });
-    });
 
     return () => {
       cancelled = true;
     };
   }, []);
+
+  useEffect(() => {
+    if (isBooting) {
+      if (typeof document !== "undefined") {
+        document.documentElement.dataset.quicknoteFrontendState = "booting";
+      }
+      return;
+    }
+
+    if (typeof document !== "undefined") {
+      document.documentElement.dataset.quicknoteFrontendState = "ready";
+    }
+
+    void reportFrontendReady();
+  }, [isBooting]);
 
   const notesMotion = getTabMotion("notes", transitionStyle, animationSpeed);
   const todosMotion = getTabMotion("todos", transitionStyle, animationSpeed);

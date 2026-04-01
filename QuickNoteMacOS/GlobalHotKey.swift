@@ -1,5 +1,7 @@
 import Carbon
+import Dispatch
 import Foundation
+import OSLog
 
 final class GlobalHotKeyManager {
     static let defaultShortcut = "Cmd+Shift+Space"
@@ -10,10 +12,9 @@ final class GlobalHotKeyManager {
 
     private var eventHandlerRef: EventHandlerRef?
     private var hotKeyRef: EventHotKeyRef?
+    private let logger = Logger(subsystem: "com.quicknote.app", category: "HotKey")
 
-    init() {
-        installEventHandlerIfNeeded()
-    }
+    init() {}
 
     deinit {
         unregister()
@@ -24,8 +25,11 @@ final class GlobalHotKeyManager {
     }
 
     func register(shortcut rawShortcut: String) throws {
+        dispatchPrecondition(condition: .onQueue(.main))
+
         let shortcut = try Self.validShortcut(from: rawShortcut)
 
+        installEventHandlerIfNeeded()
         unregister()
 
         let parsed = try HotKeyParser.parse(shortcut)
@@ -47,12 +51,16 @@ final class GlobalHotKeyManager {
 
         self.hotKeyRef = hotKeyRef
         registeredShortcut = shortcut
+        logger.info("Registered global shortcut: \(shortcut, privacy: .public)")
     }
 
     func unregister() {
+        dispatchPrecondition(condition: .onQueue(.main))
+
         if let hotKeyRef {
             UnregisterEventHotKey(hotKeyRef)
             self.hotKeyRef = nil
+            registeredShortcut = nil
         }
     }
 
@@ -96,7 +104,7 @@ final class GlobalHotKeyManager {
         )
 
         let status = InstallEventHandler(
-            GetApplicationEventTarget(),
+            GetEventDispatcherTarget(),
             quickNoteHotKeyHandler,
             1,
             &eventType,
@@ -105,12 +113,16 @@ final class GlobalHotKeyManager {
         )
 
         if status != noErr {
-            NSLog("QuickNote failed to install the Carbon hotkey handler: %d", status)
+            logger.error("Failed to install the Carbon hotkey handler. status=\(status)")
+        } else {
+            logger.info("Installed the Carbon hotkey handler.")
         }
     }
 
     fileprivate static let hotKeySignature: OSType = 0x514E4F54
 }
+
+private let hotKeyLogger = Logger(subsystem: "com.quicknote.app", category: "HotKey")
 
 private func quickNoteHotKeyHandler(
     _ nextHandler: EventHandlerCallRef?,
@@ -148,6 +160,7 @@ private func quickNoteHotKeyHandler(
     }
 
     DispatchQueue.main.async {
+        hotKeyLogger.info("Received the global shortcut event.")
         manager.onHotKeyPressed?()
     }
 

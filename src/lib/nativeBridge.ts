@@ -16,6 +16,8 @@ export type QuickNoteNativeBridge = {
   registerHotkey: (shortcut: string) => Promise<void>;
   hidePanelWindow: () => Promise<void>;
   startWindowDrag: () => Promise<void>;
+  reportFrontendReady: () => void | Promise<void>;
+  reportFrontendError: (message: string, source?: string) => void | Promise<void>;
 };
 
 declare global {
@@ -84,6 +86,12 @@ const browserBridge: QuickNoteNativeBridge = {
   },
   async startWindowDrag() {
     // Browser preview uses the normal browser window chrome.
+  },
+  reportFrontendReady() {
+    // Browser preview does not need to coordinate with a native host.
+  },
+  reportFrontendError() {
+    // Browser preview can rely on the regular browser console.
   },
 };
 

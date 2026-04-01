@@ -18,6 +18,7 @@
 		A00000000000000000000209 /* AppKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A00000000000000000000112 /* AppKit.framework */; };
 		A00000000000000000000210 /* WebKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A00000000000000000000113 /* WebKit.framework */; };
 		A00000000000000000000211 /* Carbon.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A00000000000000000000114 /* Carbon.framework */; };
+		A00000000000000000000212 /* main.swift in Sources */ = {isa = PBXBuildFile; fileRef = A00000000000000000000116 /* main.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -36,6 +37,7 @@
 		A00000000000000000000113 /* WebKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = WebKit.framework; path = System/Library/Frameworks/WebKit.framework; sourceTree = SDKROOT; };
 		A00000000000000000000114 /* Carbon.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Carbon.framework; path = System/Library/Frameworks/Carbon.framework; sourceTree = SDKROOT; };
 		A00000000000000000000115 /* QuickNote.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = QuickNote.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		A00000000000000000000116 /* main.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = main.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -90,6 +92,7 @@
 				A00000000000000000000105 /* GlobalHotKey.swift */,
 				A00000000000000000000106 /* MainWindowController.swift */,
 				A00000000000000000000107 /* WebViewController.swift */,
+				A00000000000000000000116 /* main.swift */,
 				A00000000000000000000108 /* Info.plist */,
 				A00000000000000000000007 /* Resources */,
 			);
@@ -207,6 +210,7 @@
 				A00000000000000000000205 /* GlobalHotKey.swift in Sources */,
 				A00000000000000000000206 /* MainWindowController.swift in Sources */,
 				A00000000000000000000207 /* WebViewController.swift in Sources */,
+				A00000000000000000000212 /* main.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -243,11 +247,12 @@
 		A00000000000000000000303 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				CODE_SIGN_IDENTITY = "";
-				CODE_SIGN_STYLE = Manual;
 				CODE_SIGNING_ALLOWED = NO;
 				CODE_SIGNING_REQUIRED = NO;
-				CURRENT_PROJECT_VERSION = 20;
+				CODE_SIGN_IDENTITY = "";
+				CODE_SIGN_STYLE = Manual;
+				CURRENT_PROJECT_VERSION = 21;
+				ENABLE_DEBUG_DYLIB = NO;
 				ENABLE_HARDENED_RUNTIME = NO;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = QuickNoteMacOS/Info.plist;
@@ -256,7 +261,7 @@
 					"@executable_path/../Frameworks",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 14.0;
-				MARKETING_VERSION = 0.2.0;
+				MARKETING_VERSION = 0.2.1;
 				PRODUCT_BUNDLE_IDENTIFIER = com.quicknote.app;
 				PRODUCT_NAME = QuickNote;
 				SDKROOT = macosx;
@@ -267,11 +272,12 @@
 		A00000000000000000000304 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				CODE_SIGN_IDENTITY = "";
-				CODE_SIGN_STYLE = Manual;
 				CODE_SIGNING_ALLOWED = NO;
 				CODE_SIGNING_REQUIRED = NO;
-				CURRENT_PROJECT_VERSION = 20;
+				CODE_SIGN_IDENTITY = "";
+				CODE_SIGN_STYLE = Manual;
+				CURRENT_PROJECT_VERSION = 21;
+				ENABLE_DEBUG_DYLIB = NO;
 				ENABLE_HARDENED_RUNTIME = NO;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = QuickNoteMacOS/Info.plist;
@@ -280,7 +286,7 @@
 					"@executable_path/../Frameworks",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 14.0;
-				MARKETING_VERSION = 0.2.0;
+				MARKETING_VERSION = 0.2.1;
 				PRODUCT_BUNDLE_IDENTIFIER = com.quicknote.app;
 				PRODUCT_NAME = QuickNote;
 				SDKROOT = macosx;

@@ -2,6 +2,17 @@
 
 All notable repository changes are recorded here.
 
+## v0.2.1 - 2026-04-01
+
+Purpose:
+- Stabilize the native macOS host startup path and restore the floating panel to the pre-refactor default size.
+
+Contents:
+- Rebuild the bundled `WKWebView` entry page into a native-safe inline asset form so the React frontend can boot reliably from the app bundle.
+- Fix the inline HTML injection path so minified JavaScript containing `$` replacement tokens is copied into the native bundle without syntax corruption.
+- Restore the native floating panel startup size to the same `400 x 680` default used by `v0.1.43`, while still keeping the compact minimum resize bounds.
+- Bump the repository version to `0.2.1`.
+
 ## v0.2.0 - 2026-03-31
 
 Purpose:

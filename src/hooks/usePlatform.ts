@@ -33,3 +33,11 @@ export async function registerHotkey(shortcut: string) {
 export async function hidePanelWindow() {
   await getQuickNoteBridge().hidePanelWindow();
 }
+
+export async function reportFrontendReady() {
+  await getQuickNoteBridge().reportFrontendReady();
+}
+
+export async function reportFrontendError(message: string, source?: string) {
+  await getQuickNoteBridge().reportFrontendError(message, source);
+}
