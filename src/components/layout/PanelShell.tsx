@@ -1,4 +1,4 @@
-import { motion } from "framer-motion";
+import { AnimatePresence, motion } from "framer-motion";
 import type { ReactNode } from "react";
 import { hidePanelWindow } from "../../hooks/usePlatform";
 import { startWindowDrag } from "../../hooks/useWindowDrag";
@@ -11,10 +11,12 @@ type PanelShellProps = {
   activeTab: TabId;
   onTabChange: (tab: TabId) => void;
   children: ReactNode;
+  settingsPanel: ReactNode;
+  showSettings: boolean;
   onToggleSettings: () => void;
 };
 
-export function PanelShell({ activeTab, onTabChange, children, onToggleSettings }: PanelShellProps) {
+export function PanelShell({ activeTab, onTabChange, children, settingsPanel, showSettings, onToggleSettings }: PanelShellProps) {
   const handleHideWindow = () => {
     void hidePanelWindow();
   };
@@ -78,6 +80,20 @@ export function PanelShell({ activeTab, onTabChange, children, onToggleSettings 
               <div className="absolute -right-8 top-14 h-32 w-32 rounded-full bg-[rgba(255,122,89,0.14)] blur-2xl" />
               <div className="absolute bottom-10 left-8 h-24 w-24 rounded-full bg-[rgba(47,107,255,0.1)] blur-2xl" />
             </div>
+
+            <AnimatePresence>
+              {showSettings ? (
+                <motion.div
+                  initial={{ opacity: 0, x: 18, scale: 0.985 }}
+                  animate={{ opacity: 1, x: 0, scale: 1 }}
+                  exit={{ opacity: 0, x: 18, scale: 0.992 }}
+                  transition={{ duration: 0.24, ease: [0.22, 1, 0.36, 1] }}
+                  className="paper-card absolute inset-1.5 z-10 overflow-hidden rounded-[26px]"
+                >
+                  {settingsPanel}
+                </motion.div>
+              ) : null}
+            </AnimatePresence>
 
             <div
               data-testid="panel-scroll-region"

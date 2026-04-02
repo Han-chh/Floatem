@@ -100,7 +100,7 @@ export function TodoList() {
   };
 
   const handleDraftKeyDown = (event: KeyboardEvent<HTMLTextAreaElement>) => {
-    if (event.key === "Enter" && !event.shiftKey) {
+    if (event.key === "Enter" && event.metaKey && !event.shiftKey) {
       event.preventDefault();
       formRef.current?.requestSubmit();
     }
@@ -199,50 +199,61 @@ export function TodoList() {
         </div>
       </motion.div>
 
-      <form ref={formRef} className="paper-card overflow-hidden rounded-[20px] px-3 py-2.5" onSubmit={handleSubmit}>
-        <label htmlFor="todo-input" className="sr-only">
-          Quick add
-        </label>
-        <div className="quick-add-grid">
-          <div className="flex flex-wrap items-center gap-2">
-            <span className="status-chip shrink-0" data-tone="coral">
-              {openTodos.length} open
-            </span>
-            {doneTodos.length > 0 ? (
-              <span className="status-chip shrink-0" data-tone="jade">
-                {doneTodos.length} done
+      <div className="px-1 pb-1">
+        <form ref={formRef} className="paper-card overflow-hidden rounded-[20px] px-3 py-2.5" onSubmit={handleSubmit}>
+          <label htmlFor="todo-input" className="sr-only">
+            Quick add
+          </label>
+          <div className="quick-add-grid">
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="status-chip shrink-0" data-tone="coral">
+                {openTodos.length} open
               </span>
-            ) : null}
+              {doneTodos.length > 0 ? (
+                <span className="status-chip shrink-0" data-tone="jade">
+                  {doneTodos.length} done
+                </span>
+              ) : null}
+            </div>
+            <div className="flex min-w-0 items-end gap-2">
+              <textarea
+                ref={draftRef}
+                id="todo-input"
+                rows={1}
+                value={draft}
+                onChange={(event) => setDraft(event.currentTarget.value)}
+                onInput={(event) => syncTextareaHeight(event.currentTarget)}
+                onKeyDown={handleDraftKeyDown}
+                placeholder="Add a task"
+                className="textarea-reset surface-field wrap-anywhere min-h-[42px] min-w-0 flex-1 rounded-[16px] px-3.5 py-2.5 text-[12.5px] font-medium leading-5 text-[var(--dark-text)] outline-none placeholder:text-[var(--muted)]"
+              />
+              <div className="flex shrink-0 flex-col items-center gap-1">
+                <span
+                  id="todo-submit-shortcut"
+                  className="text-[10px] font-semibold tracking-[-0.01em] text-[var(--muted)]"
+                >
+                  cmd+Enter
+                </span>
+                <motion.button
+                  type="submit"
+                  aria-label="Add task"
+                  aria-describedby="todo-submit-shortcut"
+                  disabled={!draft.trim()}
+                  className={`quick-add-submit inline-flex h-10 w-10 items-center justify-center rounded-full border transition-colors ${
+                    draft.trim()
+                      ? "paper-button paper-button-primary border-transparent"
+                      : "border-[rgba(213,198,180,0.94)] bg-[rgba(227,221,213,0.72)] text-[rgba(160,152,143,0.96)] shadow-none"
+                  }`}
+                  whileHover={draft.trim() ? { y: -2, scale: 1.03 } : undefined}
+                  whileTap={draft.trim() ? { scale: 0.97 } : undefined}
+                >
+                  <CornerDownLeftIcon size={15} />
+                </motion.button>
+              </div>
+            </div>
           </div>
-          <div className="flex min-w-0 items-center gap-2">
-            <textarea
-              ref={draftRef}
-              id="todo-input"
-              rows={1}
-              value={draft}
-              onChange={(event) => setDraft(event.currentTarget.value)}
-              onInput={(event) => syncTextareaHeight(event.currentTarget)}
-              onKeyDown={handleDraftKeyDown}
-              placeholder="Add a task"
-              className="textarea-reset surface-field wrap-anywhere min-h-[42px] min-w-0 flex-1 rounded-[16px] px-3.5 py-2.5 text-[12.5px] font-medium leading-5 text-[var(--dark-text)] outline-none placeholder:text-[var(--muted)]"
-            />
-            <motion.button
-              type="submit"
-              aria-label="Add task"
-              disabled={!draft.trim()}
-              className={`quick-add-submit inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full border transition-colors ${
-                draft.trim()
-                  ? "paper-button paper-button-primary border-transparent"
-                  : "border-[rgba(213,198,180,0.94)] bg-[rgba(227,221,213,0.72)] text-[rgba(160,152,143,0.96)] shadow-none"
-              }`}
-              whileHover={draft.trim() ? { y: -2, scale: 1.03 } : undefined}
-              whileTap={draft.trim() ? { scale: 0.97 } : undefined}
-            >
-              <CornerDownLeftIcon size={15} />
-            </motion.button>
-          </div>
-        </div>
-      </form>
+        </form>
+      </div>
     </section>
   );
 }

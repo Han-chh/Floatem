@@ -54,7 +54,13 @@ export function NotesList() {
     }
 
     if (enableParticles) {
-      spawnBurst(target, "rose");
+      spawnBurst(
+        {
+          x: target.left + target.width / 2,
+          y: target.top + target.height / 2,
+        },
+        "rose",
+      );
     }
     setRemovingIds((current) => [...current, id]);
     window.setTimeout(() => {

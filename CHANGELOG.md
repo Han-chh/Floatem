@@ -2,6 +2,18 @@
 
 All notable repository changes are recorded here.
 
+## v0.2.2 - 2026-04-02
+
+Purpose:
+- Refine the panel interaction model with stronger tab turns, an in-panel settings surface, and cleaner note/todo removal and entry behavior.
+
+Contents:
+- Rework the Notes and Todos switcher into a more explicit 3D page-turn transition while preserving the existing slide fallback.
+- Restore Settings as a single sliding container mounted inside the main panel shell instead of replacing the full window chrome.
+- Tighten note deletion feedback so note-card removal uses a centered burst and faster exit timing aligned with todos.
+- Change todo quick-add submission to `Cmd+Enter`, add the shortcut hint above the action button, and inset the footer card so its bottom corners stay visible.
+- Bump the repository version to `0.2.2`.
+
 ## v0.2.1 - 2026-04-01
 
 Purpose:
