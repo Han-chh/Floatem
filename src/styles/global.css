@@ -528,8 +528,10 @@
 
   .todo-row-toggle {
     grid-area: toggle;
-    width: 28px;
+    display: flex;
+    align-items: center;
     height: 28px;
+    min-width: 28px;
   }
 
   .todo-row-text {

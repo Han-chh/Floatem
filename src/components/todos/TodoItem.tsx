@@ -10,12 +10,14 @@ import { ReminderPicker } from "./ReminderPicker";
 
 type TodoItemProps = {
   todo: TodoItemModel;
+  order?: number;
   onDelete: (id: string, target: DOMRect) => void;
   onToggle: (id: string, target: DOMRect, nextDone: boolean) => void;
 };
 
 type TodoRowBodyProps = {
   todo: TodoItemModel;
+  order?: number;
   onDelete?: (target: DOMRect) => void;
   onToggle?: (target: DOMRect, nextDone: boolean) => void;
   preview?: boolean;
@@ -40,7 +42,7 @@ function getStatusMeta(todo: TodoItemModel) {
 
   if (!todo.reminderAt) {
     return {
-      label: "open",
+      label: "undone",
       reminderLabel: "",
       reminderClass:
         "border-[rgba(213,198,180,0.92)] bg-[rgba(255,255,255,0.86)] text-[var(--muted)]",
@@ -100,6 +102,7 @@ function getStatusMeta(todo: TodoItemModel) {
 
 function TodoRowBody({
   todo,
+  order,
   onDelete,
   onToggle,
   preview = false,
@@ -107,7 +110,7 @@ function TodoRowBody({
 }: TodoRowBodyProps) {
   const setReminder = useTodosStore((state) => state.setReminder);
   const status = getStatusMeta(todo);
-  const reminderButtonLabel = status.label === "open" ? undefined : status.reminderLabel;
+  const reminderButtonLabel = status.label === "undone" ? undefined : status.reminderLabel;
   const isInteractive = !preview;
 
   return (
@@ -129,15 +132,25 @@ function TodoRowBody({
       ) : null}
 
       <div className={`todo-row-grid relative z-10 pl-3 ${isDraggingPlaceholder ? "opacity-0" : ""}`}>
-        <div className="todo-row-toggle relative flex items-center justify-center">
-          <span
-            className="pointer-events-none absolute inset-0 rounded-full opacity-95"
-            style={{
-              boxShadow: `0 0 0 4px ${status.accent}26`,
-              background:
-                "radial-gradient(circle at 30% 30%, rgba(255,255,255,0.78), rgba(255,255,255,0) 62%)",
-            }}
-          />
+        <div className={`todo-row-toggle relative ${order ? "gap-1.5 pl-1" : "justify-center"}`}>
+          {order ? (
+            <span
+              data-testid="todo-order"
+              className="relative z-10 min-w-[14px] text-right text-[11px] font-semibold leading-none text-[var(--muted)]"
+            >
+              {order}
+            </span>
+          ) : null}
+          {!todo.done ? (
+            <span
+              className="pointer-events-none absolute right-0 inset-y-0 my-auto h-7 w-7 rounded-full opacity-95"
+              style={{
+                boxShadow: `0 0 0 4px ${status.accent}26`,
+                background:
+                  "radial-gradient(circle at 30% 30%, rgba(255,255,255,0.78), rgba(255,255,255,0) 62%)",
+              }}
+            />
+          ) : null}
           <motion.button
             type="button"
             aria-label="Mark todo as done"
@@ -153,13 +166,15 @@ function TodoRowBody({
                 : undefined
             }
           >
-            <span
-              className="pointer-events-none absolute inset-[1px] rounded-full opacity-70"
-              style={{
-                background:
-                  "radial-gradient(circle at 28% 28%, rgba(255,255,255,0.82), rgba(255,255,255,0) 58%)",
-              }}
-            />
+            {!todo.done ? (
+              <span
+                className="pointer-events-none absolute inset-[1px] rounded-full opacity-70"
+                style={{
+                  background:
+                    "radial-gradient(circle at 28% 28%, rgba(255,255,255,0.82), rgba(255,255,255,0) 58%)",
+                }}
+              />
+            ) : null}
             <CircleCheckBigIcon size={13} />
           </motion.button>
         </div>
@@ -222,18 +237,18 @@ function TodoRowBody({
   );
 }
 
-export function TodoItemPreview({ todo, width }: { todo: TodoItemModel; width?: number }) {
+export function TodoItemPreview({ todo, width, order }: { todo: TodoItemModel; width?: number; order?: number }) {
   return (
     <div
       className={`paper-card cq-card relative overflow-hidden rounded-[20px] px-2 py-1.75 shadow-[0_24px_48px_rgba(61,49,34,0.2)] ${getStatusMeta(todo).cardClass}`}
       style={{ width: width ?? undefined, maxWidth: "calc(100vw - 48px)" }}
     >
-      <TodoRowBody todo={todo} preview />
+      <TodoRowBody todo={todo} order={order} preview />
     </div>
   );
 }
 
-export function TodoItem({ todo, onDelete, onToggle }: TodoItemProps) {
+export function TodoItem({ todo, order, onDelete, onToggle }: TodoItemProps) {
   const cardRef = useRef<HTMLElement | null>(null);
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: todo.id,
@@ -267,6 +282,7 @@ export function TodoItem({ todo, onDelete, onToggle }: TodoItemProps) {
     >
       <TodoRowBody
         todo={todo}
+        order={order}
         onDelete={(target) => onDelete(todo.id, cardRef.current?.getBoundingClientRect() ?? target)}
         onToggle={(target, nextDone) => onToggle(todo.id, target, nextDone)}
         isDraggingPlaceholder={isDragging}

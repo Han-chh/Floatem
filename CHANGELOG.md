@@ -2,6 +2,17 @@
 
 All notable repository changes are recorded here.
 
+## v0.2.3 - 2026-04-02
+
+Purpose:
+- Refine the todo quick-add surface so footer actions align more cleanly and open items read more clearly.
+
+Contents:
+- Rename open todos to `undone` and add numbering for only the unfinished items.
+- Remove the glossy highlight from completed todo toggles so the done state stays flatter and cleaner.
+- Rebuild the todo quick-add footer into a two-row layout with a narrower action column that aligns `cmd+Enter` with the submit button.
+- Bump the repository version to `0.2.3`.
+
 ## v0.2.2 - 2026-04-02
 
 Purpose:

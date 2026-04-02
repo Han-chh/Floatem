@@ -47,6 +47,8 @@ export function TodoList() {
   const openTodos = visibleTodos.filter((todo) => !todo.done);
   const doneTodos = visibleTodos.filter((todo) => todo.done);
   const activeDragTodo = openTodos.find((todo) => todo.id === activeDragId) ?? null;
+  const activeDragIndex = activeDragId ? openTodos.findIndex((todo) => todo.id === activeDragId) : -1;
+  const activeDragOrder = activeDragIndex >= 0 ? activeDragIndex + 1 : undefined;
 
   const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -146,10 +148,11 @@ export function TodoList() {
                 <SortableContext items={openTodos.map((todo) => todo.id)} strategy={verticalListSortingStrategy}>
                   <div className="flex flex-col gap-2">
                     <AnimatePresence>
-                      {openTodos.map((todo) => (
+                      {openTodos.map((todo, index) => (
                         <TodoItem
                           key={todo.id}
                           todo={todo}
+                          order={index + 1}
                           onDelete={handleDeleteTodo}
                           onToggle={handleToggleTodo}
                         />
@@ -167,7 +170,7 @@ export function TodoList() {
                 >
                   {activeDragTodo ? (
                     <motion.div initial={{ rotate: -1.2 }} animate={{ rotate: -1.2 }}>
-                      <TodoItemPreview todo={activeDragTodo} width={activeDragWidth ?? undefined} />
+                      <TodoItemPreview todo={activeDragTodo} width={activeDragWidth ?? undefined} order={activeDragOrder} />
                     </motion.div>
                   ) : null}
                 </DragOverlay>
@@ -200,14 +203,18 @@ export function TodoList() {
       </motion.div>
 
       <div className="px-1 pb-1">
-        <form ref={formRef} className="paper-card overflow-hidden rounded-[20px] px-3 py-2.5" onSubmit={handleSubmit}>
+        <form
+          ref={formRef}
+          className="paper-card relative overflow-visible rounded-[22px] px-3 py-3"
+          onSubmit={handleSubmit}
+        >
           <label htmlFor="todo-input" className="sr-only">
             Quick add
           </label>
-          <div className="quick-add-grid">
-            <div className="flex flex-wrap items-center gap-2">
+          <div className="grid min-w-0 grid-cols-[minmax(0,1fr)_60px] gap-x-2.5 gap-y-2.5">
+            <div className="flex min-w-0 flex-wrap items-center gap-2">
               <span className="status-chip shrink-0" data-tone="coral">
-                {openTodos.length} open
+                {openTodos.length} undone
               </span>
               {doneTodos.length > 0 ? (
                 <span className="status-chip shrink-0" data-tone="jade">
@@ -215,41 +222,41 @@ export function TodoList() {
                 </span>
               ) : null}
             </div>
-            <div className="flex min-w-0 items-end gap-2">
-              <textarea
-                ref={draftRef}
-                id="todo-input"
-                rows={1}
-                value={draft}
-                onChange={(event) => setDraft(event.currentTarget.value)}
-                onInput={(event) => syncTextareaHeight(event.currentTarget)}
-                onKeyDown={handleDraftKeyDown}
-                placeholder="Add a task"
-                className="textarea-reset surface-field wrap-anywhere min-h-[42px] min-w-0 flex-1 rounded-[16px] px-3.5 py-2.5 text-[12.5px] font-medium leading-5 text-[var(--dark-text)] outline-none placeholder:text-[var(--muted)]"
-              />
-              <div className="flex shrink-0 flex-col items-center gap-1">
-                <span
-                  id="todo-submit-shortcut"
-                  className="text-[10px] font-semibold tracking-[-0.01em] text-[var(--muted)]"
-                >
-                  cmd+Enter
-                </span>
-                <motion.button
-                  type="submit"
-                  aria-label="Add task"
-                  aria-describedby="todo-submit-shortcut"
-                  disabled={!draft.trim()}
-                  className={`quick-add-submit inline-flex h-10 w-10 items-center justify-center rounded-full border transition-colors ${
-                    draft.trim()
-                      ? "paper-button paper-button-primary border-transparent"
-                      : "border-[rgba(213,198,180,0.94)] bg-[rgba(227,221,213,0.72)] text-[rgba(160,152,143,0.96)] shadow-none"
-                  }`}
-                  whileHover={draft.trim() ? { y: -2, scale: 1.03 } : undefined}
-                  whileTap={draft.trim() ? { scale: 0.97 } : undefined}
-                >
-                  <CornerDownLeftIcon size={15} />
-                </motion.button>
-              </div>
+            <div className="flex items-center justify-center">
+              <span
+                id="todo-submit-shortcut"
+                className="shrink-0 text-[10px] font-semibold leading-none tracking-[-0.01em] whitespace-nowrap text-[var(--muted)]"
+              >
+                cmd+Enter
+              </span>
+            </div>
+            <textarea
+              ref={draftRef}
+              id="todo-input"
+              rows={1}
+              value={draft}
+              onChange={(event) => setDraft(event.currentTarget.value)}
+              onInput={(event) => syncTextareaHeight(event.currentTarget)}
+              onKeyDown={handleDraftKeyDown}
+              placeholder="Add a task"
+              className="textarea-reset surface-field wrap-anywhere min-h-[40px] min-w-0 rounded-[16px] px-3.5 py-2 text-[12.5px] font-medium leading-5 text-[var(--dark-text)] outline-none placeholder:text-[var(--muted)]"
+            />
+            <div className="flex items-center justify-center">
+              <motion.button
+                type="submit"
+                aria-label="Add task"
+                aria-describedby="todo-submit-shortcut"
+                disabled={!draft.trim()}
+                className={`quick-add-submit inline-flex h-10 w-[28px] items-center justify-center rounded-full border transition-colors ${
+                  draft.trim()
+                    ? "paper-button paper-button-primary border-transparent"
+                    : "border-[rgba(213,198,180,0.94)] bg-[rgba(227,221,213,0.72)] text-[rgba(160,152,143,0.96)] shadow-none"
+                }`}
+                whileHover={draft.trim() ? { y: -2, scale: 1.03 } : undefined}
+                whileTap={draft.trim() ? { scale: 0.97 } : undefined}
+              >
+                <CornerDownLeftIcon size={15} />
+              </motion.button>
             </div>
           </div>
         </form>
