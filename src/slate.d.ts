@@ -5,16 +5,10 @@ import type { ReactEditor } from "slate-react";
 declare module "slate" {
   interface CustomTypes {
     Editor: BaseEditor & ReactEditor & HistoryEditor;
-    Element:
-      | {
-          type: "paragraph";
-          children: CustomText[];
-        }
-      | {
-          type: "image";
-          url: string;
-          children: CustomText[];
-        };
+    Element: {
+      type: "paragraph";
+      children: CustomText[];
+    };
     Text: CustomText;
   }
 }

@@ -1,5 +1,12 @@
 import type { Modifier } from "@dnd-kit/core";
 
+type DragPointerCoordinates = {
+  x: number;
+  y: number;
+};
+
+let latestDragPointerCoordinates: DragPointerCoordinates | null = null;
+
 function getEventCoordinates(event: Event | null) {
   if (!event) {
     return null;
@@ -33,6 +40,24 @@ function getEventCoordinates(event: Event | null) {
   return null;
 }
 
+export function setLatestDragPointerCoordinates(coordinates: DragPointerCoordinates | null) {
+  latestDragPointerCoordinates = coordinates;
+}
+
+export function syncLatestDragPointerCoordinates(event: Event | null) {
+  const coordinates = getEventCoordinates(event);
+
+  if (coordinates) {
+    latestDragPointerCoordinates = coordinates;
+  }
+
+  return coordinates;
+}
+
+export function clearLatestDragPointerCoordinates() {
+  latestDragPointerCoordinates = null;
+}
+
 export const centerOverlayToCursor: Modifier = ({
   activatorEvent,
   activeNodeRect,
@@ -40,9 +65,25 @@ export const centerOverlayToCursor: Modifier = ({
   overlayNodeRect,
   transform,
 }) => {
+  if (!activeNodeRect || !overlayNodeRect) {
+    return transform;
+  }
+
+  const liveCoordinates = latestDragPointerCoordinates;
+  if (liveCoordinates) {
+    const containerOffsetX = containerNodeRect?.left ?? 0;
+    const containerOffsetY = containerNodeRect?.top ?? 0;
+
+    return {
+      ...transform,
+      x: liveCoordinates.x - activeNodeRect.left - overlayNodeRect.width / 2 - containerOffsetX,
+      y: liveCoordinates.y - activeNodeRect.top - overlayNodeRect.height / 2 - containerOffsetY,
+    };
+  }
+
   const coordinates = getEventCoordinates(activatorEvent);
 
-  if (!coordinates || !activeNodeRect || !overlayNodeRect) {
+  if (!coordinates) {
     return transform;
   }
 

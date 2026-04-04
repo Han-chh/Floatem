@@ -40,7 +40,7 @@ final class GlobalHotKeyManager {
             parsed.keyCode,
             parsed.modifiers,
             hotKeyID,
-            GetApplicationEventTarget(),
+            GetEventDispatcherTarget(),
             0,
             &hotKeyRef
         )

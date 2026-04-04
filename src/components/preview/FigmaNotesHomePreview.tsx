@@ -3,15 +3,17 @@ import { useMemo, useState, type ComponentType, type ReactNode } from "react";
 import {
   BoldIcon,
   ChevronsUpDownIcon,
+  ClearIcon,
   CircleCheckBigIcon,
+  CopyIcon,
   GripVerticalIcon,
-  ImagePlusIcon,
   ItalicIcon,
   KeyboardIcon,
   MapPinIcon,
   NotebookPenIcon,
   PaintbrushIcon,
   PaletteIcon,
+  PasteIcon,
   SlidersHorizontalIcon,
   SparklesIcon,
   SquarePenIcon,
@@ -59,10 +61,11 @@ const TOOLBAR_ITEMS: Array<{ label: string; icon: ComponentType<{ size?: number;
   { label: "Bold", icon: BoldIcon },
   { label: "Italic", icon: ItalicIcon },
   { label: "Underline", icon: UnderlineIcon },
-  { label: "Palette", icon: PaletteIcon },
+  { label: "Color", icon: PaletteIcon },
   { label: "Brush", icon: PaintbrushIcon },
-  { label: "Image", icon: ImagePlusIcon },
-  { label: "Clear", icon: Trash2Icon },
+  { label: "Copy", icon: CopyIcon },
+  { label: "Paste", icon: PasteIcon },
+  { label: "Clear", icon: ClearIcon },
 ];
 
 function DesignTag({

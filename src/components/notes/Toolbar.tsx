@@ -1,10 +1,11 @@
 import { motion } from "framer-motion";
 import {
   BoldIcon,
-  EraserIcon,
-  ImagePlusIcon,
+  ClearIcon,
+  CopyIcon,
   ItalicIcon,
   PaletteIcon,
+  PasteIcon,
   UnderlineIcon,
 } from "../icons/AppIcons";
 
@@ -13,8 +14,9 @@ const TOOL_ITEMS = [
   { label: "Italic", icon: ItalicIcon, tone: "text-[#5D44D4] bg-[rgba(123,92,250,0.10)]" },
   { label: "Underline", icon: UnderlineIcon, tone: "text-[#B64B2E] bg-[rgba(255,122,89,0.10)]" },
   { label: "Color", icon: PaletteIcon, tone: "text-[#2853C7] bg-[rgba(47,107,255,0.10)]" },
-  { label: "Image", icon: ImagePlusIcon, tone: "text-[#8E5B44] bg-[rgba(244,185,66,0.14)]" },
-  { label: "Clear formatting", icon: EraserIcon, tone: "text-[#A24A2D] bg-[rgba(255,122,89,0.12)]" },
+  { label: "Copy", icon: CopyIcon, tone: "text-[#8752C8] bg-[rgba(159,101,255,0.12)]" },
+  { label: "Paste", icon: PasteIcon, tone: "text-[#23786A] bg-[rgba(38,170,133,0.12)]" },
+  { label: "Clear", icon: ClearIcon, tone: "text-[#A24A2D] bg-[rgba(255,122,89,0.12)]" },
 ] as const;
 
 export function Toolbar() {

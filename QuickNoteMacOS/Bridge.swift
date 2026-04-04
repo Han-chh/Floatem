@@ -7,6 +7,8 @@ protocol QuickNoteNativeBridgeHandling: AnyObject {
     func saveTodos(_ todos: Any) throws
     func saveSettings(_ settings: Any) throws
     func registerHotKey(shortcut: String) throws
+    func setEditableInputActiveFromBridge(_ active: Bool)
+    func setTextCompositionActiveFromBridge(_ active: Bool)
     func hideMainWindowFromBridge()
     func startWindowDragFromBridge() throws
 }

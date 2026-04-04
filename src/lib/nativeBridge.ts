@@ -14,6 +14,8 @@ export type QuickNoteNativeBridge = {
   saveTodos: (todos: TodoItem[]) => Promise<void>;
   saveSettings: (settings: AppSettings) => Promise<void>;
   registerHotkey: (shortcut: string) => Promise<void>;
+  setEditableInputActive: (active: boolean) => void | Promise<void>;
+  setTextCompositionActive: (active: boolean) => void | Promise<void>;
   hidePanelWindow: () => Promise<void>;
   startWindowDrag: () => Promise<void>;
   reportFrontendReady: () => void | Promise<void>;
@@ -80,6 +82,12 @@ const browserBridge: QuickNoteNativeBridge = {
   },
   async registerHotkey() {
     // Browser preview does not support global shortcuts.
+  },
+  async setEditableInputActive() {
+    // Browser preview does not need native activation-policy coordination.
+  },
+  async setTextCompositionActive() {
+    // Browser preview does not need native IME window-level coordination.
   },
   async hidePanelWindow() {
     // Browser preview keeps the current tab visible.

@@ -30,6 +30,14 @@ export async function registerHotkey(shortcut: string) {
   await getQuickNoteBridge().registerHotkey(shortcut);
 }
 
+export async function setEditableInputActive(active: boolean) {
+  await getQuickNoteBridge().setEditableInputActive(active);
+}
+
+export async function setTextCompositionActive(active: boolean) {
+  await getQuickNoteBridge().setTextCompositionActive(active);
+}
+
 export async function hidePanelWindow() {
   await getQuickNoteBridge().hidePanelWindow();
 }

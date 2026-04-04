@@ -154,6 +154,40 @@ export function ImagePlusIcon(props: IconProps) {
   );
 }
 
+export function CopyIcon(props: IconProps) {
+  return (
+    <BaseIcon {...props}>
+      <rect x="9" y="7" width="10" height="12" rx="2" />
+      <path d="M15 7V6a2 2 0 0 0-2-2H7a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2" />
+    </BaseIcon>
+  );
+}
+
+export function PasteIcon(props: IconProps) {
+  return (
+    <BaseIcon {...props}>
+      <path d="M9 5.5h6" />
+      <path d="M10 3h4a1 1 0 0 1 1 1v2H9V4a1 1 0 0 1 1-1Z" />
+      <rect x="6" y="5.5" width="12" height="15" rx="2" />
+      <path d="m12 10 3 3" />
+      <path d="m12 16 3-3" />
+      <path d="M9 13h6" />
+    </BaseIcon>
+  );
+}
+
+export function ClearIcon(props: IconProps) {
+  return (
+    <BaseIcon {...props}>
+      <path d="M4 7h10" />
+      <path d="M4 12h7" />
+      <path d="M4 17h6" />
+      <path d="m15 9 5 5" />
+      <path d="m20 9-5 5" />
+    </BaseIcon>
+  );
+}
+
 export function BoldIcon(props: IconProps) {
   return (
     <BaseIcon {...props}>

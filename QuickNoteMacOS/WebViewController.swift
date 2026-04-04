@@ -184,6 +184,22 @@ final class WebViewController: NSViewController, WKNavigationDelegate {
             logger.info("Frontend reported that the initial UI is ready.")
             hideLoadingOverlay()
             return
+        case "setEditableInputActive":
+            guard let active = params["active"] as? Bool else {
+                logger.error("Bridge method 'setEditableInputActive' was missing a Boolean active flag.")
+                return
+            }
+
+            bridgeDelegate?.setEditableInputActiveFromBridge(active)
+            return
+        case "setTextCompositionActive":
+            guard let active = params["active"] as? Bool else {
+                logger.error("Bridge method 'setTextCompositionActive' was missing a Boolean active flag.")
+                return
+            }
+
+            bridgeDelegate?.setTextCompositionActiveFromBridge(active)
+            return
         case "reportFrontendError":
             let source = params["source"] as? String ?? "unknown"
             let message = params["message"] as? String ?? "Unknown frontend error."
@@ -457,6 +473,12 @@ final class WebViewController: NSViewController, WKNavigationDelegate {
         },
         reportFrontendReady() {
           sendWithoutReply("frontendReady");
+        },
+        setEditableInputActive(active) {
+          sendWithoutReply("setEditableInputActive", { active: Boolean(active) });
+        },
+        setTextCompositionActive(active) {
+          sendWithoutReply("setTextCompositionActive", { active: Boolean(active) });
         },
         reportFrontendError(message, source = "javascript") {
           sendWithoutReply("reportFrontendError", { message, source });

@@ -132,8 +132,12 @@ export function SettingsPanel({ onClose }: SettingsPanelProps) {
   }, [hotkey]);
 
   return (
-    <section data-testid="settings-panel" data-no-window-drag="true" className="flex h-full min-h-0 flex-col">
-      <div className="mb-4 flex items-start justify-between gap-4 px-5 pt-5">
+    <section
+      data-testid="settings-panel"
+      data-no-window-drag="true"
+      className="paper-scroll h-full overflow-y-auto px-5 pb-5 pt-5"
+    >
+      <div className="mb-4 flex items-start justify-between gap-4">
         <div className="min-w-0">
           <div className="mb-2 flex flex-wrap items-center gap-2">
             <span className="status-chip" data-tone="blue">
@@ -162,8 +166,7 @@ export function SettingsPanel({ onClose }: SettingsPanelProps) {
         </motion.button>
       </div>
 
-      <div className="paper-scroll min-h-0 flex-1 overflow-y-auto px-5 pb-5 pr-4">
-        <div className="settings-grid">
+      <div className="settings-grid pr-1">
           <SettingsCard
             wide
             icon={<SparklesIcon size={18} />}
@@ -335,7 +338,6 @@ export function SettingsPanel({ onClose }: SettingsPanelProps) {
               <span className="h-10 w-10 rounded-full bg-[var(--accent-plum)] shadow-[0_10px_18px_rgba(123,92,250,0.16)]" />
             </div>
           </SettingsCard>
-        </div>
       </div>
     </section>
   );

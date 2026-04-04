@@ -7,7 +7,13 @@ import { SettingsPanel } from "./components/settings/SettingsPanel";
 import { TodoList } from "./components/todos/TodoList";
 import { useAutoSave } from "./hooks/useAutoSave";
 import { useHotkey } from "./hooks/useHotkey";
-import { loadAllData, reportFrontendError, reportFrontendReady } from "./hooks/usePlatform";
+import {
+  loadAllData,
+  reportFrontendError,
+  reportFrontendReady,
+  setEditableInputActive,
+  setTextCompositionActive,
+} from "./hooks/usePlatform";
 import { subscribeToPanelPosition } from "./lib/nativeBridge";
 import type { AnimationSpeed, TabId, TransitionStyle } from "./lib/models";
 import { useNotesStore } from "./store/notesStore";
@@ -112,6 +118,70 @@ function QuickNoteApp() {
     return subscribeToPanelPosition((panelPosition) => {
       useSettingsStore.getState().setPanelPosition(panelPosition);
     });
+  }, []);
+
+  useEffect(() => {
+    if (typeof document === "undefined") {
+      return;
+    }
+
+    const isEditableTarget = (target: EventTarget | null) => {
+      if (!(target instanceof HTMLElement)) {
+        return false;
+      }
+
+      return (
+        target.isContentEditable ||
+        target instanceof HTMLInputElement ||
+        target instanceof HTMLTextAreaElement
+      );
+    };
+
+    const handleCompositionStart = (event: CompositionEvent) => {
+      if (!isEditableTarget(event.target)) {
+        return;
+      }
+
+      void setEditableInputActive(true);
+      void setTextCompositionActive(true);
+    };
+
+    const handleFocusIn = (event: FocusEvent) => {
+      if (!isEditableTarget(event.target)) {
+        return;
+      }
+
+      void setEditableInputActive(true);
+    };
+
+    const handleFocusOut = (event: FocusEvent) => {
+      if (!isEditableTarget(event.target)) {
+        return;
+      }
+
+      void setEditableInputActive(false);
+      void setTextCompositionActive(false);
+    };
+
+    const handleCompositionEnd = (event: CompositionEvent) => {
+      if (!isEditableTarget(event.target)) {
+        return;
+      }
+
+      void setTextCompositionActive(false);
+    };
+
+    document.addEventListener("focusin", handleFocusIn, true);
+    document.addEventListener("focusout", handleFocusOut, true);
+    document.addEventListener("compositionstart", handleCompositionStart, true);
+    document.addEventListener("compositionend", handleCompositionEnd, true);
+
+    return () => {
+      document.removeEventListener("focusin", handleFocusIn, true);
+      document.removeEventListener("focusout", handleFocusOut, true);
+      document.removeEventListener("compositionstart", handleCompositionStart, true);
+      document.removeEventListener("compositionend", handleCompositionEnd, true);
+    };
   }, []);
 
   useEffect(() => {

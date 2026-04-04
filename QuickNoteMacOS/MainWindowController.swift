@@ -5,12 +5,33 @@ import OSLog
 final class MainWindowController: NSObject, NSWindowDelegate, QuickNoteNativeBridgeHandling {
     private static let defaultPanelSize = NSSize(width: 400, height: 680)
     private static let minimumPanelSize = NSSize(width: 320, height: 480)
+    private static let overlayPanelLevel = NSWindow.Level.statusBar
+    private static let interactivePanelLevel = NSWindow.Level.floating
+    private static var overlayCollectionBehavior: NSWindow.CollectionBehavior {
+        var behavior: NSWindow.CollectionBehavior = [
+            .canJoinAllSpaces,
+            .fullScreenAuxiliary,
+            .stationary,
+            .transient,
+            .ignoresCycle,
+        ]
+
+        if #available(macOS 13.0, *) {
+            behavior.formUnion(.canJoinAllApplications)
+        }
+
+        return behavior
+    }
     private let storage: AppStorage
     private let hotKeyManager: GlobalHotKeyManager
     private let panel: FloatingPanel
     private let webViewController: WebViewController
     private let logger = Logger(subsystem: "com.quicknote.app", category: "Window")
     private var lastHotKeyPressTimestamp: CFAbsoluteTime = 0
+    private var isEditableInputActive = false
+    private var isTextCompositionActive = false
+    private var spaceObserver: NSObjectProtocol?
+    private var appDidBecomeActiveObserver: NSObjectProtocol?
 
     private static let hotKeyDebounceInterval: CFAbsoluteTime = 0.25
 
@@ -20,7 +41,7 @@ final class MainWindowController: NSObject, NSWindowDelegate, QuickNoteNativeBri
 
         panel = FloatingPanel(
             contentRect: NSRect(origin: .zero, size: Self.defaultPanelSize),
-            styleMask: [.borderless, .fullSizeContentView, .resizable],
+            styleMask: [.borderless, .nonactivatingPanel, .fullSizeContentView, .resizable],
             backing: .buffered,
             defer: false
         )
@@ -36,15 +57,11 @@ final class MainWindowController: NSObject, NSWindowDelegate, QuickNoteNativeBri
         panel.backgroundColor = .clear
         panel.isOpaque = false
         panel.hasShadow = true
-        panel.level = .floating
+        panel.level = Self.overlayPanelLevel
         panel.isFloatingPanel = true
         panel.becomesKeyOnlyIfNeeded = false
         panel.title = "QuickNote"
-        panel.collectionBehavior = [
-            .fullScreenAuxiliary,
-            .moveToActiveSpace,
-            .ignoresCycle,
-        ]
+        panel.collectionBehavior = Self.overlayCollectionBehavior
         panel.hidesOnDeactivate = false
         panel.isMovableByWindowBackground = false
         panel.standardWindowButton(.closeButton)?.isHidden = true
@@ -52,9 +69,20 @@ final class MainWindowController: NSObject, NSWindowDelegate, QuickNoteNativeBri
         panel.standardWindowButton(.zoomButton)?.isHidden = true
         panel.minSize = Self.minimumPanelSize
         panel.contentViewController = webViewController
+        installOverlayObservers()
 
         hotKeyManager.onHotKeyPressed = { [weak self] in
             self?.handleHotKeyPressed()
+        }
+    }
+
+    deinit {
+        if let spaceObserver {
+            NSWorkspace.shared.notificationCenter.removeObserver(spaceObserver)
+        }
+
+        if let appDidBecomeActiveObserver {
+            NotificationCenter.default.removeObserver(appDidBecomeActiveObserver)
         }
     }
 
@@ -75,20 +103,19 @@ final class MainWindowController: NSObject, NSWindowDelegate, QuickNoteNativeBri
     }
 
     func showMainWindow() {
+        configurePanelForGlobalOverlay()
         restoreDefaultPanelSizeIfNeeded()
         restorePanelPosition(on: activeScreen())
-        NSRunningApplication.current.activate(options: [.activateAllWindows])
-        NSApp.activate(ignoringOtherApps: true)
         panel.orderFrontRegardless()
-        panel.orderFront(nil)
-        panel.makeKeyAndOrderFront(nil)
-        panel.makeMain()
-        panel.invalidateShadow()
+        panel.makeKey()
+        bringPanelToFront(context: "Showing")
         logPanelState(context: "Showing")
     }
 
     func hideMainWindow() {
         persistPanelPosition()
+        isEditableInputActive = false
+        isTextCompositionActive = false
         panel.orderOut(nil)
         logPanelState(context: "Hid")
     }
@@ -149,6 +176,26 @@ final class MainWindowController: NSObject, NSWindowDelegate, QuickNoteNativeBri
         try hotKeyManager.register(shortcut: shortcut)
     }
 
+    func setEditableInputActiveFromBridge(_ active: Bool) {
+        isEditableInputActive = active
+
+        if !active {
+            isTextCompositionActive = false
+        }
+
+        updatePanelPresentationForCurrentInteraction()
+    }
+
+    func setTextCompositionActiveFromBridge(_ active: Bool) {
+        isTextCompositionActive = active
+
+        if active {
+            isEditableInputActive = true
+        }
+
+        updatePanelPresentationForCurrentInteraction()
+    }
+
     func hideMainWindowFromBridge() {
         hideMainWindow()
     }
@@ -169,10 +216,12 @@ final class MainWindowController: NSObject, NSWindowDelegate, QuickNoteNativeBri
     }
 
     func windowDidBecomeKey(_ notification: Notification) {
+        updatePanelPresentationForCurrentInteraction()
         logPanelState(context: "Panel became key")
     }
 
     func windowDidBecomeMain(_ notification: Notification) {
+        updatePanelPresentationForCurrentInteraction()
         logPanelState(context: "Panel became main")
     }
 
@@ -181,6 +230,7 @@ final class MainWindowController: NSObject, NSWindowDelegate, QuickNoteNativeBri
     }
 
     func windowDidResignKey(_ notification: Notification) {
+        updatePanelPresentationForCurrentInteraction()
         logPanelState(context: "Panel resigned key")
     }
 
@@ -275,5 +325,77 @@ final class MainWindowController: NSObject, NSWindowDelegate, QuickNoteNativeBri
         logger.info(
             "\(context, privacy: .public) panel. appActive=\(NSApp.isActive) visible=\(self.panel.isVisible) key=\(self.panel.isKeyWindow) main=\(self.panel.isMainWindow) occlusion=\(self.panel.occlusionState.rawValue) screen=\(screenName, privacy: .public) frame=\(frameDescription, privacy: .public)"
         )
+    }
+
+    private func configurePanelForGlobalOverlay() {
+        panel.level = Self.overlayPanelLevel
+        panel.collectionBehavior.formUnion(Self.overlayCollectionBehavior)
+    }
+
+    private func configurePanelForInteractiveInput() {
+        panel.level = Self.interactivePanelLevel
+        panel.collectionBehavior.formUnion(Self.overlayCollectionBehavior)
+    }
+
+    private func configurePanelForTextComposition() {
+        panel.level = .normal
+        panel.collectionBehavior.formUnion(Self.overlayCollectionBehavior)
+    }
+
+    private func updatePanelPresentationForCurrentInteraction() {
+        guard panel.isVisible else {
+            return
+        }
+
+        if isTextCompositionActive {
+            configurePanelForTextComposition()
+            return
+        }
+
+        if isEditableInputActive {
+            configurePanelForInteractiveInput()
+            return
+        }
+
+        configurePanelForGlobalOverlay()
+    }
+
+    private func bringPanelToFront(context: String) {
+        configurePanelForGlobalOverlay()
+        panel.orderFrontRegardless()
+        panel.orderFront(nil)
+        panel.invalidateShadow()
+        updatePanelPresentationForCurrentInteraction()
+        logger.debug("\(context, privacy: .public): raised panel above the active Space.")
+    }
+
+    private func installOverlayObservers() {
+        spaceObserver = NSWorkspace.shared.notificationCenter.addObserver(
+            forName: NSWorkspace.activeSpaceDidChangeNotification,
+            object: nil,
+            queue: .main
+        ) { [weak self] _ in
+            Task { @MainActor [weak self] in
+                guard let self, self.panel.isVisible else {
+                    return
+                }
+
+                self.bringPanelToFront(context: "Active space changed")
+            }
+        }
+
+        appDidBecomeActiveObserver = NotificationCenter.default.addObserver(
+            forName: NSApplication.didBecomeActiveNotification,
+            object: nil,
+            queue: .main
+        ) { [weak self] _ in
+            Task { @MainActor [weak self] in
+                guard let self, self.panel.isVisible else {
+                    return
+                }
+
+                self.bringPanelToFront(context: "App became active")
+            }
+        }
     }
 }

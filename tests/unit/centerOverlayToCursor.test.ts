@@ -1,5 +1,9 @@
-import { describe, expect, it } from "vitest";
-import { centerOverlayToCursor } from "../../src/lib/dnd/centerOverlayToCursor";
+import { afterEach, describe, expect, it } from "vitest";
+import {
+  centerOverlayToCursor,
+  clearLatestDragPointerCoordinates,
+  setLatestDragPointerCoordinates,
+} from "../../src/lib/dnd/centerOverlayToCursor";
 
 type ModifierArgs = Parameters<typeof centerOverlayToCursor>[0];
 
@@ -28,6 +32,10 @@ function createModifierArgs(
 }
 
 describe("centerOverlayToCursor", () => {
+  afterEach(() => {
+    clearLatestDragPointerCoordinates();
+  });
+
   it("centers the drag overlay using pointer-like event coordinates", () => {
     const transformed = centerOverlayToCursor(createModifierArgs({
       activatorEvent: { clientX: 50, clientY: 70 } as unknown as Event,
@@ -137,5 +145,36 @@ describe("centerOverlayToCursor", () => {
     }));
 
     expect(transformed).toBe(transform);
+  });
+
+  it("prefers the latest tracked drag pointer coordinates when available", () => {
+    setLatestDragPointerCoordinates({ x: 180, y: 160 });
+
+    const transformed = centerOverlayToCursor(createModifierArgs({
+      activatorEvent: { clientX: 50, clientY: 70 } as unknown as Event,
+      activeNodeRect: {
+        top: 40,
+        left: 80,
+      } as DOMRect,
+      containerNodeRect: {
+        top: 10,
+        left: 20,
+      } as DOMRect,
+      overlayNodeRect: {
+        width: 100,
+        height: 60,
+      } as DOMRect,
+      transform: {
+        x: 999,
+        y: 999,
+        scaleX: 1,
+        scaleY: 1,
+      },
+    }));
+
+    expect(transformed).toMatchObject({
+      x: 30,
+      y: 80,
+    });
   });
 });

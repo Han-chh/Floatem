@@ -10,11 +10,13 @@ import {
 } from "@dnd-kit/core";
 import { SortableContext, verticalListSortingStrategy } from "@dnd-kit/sortable";
 import { AnimatePresence, motion } from "framer-motion";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { useDragPointerTracking } from "../../hooks/useDragPointerTracking";
 import { ParticleField } from "../feedback/ParticleField";
 import { PlusIcon } from "../icons/AppIcons";
 import { useParticleField } from "../../hooks/useParticleField";
-import { centerOverlayToCursor } from "../../lib/dnd/centerOverlayToCursor";
+import { centerOverlayToCursor, syncLatestDragPointerCoordinates } from "../../lib/dnd/centerOverlayToCursor";
+import { resolveDragReorderTarget } from "../../lib/dnd/resolveDragReorderTarget";
 import { useNotesStore } from "../../store/notesStore";
 import { useSettingsStore } from "../../store/settingsStore";
 import { NoteCard, NoteCardPreview } from "./NoteCard";
@@ -27,6 +29,7 @@ export function NotesList() {
   const enableParticles = useSettingsStore((state) => state.enableParticles);
   const [removingIds, setRemovingIds] = useState<string[]>([]);
   const [activeDragId, setActiveDragId] = useState<string | null>(null);
+  const [activeDragOverId, setActiveDragOverId] = useState<string | null>(null);
   const [activeDragWidth, setActiveDragWidth] = useState<number | null>(null);
   const { bursts, fieldRef, spawnBurst } = useParticleField();
   const sensors = useSensors(
@@ -37,6 +40,25 @@ export function NotesList() {
 
   const visibleCards = cards.filter((card) => !removingIds.includes(card.id));
   const activeDragCard = cards.find((card) => card.id === activeDragId) ?? null;
+  const dragPointerCoordinates = useDragPointerTracking(Boolean(activeDragId));
+
+  useEffect(() => {
+    if (!activeDragId || !dragPointerCoordinates || typeof document === "undefined") {
+      setActiveDragOverId(null);
+      return;
+    }
+
+    const nextTarget =
+      document
+        .elementsFromPoint(dragPointerCoordinates.x, dragPointerCoordinates.y)
+        .map((element) => element.closest("[data-note-card-id]") as HTMLElement | null)
+        .find((element) => {
+          const id = element?.dataset.noteCardId;
+          return Boolean(id && id !== activeDragId);
+        })?.dataset.noteCardId ?? null;
+
+    setActiveDragOverId(nextTarget);
+  }, [activeDragId, dragPointerCoordinates]);
 
   const handleAddCard = (target: DOMRect) => {
     const card = addCard();
@@ -71,18 +93,28 @@ export function NotesList() {
 
   const handleDragStart = (event: DragStartEvent) => {
     setActiveDragId(String(event.active.id));
+    setActiveDragOverId(null);
     setActiveDragWidth(event.active.rect.current.initial?.width ?? null);
+    syncLatestDragPointerCoordinates(event.activatorEvent);
   };
 
   const handleDragEnd = (event: DragEndEvent) => {
+    const activeId = String(event.active.id);
+    const overId = resolveDragReorderTarget({
+      activeId,
+      eventOverId: event.over ? String(event.over.id) : null,
+      previewOverId: activeDragOverId,
+    });
+
     setActiveDragId(null);
+    setActiveDragOverId(null);
     setActiveDragWidth(null);
 
-    if (!event.over || event.active.id === event.over.id) {
+    if (!overId) {
       return;
     }
 
-    moveCard(String(event.active.id), String(event.over.id));
+    moveCard(activeId, overId);
   };
 
   return (
@@ -111,6 +143,7 @@ export function NotesList() {
             onDragEnd={handleDragEnd}
             onDragCancel={() => {
               setActiveDragId(null);
+              setActiveDragOverId(null);
               setActiveDragWidth(null);
             }}
           >
@@ -119,7 +152,12 @@ export function NotesList() {
                 <div className="flex flex-col gap-3">
                   <AnimatePresence>
                     {visibleCards.map((card) => (
-                      <NoteCard key={card.id} note={card} onDelete={handleDeleteCard} />
+                      <NoteCard
+                        key={card.id}
+                        note={card}
+                        onDelete={handleDeleteCard}
+                        dropPreview={activeDragOverId === card.id && activeDragId !== card.id}
+                      />
                     ))}
                   </AnimatePresence>
                 </div>

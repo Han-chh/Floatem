@@ -12,6 +12,7 @@ import { Toolbar } from "./Toolbar";
 type NoteCardProps = {
   note: NoteCardModel;
   onDelete: (id: string, target: DOMRect) => void;
+  dropPreview?: boolean;
 };
 
 type NoteCardBodyProps = {
@@ -26,6 +27,7 @@ type NoteCardBodyProps = {
   setShowPalette?: (nextValue: boolean) => void;
   titleRef?: Ref<HTMLTextAreaElement>;
   isDraggingPlaceholder?: boolean;
+  isDropTargetPreview?: boolean;
   preview?: boolean;
 };
 
@@ -70,6 +72,7 @@ function NoteCardBody({
   setShowPalette,
   titleRef,
   isDraggingPlaceholder = false,
+  isDropTargetPreview = false,
   preview = false,
 }: NoteCardBodyProps) {
   const isInteractive = !preview;
@@ -105,7 +108,10 @@ function NoteCardBody({
       />
 
       {isDraggingPlaceholder ? (
-        <div className="absolute inset-0 rounded-[28px] border-2 border-dashed border-[rgba(161,136,113,0.44)] bg-[rgba(255,255,255,0.12)]" />
+        <div className="absolute inset-0 rounded-[28px] border border-transparent bg-[rgba(255,255,255,0.08)]" />
+      ) : null}
+      {isDropTargetPreview ? (
+        <div className="pointer-events-none absolute inset-[3px] rounded-[25px] border-2 border-[rgba(31,168,122,0.82)] bg-[rgba(31,168,122,0.05)] shadow-[0_0_0_4px_rgba(31,168,122,0.14)]" />
       ) : null}
 
       <div className={`relative rounded-t-[28px] px-3 py-2.5 ${isDraggingPlaceholder ? "opacity-0" : ""}`}>
@@ -266,7 +272,7 @@ export function NoteCardPreview({ note, width }: { note: NoteCardModel; width?: 
   );
 }
 
-export function NoteCard({ note, onDelete }: NoteCardProps) {
+export function NoteCard({ note, onDelete, dropPreview = false }: NoteCardProps) {
   const toggleCollapsed = useNotesStore((state) => state.toggleCollapsed);
   const updateCardTitle = useNotesStore((state) => state.updateCardTitle);
   const updateCardContent = useNotesStore((state) => state.updateCardContent);
@@ -308,10 +314,11 @@ export function NoteCard({ note, onDelete }: NoteCardProps) {
       data-no-window-drag="true"
       aria-label="Reorder note"
       data-testid="note-card"
+      data-note-card-id={note.id}
       className={`paper-card cq-card relative rounded-[28px] border border-[rgba(213,198,180,0.92)] bg-[linear-gradient(180deg,rgba(255,252,248,0.98),rgba(255,247,239,0.95))] shadow-[0_18px_36px_rgba(61,49,34,0.10)] cursor-grab active:cursor-grabbing ${
         showPalette ? "z-30 overflow-visible" : "overflow-hidden"
       } ${
-        isDragging ? "border-dashed border-[rgba(161,136,113,0.44)] bg-[rgba(255,255,255,0.12)] shadow-none" : ""
+        isDragging ? "border-transparent bg-[rgba(255,255,255,0.08)] shadow-none" : ""
       }`}
     >
       <NoteCardBody
@@ -329,6 +336,7 @@ export function NoteCard({ note, onDelete }: NoteCardProps) {
         setShowPalette={setShowPalette}
         titleRef={titleRef}
         isDraggingPlaceholder={isDragging}
+        isDropTargetPreview={dropPreview}
       />
     </motion.article>
   );

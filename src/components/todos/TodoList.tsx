@@ -11,10 +11,12 @@ import {
 import { SortableContext, verticalListSortingStrategy } from "@dnd-kit/sortable";
 import { AnimatePresence, motion } from "framer-motion";
 import { useEffect, useMemo, useRef, useState, type FormEvent, type KeyboardEvent } from "react";
+import { useDragPointerTracking } from "../../hooks/useDragPointerTracking";
 import { ParticleField } from "../feedback/ParticleField";
 import { CornerDownLeftIcon } from "../icons/AppIcons";
 import { useParticleField } from "../../hooks/useParticleField";
-import { centerOverlayToCursor } from "../../lib/dnd/centerOverlayToCursor";
+import { centerOverlayToCursor, syncLatestDragPointerCoordinates } from "../../lib/dnd/centerOverlayToCursor";
+import { resolveDragReorderTarget } from "../../lib/dnd/resolveDragReorderTarget";
 import { syncTextareaHeight } from "../../lib/resizeTextarea";
 import { useSettingsStore } from "../../store/settingsStore";
 import { useTodosStore } from "../../store/todosStore";
@@ -30,6 +32,7 @@ export function TodoList() {
   const [draft, setDraft] = useState("");
   const [removingIds, setRemovingIds] = useState<string[]>([]);
   const [activeDragId, setActiveDragId] = useState<string | null>(null);
+  const [activeDragOverId, setActiveDragOverId] = useState<string | null>(null);
   const [activeDragWidth, setActiveDragWidth] = useState<number | null>(null);
   const formRef = useRef<HTMLFormElement>(null);
   const draftRef = useRef<HTMLTextAreaElement | null>(null);
@@ -49,6 +52,25 @@ export function TodoList() {
   const activeDragTodo = openTodos.find((todo) => todo.id === activeDragId) ?? null;
   const activeDragIndex = activeDragId ? openTodos.findIndex((todo) => todo.id === activeDragId) : -1;
   const activeDragOrder = activeDragIndex >= 0 ? activeDragIndex + 1 : undefined;
+  const dragPointerCoordinates = useDragPointerTracking(Boolean(activeDragId));
+
+  useEffect(() => {
+    if (!activeDragId || !dragPointerCoordinates || typeof document === "undefined") {
+      setActiveDragOverId(null);
+      return;
+    }
+
+    const nextTarget =
+      document
+        .elementsFromPoint(dragPointerCoordinates.x, dragPointerCoordinates.y)
+        .map((element) => element.closest("[data-todo-item-id]") as HTMLElement | null)
+        .find((element) => {
+          const id = element?.dataset.todoItemId;
+          return Boolean(id && id !== activeDragId);
+        })?.dataset.todoItemId ?? null;
+
+    setActiveDragOverId(nextTarget);
+  }, [activeDragId, dragPointerCoordinates]);
 
   const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -87,18 +109,28 @@ export function TodoList() {
 
   const handleDragStart = (event: DragStartEvent) => {
     setActiveDragId(String(event.active.id));
+    setActiveDragOverId(null);
     setActiveDragWidth(event.active.rect.current.initial?.width ?? null);
+    syncLatestDragPointerCoordinates(event.activatorEvent);
   };
 
   const handleDragEnd = (event: DragEndEvent) => {
+    const activeId = String(event.active.id);
+    const overId = resolveDragReorderTarget({
+      activeId,
+      eventOverId: event.over ? String(event.over.id) : null,
+      previewOverId: activeDragOverId,
+    });
+
     setActiveDragId(null);
+    setActiveDragOverId(null);
     setActiveDragWidth(null);
 
-    if (!event.over || event.active.id === event.over.id) {
+    if (!overId) {
       return;
     }
 
-    moveTodo(String(event.active.id), String(event.over.id));
+    moveTodo(activeId, overId);
   };
 
   const handleDraftKeyDown = (event: KeyboardEvent<HTMLTextAreaElement>) => {
@@ -142,6 +174,7 @@ export function TodoList() {
                 onDragEnd={handleDragEnd}
                 onDragCancel={() => {
                   setActiveDragId(null);
+                  setActiveDragOverId(null);
                   setActiveDragWidth(null);
                 }}
               >
@@ -155,6 +188,7 @@ export function TodoList() {
                           order={index + 1}
                           onDelete={handleDeleteTodo}
                           onToggle={handleToggleTodo}
+                          dropPreview={activeDragOverId === todo.id && activeDragId !== todo.id}
                         />
                       ))}
                     </AnimatePresence>

@@ -23,6 +23,30 @@ const initialState = () => ({
   isLoaded: false,
 });
 
+function updateCardById(cards: NoteCard[], id: string, updater: (card: NoteCard) => NoteCard) {
+  let didChange = false;
+
+  const nextCards = cards.map((card) => {
+    if (card.id !== id) {
+      return card;
+    }
+
+    const nextCard = updater(card);
+    didChange ||= nextCard !== card;
+    return nextCard;
+  });
+
+  return didChange ? nextCards : cards;
+}
+
+function isSameContent(left: Descendant[], right: Descendant[]) {
+  if (left === right) {
+    return true;
+  }
+
+  return JSON.stringify(left) === JSON.stringify(right);
+}
+
 export const useNotesStore = create<NotesState>()(
   subscribeWithSelector((set) => ({
     ...initialState(),
@@ -45,56 +69,58 @@ export const useNotesStore = create<NotesState>()(
       }));
     },
     updateCardTitle: (id, title) => {
-      set((state) => ({
-        cards: state.cards.map((card) =>
-          card.id === id
-            ? {
+      set((state) => {
+        const cards = updateCardById(state.cards, id, (card) =>
+          card.title === title
+            ? card
+            : {
                 ...card,
                 title,
                 updatedAt: Date.now(),
-              }
-            : card,
-        ),
-      }));
+              },
+        );
+
+        return cards === state.cards ? state : { cards };
+      });
     },
     updateCardContent: (id, content) => {
-      set((state) => ({
-        cards: state.cards.map((card) =>
-          card.id === id
-            ? {
+      set((state) => {
+        const cards = updateCardById(state.cards, id, (card) =>
+          isSameContent(card.content, content)
+            ? card
+            : {
                 ...card,
                 content,
                 updatedAt: Date.now(),
-              }
-            : card,
-        ),
-      }));
+              },
+        );
+
+        return cards === state.cards ? state : { cards };
+      });
     },
     updateDotColor: (id, dotColor) => {
-      set((state) => ({
-        cards: state.cards.map((card) =>
-          card.id === id
-            ? {
+      set((state) => {
+        const cards = updateCardById(state.cards, id, (card) =>
+          card.dotColor === dotColor
+            ? card
+            : {
                 ...card,
                 dotColor,
-                updatedAt: Date.now(),
-              }
-            : card,
-        ),
-      }));
+              },
+        );
+
+        return cards === state.cards ? state : { cards };
+      });
     },
     toggleCollapsed: (id) => {
-      set((state) => ({
-        cards: state.cards.map((card) =>
-          card.id === id
-            ? {
-                ...card,
-                collapsed: !card.collapsed,
-                updatedAt: Date.now(),
-              }
-            : card,
-        ),
-      }));
+      set((state) => {
+        const cards = updateCardById(state.cards, id, (card) => ({
+          ...card,
+          collapsed: !card.collapsed,
+        }));
+
+        return cards === state.cards ? state : { cards };
+      });
     },
     moveCard: (activeId, overId) => {
       set((state) => {

@@ -13,6 +13,7 @@ type TodoItemProps = {
   order?: number;
   onDelete: (id: string, target: DOMRect) => void;
   onToggle: (id: string, target: DOMRect, nextDone: boolean) => void;
+  dropPreview?: boolean;
 };
 
 type TodoRowBodyProps = {
@@ -22,6 +23,7 @@ type TodoRowBodyProps = {
   onToggle?: (target: DOMRect, nextDone: boolean) => void;
   preview?: boolean;
   isDraggingPlaceholder?: boolean;
+  isDropTargetPreview?: boolean;
 };
 
 function getStatusMeta(todo: TodoItemModel) {
@@ -107,6 +109,7 @@ function TodoRowBody({
   onToggle,
   preview = false,
   isDraggingPlaceholder = false,
+  isDropTargetPreview = false,
 }: TodoRowBodyProps) {
   const setReminder = useTodosStore((state) => state.setReminder);
   const status = getStatusMeta(todo);
@@ -128,7 +131,10 @@ function TodoRowBody({
         style={{ background: `linear-gradient(180deg, ${status.accent}, rgba(255,255,255,0.16))` }}
       />
       {isDraggingPlaceholder ? (
-        <div className="absolute inset-0 rounded-[22px] border-2 border-dashed border-[rgba(161,136,113,0.42)] bg-[rgba(255,255,255,0.12)]" />
+        <div className="absolute inset-0 rounded-[22px] border border-transparent bg-[rgba(255,255,255,0.08)]" />
+      ) : null}
+      {isDropTargetPreview ? (
+        <div className="pointer-events-none absolute inset-[2px] rounded-[18px] border-2 border-[rgba(31,168,122,0.82)] bg-[rgba(31,168,122,0.05)] shadow-[0_0_0_4px_rgba(31,168,122,0.14)]" />
       ) : null}
 
       <div className={`todo-row-grid relative z-10 pl-3 ${isDraggingPlaceholder ? "opacity-0" : ""}`}>
@@ -248,7 +254,7 @@ export function TodoItemPreview({ todo, width, order }: { todo: TodoItemModel; w
   );
 }
 
-export function TodoItem({ todo, order, onDelete, onToggle }: TodoItemProps) {
+export function TodoItem({ todo, order, onDelete, onToggle, dropPreview = false }: TodoItemProps) {
   const cardRef = useRef<HTMLElement | null>(null);
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: todo.id,
@@ -275,9 +281,10 @@ export function TodoItem({ todo, order, onDelete, onToggle }: TodoItemProps) {
       {...listeners}
       data-no-window-drag="true"
       data-testid="todo-item"
+      data-todo-item-id={todo.id}
       aria-label="Reorder todo"
       className={`paper-card cq-card relative overflow-hidden rounded-[20px] px-2 py-1.75 shadow-[0_10px_22px_rgba(61,49,34,0.08)] cursor-grab active:cursor-grabbing ${status.cardClass} ${
-        isDragging ? "border-dashed border-[rgba(161,136,113,0.42)] bg-[rgba(255,255,255,0.12)] shadow-none" : ""
+        isDragging ? "border-transparent bg-[rgba(255,255,255,0.08)] shadow-none" : ""
       }`}
     >
       <TodoRowBody
@@ -286,6 +293,7 @@ export function TodoItem({ todo, order, onDelete, onToggle }: TodoItemProps) {
         onDelete={(target) => onDelete(todo.id, cardRef.current?.getBoundingClientRect() ?? target)}
         onToggle={(target, nextDone) => onToggle(todo.id, target, nextDone)}
         isDraggingPlaceholder={isDragging}
+        isDropTargetPreview={dropPreview}
       />
     </motion.article>
   );

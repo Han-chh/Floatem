@@ -6,7 +6,6 @@ import type { RenderElementProps, RenderLeafProps } from "slate-react";
 import { useState } from "react";
 import { DEFAULT_NOTE_CONTENT } from "../../lib/models";
 import { withColorMark } from "../../lib/slate-plugins/withColorMark";
-import { withImages } from "../../lib/slate-plugins/withImages";
 
 type EditorProps = {
   content: Descendant[];
@@ -14,15 +13,6 @@ type EditorProps = {
 };
 
 function renderElement(props: RenderElementProps) {
-  if (props.element.type === "image") {
-    return (
-      <div {...props.attributes}>
-        <img src={props.element.url} alt="" className="my-2 max-h-40 rounded-[10px] border border-[var(--border)] object-cover" />
-        {props.children}
-      </div>
-    );
-  }
-
   return <p {...props.attributes}>{props.children}</p>;
 }
 
@@ -47,12 +37,19 @@ function renderLeaf(props: RenderLeafProps) {
 }
 
 export function Editor({ content, onChange }: EditorProps) {
-  const [editor] = useState(() =>
-    withColorMark(withImages(withHistory(withReact(createEditor())))),
-  );
+  const [editor] = useState(() => withColorMark(withHistory(withReact(createEditor()))));
+  const handleChange = (value: Descendant[]) => {
+    const hasDocumentChange = editor.operations.some((operation) => operation.type !== "set_selection");
+
+    if (!hasDocumentChange) {
+      return;
+    }
+
+    onChange(value);
+  };
 
   return (
-    <Slate editor={editor} initialValue={content.length > 0 ? content : DEFAULT_NOTE_CONTENT} onChange={onChange}>
+    <Slate editor={editor} initialValue={content.length > 0 ? content : DEFAULT_NOTE_CONTENT} onChange={handleChange}>
       <Editable
         onPointerDown={(event) => event.stopPropagation()}
         className="surface-field wrap-anywhere min-h-[184px] rounded-[20px] px-3 py-3 text-[12.25px] leading-[1.6] outline-none"
