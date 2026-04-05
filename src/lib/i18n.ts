@@ -36,8 +36,10 @@ type MessageCatalog = {
     focusCard: string;
     fold: string;
     italic: string;
+    moreColors: string;
     open: string;
     reorder: string;
+    showColors: string;
     titleAria: string;
     toolbarClear: string;
     underline: string;
@@ -168,7 +170,7 @@ type MessageCatalog = {
     specificTimeTitle: string;
     statusDone: string;
     statusUndone: string;
-    submitShortcut: string;
+    submitHint: string;
     tomorrow: string;
     tomorrowMorning: string;
     tomorrowTimePrompt: string;
@@ -216,11 +218,13 @@ const messages: Record<AppLanguage, MessageCatalog> = {
       focusCard: "Focus card",
       fold: "Fold",
       italic: "Italic",
+      moreColors: "More Colors",
       open: "Open",
       paste: "Paste",
       reorder: "Reorder note",
+      showColors: "Show Colors",
       titleAria: "Note title",
-      toolbarClear: "Clear",
+      toolbarClear: "Clear format",
       underline: "Underline",
       untitled: "Untitled note",
       useColor: (color) => `Use ${color} for note`,
@@ -348,7 +352,7 @@ const messages: Record<AppLanguage, MessageCatalog> = {
       specificTimeTitle: "Specific time",
       statusDone: "done",
       statusUndone: "undone",
-      submitShortcut: "Cmd+Enter",
+      submitHint: "Cmd+Enter for newline",
       tomorrow: "Tomorrow",
       tomorrowMorning: "Tomorrow 09:00",
       tomorrowTimePrompt: "Tomorrow selected. Choose the hour and minute below.",
@@ -393,11 +397,13 @@ const messages: Record<AppLanguage, MessageCatalog> = {
       focusCard: "聚焦卡片",
       fold: "折叠",
       italic: "斜体",
+      moreColors: "更多颜色",
       open: "展开",
       paste: "粘贴",
       reorder: "重新排序笔记",
+      showColors: "显示颜色面板",
       titleAria: "笔记标题",
-      toolbarClear: "清除",
+      toolbarClear: "清除格式",
       underline: "下划线",
       untitled: "未命名笔记",
       useColor: (color) => `使用 ${color} 作为笔记颜色`,
@@ -525,7 +531,7 @@ const messages: Record<AppLanguage, MessageCatalog> = {
       specificTimeTitle: "具体时间",
       statusDone: "已完成",
       statusUndone: "未完成",
-      submitShortcut: "Cmd+Enter",
+      submitHint: "Cmd+Enter 换行",
       tomorrow: "明天",
       tomorrowMorning: "明天 09:00",
       tomorrowTimePrompt: "已选择明天，请继续选择具体时分。",

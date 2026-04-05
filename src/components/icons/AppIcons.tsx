@@ -131,6 +131,18 @@ export function PaletteIcon(props: IconProps) {
   );
 }
 
+export function FilledPaletteIcon(props: IconProps) {
+  return (
+    <BaseIcon {...props}>
+      <path d="M12 4a8 8 0 1 0 0 16h1.2a2.3 2.3 0 0 0 0-4.6h-.7A1.5 1.5 0 0 1 11 14v-.5A2.5 2.5 0 0 1 13.5 11H16a4 4 0 0 0 0-8Z" />
+      <circle cx="7.5" cy="10" r="1.45" fill="#FF7A59" stroke="none" />
+      <circle cx="9.5" cy="7.5" r="1.45" fill="#F4B942" stroke="none" />
+      <circle cx="13" cy="7" r="1.45" fill="#2F6BFF" stroke="none" />
+      <circle cx="15.2" cy="9.7" r="1.2" fill="#1FA87A" stroke="none" />
+    </BaseIcon>
+  );
+}
+
 export function PaintbrushIcon(props: IconProps) {
   return (
     <BaseIcon {...props}>

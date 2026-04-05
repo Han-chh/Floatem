@@ -8,7 +8,6 @@ import { syncTextareaHeight } from "../../lib/resizeTextarea";
 import { useNotesStore } from "../../store/notesStore";
 import { ChevronsUpDownIcon, PaletteIcon, Trash2Icon } from "../icons/AppIcons";
 import { Editor } from "./Editor";
-import { Toolbar } from "./Toolbar";
 
 type NoteCardProps = {
   note: NoteCardModel;
@@ -226,9 +225,8 @@ function NoteCardBody({
 
       {note.collapsed ? null : (
         <div className={`relative space-y-2 px-3 pb-3 pt-0 ${isDraggingPlaceholder ? "opacity-0" : ""}`}>
-          <Toolbar />
           {preview ? (
-            <div className="surface-field min-h-[188px] rounded-[20px] px-3 py-3 text-[12.25px] leading-[1.62] text-[var(--muted)]">
+            <div className="surface-field min-h-[80px] rounded-[20px] px-3 py-3 text-[12.25px] leading-[1.62] text-[var(--muted)]">
               {note.title ? t.notes.dragPreviewEditing : t.notes.dragPreview}
             </div>
           ) : (

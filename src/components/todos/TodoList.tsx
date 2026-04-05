@@ -10,9 +10,19 @@ import {
 } from "@dnd-kit/core";
 import { SortableContext, verticalListSortingStrategy } from "@dnd-kit/sortable";
 import { AnimatePresence, motion } from "framer-motion";
-import { useEffect, useMemo, useRef, useState, type FormEvent, type KeyboardEvent } from "react";
+import {
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type ClipboardEvent,
+  type FormEvent,
+  type KeyboardEvent,
+} from "react";
 import { useDragPointerTracking } from "../../hooks/useDragPointerTracking";
+import { isPrimaryShortcut } from "../../lib/isPrimaryShortcut";
 import { useI18n } from "../../lib/i18n";
+import { readPlainTextFromClipboard, writePlainTextToClipboard } from "../../lib/plainTextClipboard";
 import { ParticleField } from "../feedback/ParticleField";
 import { CornerDownLeftIcon } from "../icons/AppIcons";
 import { useParticleField } from "../../hooks/useParticleField";
@@ -136,7 +146,36 @@ export function TodoList() {
   };
 
   const handleDraftKeyDown = (event: KeyboardEvent<HTMLTextAreaElement>) => {
-    if (event.key === "Enter" && event.metaKey && !event.shiftKey) {
+    if (event.nativeEvent.isComposing) {
+      return;
+    }
+
+    if (isPrimaryShortcut(event, "a")) {
+      event.preventDefault();
+      event.currentTarget.focus();
+      event.currentTarget.select();
+      return;
+    }
+
+    if (isPrimaryShortcut(event, "c")) {
+      event.preventDefault();
+      void handleDraftCopy(event.currentTarget);
+      return;
+    }
+
+    if (isPrimaryShortcut(event, "v")) {
+      event.preventDefault();
+      void handleDraftPaste(event.currentTarget);
+      return;
+    }
+
+    if (
+      event.key === "Enter" &&
+      !event.metaKey &&
+      !event.shiftKey &&
+      !event.ctrlKey &&
+      !event.altKey
+    ) {
       event.preventDefault();
       formRef.current?.requestSubmit();
     }
@@ -147,6 +186,46 @@ export function TodoList() {
       syncTextareaHeight(draftRef.current);
     }
   }, [draft]);
+
+  const replaceDraftSelection = (textarea: HTMLTextAreaElement, text: string) => {
+    const selectionStart = textarea.selectionStart ?? textarea.value.length;
+    const selectionEnd = textarea.selectionEnd ?? selectionStart;
+    const nextDraft = `${textarea.value.slice(0, selectionStart)}${text}${textarea.value.slice(selectionEnd)}`;
+    const nextCaret = selectionStart + text.length;
+
+    setDraft(nextDraft);
+    window.requestAnimationFrame(() => {
+      if (!draftRef.current) {
+        return;
+      }
+
+      draftRef.current.focus();
+      draftRef.current.setSelectionRange(nextCaret, nextCaret);
+      syncTextareaHeight(draftRef.current);
+    });
+  };
+
+  const handleDraftCopy = async (textarea: HTMLTextAreaElement) => {
+    const selectionStart = textarea.selectionStart ?? 0;
+    const selectionEnd = textarea.selectionEnd ?? selectionStart;
+    const text = textarea.value.slice(selectionStart, selectionEnd);
+
+    if (!text) {
+      return;
+    }
+
+    await writePlainTextToClipboard(text);
+  };
+
+  const handleDraftPaste = async (textarea: HTMLTextAreaElement) => {
+    const text = await readPlainTextFromClipboard();
+
+    if (!text) {
+      return;
+    }
+
+    replaceDraftSelection(textarea, text);
+  };
 
   return (
     <section className="cq-module flex h-full min-h-0 flex-col gap-2.5">
@@ -261,9 +340,9 @@ export function TodoList() {
             <div className="flex items-center justify-center">
               <span
                 id="todo-submit-shortcut"
-                className="shrink-0 text-[10px] font-semibold leading-none tracking-[-0.01em] whitespace-nowrap text-[var(--muted)]"
+                className="max-w-full text-center text-[9px] font-medium leading-[1.25] tracking-[-0.01em] text-[var(--muted)] opacity-90"
               >
-                {t.todos.submitShortcut}
+                {t.todos.submitHint}
               </span>
             </div>
             <textarea
@@ -272,7 +351,29 @@ export function TodoList() {
               rows={1}
               value={draft}
               onChange={(event) => setDraft(event.currentTarget.value)}
+              onCopy={(event: ClipboardEvent<HTMLTextAreaElement>) => {
+                const selectionStart = event.currentTarget.selectionStart ?? 0;
+                const selectionEnd = event.currentTarget.selectionEnd ?? selectionStart;
+                const text = event.currentTarget.value.slice(selectionStart, selectionEnd);
+
+                if (!text) {
+                  return;
+                }
+
+                event.preventDefault();
+                event.clipboardData.setData("text/plain", text);
+              }}
               onInput={(event) => syncTextareaHeight(event.currentTarget)}
+              onPaste={(event) => {
+                event.preventDefault();
+                const text = event.clipboardData.getData("text/plain");
+
+                if (!text) {
+                  return;
+                }
+
+                replaceDraftSelection(event.currentTarget, text);
+              }}
               onKeyDown={handleDraftKeyDown}
               placeholder={t.todos.quickAddPlaceholder}
               className="textarea-reset surface-field wrap-anywhere min-h-[40px] min-w-0 rounded-[16px] px-3.5 py-2 text-[12.5px] font-medium leading-5 text-[var(--dark-text)] outline-none placeholder:text-[var(--muted)]"

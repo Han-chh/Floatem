@@ -7,7 +7,19 @@ const SETTINGS_STORAGE_KEY = "quicknote.settings";
 
 export const PANEL_POSITION_EVENT = "quicknote:panel-position";
 export const PANEL_WILL_OPEN_EVENT = "quicknote:panel-will-open";
+export const TEXT_COLOR_PANEL_OPEN_EVENT = "quicknote:text-color-panel-open";
+export const TEXT_COLOR_PANEL_CHANGE_EVENT = "quicknote:text-color-panel-change";
+export const TEXT_COLOR_PANEL_CLOSE_EVENT = "quicknote:text-color-panel-close";
 export const TODOS_UPDATED_EVENT = "quicknote:todos-updated";
+
+export type TextColorPanelChangeDetail = {
+  color: string;
+  requestId: string;
+};
+
+export type TextColorPanelCloseDetail = {
+  requestId: string;
+};
 
 export type QuickNoteNativeBridge = {
   platform: "macos-appkit-wkwebview";
@@ -16,13 +28,16 @@ export type QuickNoteNativeBridge = {
   saveTodos: (todos: TodoItem[]) => Promise<void>;
   saveSettings: (settings: AppSettings) => Promise<void>;
   openNotificationSettings: () => Promise<void>;
+  openTextColorPanel: (options: { color?: string; requestId: string }) => Promise<void>;
   testReminderNotification: (options?: {
     soundEnabled?: boolean;
     language?: AppLanguage;
   }) => Promise<void>;
+  readClipboardText: () => Promise<string>;
   registerHotkey: (shortcut: string) => Promise<void>;
   setEditableInputActive: (active: boolean) => void | Promise<void>;
   setTextCompositionActive: (active: boolean) => void | Promise<void>;
+  writeClipboardText: (text: string) => Promise<void>;
   hidePanelWindow: () => Promise<void>;
   startWindowDrag: () => Promise<void>;
   reportFrontendReady: () => void | Promise<void>;
@@ -90,8 +105,22 @@ const browserBridge: QuickNoteNativeBridge = {
   async openNotificationSettings() {
     // Browser preview cannot open macOS System Settings.
   },
+  async openTextColorPanel() {
+    // Browser preview uses the HTML color input fallback.
+  },
   async testReminderNotification() {
     // Browser preview cannot send native notifications.
+  },
+  async readClipboardText() {
+    if (typeof navigator === "undefined" || !navigator.clipboard?.readText) {
+      return "";
+    }
+
+    try {
+      return await navigator.clipboard.readText();
+    } catch {
+      return "";
+    }
   },
   async registerHotkey() {
     // Browser preview does not support global shortcuts.
@@ -101,6 +130,17 @@ const browserBridge: QuickNoteNativeBridge = {
   },
   async setTextCompositionActive() {
     // Browser preview does not need native IME window-level coordination.
+  },
+  async writeClipboardText(text) {
+    if (typeof navigator === "undefined" || !navigator.clipboard?.writeText) {
+      return;
+    }
+
+    try {
+      await navigator.clipboard.writeText(text);
+    } catch {
+      // Ignore preview clipboard failures.
+    }
   },
   async hidePanelWindow() {
     // Browser preview keeps the current tab visible.
@@ -158,6 +198,74 @@ export function subscribeToPanelWillOpen(listener: () => void) {
 
   return () => {
     window.removeEventListener(PANEL_WILL_OPEN_EVENT, handler);
+  };
+}
+
+export function dispatchTextColorPanelOpen() {
+  if (typeof window === "undefined") {
+    return;
+  }
+
+  window.dispatchEvent(new Event(TEXT_COLOR_PANEL_OPEN_EVENT));
+}
+
+export function subscribeToTextColorPanelOpen(listener: () => void) {
+  if (typeof window === "undefined") {
+    return () => {};
+  }
+
+  const handler = () => {
+    listener();
+  };
+
+  window.addEventListener(TEXT_COLOR_PANEL_OPEN_EVENT, handler);
+
+  return () => {
+    window.removeEventListener(TEXT_COLOR_PANEL_OPEN_EVENT, handler);
+  };
+}
+
+export function subscribeToTextColorPanelChange(listener: (detail: TextColorPanelChangeDetail) => void) {
+  if (typeof window === "undefined") {
+    return () => {};
+  }
+
+  const handler = (event: Event) => {
+    const detail = (event as CustomEvent<TextColorPanelChangeDetail>).detail;
+
+    if (!detail?.requestId || typeof detail.color !== "string" || !detail.color) {
+      return;
+    }
+
+    listener(detail);
+  };
+
+  window.addEventListener(TEXT_COLOR_PANEL_CHANGE_EVENT, handler as EventListener);
+
+  return () => {
+    window.removeEventListener(TEXT_COLOR_PANEL_CHANGE_EVENT, handler as EventListener);
+  };
+}
+
+export function subscribeToTextColorPanelClose(listener: (detail: TextColorPanelCloseDetail) => void) {
+  if (typeof window === "undefined") {
+    return () => {};
+  }
+
+  const handler = (event: Event) => {
+    const detail = (event as CustomEvent<TextColorPanelCloseDetail>).detail;
+
+    if (!detail?.requestId) {
+      return;
+    }
+
+    listener(detail);
+  };
+
+  window.addEventListener(TEXT_COLOR_PANEL_CLOSE_EVENT, handler as EventListener);
+
+  return () => {
+    window.removeEventListener(TEXT_COLOR_PANEL_CLOSE_EVENT, handler as EventListener);
   };
 }
 

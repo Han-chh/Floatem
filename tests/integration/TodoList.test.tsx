@@ -4,18 +4,24 @@ import { describe, expect, it } from "vitest";
 import { TodoList } from "../../src/components/todos/TodoList";
 
 describe("TodoList", () => {
-  it("adds, completes, and deletes a todo with Cmd+Enter submission", async () => {
+  it("adds, completes, and deletes a todo with Enter submission while keeping Cmd+Enter for new lines", async () => {
     const user = userEvent.setup();
     render(<TodoList />);
 
     const input = screen.getByLabelText("Quick add");
 
     await user.type(input, "Ship docs");
-    await user.keyboard("{Enter}");
-    expect(screen.queryByRole("button", { name: "Complete task" })).not.toBeInTheDocument();
+    expect(screen.getByText("Cmd+Enter for newline")).toBeInTheDocument();
 
     await user.keyboard("{Meta>}{Enter}{/Meta}");
-    expect(screen.getByText("Ship docs")).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Complete task" })).not.toBeInTheDocument();
+    expect(input).toHaveValue("Ship docs\n");
+
+    await user.keyboard("v2");
+    await user.keyboard("{Enter}");
+    expect(
+      screen.getByText((_, element) => element?.tagName === "P" && element.textContent === "Ship docs\nv2"),
+    ).toBeInTheDocument();
     expect(screen.getByText("1 undone")).toBeInTheDocument();
     expect(screen.getByTestId("todo-order")).toHaveTextContent("1");
 

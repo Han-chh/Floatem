@@ -6,6 +6,8 @@ import WebKit
 final class WebViewController: NSViewController, WKNavigationDelegate {
     private static let bridgeName = "quickNoteNative"
     private static let panelWillOpenEventName = "quicknote:panel-will-open"
+    private static let textColorPanelChangeEventName = "quicknote:text-color-panel-change"
+    private static let textColorPanelCloseEventName = "quicknote:text-color-panel-close"
     private static let todosUpdatedEventName = "quicknote:todos-updated"
     private static let frontendBootstrapProbeScript = """
     (() => {
@@ -131,6 +133,35 @@ final class WebViewController: NSViewController, WKNavigationDelegate {
     func emitPanelWillOpen() {
         webView.evaluateJavaScript(
             "window.dispatchEvent(new Event('\(Self.panelWillOpenEventName)'));"
+        )
+    }
+
+    func emitTextColorPanelChange(requestID: String, colorHex: String) {
+        let payload: [String: Any] = [
+            "color": colorHex,
+            "requestId": requestID
+        ]
+
+        guard let json = jsonString(for: payload) else {
+            return
+        }
+
+        webView.evaluateJavaScript(
+            "window.dispatchEvent(new CustomEvent('\(Self.textColorPanelChangeEventName)', { detail: \(json) }));"
+        )
+    }
+
+    func emitTextColorPanelClose(requestID: String) {
+        let payload: [String: Any] = [
+            "requestId": requestID
+        ]
+
+        guard let json = jsonString(for: payload) else {
+            return
+        }
+
+        webView.evaluateJavaScript(
+            "window.dispatchEvent(new CustomEvent('\(Self.textColorPanelCloseEventName)', { detail: \(json) }));"
         )
     }
 
@@ -298,17 +329,30 @@ final class WebViewController: NSViewController, WKNavigationDelegate {
             case "openNotificationSettings":
                 try bridgeDelegate?.openNotificationSettings()
                 result = NSNull()
+            case "openTextColorPanel":
+                guard let requestID = params["requestId"] as? String, !requestID.isEmpty else {
+                    throw QuickNoteBridgeError.invalidParameters("QuickNote expected a text color panel request id from JavaScript.")
+                }
+                let colorHex = params["color"] as? String
+                try bridgeDelegate?.openTextColorPanel(requestID: requestID, colorHex: colorHex)
+                result = NSNull()
             case "registerHotkey":
                 guard let shortcut = params["shortcut"] as? String else {
                     throw QuickNoteBridgeError.invalidParameters("QuickNote expected a shortcut string from JavaScript.")
                 }
                 try bridgeDelegate?.registerHotKey(shortcut: shortcut)
                 result = NSNull()
+            case "readClipboardText":
+                result = bridgeDelegate?.readClipboardText() ?? ""
             case "hidePanelWindow":
                 bridgeDelegate?.hideMainWindowFromBridge()
                 result = NSNull()
             case "startWindowDrag":
                 try bridgeDelegate?.startWindowDragFromBridge()
+                result = NSNull()
+            case "writeClipboardText":
+                let text = params["text"] as? String ?? ""
+                bridgeDelegate?.writeClipboardText(text)
                 result = NSNull()
             default:
                 throw QuickNoteBridgeError.invalidParameters("QuickNote does not support the native bridge method '\(method)'.")
@@ -538,8 +582,14 @@ final class WebViewController: NSViewController, WKNavigationDelegate {
         openNotificationSettings() {
           return send("openNotificationSettings");
         },
+        openTextColorPanel(options = {}) {
+          return send("openTextColorPanel", options);
+        },
         testReminderNotification(options = {}) {
           return send("testReminderNotification", options);
+        },
+        readClipboardText() {
+          return send("readClipboardText");
         },
         registerHotkey(shortcut) {
           return send("registerHotkey", { shortcut });
@@ -549,6 +599,9 @@ final class WebViewController: NSViewController, WKNavigationDelegate {
         },
         startWindowDrag() {
           return send("startWindowDrag");
+        },
+        writeClipboardText(text) {
+          return send("writeClipboardText", { text: String(text ?? "") });
         },
         reportFrontendReady() {
           sendWithoutReply("frontendReady");

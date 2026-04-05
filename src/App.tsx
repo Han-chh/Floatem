@@ -1,5 +1,5 @@
 import { AnimatePresence, motion } from "framer-motion";
-import { startTransition, useEffect, useState } from "react";
+import { startTransition, useEffect, useRef, useState } from "react";
 import { PanelShell } from "./components/layout/PanelShell";
 import { NotesList } from "./components/notes/NotesList";
 import { FigmaNotesHomePreview } from "./components/preview/FigmaNotesHomePreview";
@@ -15,7 +15,13 @@ import {
   setTextCompositionActive,
 } from "./hooks/usePlatform";
 import { useI18n } from "./lib/i18n";
-import { subscribeToPanelPosition, subscribeToPanelWillOpen, subscribeToTodosUpdated } from "./lib/nativeBridge";
+import {
+  subscribeToPanelPosition,
+  subscribeToPanelWillOpen,
+  subscribeToTextColorPanelClose,
+  subscribeToTextColorPanelOpen,
+  subscribeToTodosUpdated,
+} from "./lib/nativeBridge";
 import type { TabId } from "./lib/models";
 import { getTabMotionConfig } from "./lib/transitionMotion";
 import { useNotesStore } from "./store/notesStore";
@@ -36,6 +42,18 @@ function getTabDirection(activeTab: TabId): TabTurnDirection {
   return activeTab === "todos" ? 1 : -1;
 }
 
+function isEditableTarget(target: EventTarget | null) {
+  if (!(target instanceof HTMLElement)) {
+    return false;
+  }
+
+  return (
+    target.isContentEditable ||
+    target instanceof HTMLInputElement ||
+    target instanceof HTMLTextAreaElement
+  );
+}
+
 function QuickNoteApp() {
   const { t } = useI18n();
   const activeTab = useSettingsStore((state) => state.activeTab);
@@ -45,6 +63,7 @@ function QuickNoteApp() {
   const setActiveTab = useSettingsStore((state) => state.setActiveTab);
   const [isBooting, setIsBooting] = useState(true);
   const [showSettings, setShowSettings] = useState(false);
+  const isNativeTextColorPanelOpenRef = useRef(false);
 
   useAutoSave();
   useHotkey(hotkey);
@@ -89,18 +108,6 @@ function QuickNoteApp() {
       return;
     }
 
-    const isEditableTarget = (target: EventTarget | null) => {
-      if (!(target instanceof HTMLElement)) {
-        return false;
-      }
-
-      return (
-        target.isContentEditable ||
-        target instanceof HTMLInputElement ||
-        target instanceof HTMLTextAreaElement
-      );
-    };
-
     const handleCompositionStart = (event: CompositionEvent) => {
       if (!isEditableTarget(event.target)) {
         return;
@@ -120,6 +127,10 @@ function QuickNoteApp() {
 
     const handleFocusOut = (event: FocusEvent) => {
       if (!isEditableTarget(event.target)) {
+        return;
+      }
+
+      if (isNativeTextColorPanelOpenRef.current) {
         return;
       }
 
@@ -145,6 +156,38 @@ function QuickNoteApp() {
       document.removeEventListener("focusout", handleFocusOut, true);
       document.removeEventListener("compositionstart", handleCompositionStart, true);
       document.removeEventListener("compositionend", handleCompositionEnd, true);
+    };
+  }, []);
+
+  useEffect(() => {
+    const syncEditableBridgeState = () => {
+      if (typeof document === "undefined") {
+        return;
+      }
+
+      const activeElement = document.activeElement;
+      const hasEditableFocus = isEditableTarget(activeElement);
+
+      void setEditableInputActive(hasEditableFocus);
+
+      if (!hasEditableFocus) {
+        void setTextCompositionActive(false);
+      }
+    };
+
+    const unsubscribeOpen = subscribeToTextColorPanelOpen(() => {
+      isNativeTextColorPanelOpenRef.current = true;
+      void setEditableInputActive(true);
+    });
+
+    const unsubscribeClose = subscribeToTextColorPanelClose(() => {
+      isNativeTextColorPanelOpenRef.current = false;
+      syncEditableBridgeState();
+    });
+
+    return () => {
+      unsubscribeOpen();
+      unsubscribeClose();
     };
   }, []);
 

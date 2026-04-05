@@ -29,9 +29,12 @@ final class MainWindowController: NSObject, NSWindowDelegate, QuickNoteNativeBri
     private let webViewController: WebViewController
     private let logger = Logger(subsystem: "com.quicknote.app", category: "Window")
     private var lastHotKeyPressTimestamp: CFAbsoluteTime = 0
+    private var activeTextColorPanelRequestID: String?
     private var isEditableInputActive = false
     private var isTextCompositionActive = false
     private var spaceObserver: NSObjectProtocol?
+    private var textColorPanelChangeObserver: NSObjectProtocol?
+    private var textColorPanelCloseObserver: NSObjectProtocol?
     private var appDidBecomeActiveObserver: NSObjectProtocol?
 
     private static let hotKeyDebounceInterval: CFAbsoluteTime = 0.25
@@ -95,6 +98,14 @@ final class MainWindowController: NSObject, NSWindowDelegate, QuickNoteNativeBri
         if let appDidBecomeActiveObserver {
             NotificationCenter.default.removeObserver(appDidBecomeActiveObserver)
         }
+
+        if let textColorPanelChangeObserver {
+            NotificationCenter.default.removeObserver(textColorPanelChangeObserver)
+        }
+
+        if let textColorPanelCloseObserver {
+            NotificationCenter.default.removeObserver(textColorPanelCloseObserver)
+        }
     }
 
     func installSavedHotKey() {
@@ -137,6 +148,7 @@ final class MainWindowController: NSObject, NSWindowDelegate, QuickNoteNativeBri
 
     func hideMainWindow() {
         persistPanelPosition()
+        dismissTextColorPanel(emitClose: true)
         isEditableInputActive = false
         isTextCompositionActive = false
         panel.orderOut(nil)
@@ -220,6 +232,28 @@ final class MainWindowController: NSObject, NSWindowDelegate, QuickNoteNativeBri
         throw QuickNoteBridgeError.invalidParameters(language.localization.notificationOpenSettingsFailedMessage)
     }
 
+    func openTextColorPanel(requestID: String, colorHex: String?) throws {
+        let colorPanel = NSColorPanel.shared
+        installTextColorPanelObserversIfNeeded()
+
+        activeTextColorPanelRequestID = requestID
+        NSColorPanel.setPickerMode(NSColorPanel.Mode.wheel)
+        colorPanel.showsAlpha = false
+        colorPanel.isContinuous = true
+        colorPanel.hidesOnDeactivate = false
+        colorPanel.isReleasedWhenClosed = false
+        colorPanel.mode = NSColorPanel.Mode.wheel
+
+        if let color = color(from: colorHex) {
+            colorPanel.color = color
+        }
+
+        logger.debug("Opening text color panel. requestID=\(requestID, privacy: .public)")
+        NSApp.activate(ignoringOtherApps: true)
+        bringPanelToFront(context: "Opening text color panel")
+        presentTextColorPanel(colorPanel, reposition: true)
+    }
+
     func testReminderNotification(soundEnabled: Bool, language: QuickNoteLanguage) async throws {
         try await notificationManager.scheduleTestNotification(
             soundEnabled: soundEnabled,
@@ -229,6 +263,10 @@ final class MainWindowController: NSObject, NSWindowDelegate, QuickNoteNativeBri
 
     func registerHotKey(shortcut: String) throws {
         try hotKeyManager.register(shortcut: shortcut)
+    }
+
+    func readClipboardText() -> String {
+        NSPasteboard.general.string(forType: .string) ?? ""
     }
 
     func setEditableInputActiveFromBridge(_ active: Bool) {
@@ -251,6 +289,12 @@ final class MainWindowController: NSObject, NSWindowDelegate, QuickNoteNativeBri
         updatePanelPresentationForCurrentInteraction()
     }
 
+    func writeClipboardText(_ text: String) {
+        let pasteboard = NSPasteboard.general
+        pasteboard.clearContents()
+        pasteboard.setString(text, forType: .string)
+    }
+
     func hideMainWindowFromBridge() {
         hideMainWindow()
     }
@@ -271,11 +315,19 @@ final class MainWindowController: NSObject, NSWindowDelegate, QuickNoteNativeBri
     }
 
     func windowDidBecomeKey(_ notification: Notification) {
+        if activeTextColorPanelRequestID != nil {
+            return
+        }
+
         updatePanelPresentationForCurrentInteraction()
         logPanelState(context: "Panel became key")
     }
 
     func windowDidBecomeMain(_ notification: Notification) {
+        if activeTextColorPanelRequestID != nil {
+            return
+        }
+
         updatePanelPresentationForCurrentInteraction()
         logPanelState(context: "Panel became main")
     }
@@ -285,6 +337,10 @@ final class MainWindowController: NSObject, NSWindowDelegate, QuickNoteNativeBri
     }
 
     func windowDidResignKey(_ notification: Notification) {
+        if activeTextColorPanelRequestID != nil {
+            return
+        }
+
         updatePanelPresentationForCurrentInteraction()
         logPanelState(context: "Panel resigned key")
     }
@@ -424,6 +480,11 @@ final class MainWindowController: NSObject, NSWindowDelegate, QuickNoteNativeBri
             return
         }
 
+        if activeTextColorPanelRequestID != nil {
+            configurePanelForInteractiveInput()
+            return
+        }
+
         if isTextCompositionActive {
             configurePanelForTextComposition()
             return
@@ -444,6 +505,138 @@ final class MainWindowController: NSObject, NSWindowDelegate, QuickNoteNativeBri
         panel.invalidateShadow()
         updatePanelPresentationForCurrentInteraction()
         logger.debug("\(context, privacy: .public): raised panel above the active Space.")
+    }
+
+    private func presentTextColorPanel(_ colorPanel: NSColorPanel, reposition: Bool) {
+        if reposition {
+            positionTextColorPanel(colorPanel)
+        }
+
+        colorPanel.collectionBehavior = Self.overlayCollectionBehavior
+        colorPanel.level = NSWindow.Level(rawValue: Self.overlayPanelLevel.rawValue + 1)
+
+        colorPanel.makeKeyAndOrderFront(nil)
+        colorPanel.orderFrontRegardless()
+        logger.debug("Raised text color panel above the main overlay.")
+    }
+
+    private func dismissTextColorPanel(emitClose: Bool) {
+        let colorPanel = NSColorPanel.shared
+        let requestID = activeTextColorPanelRequestID
+
+        activeTextColorPanelRequestID = nil
+
+        if colorPanel.isVisible {
+            colorPanel.orderOut(nil)
+        }
+
+        if emitClose, let requestID {
+            webViewController.emitTextColorPanelClose(requestID: requestID)
+        }
+    }
+
+    private func positionTextColorPanel(_ colorPanel: NSColorPanel) {
+        let windowFrame = panel.frame
+        let screenFrame = panel.screen?.visibleFrame ?? NSScreen.main?.visibleFrame ?? windowFrame
+        let margin: CGFloat = 16
+        let gap: CGFloat = 12
+        let panelSize = colorPanel.frame.size
+
+        let preferredRightX = windowFrame.maxX + gap
+        let preferredLeftX = windowFrame.minX - panelSize.width - gap
+
+        let x: CGFloat
+        if preferredRightX + panelSize.width <= screenFrame.maxX - margin {
+            x = preferredRightX
+        } else if preferredLeftX >= screenFrame.minX + margin {
+            x = preferredLeftX
+        } else {
+            x = min(
+                max(windowFrame.midX - panelSize.width / 2, screenFrame.minX + margin),
+                screenFrame.maxX - panelSize.width - margin
+            )
+        }
+
+        let centeredY = windowFrame.midY - panelSize.height / 2
+        let y = min(
+            max(centeredY, screenFrame.minY + margin),
+            screenFrame.maxY - panelSize.height - margin
+        )
+
+        colorPanel.setFrameOrigin(NSPoint(x: x, y: y))
+    }
+
+    private func installTextColorPanelObserversIfNeeded() {
+        let colorPanel = NSColorPanel.shared
+
+        if textColorPanelChangeObserver == nil {
+            textColorPanelChangeObserver = NotificationCenter.default.addObserver(
+                forName: NSColorPanel.colorDidChangeNotification,
+                object: colorPanel,
+                queue: .main
+            ) { [weak self, weak colorPanel] _ in
+                Task { @MainActor [weak self, weak colorPanel] in
+                    guard
+                        let self,
+                        let requestID = self.activeTextColorPanelRequestID,
+                        let panel = colorPanel
+                    else {
+                        return
+                    }
+
+                    self.webViewController.emitTextColorPanelChange(
+                        requestID: requestID,
+                        colorHex: self.hexColor(from: panel.color)
+                    )
+                }
+            }
+        }
+
+        if textColorPanelCloseObserver == nil {
+            textColorPanelCloseObserver = NotificationCenter.default.addObserver(
+                forName: NSWindow.willCloseNotification,
+                object: colorPanel,
+                queue: .main
+            ) { [weak self] _ in
+                Task { @MainActor [weak self] in
+                    guard let self, let requestID = self.activeTextColorPanelRequestID else {
+                        return
+                    }
+
+                    self.activeTextColorPanelRequestID = nil
+                    self.webViewController.emitTextColorPanelClose(requestID: requestID)
+                }
+            }
+        }
+    }
+
+    private func color(from hexColor: String?) -> NSColor? {
+        guard var normalized = hexColor?.trimmingCharacters(in: .whitespacesAndNewlines), !normalized.isEmpty else {
+            return nil
+        }
+
+        if normalized.hasPrefix("#") {
+            normalized.removeFirst()
+        }
+
+        guard normalized.count == 6, let value = Int(normalized, radix: 16) else {
+            return nil
+        }
+
+        let red = CGFloat((value >> 16) & 0xFF) / 255
+        let green = CGFloat((value >> 8) & 0xFF) / 255
+        let blue = CGFloat(value & 0xFF) / 255
+
+        return NSColor(srgbRed: red, green: green, blue: blue, alpha: 1)
+    }
+
+    private func hexColor(from color: NSColor) -> String {
+        let srgbColor = color.usingColorSpace(.sRGB) ?? color
+        let red = Int((srgbColor.redComponent * 255).rounded())
+        let green = Int((srgbColor.greenComponent * 255).rounded())
+        let blue = Int((srgbColor.blueComponent * 255).rounded())
+
+        return String(format: "#%02X%02X%02X", red, green, blue)
     }
 
     private func syncTodoReminderNotifications(
@@ -638,6 +831,11 @@ final class MainWindowController: NSObject, NSWindowDelegate, QuickNoteNativeBri
                     return
                 }
 
+                if self.activeTextColorPanelRequestID != nil, NSColorPanel.shared.isVisible {
+                    self.presentTextColorPanel(NSColorPanel.shared, reposition: false)
+                    return
+                }
+
                 self.bringPanelToFront(context: "Active space changed")
             }
         }
@@ -649,6 +847,11 @@ final class MainWindowController: NSObject, NSWindowDelegate, QuickNoteNativeBri
         ) { [weak self] _ in
             Task { @MainActor [weak self] in
                 guard let self, self.panel.isVisible else {
+                    return
+                }
+
+                if self.activeTextColorPanelRequestID != nil, NSColorPanel.shared.isVisible {
+                    self.presentTextColorPanel(NSColorPanel.shared, reposition: false)
                     return
                 }
 

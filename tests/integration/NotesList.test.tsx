@@ -14,7 +14,7 @@ describe("NotesList", () => {
     expect(screen.getByPlaceholderText("Untitled note")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Copy" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Paste" })).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Clear" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Clear format" })).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Image" })).not.toBeInTheDocument();
 
     await user.click(screen.getByRole("button", { name: "Delete note" }));
@@ -43,5 +43,56 @@ describe("NotesList", () => {
 
     expect(screen.getByText("1h ago")).toBeInTheDocument();
     nowSpy.mockRestore();
+  });
+
+  it("shows formatting shortcuts in the toolbar tooltips", async () => {
+    useNotesStore.getState().initialize([
+      createNoteCard({
+        id: "note-format-toolbar",
+        title: "Formatting",
+        content: DEFAULT_NOTE_CONTENT,
+      }),
+    ]);
+
+    const user = userEvent.setup();
+    render(<NotesList />);
+
+    const boldButton = screen.getByRole("button", { name: "Bold" });
+    const italicButton = screen.getByRole("button", { name: "Italic" });
+    const underlineButton = screen.getByRole("button", { name: "Underline" });
+
+    expect(boldButton).toHaveAttribute("aria-pressed", "false");
+    expect(italicButton).toHaveAttribute("aria-pressed", "false");
+    expect(underlineButton).toHaveAttribute("aria-pressed", "false");
+
+    await user.click(boldButton);
+    expect(boldButton).toHaveAttribute("aria-pressed", "true");
+    await user.click(boldButton);
+    expect(boldButton).toHaveAttribute("aria-pressed", "false");
+    expect(screen.getByText("Cmd+B")).toBeInTheDocument();
+    expect(screen.getByText("Cmd+I")).toBeInTheDocument();
+    expect(screen.getByText("Cmd+U")).toBeInTheDocument();
+    expect(screen.getByText("Cmd+C")).toBeInTheDocument();
+    expect(screen.getByText("Cmd+V")).toBeInTheDocument();
+  });
+
+  it("renders the text color palette in a floating layer", async () => {
+    useNotesStore.getState().initialize([
+      createNoteCard({
+        id: "note-color-toolbar",
+        title: "Color",
+        content: DEFAULT_NOTE_CONTENT,
+      }),
+    ]);
+
+    const user = userEvent.setup();
+    render(<NotesList />);
+
+    await user.click(screen.getByRole("button", { name: "Color" }));
+    expect(screen.getByTestId("note-text-color-palette")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "More Colors" })).toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: "More Colors" }));
+    expect(screen.getByRole("button", { name: "Show Colors" })).toBeInTheDocument();
   });
 });

@@ -7,10 +7,13 @@ protocol QuickNoteNativeBridgeHandling: AnyObject {
     func saveTodos(_ todos: Any) throws
     func saveSettings(_ settings: Any) throws
     func openNotificationSettings() throws
+    func openTextColorPanel(requestID: String, colorHex: String?) throws
     func testReminderNotification(soundEnabled: Bool, language: QuickNoteLanguage) async throws
+    func readClipboardText() -> String
     func registerHotKey(shortcut: String) throws
     func setEditableInputActiveFromBridge(_ active: Bool)
     func setTextCompositionActiveFromBridge(_ active: Bool)
+    func writeClipboardText(_ text: String)
     func hideMainWindowFromBridge()
     func startWindowDragFromBridge() throws
 }

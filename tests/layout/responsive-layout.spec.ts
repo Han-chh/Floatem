@@ -83,7 +83,7 @@ for (const viewport of VIEWPORTS) {
       await page.getByRole("tab", { name: "Todos" }).click();
       const draft = page.getByLabel("Quick add");
       await draft.fill(LONG_TODO);
-      await draft.press("Meta+Enter");
+      await draft.press("Enter");
 
       const todoCard = page.getByTestId("todo-item").first();
       await expect(todoCard).toBeVisible();
