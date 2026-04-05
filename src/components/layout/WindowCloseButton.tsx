@@ -1,4 +1,5 @@
 import { motion } from "framer-motion";
+import { useI18n } from "../../lib/i18n";
 import { XIcon } from "../icons/AppIcons";
 
 type WindowCloseButtonProps = {
@@ -6,11 +7,13 @@ type WindowCloseButtonProps = {
 };
 
 export function WindowCloseButton({ onClick }: WindowCloseButtonProps) {
+  const { t } = useI18n();
+
   return (
     <motion.button
       type="button"
-      aria-label="Hide QuickNote"
-      title="Hide QuickNote"
+      aria-label={t.app.hideWindow}
+      title={t.app.hideWindow}
       className="mac-window-close group"
       whileHover={{ scale: 1.03 }}
       whileTap={{ scale: 0.96 }}

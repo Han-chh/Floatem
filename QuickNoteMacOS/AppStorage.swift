@@ -37,6 +37,9 @@ final class AppStorage {
             settings["panelPosition"] = NSNull()
         }
 
+        let language = QuickNoteLanguage(storedValue: settings["language"])
+        settings["language"] = language.rawValue
+
         try saveJSONObject(settings, to: settingsURL)
         return settings
     }
@@ -44,6 +47,11 @@ final class AppStorage {
     func currentHotkey() throws -> String {
         let settings = try loadSettings()
         return settings["hotkey"] as? String ?? GlobalHotKeyManager.defaultShortcut
+    }
+
+    func currentLanguage() throws -> QuickNoteLanguage {
+        let settings = try loadSettings()
+        return QuickNoteLanguage(storedValue: settings["language"])
     }
 
     func updateHotkey(_ shortcut: String) throws {
@@ -61,6 +69,7 @@ final class AppStorage {
     }
 
     func saveSettings(_ settings: [String: Any]) throws {
+        let previousLanguage = try? currentLanguage()
         var mergedSettings = defaultSettings
 
         for (key, value) in settings {
@@ -77,7 +86,18 @@ final class AppStorage {
             mergedSettings["hotkey"] = GlobalHotKeyManager.defaultShortcut
         }
 
+        let language = QuickNoteLanguage(storedValue: mergedSettings["language"])
+        mergedSettings["language"] = language.rawValue
+
         try saveJSONObject(mergedSettings, to: settingsURL)
+
+        if previousLanguage != language {
+            NotificationCenter.default.post(
+                name: .quickNoteLanguageDidChange,
+                object: self,
+                userInfo: ["language": language.rawValue]
+            )
+        }
     }
 
     func savePanelPosition(origin: CGPoint) throws {
@@ -104,10 +124,13 @@ final class AppStorage {
     private var defaultSettings: [String: Any] {
         [
             "hotkey": GlobalHotKeyManager.defaultShortcut,
+            "language": "en",
             "panelPosition": NSNull(),
             "activeTab": "notes",
+            "lastActiveTab": "notes",
+            "defaultOpenSection": "last",
             "transitionStyle": "page",
-            "animationSpeed": "faster",
+            "animationSpeed": "mediate",
             "enableParticles": true,
         ]
     }

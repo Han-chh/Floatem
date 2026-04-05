@@ -1,11 +1,12 @@
 import type { AppSettings, LoadAllResult, NoteCard, PanelPosition, TodoItem } from "./models";
-import { DEFAULT_SETTINGS } from "./models";
+import { DEFAULT_SETTINGS, normalizeAppSettings } from "./models";
 
 const NOTES_STORAGE_KEY = "quicknote.notes";
 const TODOS_STORAGE_KEY = "quicknote.todos";
 const SETTINGS_STORAGE_KEY = "quicknote.settings";
 
 export const PANEL_POSITION_EVENT = "quicknote:panel-position";
+export const PANEL_WILL_OPEN_EVENT = "quicknote:panel-will-open";
 
 export type QuickNoteNativeBridge = {
   platform: "macos-appkit-wkwebview";
@@ -65,10 +66,10 @@ const browserBridge: QuickNoteNativeBridge = {
     return {
       notes: readStoredValue<NoteCard[]>(NOTES_STORAGE_KEY, []),
       todos: readStoredValue<TodoItem[]>(TODOS_STORAGE_KEY, []),
-      settings: {
+      settings: normalizeAppSettings({
         ...DEFAULT_SETTINGS,
         ...settings,
-      },
+      }),
     };
   },
   async saveNotes(cards) {
@@ -129,5 +130,21 @@ export function subscribeToPanelPosition(listener: (position: PanelPosition) => 
 
   return () => {
     window.removeEventListener(PANEL_POSITION_EVENT, handler as EventListener);
+  };
+}
+
+export function subscribeToPanelWillOpen(listener: () => void) {
+  if (typeof window === "undefined") {
+    return () => {};
+  }
+
+  const handler = () => {
+    listener();
+  };
+
+  window.addEventListener(PANEL_WILL_OPEN_EVENT, handler);
+
+  return () => {
+    window.removeEventListener(PANEL_WILL_OPEN_EVENT, handler);
   };
 }

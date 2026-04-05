@@ -1,38 +1,41 @@
 import { AnimatePresence, motion } from "framer-motion";
 import type { ReactNode } from "react";
 import { hidePanelWindow } from "../../hooks/usePlatform";
+import { useI18n } from "../../lib/i18n";
 import { startWindowDrag } from "../../hooks/useWindowDrag";
 import { SlidersHorizontalIcon } from "../icons/AppIcons";
-import type { TabId } from "../../lib/models";
+import type { AnimationSpeed, TabId, TransitionStyle } from "../../lib/models";
+import { getSurfaceMotionConfig } from "../../lib/transitionMotion";
 import { TabBar } from "./TabBar";
 import { WindowCloseButton } from "./WindowCloseButton";
 
 type PanelShellProps = {
   activeTab: TabId;
+  animationSpeed: AnimationSpeed;
   onTabChange: (tab: TabId) => void;
   children: ReactNode;
   settingsPanel: ReactNode;
   showSettings: boolean;
   onToggleSettings: () => void;
+  transitionStyle: TransitionStyle;
 };
 
-export function PanelShell({ activeTab, onTabChange, children, settingsPanel, showSettings, onToggleSettings }: PanelShellProps) {
+export function PanelShell({
+  activeTab,
+  animationSpeed,
+  onTabChange,
+  children,
+  settingsPanel,
+  showSettings,
+  onToggleSettings,
+  transitionStyle,
+}: PanelShellProps) {
+  const { t } = useI18n();
   const handleHideWindow = () => {
     void hidePanelWindow();
   };
-  const slideDirection = showSettings ? 1 : -1;
-
-  const pageVariants = {
-    initial: (direction: number) => ({
-      x: direction > 0 ? "100%" : "-100%",
-    }),
-    animate: {
-      x: "0%",
-    },
-    exit: (direction: number) => ({
-      x: direction > 0 ? "-100%" : "100%",
-    }),
-  };
+  const pageDirection = showSettings ? 1 : -1;
+  const surfaceMotion = getSurfaceMotionConfig(transitionStyle, animationSpeed);
 
   return (
     <main className="h-screen overflow-hidden bg-transparent text-[13.5px] text-[var(--dark-text)]">
@@ -51,17 +54,18 @@ export function PanelShell({ activeTab, onTabChange, children, settingsPanel, sh
             <div className="absolute bottom-[-3.5rem] left-1/3 h-64 w-64 rounded-full bg-[rgba(31,168,122,0.11)] blur-3xl" />
           </div>
 
-          <div className="relative h-full min-h-0 overflow-hidden">
-            <AnimatePresence initial={false} mode="sync" custom={slideDirection}>
+          <div className="relative h-full min-h-0 overflow-hidden" style={surfaceMotion.sceneStyle}>
+            <AnimatePresence initial={false} mode={surfaceMotion.presenceMode} custom={pageDirection}>
               {showSettings ? (
                 <motion.div
                   key="settings-page"
-                  custom={slideDirection}
-                  variants={pageVariants}
+                  custom={pageDirection}
+                  variants={surfaceMotion.variants}
                   initial="initial"
                   animate="animate"
                   exit="exit"
-                  transition={{ duration: 0.34, ease: [0.22, 1, 0.36, 1] }}
+                  transition={surfaceMotion.transition}
+                  style={surfaceMotion.contentStyle}
                   className="absolute inset-0 flex min-h-0 flex-col will-change-transform"
                 >
                   <motion.section
@@ -84,12 +88,13 @@ export function PanelShell({ activeTab, onTabChange, children, settingsPanel, sh
               ) : (
                 <motion.div
                   key="main-page"
-                  custom={slideDirection}
-                  variants={pageVariants}
+                  custom={pageDirection}
+                  variants={surfaceMotion.variants}
                   initial="initial"
                   animate="animate"
                   exit="exit"
-                  transition={{ duration: 0.34, ease: [0.22, 1, 0.36, 1] }}
+                  transition={surfaceMotion.transition}
+                  style={surfaceMotion.contentStyle}
                   className="absolute inset-0 flex min-h-0 flex-col will-change-transform"
                 >
                   <div className="mb-2 flex min-h-[28px] items-center px-2">
@@ -109,7 +114,7 @@ export function PanelShell({ activeTab, onTabChange, children, settingsPanel, sh
                         </p>
                         <motion.button
                           type="button"
-                          aria-label="Settings"
+                          aria-label={t.app.settings}
                           className="paper-icon-button shrink-0"
                           whileHover={{ y: -2, scale: 1.02 }}
                           whileTap={{ scale: 0.985 }}

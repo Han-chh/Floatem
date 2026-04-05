@@ -3,6 +3,7 @@ import { CSS } from "@dnd-kit/utilities";
 import { format, isPast, isToday } from "date-fns";
 import { motion } from "framer-motion";
 import { useRef } from "react";
+import { useI18n } from "../../lib/i18n";
 import type { TodoItem as TodoItemModel } from "../../lib/models";
 import { useTodosStore } from "../../store/todosStore";
 import { CircleCheckBigIcon, Trash2Icon } from "../icons/AppIcons";
@@ -26,11 +27,11 @@ type TodoRowBodyProps = {
   isDropTargetPreview?: boolean;
 };
 
-function getStatusMeta(todo: TodoItemModel) {
+function getStatusMeta(todo: TodoItemModel, doneFallbackLabel: string) {
   if (todo.done) {
     return {
       label: "done",
-      reminderLabel: todo.reminderAt ? format(new Date(todo.reminderAt), "M/d HH:mm") : "Done",
+      reminderLabel: todo.reminderAt ? format(new Date(todo.reminderAt), "M/d HH:mm") : doneFallbackLabel,
       reminderClass:
         "border-[rgba(150,154,151,0.16)] bg-[rgba(219,223,220,0.38)] text-[rgba(111,116,112,0.74)]",
       toggleClass:
@@ -111,8 +112,9 @@ function TodoRowBody({
   isDraggingPlaceholder = false,
   isDropTargetPreview = false,
 }: TodoRowBodyProps) {
+  const { t } = useI18n();
   const setReminder = useTodosStore((state) => state.setReminder);
-  const status = getStatusMeta(todo);
+  const status = getStatusMeta(todo, t.todos.doneFallback);
   const reminderButtonLabel = status.label === "undone" ? undefined : status.reminderLabel;
   const isInteractive = !preview;
 
@@ -159,9 +161,9 @@ function TodoRowBody({
           ) : null}
           <motion.button
             type="button"
-            aria-label="Mark todo as done"
+            aria-label={todo.done ? t.todos.restoreTask : t.todos.completeTask}
             aria-pressed={todo.done}
-            title={todo.done ? "Restore task" : "Complete task"}
+            title={todo.done ? t.todos.restoreTask : t.todos.completeTask}
             className={`relative inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-full border text-[10px] font-bold shadow-[0_6px_12px_rgba(61,49,34,0.08)] ${status.toggleClass}`}
             whileHover={isInteractive ? { scale: 1.06 } : undefined}
             whileTap={isInteractive ? { scale: 0.93 } : undefined}
@@ -208,8 +210,8 @@ function TodoRowBody({
 
           <motion.button
             type="button"
-            aria-label="Delete todo"
-            title="Delete todo"
+            aria-label={t.todos.delete}
+            title={t.todos.delete}
             className={`paper-icon-button inline-flex h-6.5 w-6.5 min-h-0 min-w-0 items-center justify-center rounded-full ${
               todo.done
                 ? "border-[rgba(151,156,152,0.24)] bg-[rgba(222,226,223,0.72)] text-[rgba(113,118,114,0.9)]"
@@ -244,9 +246,10 @@ function TodoRowBody({
 }
 
 export function TodoItemPreview({ todo, width, order }: { todo: TodoItemModel; width?: number; order?: number }) {
+  const { t } = useI18n();
   return (
     <div
-      className={`paper-card cq-card relative overflow-hidden rounded-[20px] px-2 py-1.75 shadow-[0_24px_48px_rgba(61,49,34,0.2)] ${getStatusMeta(todo).cardClass}`}
+      className={`paper-card cq-card relative overflow-hidden rounded-[20px] px-2 py-1.75 shadow-[0_24px_48px_rgba(61,49,34,0.2)] ${getStatusMeta(todo, t.todos.doneFallback).cardClass}`}
       style={{ width: width ?? undefined, maxWidth: "calc(100vw - 48px)" }}
     >
       <TodoRowBody todo={todo} order={order} preview />
@@ -255,11 +258,12 @@ export function TodoItemPreview({ todo, width, order }: { todo: TodoItemModel; w
 }
 
 export function TodoItem({ todo, order, onDelete, onToggle, dropPreview = false }: TodoItemProps) {
+  const { t } = useI18n();
   const cardRef = useRef<HTMLElement | null>(null);
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: todo.id,
   });
-  const status = getStatusMeta(todo);
+  const status = getStatusMeta(todo, t.todos.doneFallback);
   const setArticleRef = (node: HTMLElement | null) => {
     cardRef.current = node;
     setNodeRef(node);
@@ -282,7 +286,7 @@ export function TodoItem({ todo, order, onDelete, onToggle, dropPreview = false 
       data-no-window-drag="true"
       data-testid="todo-item"
       data-todo-item-id={todo.id}
-      aria-label="Reorder todo"
+      aria-label={t.todos.reorder}
       className={`paper-card cq-card relative overflow-hidden rounded-[20px] px-2 py-1.75 shadow-[0_10px_22px_rgba(61,49,34,0.08)] cursor-grab active:cursor-grabbing ${status.cardClass} ${
         isDragging ? "border-transparent bg-[rgba(255,255,255,0.08)] shadow-none" : ""
       }`}
@@ -300,7 +304,8 @@ export function TodoItem({ todo, order, onDelete, onToggle, dropPreview = false 
 }
 
 export function CompletedTodoItem({ todo, onDelete, onToggle }: TodoItemProps) {
-  const status = getStatusMeta(todo);
+  const { t } = useI18n();
+  const status = getStatusMeta(todo, t.todos.doneFallback);
   const cardRef = useRef<HTMLElement | null>(null);
 
   return (

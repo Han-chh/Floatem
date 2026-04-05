@@ -1,4 +1,5 @@
 import { motion } from "framer-motion";
+import { useI18n } from "../../lib/i18n";
 import {
   BoldIcon,
   ClearIcon,
@@ -9,20 +10,21 @@ import {
   UnderlineIcon,
 } from "../icons/AppIcons";
 
-const TOOL_ITEMS = [
-  { label: "Bold", icon: BoldIcon, tone: "text-[#1E1915] bg-white/88" },
-  { label: "Italic", icon: ItalicIcon, tone: "text-[#5D44D4] bg-[rgba(123,92,250,0.10)]" },
-  { label: "Underline", icon: UnderlineIcon, tone: "text-[#B64B2E] bg-[rgba(255,122,89,0.10)]" },
-  { label: "Color", icon: PaletteIcon, tone: "text-[#2853C7] bg-[rgba(47,107,255,0.10)]" },
-  { label: "Copy", icon: CopyIcon, tone: "text-[#8752C8] bg-[rgba(159,101,255,0.12)]" },
-  { label: "Paste", icon: PasteIcon, tone: "text-[#23786A] bg-[rgba(38,170,133,0.12)]" },
-  { label: "Clear", icon: ClearIcon, tone: "text-[#A24A2D] bg-[rgba(255,122,89,0.12)]" },
-] as const;
-
 export function Toolbar() {
+  const { t } = useI18n();
+  const toolItems = [
+    { label: t.notes.bold, icon: BoldIcon, tone: "text-[#1E1915] bg-white/88" },
+    { label: t.notes.italic, icon: ItalicIcon, tone: "text-[#5D44D4] bg-[rgba(123,92,250,0.10)]" },
+    { label: t.notes.underline, icon: UnderlineIcon, tone: "text-[#B64B2E] bg-[rgba(255,122,89,0.10)]" },
+    { label: t.notes.color, icon: PaletteIcon, tone: "text-[#2853C7] bg-[rgba(47,107,255,0.10)]" },
+    { label: t.notes.copy, icon: CopyIcon, tone: "text-[#8752C8] bg-[rgba(159,101,255,0.12)]" },
+    { label: t.notes.paste, icon: PasteIcon, tone: "text-[#23786A] bg-[rgba(38,170,133,0.12)]" },
+    { label: t.notes.toolbarClear, icon: ClearIcon, tone: "text-[#A24A2D] bg-[rgba(255,122,89,0.12)]" },
+  ] as const;
+
   return (
     <div className="paper-card note-toolbar-grid rounded-[15px] bg-[rgba(255,250,244,0.66)] px-1.25 py-1.25">
-      {TOOL_ITEMS.map(({ label, icon: Icon, tone }, index) => (
+      {toolItems.map(({ label, icon: Icon, tone }, index) => (
         <motion.button
           key={label}
           type="button"

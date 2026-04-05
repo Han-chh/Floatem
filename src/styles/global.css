@@ -74,6 +74,7 @@
   .paper-scroll {
     scrollbar-width: thin;
     scrollbar-color: rgba(156, 126, 94, 0.35) transparent;
+    scrollbar-gutter: stable;
   }
 
   .paper-scroll::-webkit-scrollbar {
@@ -570,7 +571,7 @@
 
   .settings-grid {
     display: grid;
-    gap: 12px;
+    gap: 14px;
   }
 
   @container panel (max-width: 331px) {

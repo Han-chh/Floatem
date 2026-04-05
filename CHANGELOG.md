@@ -2,6 +2,19 @@
 
 All notable repository changes are recorded here.
 
+## v0.2.4 - 2026-04-05
+
+Purpose:
+- Complete the in-panel Settings experience so it fully controls launch behavior, motion, language, and shortcut management from a polished native-feeling surface.
+
+Contents:
+- Keep the Settings close button fixed and accessible while the panel scrolls, let the app window be dragged from inside Settings, remove the old visual-palette block, and tighten the overall responsive layout so controls no longer cover text.
+- Expand section-opening controls with `Open last stored section by default`, update hotkey summon behavior so Notes or Todos can be forced on each summon, and add a one-click `Restore defaults` action for the full Settings state.
+- Extend page-turn and slide animations to main-surface and Settings transitions, add the new `Lift` transition, retune switch-speed tiers with dedicated icons, and keep particle feedback toggle rendering stable without clipping.
+- Replace manual shortcut text editing with a record-in-dialog flow that captures key combos directly, validates modifier requirements, reports success or failure, and preserves the previous shortcut if native registration fails.
+- Add complete English and Simplified Chinese localization across the React UI and native macOS shell, including a language switcher with dedicated language icons while keeping the app name `QuickNote` unchanged in both languages.
+- Bump the repository version to `0.2.4`.
+
 ## v0.2.3 - 2026-04-02
 
 Purpose:

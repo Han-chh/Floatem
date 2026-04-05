@@ -46,7 +46,7 @@ final class MainWindowController: NSObject, NSWindowDelegate, QuickNoteNativeBri
             defer: false
         )
 
-        webViewController = WebViewController(bridgeDelegate: nil)
+        webViewController = WebViewController(storage: storage, bridgeDelegate: nil)
 
         super.init()
 
@@ -107,6 +107,7 @@ final class MainWindowController: NSObject, NSWindowDelegate, QuickNoteNativeBri
         restoreDefaultPanelSizeIfNeeded()
         restorePanelPosition(on: activeScreen())
         panel.orderFrontRegardless()
+        webViewController.emitPanelWillOpen()
         panel.makeKey()
         bringPanelToFront(context: "Showing")
         logPanelState(context: "Showing")

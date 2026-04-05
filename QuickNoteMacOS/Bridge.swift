@@ -13,6 +13,100 @@ protocol QuickNoteNativeBridgeHandling: AnyObject {
     func startWindowDragFromBridge() throws
 }
 
+enum QuickNoteLanguage: String {
+    case english = "en"
+    case simplifiedChinese = "zh-CN"
+
+    init(storedValue: Any?) {
+        if let languageCode = storedValue as? String, languageCode == Self.simplifiedChinese.rawValue {
+            self = .simplifiedChinese
+        } else {
+            self = .english
+        }
+    }
+
+    var localization: QuickNoteLocalization {
+        switch self {
+        case .english:
+            return QuickNoteLocalization(
+                menuToggle: "Toggle",
+                menuToggleApp: "Toggle QuickNote",
+                menuQuit: "Quit",
+                menuQuitApp: "Quit QuickNote",
+                loadingTitle: "Loading QuickNote...",
+                loadingDetail: "Preparing the local app interface.",
+                missingInterfaceTitle: "QuickNote couldn't load its interface.",
+                missingInterfaceDetail: "The bundled frontend assets are missing from the app resources.",
+                reconnectingTitle: "Reconnecting QuickNote...",
+                reconnectingDetail: "The embedded WebView process terminated. Retrying once.",
+                recoverWindowTitle: "QuickNote couldn't recover the window content.",
+                recoverWindowDetail: "The embedded WebView process terminated twice. Check the Xcode console for details.",
+                finishLoadingTitle: "QuickNote couldn't finish loading.",
+                loadWindowContentTitle: "QuickNote couldn't load its window content.",
+                slowStartupTitle: "QuickNote is taking longer than expected to appear.",
+                slowStartupDetail: "The web interface loaded but did not confirm startup. Check the Xcode console for WebView diagnostics.",
+                missingBundleHeading: "QuickNote frontend bundle is missing",
+                missingBundleBody: "Run pnpm install, then build the app again so the WKWebView host can copy the Vite output into the application bundle."
+            )
+        case .simplifiedChinese:
+            return QuickNoteLocalization(
+                menuToggle: "显示或隐藏",
+                menuToggleApp: "显示或隐藏 QuickNote",
+                menuQuit: "退出",
+                menuQuitApp: "退出 QuickNote",
+                loadingTitle: "正在加载 QuickNote...",
+                loadingDetail: "正在准备本地应用界面。",
+                missingInterfaceTitle: "QuickNote 无法加载界面。",
+                missingInterfaceDetail: "应用资源中缺少打包后的前端文件。",
+                reconnectingTitle: "正在重新连接 QuickNote...",
+                reconnectingDetail: "内嵌 WebView 进程已终止，正在重试一次。",
+                recoverWindowTitle: "QuickNote 无法恢复窗口内容。",
+                recoverWindowDetail: "内嵌 WebView 进程已连续两次终止。请检查 Xcode 控制台获取详情。",
+                finishLoadingTitle: "QuickNote 无法完成加载。",
+                loadWindowContentTitle: "QuickNote 无法加载窗口内容。",
+                slowStartupTitle: "QuickNote 显示时间比预期更长。",
+                slowStartupDetail: "网页界面已经加载，但还没有确认启动完成。请检查 Xcode 控制台中的 WebView 诊断信息。",
+                missingBundleHeading: "QuickNote 前端资源包缺失",
+                missingBundleBody: "请先运行 pnpm install，然后重新构建应用，以便 WKWebView 宿主把 Vite 构建产物复制进应用包。"
+            )
+        }
+    }
+
+    var htmlLanguageCode: String {
+        switch self {
+        case .english:
+            return "en"
+        case .simplifiedChinese:
+            return "zh-CN"
+        }
+    }
+}
+
+struct QuickNoteLocalization {
+    let menuToggle: String
+    let menuToggleApp: String
+    let menuQuit: String
+    let menuQuitApp: String
+    let loadingTitle: String
+    let loadingDetail: String
+    let missingInterfaceTitle: String
+    let missingInterfaceDetail: String
+    let reconnectingTitle: String
+    let reconnectingDetail: String
+    let recoverWindowTitle: String
+    let recoverWindowDetail: String
+    let finishLoadingTitle: String
+    let loadWindowContentTitle: String
+    let slowStartupTitle: String
+    let slowStartupDetail: String
+    let missingBundleHeading: String
+    let missingBundleBody: String
+}
+
+extension Notification.Name {
+    static let quickNoteLanguageDidChange = Notification.Name("QuickNoteLanguageDidChange")
+}
+
 enum QuickNoteBridgeError: LocalizedError {
     case invalidParameters(String)
     case invalidJSON(String)

@@ -5,6 +5,7 @@ import WebKit
 @MainActor
 final class WebViewController: NSViewController, WKNavigationDelegate {
     private static let bridgeName = "quickNoteNative"
+    private static let panelWillOpenEventName = "quicknote:panel-will-open"
     private static let frontendBootstrapProbeScript = """
     (() => {
       const root = document.getElementById("root");
@@ -27,6 +28,7 @@ final class WebViewController: NSViewController, WKNavigationDelegate {
     weak var bridgeDelegate: QuickNoteNativeBridgeHandling?
 
     private let webView: WKWebView
+    private var currentLanguage: QuickNoteLanguage
     private let containerView = NSView()
     private let loadingOverlay = NSView()
     private let loadingTitleLabel = NSTextField(labelWithString: "Loading QuickNote...")
@@ -35,9 +37,15 @@ final class WebViewController: NSViewController, WKNavigationDelegate {
     private let logger = Logger(subsystem: "com.quicknote.app", category: "WebView")
     private var hasRetriedAfterTermination = false
     private var frontendProbeAttemptsRemaining = 0
+    private var languageObserver: NSObjectProtocol?
 
-    init(bridgeDelegate: QuickNoteNativeBridgeHandling?) {
+    private var localization: QuickNoteLocalization {
+        currentLanguage.localization
+    }
+
+    init(storage: AppStorage, bridgeDelegate: QuickNoteNativeBridgeHandling?) {
         self.bridgeDelegate = bridgeDelegate
+        self.currentLanguage = (try? storage.currentLanguage()) ?? .english
 
         let userContentController = WKUserContentController()
         let configuration = WKWebViewConfiguration()
@@ -49,6 +57,7 @@ final class WebViewController: NSViewController, WKNavigationDelegate {
         super.init(nibName: nil, bundle: nil)
 
         scriptMessageProxy.owner = self
+        installLanguageObserver()
         userContentController.add(scriptMessageProxy, name: Self.bridgeName)
         userContentController.addUserScript(
             WKUserScript(
@@ -70,6 +79,12 @@ final class WebViewController: NSViewController, WKNavigationDelegate {
     @available(*, unavailable)
     required init?(coder: NSCoder) {
         nil
+    }
+
+    deinit {
+        if let languageObserver {
+            NotificationCenter.default.removeObserver(languageObserver)
+        }
     }
 
     override func loadView() {
@@ -112,21 +127,27 @@ final class WebViewController: NSViewController, WKNavigationDelegate {
         )
     }
 
+    func emitPanelWillOpen() {
+        webView.evaluateJavaScript(
+            "window.dispatchEvent(new Event('\(Self.panelWillOpenEventName)'));"
+        )
+    }
+
     private func loadFrontend() {
         guard let indexURL = Bundle.main.url(forResource: "index", withExtension: "html", subdirectory: "web") else {
             logger.error("Missing bundled frontend assets in QuickNote.app/Contents/Resources/web.")
             showLoadingOverlay(
-                title: "QuickNote couldn't load its interface.",
-                detail: "The bundled frontend assets are missing from the app resources."
+                title: localization.missingInterfaceTitle,
+                detail: localization.missingInterfaceDetail
             )
-            webView.loadHTMLString(Self.missingBundleHTML, baseURL: nil)
+            webView.loadHTMLString(Self.missingBundleHTML(for: currentLanguage), baseURL: nil)
             return
         }
 
         logger.info("Loading bundled frontend from \(indexURL.path, privacy: .public)")
         showLoadingOverlay(
-            title: "Loading QuickNote...",
-            detail: "Preparing the local app interface."
+            title: localization.loadingTitle,
+            detail: localization.loadingDetail
         )
         webView.loadFileURL(indexURL, allowingReadAccessTo: indexURL.deletingLastPathComponent())
     }
@@ -154,16 +175,16 @@ final class WebViewController: NSViewController, WKNavigationDelegate {
 
         guard !hasRetriedAfterTermination else {
             showLoadingOverlay(
-                title: "QuickNote couldn't recover the window content.",
-                detail: "The embedded WebView process terminated twice. Check the Xcode console for details."
+                title: localization.recoverWindowTitle,
+                detail: localization.recoverWindowDetail
             )
             return
         }
 
         hasRetriedAfterTermination = true
         showLoadingOverlay(
-            title: "Reconnecting QuickNote...",
-            detail: "The embedded WebView process terminated. Retrying once."
+            title: localization.reconnectingTitle,
+            detail: localization.reconnectingDetail
         )
         webView.reload()
     }
@@ -205,7 +226,7 @@ final class WebViewController: NSViewController, WKNavigationDelegate {
             let message = params["message"] as? String ?? "Unknown frontend error."
             logger.error("Frontend reported an error from \(source, privacy: .public): \(message, privacy: .public)")
             showLoadingOverlay(
-                title: "QuickNote couldn't finish loading.",
+                title: localization.finishLoadingTitle,
                 detail: message
             )
             return
@@ -298,11 +319,13 @@ final class WebViewController: NSViewController, WKNavigationDelegate {
         loadingOverlay.wantsLayer = true
         loadingOverlay.layer?.backgroundColor = Self.hostBackgroundColor.cgColor
 
+        loadingTitleLabel.stringValue = localization.loadingTitle
         loadingTitleLabel.translatesAutoresizingMaskIntoConstraints = false
         loadingTitleLabel.textColor = NSColor(calibratedRed: 0.12, green: 0.10, blue: 0.08, alpha: 1)
         loadingTitleLabel.font = .systemFont(ofSize: 18, weight: .semibold)
         loadingTitleLabel.alignment = .center
 
+        loadingDetailLabel.stringValue = localization.loadingDetail
         loadingDetailLabel.translatesAutoresizingMaskIntoConstraints = false
         loadingDetailLabel.textColor = NSColor(calibratedRed: 0.38, green: 0.34, blue: 0.30, alpha: 1)
         loadingDetailLabel.font = .systemFont(ofSize: 13, weight: .medium)
@@ -352,7 +375,7 @@ final class WebViewController: NSViewController, WKNavigationDelegate {
             "WebView navigation failed during \(stage, privacy: .public). code=\(nsError.code) domain=\(nsError.domain, privacy: .public) description=\(nsError.localizedDescription, privacy: .public)"
         )
         showLoadingOverlay(
-            title: "QuickNote couldn't load its window content.",
+            title: localization.loadWindowContentTitle,
             detail: nsError.localizedDescription
         )
     }
@@ -366,8 +389,8 @@ final class WebViewController: NSViewController, WKNavigationDelegate {
         guard frontendProbeAttemptsRemaining > 0 else {
             logger.error("Frontend probe timed out before the page reported readiness.")
             showLoadingOverlay(
-                title: "QuickNote is taking longer than expected to appear.",
-                detail: "The web interface loaded but did not confirm startup. Check the Xcode console for WebView diagnostics."
+                title: localization.slowStartupTitle,
+                detail: localization.slowStartupDetail
             )
             return
         }
@@ -415,6 +438,20 @@ final class WebViewController: NSViewController, WKNavigationDelegate {
     private func scheduleFrontendProbeRetry() {
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) { [weak self] in
             self?.probeFrontendReadiness()
+        }
+    }
+
+    private func installLanguageObserver() {
+        languageObserver = NotificationCenter.default.addObserver(
+            forName: .quickNoteLanguageDidChange,
+            object: nil,
+            queue: .main
+        ) { [weak self] notification in
+            guard let self else {
+                return
+            }
+
+            self.currentLanguage = QuickNoteLanguage(storedValue: notification.userInfo?["language"])
         }
     }
 
@@ -527,9 +564,12 @@ final class WebViewController: NSViewController, WKNavigationDelegate {
     })();
     """
 
-    private static let missingBundleHTML = """
+    private static func missingBundleHTML(for language: QuickNoteLanguage) -> String {
+        let localization = language.localization
+
+        return """
     <!doctype html>
-    <html lang="en">
+    <html lang="\(language.htmlLanguageCode)">
       <head>
         <meta charset="utf-8" />
         <title>QuickNote</title>
@@ -555,12 +595,13 @@ final class WebViewController: NSViewController, WKNavigationDelegate {
       </head>
       <body>
         <article>
-          <h1>QuickNote frontend bundle is missing</h1>
-          <p>Run <code>pnpm install</code>, then build the app again so the WKWebView host can copy the Vite output into the application bundle.</p>
+          <h1>\(localization.missingBundleHeading)</h1>
+          <p>\(localization.missingBundleBody)</p>
         </article>
       </body>
     </html>
     """
+    }
 }
 
 private final class ScriptMessageProxy: NSObject, WKScriptMessageHandler {

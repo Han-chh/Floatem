@@ -229,6 +229,44 @@ export function KeyboardIcon(props: IconProps) {
   );
 }
 
+export function EnglishLanguageIcon(props: IconProps) {
+  return (
+    <BaseIcon {...props}>
+      <rect x="4" y="4" width="16" height="16" rx="4" />
+      <text
+        x="12"
+        y="15.25"
+        textAnchor="middle"
+        fontSize="9.5"
+        fontWeight="700"
+        fill="currentColor"
+        stroke="none"
+      >
+        A
+      </text>
+    </BaseIcon>
+  );
+}
+
+export function ChineseLanguageIcon(props: IconProps) {
+  return (
+    <BaseIcon {...props}>
+      <rect x="4" y="4" width="16" height="16" rx="4" />
+      <text
+        x="12"
+        y="15.25"
+        textAnchor="middle"
+        fontSize="8.75"
+        fontWeight="700"
+        fill="currentColor"
+        stroke="none"
+      >
+        文
+      </text>
+    </BaseIcon>
+  );
+}
+
 export function MapPinIcon(props: IconProps) {
   return (
     <BaseIcon {...props}>
@@ -243,6 +281,38 @@ export function Clock3Icon(props: IconProps) {
     <BaseIcon {...props}>
       <circle cx="12" cy="12" r="9" />
       <path d="M12 7v5l3 2" />
+    </BaseIcon>
+  );
+}
+
+export function FastForwardIcon(props: IconProps) {
+  return (
+    <BaseIcon {...props}>
+      <path d="m4 7 6 5-6 5V7Z" />
+      <path d="m11 7 6 5-6 5V7Z" />
+      <path d="M20 7v10" />
+    </BaseIcon>
+  );
+}
+
+export function GaugeIcon(props: IconProps) {
+  return (
+    <BaseIcon {...props}>
+      <path d="M5 18a7 7 0 1 1 14 0" />
+      <path d="m12 12 4-3" />
+      <path d="M12 12v6" />
+      <path d="M8 18h8" />
+    </BaseIcon>
+  );
+}
+
+export function HourglassIcon(props: IconProps) {
+  return (
+    <BaseIcon {...props}>
+      <path d="M7 4h10" />
+      <path d="M7 20h10" />
+      <path d="M8 4c0 3 2 4.5 4 6 2-1.5 4-3 4-6" />
+      <path d="M8 20c0-3 2-4.5 4-6 2 1.5 4 3 4 6" />
     </BaseIcon>
   );
 }

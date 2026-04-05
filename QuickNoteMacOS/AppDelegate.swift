@@ -4,25 +4,38 @@ import AppKit
 final class AppDelegate: NSObject, NSApplicationDelegate {
     private let storage = AppStorage()
     private let hotKeyManager = GlobalHotKeyManager()
+    private var currentLanguage: QuickNoteLanguage = .english
 
     private lazy var mainWindowController = MainWindowController(
         storage: storage,
         hotKeyManager: hotKeyManager
     )
 
+    private weak var statusToggleItem: NSMenuItem?
+    private weak var statusQuitItem: NSMenuItem?
+    private weak var mainMenuToggleItem: NSMenuItem?
+    private weak var mainMenuQuitItem: NSMenuItem?
+    private var languageObserver: NSObjectProtocol?
+
+    private var localization: QuickNoteLocalization {
+        currentLanguage.localization
+    }
+
     private lazy var statusMenu: NSMenu = {
         let menu = NSMenu()
 
-        let toggleItem = NSMenuItem(title: "Toggle", action: #selector(toggleMainWindow(_:)), keyEquivalent: "")
+        let toggleItem = NSMenuItem(title: localization.menuToggle, action: #selector(toggleMainWindow(_:)), keyEquivalent: "")
         toggleItem.target = self
         menu.addItem(toggleItem)
+        statusToggleItem = toggleItem
 
         menu.addItem(NSMenuItem.separator())
 
-        let quitItem = NSMenuItem(title: "Quit", action: #selector(quitApplication(_:)), keyEquivalent: "q")
+        let quitItem = NSMenuItem(title: localization.menuQuit, action: #selector(quitApplication(_:)), keyEquivalent: "q")
         quitItem.keyEquivalentModifierMask = [.command]
         quitItem.target = self
         menu.addItem(quitItem)
+        statusQuitItem = quitItem
 
         return menu
     }()
@@ -31,9 +44,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         NSApp.setActivationPolicy(.accessory)
+        currentLanguage = (try? storage.currentLanguage()) ?? .english
 
         configureMainMenu()
         configureStatusItem()
+        installLanguageObserver()
+        updateLocalizedMenuTitles()
 
         DispatchQueue.main.async { [weak self] in
             self?.mainWindowController.installSavedHotKey()
@@ -48,6 +64,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     func applicationShouldTerminateAfterLastWindowClosed(_ sender: NSApplication) -> Bool {
         false
+    }
+
+    deinit {
+        if let languageObserver {
+            NotificationCenter.default.removeObserver(languageObserver)
+        }
     }
 
     @objc private func statusItemClicked(_ sender: Any?) {
@@ -142,18 +164,42 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
         let appMenu = NSMenu()
 
-        let toggleItem = NSMenuItem(title: "Toggle QuickNote", action: #selector(toggleMainWindow(_:)), keyEquivalent: "")
+        let toggleItem = NSMenuItem(title: localization.menuToggleApp, action: #selector(toggleMainWindow(_:)), keyEquivalent: "")
         toggleItem.target = self
         appMenu.addItem(toggleItem)
+        mainMenuToggleItem = toggleItem
 
         appMenu.addItem(NSMenuItem.separator())
 
-        let quitItem = NSMenuItem(title: "Quit QuickNote", action: #selector(quitApplication(_:)), keyEquivalent: "q")
+        let quitItem = NSMenuItem(title: localization.menuQuitApp, action: #selector(quitApplication(_:)), keyEquivalent: "q")
         quitItem.keyEquivalentModifierMask = [.command]
         quitItem.target = self
         appMenu.addItem(quitItem)
+        mainMenuQuitItem = quitItem
 
         appMenuItem.submenu = appMenu
         NSApp.mainMenu = mainMenu
+    }
+
+    private func installLanguageObserver() {
+        languageObserver = NotificationCenter.default.addObserver(
+            forName: .quickNoteLanguageDidChange,
+            object: nil,
+            queue: .main
+        ) { [weak self] notification in
+            guard let self else {
+                return
+            }
+
+            self.currentLanguage = QuickNoteLanguage(storedValue: notification.userInfo?["language"])
+            self.updateLocalizedMenuTitles()
+        }
+    }
+
+    private func updateLocalizedMenuTitles() {
+        statusToggleItem?.title = localization.menuToggle
+        statusQuitItem?.title = localization.menuQuit
+        mainMenuToggleItem?.title = localization.menuToggleApp
+        mainMenuQuitItem?.title = localization.menuQuitApp
     }
 }

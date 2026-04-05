@@ -12,6 +12,7 @@ import { SortableContext, verticalListSortingStrategy } from "@dnd-kit/sortable"
 import { AnimatePresence, motion } from "framer-motion";
 import { useEffect, useState } from "react";
 import { useDragPointerTracking } from "../../hooks/useDragPointerTracking";
+import { useI18n } from "../../lib/i18n";
 import { ParticleField } from "../feedback/ParticleField";
 import { PlusIcon } from "../icons/AppIcons";
 import { useParticleField } from "../../hooks/useParticleField";
@@ -22,6 +23,7 @@ import { useSettingsStore } from "../../store/settingsStore";
 import { NoteCard, NoteCardPreview } from "./NoteCard";
 
 export function NotesList() {
+  const { t } = useI18n();
   const cards = useNotesStore((state) => state.cards);
   const addCard = useNotesStore((state) => state.addCard);
   const moveCard = useNotesStore((state) => state.moveCard);
@@ -133,7 +135,7 @@ export function NotesList() {
             animate={{ opacity: 1, y: 0 }}
             className="flex h-full items-center justify-center rounded-[24px] border border-dashed border-[rgba(213,198,180,0.88)] bg-[rgba(255,255,255,0.34)] px-6 text-center text-[13px] leading-6 text-[var(--muted)]"
           >
-            No notes yet. Tap the plus button below to start a new card.
+            {t.notes.empty}
           </motion.div>
         ) : (
           <DndContext
@@ -186,14 +188,14 @@ export function NotesList() {
         className="paper-card flex items-center gap-3 rounded-[22px] px-3 py-3"
       >
         <span className="status-chip shrink-0" data-tone="coral">
-          {cards.length} cards
+          {t.notes.cards(cards.length)}
         </span>
         <p className="min-w-0 flex-1 wrap-anywhere text-[12px] font-medium text-[var(--muted)]">
-          Drag to sort cards and keep the stack compact.
+          {t.notes.dragHint}
         </p>
         <motion.button
           type="button"
-          aria-label="Add note"
+          aria-label={t.notes.add}
           className="paper-button paper-button-primary inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-full"
           whileHover={{ y: -2, scale: 1.03 }}
           whileTap={{ scale: 0.97 }}

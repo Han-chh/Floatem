@@ -1,5 +1,6 @@
 import clsx from "clsx";
 import { motion } from "framer-motion";
+import { useI18n } from "../../lib/i18n";
 import { CircleCheckBigIcon, NotebookPenIcon } from "../icons/AppIcons";
 import type { TabId } from "../../lib/models";
 
@@ -8,20 +9,21 @@ type TabBarProps = {
   onTabChange: (tab: TabId) => void;
 };
 
-const TABS: Array<{ id: TabId; label: string; icon: typeof NotebookPenIcon }> = [
-  { id: "notes", label: "Notes", icon: NotebookPenIcon },
-  { id: "todos", label: "Todos", icon: CircleCheckBigIcon },
-];
-
 export function TabBar({ activeTab, onTabChange }: TabBarProps) {
+  const { t } = useI18n();
+  const tabs: Array<{ id: TabId; label: string; icon: typeof NotebookPenIcon }> = [
+    { id: "notes", label: t.tabs.notes, icon: NotebookPenIcon },
+    { id: "todos", label: t.tabs.todos, icon: CircleCheckBigIcon },
+  ];
+
   return (
     <div
       className="w-full rounded-[22px] border border-[var(--border)]/80 bg-[rgba(30,25,21,0.05)] p-[5px] shadow-[inset_0_1px_0_rgba(255,255,255,0.55)]"
       role="tablist"
-      aria-label="QuickNote sections"
+      aria-label={t.app.sectionsAria}
     >
       <div className="grid grid-cols-2 gap-[3px]">
-        {TABS.map((tab) => {
+        {tabs.map((tab) => {
           const Icon = tab.icon;
 
           return (

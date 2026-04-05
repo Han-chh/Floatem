@@ -62,7 +62,10 @@ export function useAutoSave() {
     const unsubscribeSettings = useSettingsStore.subscribe(
       (state) => ({
         activeTab: state.activeTab,
+        defaultOpenSection: state.defaultOpenSection,
         hotkey: state.hotkey,
+        language: state.language,
+        lastActiveTab: state.lastActiveTab,
         panelPosition: state.panelPosition,
         transitionStyle: state.transitionStyle,
         animationSpeed: state.animationSpeed,
@@ -86,7 +89,10 @@ export function useAutoSave() {
         settingsTimer.current = window.setTimeout(() => {
           void saveSettings({
             activeTab: nextState.activeTab,
+            defaultOpenSection: nextState.defaultOpenSection,
             hotkey: nextState.hotkey,
+            language: nextState.language,
+            lastActiveTab: nextState.lastActiveTab,
             panelPosition: nextState.panelPosition,
             transitionStyle: nextState.transitionStyle,
             animationSpeed: nextState.animationSpeed,

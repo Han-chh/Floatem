@@ -12,6 +12,7 @@ import { SortableContext, verticalListSortingStrategy } from "@dnd-kit/sortable"
 import { AnimatePresence, motion } from "framer-motion";
 import { useEffect, useMemo, useRef, useState, type FormEvent, type KeyboardEvent } from "react";
 import { useDragPointerTracking } from "../../hooks/useDragPointerTracking";
+import { useI18n } from "../../lib/i18n";
 import { ParticleField } from "../feedback/ParticleField";
 import { CornerDownLeftIcon } from "../icons/AppIcons";
 import { useParticleField } from "../../hooks/useParticleField";
@@ -23,6 +24,7 @@ import { useTodosStore } from "../../store/todosStore";
 import { CompletedTodoItem, TodoItem, TodoItemPreview } from "./TodoItem";
 
 export function TodoList() {
+  const { t } = useI18n();
   const todos = useTodosStore((state) => state.todos);
   const addTodo = useTodosStore((state) => state.addTodo);
   const moveTodo = useTodosStore((state) => state.moveTodo);
@@ -163,7 +165,7 @@ export function TodoList() {
               animate={{ opacity: 1, y: 0 }}
               className="flex h-full items-center justify-center rounded-[24px] border border-dashed border-[rgba(213,198,180,0.88)] bg-[rgba(255,255,255,0.34)] px-6 text-center text-[12.5px] leading-6 text-[var(--muted)]"
             >
-              No tasks yet. Add a compact todo below.
+              {t.todos.empty}
             </motion.div>
           ) : (
             <div className="flex flex-col gap-2.5 pb-1">
@@ -214,7 +216,7 @@ export function TodoList() {
                 <div className="flex flex-col gap-2 pt-1">
                   <div className="flex items-center gap-2 px-1">
                     <span className="status-chip shrink-0" data-tone="jade">
-                      {doneTodos.length} done
+                      {t.todos.doneCount(doneTodos.length)}
                     </span>
                   </div>
                   <div className="flex flex-col gap-2">
@@ -243,16 +245,16 @@ export function TodoList() {
           onSubmit={handleSubmit}
         >
           <label htmlFor="todo-input" className="sr-only">
-            Quick add
+            {t.todos.quickAdd}
           </label>
           <div className="grid min-w-0 grid-cols-[minmax(0,1fr)_60px] gap-x-2.5 gap-y-2.5">
             <div className="flex min-w-0 flex-wrap items-center gap-2">
               <span className="status-chip shrink-0" data-tone="coral">
-                {openTodos.length} undone
+                {t.todos.undoneCount(openTodos.length)}
               </span>
               {doneTodos.length > 0 ? (
                 <span className="status-chip shrink-0" data-tone="jade">
-                  {doneTodos.length} done
+                  {t.todos.doneCount(doneTodos.length)}
                 </span>
               ) : null}
             </div>
@@ -261,7 +263,7 @@ export function TodoList() {
                 id="todo-submit-shortcut"
                 className="shrink-0 text-[10px] font-semibold leading-none tracking-[-0.01em] whitespace-nowrap text-[var(--muted)]"
               >
-                cmd+Enter
+                {t.todos.submitShortcut}
               </span>
             </div>
             <textarea
@@ -272,13 +274,13 @@ export function TodoList() {
               onChange={(event) => setDraft(event.currentTarget.value)}
               onInput={(event) => syncTextareaHeight(event.currentTarget)}
               onKeyDown={handleDraftKeyDown}
-              placeholder="Add a task"
+              placeholder={t.todos.quickAddPlaceholder}
               className="textarea-reset surface-field wrap-anywhere min-h-[40px] min-w-0 rounded-[16px] px-3.5 py-2 text-[12.5px] font-medium leading-5 text-[var(--dark-text)] outline-none placeholder:text-[var(--muted)]"
             />
             <div className="flex items-center justify-center">
               <motion.button
                 type="submit"
-                aria-label="Add task"
+                aria-label={t.todos.add}
                 aria-describedby="todo-submit-shortcut"
                 disabled={!draft.trim()}
                 className={`quick-add-submit inline-flex h-10 w-[28px] items-center justify-center rounded-full border transition-colors ${

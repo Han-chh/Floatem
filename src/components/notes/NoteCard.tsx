@@ -2,6 +2,7 @@ import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { motion } from "framer-motion";
 import { useEffect, useRef, useState, type CSSProperties, type Ref } from "react";
+import { formatCompactEditedLabel, useI18n } from "../../lib/i18n";
 import { NOTE_DOT_COLORS, type NoteCard as NoteCardModel } from "../../lib/models";
 import { syncTextareaHeight } from "../../lib/resizeTextarea";
 import { useNotesStore } from "../../store/notesStore";
@@ -39,27 +40,6 @@ const NOTE_PALETTE_STYLE: CSSProperties = {
   maxHeight: "min(240px, calc(100vh - 128px))",
 };
 
-function formatCompactEditedLabel(updatedAt: number) {
-  const elapsed = Math.max(0, Date.now() - updatedAt);
-  const minute = 60_000;
-  const hour = minute * 60;
-  const day = hour * 24;
-
-  if (elapsed < minute) {
-    return "<1min ago";
-  }
-
-  if (elapsed < hour) {
-    return `${Math.floor(elapsed / minute)}min ago`;
-  }
-
-  if (elapsed < day) {
-    return `${Math.floor(elapsed / hour)}h ago`;
-  }
-
-  return `${Math.floor(elapsed / day)}d ago`;
-}
-
 function NoteCardBody({
   note,
   editedLabel,
@@ -75,6 +55,7 @@ function NoteCardBody({
   isDropTargetPreview = false,
   preview = false,
 }: NoteCardBodyProps) {
+  const { t } = useI18n();
   const isInteractive = !preview;
 
   return (
@@ -120,19 +101,19 @@ function NoteCardBody({
             <div className="note-card-title-block">
               {preview ? (
                 <div className="surface-field wrap-anywhere min-h-[40px] rounded-[17px] px-3 py-2 text-[13px] font-semibold leading-[1.35] tracking-[-0.02em] text-[var(--dark-text)]">
-                  {note.title || "Untitled note"}
+                  {note.title || t.notes.untitled}
                 </div>
               ) : (
                 <textarea
                   ref={titleRef}
                   id={`note-title-${note.id}`}
-                  aria-label="Note title"
+                  aria-label={t.notes.titleAria}
                   rows={1}
                   value={note.title}
                   onChange={(event) => onUpdateTitle?.(event.currentTarget.value, event.currentTarget)}
                   onInput={(event) => syncTextareaHeight(event.currentTarget)}
                   onPointerDown={(event) => event.stopPropagation()}
-                  placeholder="Untitled note"
+                  placeholder={t.notes.untitled}
                   className="textarea-reset surface-field wrap-anywhere min-h-[40px] w-full rounded-[17px] px-3 py-2 text-[13px] font-semibold leading-[1.35] tracking-[-0.02em] text-[var(--dark-text)] outline-none placeholder:text-[var(--muted)]"
                 />
               )}
@@ -146,7 +127,7 @@ function NoteCardBody({
                 style={{ color: note.dotColor, backgroundColor: `${note.dotColor}1f` }}
               >
                 <PaletteIcon size={12} />
-                Focus card
+                {t.notes.focusCard}
               </span>
               <span className="note-secondary-chip status-chip" data-tone="neutral">
                 {editedLabel}
@@ -158,7 +139,7 @@ function NoteCardBody({
                 <motion.button
                   type="button"
                   className="note-card-action-button paper-icon-button relative rounded-[9px]"
-                  aria-label="Change note color"
+                  aria-label={t.notes.changeColor}
                   whileHover={isInteractive ? { y: -1.5, scale: 1.03 } : undefined}
                   whileTap={isInteractive ? { scale: 0.97 } : undefined}
                   onPointerDown={isInteractive ? (event) => event.stopPropagation() : undefined}
@@ -168,15 +149,15 @@ function NoteCardBody({
                     background: `linear-gradient(180deg, rgba(255,255,255,0.98), ${note.dotColor}14), rgba(255,255,255,0.96)`,
                     boxShadow: `0 0 0 3px ${note.dotColor}14, 0 10px 18px rgba(61,49,34,0.08), inset 0 1px 0 rgba(255,255,255,0.88)`,
                   }}
-                >
+                  >
                   <span
                     className="inline-flex h-3 w-3 rounded-full border border-white/70 shadow-[0_4px_8px_rgba(0,0,0,0.08)]"
                     style={{ backgroundColor: note.dotColor }}
                   />
-                  <span className="sr-only">Change note color</span>
+                  <span className="sr-only">{t.notes.changeColor}</span>
                 </motion.button>
                 <span className="pointer-events-none absolute -top-8 left-1/2 z-10 -translate-x-1/2 rounded-full bg-[rgba(30,25,21,0.94)] px-2 py-1 text-[10px] font-semibold leading-none whitespace-nowrap text-white opacity-0 shadow-[0_10px_20px_rgba(30,25,21,0.18)] transition-all duration-75 ease-out group-hover:-translate-y-1 group-hover:opacity-100">
-                  Color
+                  {t.notes.color}
                 </span>
                 {isInteractive && showPalette && setShowPalette && onUpdateDotColor ? (
                   <motion.div
@@ -192,7 +173,7 @@ function NoteCardBody({
                         type="button"
                         className="h-[22px] w-[22px] rounded-full border border-[var(--border)]"
                         style={{ backgroundColor: color }}
-                        aria-label={`Use ${color} for note`}
+                        aria-label={t.notes.useColor(color)}
                         whileHover={{ scale: 1.08 }}
                         whileTap={{ scale: 0.94 }}
                         onPointerDown={(event) => event.stopPropagation()}
@@ -207,7 +188,7 @@ function NoteCardBody({
               </div>
               <motion.button
                 type="button"
-                aria-label="Collapse note"
+                aria-label={t.notes.collapse}
                 className="note-card-action-button paper-icon-button group relative rounded-[9px]"
                 whileHover={isInteractive ? { y: -1.5, scale: 1.03 } : undefined}
                 whileTap={isInteractive ? { scale: 0.97 } : undefined}
@@ -216,13 +197,13 @@ function NoteCardBody({
               >
                 <ChevronsUpDownIcon size={13} />
                 <span className="pointer-events-none absolute -top-8 left-1/2 z-10 -translate-x-1/2 rounded-full bg-[rgba(30,25,21,0.94)] px-2 py-1 text-[10px] font-semibold leading-none whitespace-nowrap text-white opacity-0 shadow-[0_10px_20px_rgba(30,25,21,0.18)] transition-all duration-75 ease-out group-hover:-translate-y-1 group-hover:opacity-100">
-                  {note.collapsed ? "Open" : "Fold"}
+                  {note.collapsed ? t.notes.open : t.notes.fold}
                 </span>
               </motion.button>
               <motion.button
                 type="button"
                 data-action="delete"
-                aria-label="Delete note"
+                aria-label={t.notes.delete}
                 className="note-card-action-button paper-icon-button paper-button-danger group relative rounded-[9px]"
                 whileHover={isInteractive ? { y: -1.5, scale: 1.03 } : undefined}
                 whileTap={isInteractive ? { scale: 0.97 } : undefined}
@@ -235,7 +216,7 @@ function NoteCardBody({
               >
                 <Trash2Icon size={13} />
                 <span className="pointer-events-none absolute -top-8 left-1/2 z-10 -translate-x-1/2 rounded-full bg-[rgba(30,25,21,0.94)] px-2 py-1 text-[10px] font-semibold leading-none whitespace-nowrap text-white opacity-0 shadow-[0_10px_20px_rgba(30,25,21,0.18)] transition-all duration-75 ease-out group-hover:-translate-y-1 group-hover:opacity-100">
-                  Delete
+                  {t.notes.delete}
                 </span>
               </motion.button>
             </div>
@@ -248,7 +229,7 @@ function NoteCardBody({
           <Toolbar />
           {preview ? (
             <div className="surface-field min-h-[188px] rounded-[20px] px-3 py-3 text-[12.25px] leading-[1.62] text-[var(--muted)]">
-              {note.title ? "Editing preview of this card while dragging." : "Drag preview."}
+              {note.title ? t.notes.dragPreviewEditing : t.notes.dragPreview}
             </div>
           ) : (
             <Editor content={note.content} onChange={(value) => onUpdateContent?.(value)} />
@@ -260,7 +241,8 @@ function NoteCardBody({
 }
 
 export function NoteCardPreview({ note, width }: { note: NoteCardModel; width?: number }) {
-  const editedLabel = formatCompactEditedLabel(note.updatedAt);
+  const { language } = useI18n();
+  const editedLabel = formatCompactEditedLabel(note.updatedAt, language);
 
   return (
     <div
@@ -273,6 +255,7 @@ export function NoteCardPreview({ note, width }: { note: NoteCardModel; width?: 
 }
 
 export function NoteCard({ note, onDelete, dropPreview = false }: NoteCardProps) {
+  const { language, t } = useI18n();
   const toggleCollapsed = useNotesStore((state) => state.toggleCollapsed);
   const updateCardTitle = useNotesStore((state) => state.updateCardTitle);
   const updateCardContent = useNotesStore((state) => state.updateCardContent);
@@ -295,7 +278,7 @@ export function NoteCard({ note, onDelete, dropPreview = false }: NoteCardProps)
     }
   }, [note.id, note.title]);
 
-  const editedLabel = formatCompactEditedLabel(note.updatedAt);
+  const editedLabel = formatCompactEditedLabel(note.updatedAt, language);
 
   return (
     <motion.article
@@ -312,7 +295,7 @@ export function NoteCard({ note, onDelete, dropPreview = false }: NoteCardProps)
       {...attributes}
       {...listeners}
       data-no-window-drag="true"
-      aria-label="Reorder note"
+      aria-label={t.notes.reorder}
       data-testid="note-card"
       data-note-card-id={note.id}
       className={`paper-card cq-card relative rounded-[28px] border border-[rgba(213,198,180,0.92)] bg-[linear-gradient(180deg,rgba(255,252,248,0.98),rgba(255,247,239,0.95))] shadow-[0_18px_36px_rgba(61,49,34,0.10)] cursor-grab active:cursor-grabbing ${

@@ -12,17 +12,17 @@ describe("TodoList", () => {
 
     await user.type(input, "Ship docs");
     await user.keyboard("{Enter}");
-    expect(screen.queryByRole("button", { name: "Mark todo as done" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Complete task" })).not.toBeInTheDocument();
 
     await user.keyboard("{Meta>}{Enter}{/Meta}");
     expect(screen.getByText("Ship docs")).toBeInTheDocument();
     expect(screen.getByText("1 undone")).toBeInTheDocument();
     expect(screen.getByTestId("todo-order")).toHaveTextContent("1");
 
-    await user.click(screen.getByRole("button", { name: "Mark todo as done" }));
+    await user.click(screen.getByRole("button", { name: "Complete task" }));
     expect(
       screen
-        .getAllByRole("button", { name: "Mark todo as done" })
+        .getAllByRole("button", { name: "Restore task" })
         .some((button) => button.getAttribute("aria-pressed") === "true"),
     ).toBe(true);
     await waitFor(() => {

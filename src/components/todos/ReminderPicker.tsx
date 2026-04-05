@@ -1,6 +1,7 @@
 import { addDays, addHours, format, setHours, setMinutes } from "date-fns";
 import { AnimatePresence, motion } from "framer-motion";
 import { useEffect, useMemo, useRef, useState } from "react";
+import { useI18n } from "../../lib/i18n";
 import { Clock3Icon } from "../icons/AppIcons";
 
 type ReminderPickerProps = {
@@ -57,6 +58,7 @@ export function ReminderPicker({
   className = "",
   disabled = false,
 }: ReminderPickerProps) {
+  const { t } = useI18n();
   const shellRef = useRef<HTMLDivElement | null>(null);
   const [isOpen, setIsOpen] = useState(false);
   const [draftDate, setDraftDate] = useState("");
@@ -70,11 +72,11 @@ export function ReminderPicker({
     const tonight = setMinutes(setHours(now, Math.max(now.getHours() + 2, 20)), 0);
 
     return [
-      { label: "In 1h", value: inOneHour.getTime() },
-      { label: "Tonight", value: tonight.getTime() },
-      { label: "Tomorrow 09:00", value: tomorrowMorning.getTime() },
+      { label: t.todos.inOneHour, value: inOneHour.getTime() },
+      { label: t.todos.tonight, value: tonight.getTime() },
+      { label: t.todos.tomorrowMorning, value: tomorrowMorning.getTime() },
     ];
-  }, []);
+  }, [t.todos.inOneHour, t.todos.tonight, t.todos.tomorrowMorning]);
 
   useEffect(() => {
     if (!isOpen) {
@@ -128,8 +130,8 @@ export function ReminderPicker({
     <div ref={shellRef} className="relative">
       <motion.button
         type="button"
-        aria-label={reminderAt ? "Change reminder" : "Set reminder"}
-        title={displayValue ?? "Set reminder"}
+        aria-label={reminderAt ? t.todos.changeReminder : t.todos.setReminder}
+        title={displayValue ?? t.todos.setReminder}
         className={`inline-flex max-w-full min-w-0 shrink items-center gap-1.5 rounded-full border px-2.5 py-1.5 text-[10.5px] font-semibold shadow-[0_8px_18px_rgba(61,49,34,0.08)] ${className}`}
         whileHover={disabled ? undefined : { y: -1.5, scale: 1.02 }}
         whileTap={disabled ? undefined : { scale: 0.97 }}
@@ -163,22 +165,22 @@ export function ReminderPicker({
               <div className="flex items-center justify-between gap-2">
                 <div>
                   <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-[var(--muted)]">
-                    Reminder
+                    {t.todos.reminder}
                   </p>
                   <p className="mt-1 text-[13px] font-semibold text-[var(--brown-strong)]">
-                    Pick date and time
+                    {t.todos.pickDateTime}
                   </p>
                 </div>
                 <span className="status-chip" data-tone="blue">
                   <Clock3Icon size={11} />
-                  precise
+                  {t.todos.precise}
                 </span>
               </div>
 
               <div className="grid gap-2">
                 <label className="grid gap-1">
                   <span className="text-[10.5px] font-semibold uppercase tracking-[0.12em] text-[var(--muted)]">
-                    Date
+                    {t.todos.date}
                   </span>
                   <input
                     type="date"
@@ -191,7 +193,7 @@ export function ReminderPicker({
                 <div className="grid grid-cols-2 gap-2">
                   <label className="grid gap-1">
                     <span className="text-[10.5px] font-semibold uppercase tracking-[0.12em] text-[var(--muted)]">
-                      Hour
+                      {t.todos.hour}
                     </span>
                     <select
                       value={draftHour}
@@ -208,7 +210,7 @@ export function ReminderPicker({
 
                   <label className="grid gap-1">
                     <span className="text-[10.5px] font-semibold uppercase tracking-[0.12em] text-[var(--muted)]">
-                      Minute
+                      {t.todos.minute}
                     </span>
                     <select
                       value={draftMinute}
@@ -256,7 +258,7 @@ export function ReminderPicker({
                     setIsOpen(false);
                   }}
                 >
-                  Clear
+                  {t.common.clear}
                 </motion.button>
 
                 <div className="flex items-center gap-2">
@@ -267,7 +269,7 @@ export function ReminderPicker({
                     whileTap={{ scale: 0.97 }}
                     onClick={() => setIsOpen(false)}
                   >
-                    Cancel
+                    {t.common.cancel}
                   </motion.button>
                   <motion.button
                     type="button"
@@ -276,7 +278,7 @@ export function ReminderPicker({
                     whileTap={{ scale: 0.97 }}
                     onClick={handleSave}
                   >
-                    Save
+                    {t.common.save}
                   </motion.button>
                 </div>
               </div>

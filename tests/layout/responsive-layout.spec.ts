@@ -83,12 +83,12 @@ for (const viewport of VIEWPORTS) {
       await page.getByRole("tab", { name: "Todos" }).click();
       const draft = page.getByLabel("Quick add");
       await draft.fill(LONG_TODO);
-      await draft.press("Enter");
+      await draft.press("Meta+Enter");
 
       const todoCard = page.getByTestId("todo-item").first();
       await expect(todoCard).toBeVisible();
 
-      await expectWithinViewport(page, page.getByRole("button", { name: "Mark todo as done" }));
+      await expectWithinViewport(page, page.getByRole("button", { name: "Complete task" }));
       await expectWithinViewport(page, page.getByRole("button", { name: "Delete todo" }));
       await expectWithinViewport(page, page.getByRole("button", { name: "Set reminder" }));
       await expectNoSelfOverflow(draft);
@@ -100,11 +100,24 @@ for (const viewport of VIEWPORTS) {
 
       await page.getByRole("button", { name: "Settings" }).click();
       const panel = page.getByTestId("settings-panel");
+      const scrollRegion = page.getByTestId("settings-scroll-region");
+      const closeButton = panel.getByRole("button", { name: "Close", exact: true });
       await expect(panel).toBeVisible();
 
-      await expectWithinViewport(page, panel.getByRole("button", { name: "Close" }));
-      await expectWithinViewport(page, panel.locator("input").first());
+      await expectWithinViewport(page, closeButton);
+      await expectWithinViewport(page, panel.getByRole("button", { name: "Change" }));
       await expectWithinViewport(page, panel.getByText(/Unset|x \d+\s+y \d+/));
+      await panel.getByRole("button", { name: "Change" }).click();
+      const dialog = panel.getByRole("dialog", { name: "Change global shortcut" });
+      await expectWithinViewport(page, dialog);
+      await expectWithinViewport(page, panel.getByText("Waiting for input..."));
+      await panel.getByRole("button", { name: "Cancel" }).click();
+      await expect(dialog).toBeHidden();
+      await scrollRegion.evaluate((element) => {
+        element.scrollTop = element.scrollHeight;
+      });
+      await expectWithinViewport(page, closeButton);
+      await expectWithinViewport(page, panel.getByRole("button", { name: "Restore defaults" }));
       await expectNoHorizontalOverflow(page);
     });
   });

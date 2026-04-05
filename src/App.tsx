@@ -14,8 +14,10 @@ import {
   setEditableInputActive,
   setTextCompositionActive,
 } from "./hooks/usePlatform";
-import { subscribeToPanelPosition } from "./lib/nativeBridge";
-import type { AnimationSpeed, TabId, TransitionStyle } from "./lib/models";
+import { useI18n } from "./lib/i18n";
+import { subscribeToPanelPosition, subscribeToPanelWillOpen } from "./lib/nativeBridge";
+import type { TabId } from "./lib/models";
+import { getTabMotionConfig } from "./lib/transitionMotion";
 import { useNotesStore } from "./store/notesStore";
 import { useSettingsStore } from "./store/settingsStore";
 import { useTodosStore } from "./store/todosStore";
@@ -28,69 +30,14 @@ function isDesignPreviewMode() {
   return new URLSearchParams(window.location.search).get("preview") === "figma-notes-home";
 }
 
-function getTransitionDuration(animationSpeed: AnimationSpeed) {
-  return animationSpeed === "faster" ? 0.16 : 0.22;
-}
-
 type TabTurnDirection = -1 | 1;
 
 function getTabDirection(activeTab: TabId): TabTurnDirection {
   return activeTab === "todos" ? 1 : -1;
 }
 
-function getTabMotionConfig(transitionStyle: TransitionStyle, animationSpeed: AnimationSpeed) {
-  const duration = transitionStyle === "page" ? (animationSpeed === "faster" ? 0.5 : 0.6) : getTransitionDuration(animationSpeed);
-
-  if (transitionStyle === "page") {
-    return {
-      variants: {
-        initial: (direction: TabTurnDirection) => ({
-          opacity: 0.46,
-          x: direction === 1 ? 78 : -78,
-          rotateY: direction === 1 ? 108 : -108,
-          scale: 0.9,
-          filter: "brightness(0.82) saturate(0.88)",
-          zIndex: 0,
-          transformOrigin: direction === 1 ? "right center" : "left center",
-        }),
-        animate: {
-          opacity: 1,
-          x: 0,
-          rotateY: 0,
-          scale: 1,
-          filter: "brightness(1) saturate(1)",
-          zIndex: 1,
-          transformOrigin: "center center",
-        },
-        exit: (direction: TabTurnDirection) => ({
-          opacity: 0.22,
-          x: direction === 1 ? -92 : 92,
-          rotateY: direction === 1 ? -116 : 116,
-          scale: 0.92,
-          filter: "brightness(0.74) saturate(0.84)",
-          zIndex: 2,
-          transformOrigin: direction === 1 ? "left center" : "right center",
-        }),
-      },
-      transition: { duration, ease: [0.2, 0.9, 0.24, 1] as const },
-      style: {
-        transformStyle: "preserve-3d" as const,
-        backfaceVisibility: "hidden" as const,
-      },
-    };
-  }
-
-  return {
-    variants: {
-      initial: (direction: TabTurnDirection) => ({ opacity: 0, x: direction === 1 ? 14 : -14, scale: 0.99 }),
-      animate: { opacity: 1, x: 0, scale: 1 },
-      exit: (direction: TabTurnDirection) => ({ opacity: 0, x: direction === 1 ? -12 : 12, scale: 0.995 }),
-    },
-    transition: { duration, ease: [0.22, 1, 0.36, 1] as const },
-  };
-}
-
 function QuickNoteApp() {
+  const { t } = useI18n();
   const activeTab = useSettingsStore((state) => state.activeTab);
   const hotkey = useSettingsStore((state) => state.hotkey);
   const transitionStyle = useSettingsStore((state) => state.transitionStyle);
@@ -117,6 +64,15 @@ function QuickNoteApp() {
   useEffect(() => {
     return subscribeToPanelPosition((panelPosition) => {
       useSettingsStore.getState().setPanelPosition(panelPosition);
+    });
+  }, []);
+
+  useEffect(() => {
+    return subscribeToPanelWillOpen(() => {
+      startTransition(() => {
+        setShowSettings(false);
+        useSettingsStore.getState().applyPreferredOpenSection();
+      });
     });
   }, []);
 
@@ -196,7 +152,9 @@ function QuickNoteApp() {
         startTransition(() => {
           useNotesStore.getState().initialize(notes);
           useTodosStore.getState().initialize(todos);
-          useSettingsStore.getState().hydrateSettings(settings);
+          const settingsStore = useSettingsStore.getState();
+          settingsStore.hydrateSettings(settings);
+          settingsStore.applyPreferredOpenSection();
           setIsBooting(false);
         });
       })
@@ -235,10 +193,12 @@ function QuickNoteApp() {
   return (
     <PanelShell
       activeTab={activeTab}
+      animationSpeed={animationSpeed}
       onTabChange={setActiveTab}
       showSettings={showSettings}
       onToggleSettings={() => setShowSettings((current) => !current)}
       settingsPanel={<SettingsPanel onClose={() => setShowSettings(false)} />}
+      transitionStyle={transitionStyle}
     >
       {isBooting ? (
         <motion.div
@@ -246,14 +206,14 @@ function QuickNoteApp() {
           animate={{ opacity: 1, scale: 1 }}
           className="paper-card flex h-full items-center justify-center rounded-[26px] text-[13px] font-medium text-[var(--muted)]"
         >
-          Loading QuickNote...
+          {t.app.loading}
         </motion.div>
       ) : (
         <div
           className="relative h-full overflow-hidden rounded-[26px]"
-          style={transitionStyle === "page" ? { perspective: 1100, transformStyle: "preserve-3d" } : undefined}
+          style={tabMotion.sceneStyle}
         >
-          <AnimatePresence initial={false} mode={transitionStyle === "page" ? "sync" : "wait"} custom={tabDirection}>
+          <AnimatePresence initial={false} mode={tabMotion.presenceMode} custom={tabDirection}>
             <motion.div
               key={activeTab}
               custom={tabDirection}
@@ -262,7 +222,7 @@ function QuickNoteApp() {
               animate="animate"
               exit="exit"
               transition={tabMotion.transition}
-              style={tabMotion.style}
+              style={tabMotion.contentStyle}
               className="absolute inset-px h-auto will-change-transform"
             >
               <div className="relative h-full overflow-hidden rounded-[24px]">

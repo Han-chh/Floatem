@@ -4,6 +4,7 @@ import type { Descendant } from "slate";
 import { Editable, Slate, withReact } from "slate-react";
 import type { RenderElementProps, RenderLeafProps } from "slate-react";
 import { useState } from "react";
+import { useI18n } from "../../lib/i18n";
 import { DEFAULT_NOTE_CONTENT } from "../../lib/models";
 import { withColorMark } from "../../lib/slate-plugins/withColorMark";
 
@@ -37,6 +38,7 @@ function renderLeaf(props: RenderLeafProps) {
 }
 
 export function Editor({ content, onChange }: EditorProps) {
+  const { t } = useI18n();
   const [editor] = useState(() => withColorMark(withHistory(withReact(createEditor()))));
   const handleChange = (value: Descendant[]) => {
     const hasDocumentChange = editor.operations.some((operation) => operation.type !== "set_selection");
@@ -53,7 +55,7 @@ export function Editor({ content, onChange }: EditorProps) {
       <Editable
         onPointerDown={(event) => event.stopPropagation()}
         className="surface-field wrap-anywhere min-h-[184px] rounded-[20px] px-3 py-3 text-[12.25px] leading-[1.6] outline-none"
-        placeholder="Capture the note while it is fresh..."
+        placeholder={t.notes.editorPlaceholder}
         renderElement={renderElement}
         renderLeaf={renderLeaf}
         spellCheck
