@@ -2,6 +2,7 @@ import { arrayMove } from "@dnd-kit/sortable";
 import { create } from "zustand";
 import { subscribeWithSelector } from "zustand/middleware";
 import { createTodoItem, type TodoItem } from "../lib/models";
+import { isFutureReminderTimestamp } from "../lib/reminders";
 
 type TodosState = {
   todos: TodoItem[];
@@ -97,6 +98,10 @@ export const useTodosStore = create<TodosState>()(
       }));
     },
     setReminder: (id, reminderAt) => {
+      if (!isFutureReminderTimestamp(reminderAt)) {
+        return;
+      }
+
       set((state) => ({
         todos: state.todos.map((todo) =>
           todo.id === id

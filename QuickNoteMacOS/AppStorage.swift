@@ -64,6 +64,10 @@ final class AppStorage {
         try saveJSONObject(notes, to: notesURL)
     }
 
+    func loadTodos() throws -> [Any] {
+        try readJSONArray(at: todosURL)
+    }
+
     func saveTodos(_ todos: Any) throws {
         try saveJSONObject(todos, to: todosURL)
     }
@@ -132,6 +136,7 @@ final class AppStorage {
             "transitionStyle": "page",
             "animationSpeed": "mediate",
             "enableParticles": true,
+            "enableReminderSound": true,
         ]
     }
 

@@ -39,6 +39,7 @@ export type AppSettings = {
   transitionStyle: TransitionStyle;
   animationSpeed: AnimationSpeed;
   enableParticles: boolean;
+  enableReminderSound: boolean;
 };
 
 export type LoadAllResult = {
@@ -73,6 +74,7 @@ export const DEFAULT_SETTINGS: AppSettings = {
   transitionStyle: "page",
   animationSpeed: "mediate",
   enableParticles: true,
+  enableReminderSound: true,
 };
 
 export function normalizeLanguage(value: unknown): AppLanguage {
@@ -144,6 +146,10 @@ export function normalizeAppSettings(settings: Partial<AppSettings> = {}): AppSe
     transitionStyle: normalizeTransitionStyle(settings.transitionStyle),
     animationSpeed: normalizeAnimationSpeed(settings.animationSpeed),
     enableParticles: typeof settings.enableParticles === "boolean" ? settings.enableParticles : DEFAULT_SETTINGS.enableParticles,
+    enableReminderSound:
+      typeof settings.enableReminderSound === "boolean"
+        ? settings.enableReminderSound
+        : DEFAULT_SETTINGS.enableReminderSound,
   };
 }
 

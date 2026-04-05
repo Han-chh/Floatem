@@ -70,6 +70,7 @@ export function useAutoSave() {
         transitionStyle: state.transitionStyle,
         animationSpeed: state.animationSpeed,
         enableParticles: state.enableParticles,
+        enableReminderSound: state.enableReminderSound,
         isLoaded: state.isLoaded,
       }),
       (nextState) => {
@@ -97,6 +98,7 @@ export function useAutoSave() {
             transitionStyle: nextState.transitionStyle,
             animationSpeed: nextState.animationSpeed,
             enableParticles: nextState.enableParticles,
+            enableReminderSound: nextState.enableReminderSound,
           });
         }, SAVE_DELAY);
       },

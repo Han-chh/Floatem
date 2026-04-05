@@ -28,6 +28,8 @@ describe("TodoList", () => {
     await waitFor(() => {
       expect(screen.queryByTestId("todo-order")).not.toBeInTheDocument();
     });
+    expect(screen.queryByRole("button", { name: "Set reminder" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Change reminder" })).not.toBeInTheDocument();
 
     const deleteButtons = screen.getAllByRole("button", { name: "Delete todo" });
     await user.click(deleteButtons[deleteButtons.length - 1]!);

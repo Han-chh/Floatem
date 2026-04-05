@@ -6,6 +6,8 @@ protocol QuickNoteNativeBridgeHandling: AnyObject {
     func saveNotes(_ notes: Any) throws
     func saveTodos(_ todos: Any) throws
     func saveSettings(_ settings: Any) throws
+    func openNotificationSettings() throws
+    func testReminderNotification(soundEnabled: Bool, language: QuickNoteLanguage) async throws
     func registerHotKey(shortcut: String) throws
     func setEditableInputActiveFromBridge(_ active: Bool)
     func setTextCompositionActiveFromBridge(_ active: Bool)
@@ -45,6 +47,12 @@ enum QuickNoteLanguage: String {
                 loadWindowContentTitle: "QuickNote couldn't load its window content.",
                 slowStartupTitle: "QuickNote is taking longer than expected to appear.",
                 slowStartupDetail: "The web interface loaded but did not confirm startup. Check the Xcode console for WebView diagnostics.",
+                notificationOpenSettingsFailedMessage: "QuickNote couldn't open System Settings. Open Apple menu > System Settings > Notifications, then select QuickNote.",
+                notificationPermissionDeniedMessage: "QuickNote is not allowed to send notifications. Enable alerts and sounds for QuickNote in System Settings > Notifications.",
+                notificationTestBody: "This is a QuickNote test reminder.",
+                notificationTestTitle: "QuickNote test",
+                reminderNotificationTitle: "Todo reminder",
+                reminderNotificationFallbackBody: "Open QuickNote to review this todo.",
                 missingBundleHeading: "QuickNote frontend bundle is missing",
                 missingBundleBody: "Run pnpm install, then build the app again so the WKWebView host can copy the Vite output into the application bundle."
             )
@@ -66,6 +74,12 @@ enum QuickNoteLanguage: String {
                 loadWindowContentTitle: "QuickNote 无法加载窗口内容。",
                 slowStartupTitle: "QuickNote 显示时间比预期更长。",
                 slowStartupDetail: "网页界面已经加载，但还没有确认启动完成。请检查 Xcode 控制台中的 WebView 诊断信息。",
+                notificationOpenSettingsFailedMessage: "QuickNote 无法打开系统设置。请手动前往“苹果菜单 > 系统设置 > 通知”，然后选择 QuickNote。",
+                notificationPermissionDeniedMessage: "QuickNote 当前没有通知权限。请在“系统设置 > 通知”里为 QuickNote 开启提醒和声音。",
+                notificationTestBody: "这是一条来自 QuickNote 的测试提醒。",
+                notificationTestTitle: "QuickNote 测试通知",
+                reminderNotificationTitle: "待办提醒",
+                reminderNotificationFallbackBody: "打开 QuickNote 查看这条待办。",
                 missingBundleHeading: "QuickNote 前端资源包缺失",
                 missingBundleBody: "请先运行 pnpm install，然后重新构建应用，以便 WKWebView 宿主把 Vite 构建产物复制进应用包。"
             )
@@ -99,6 +113,12 @@ struct QuickNoteLocalization {
     let loadWindowContentTitle: String
     let slowStartupTitle: String
     let slowStartupDetail: String
+    let notificationOpenSettingsFailedMessage: String
+    let notificationPermissionDeniedMessage: String
+    let notificationTestBody: String
+    let notificationTestTitle: String
+    let reminderNotificationTitle: String
+    let reminderNotificationFallbackBody: String
     let missingBundleHeading: String
     let missingBundleBody: String
 }

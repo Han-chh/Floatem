@@ -1,4 +1,4 @@
-import type { AppSettings, LoadAllResult, NoteCard, PanelPosition, TodoItem } from "./models";
+import type { AppLanguage, AppSettings, LoadAllResult, NoteCard, PanelPosition, TodoItem } from "./models";
 import { DEFAULT_SETTINGS, normalizeAppSettings } from "./models";
 
 const NOTES_STORAGE_KEY = "quicknote.notes";
@@ -7,6 +7,7 @@ const SETTINGS_STORAGE_KEY = "quicknote.settings";
 
 export const PANEL_POSITION_EVENT = "quicknote:panel-position";
 export const PANEL_WILL_OPEN_EVENT = "quicknote:panel-will-open";
+export const TODOS_UPDATED_EVENT = "quicknote:todos-updated";
 
 export type QuickNoteNativeBridge = {
   platform: "macos-appkit-wkwebview";
@@ -14,6 +15,11 @@ export type QuickNoteNativeBridge = {
   saveNotes: (cards: NoteCard[]) => Promise<void>;
   saveTodos: (todos: TodoItem[]) => Promise<void>;
   saveSettings: (settings: AppSettings) => Promise<void>;
+  openNotificationSettings: () => Promise<void>;
+  testReminderNotification: (options?: {
+    soundEnabled?: boolean;
+    language?: AppLanguage;
+  }) => Promise<void>;
   registerHotkey: (shortcut: string) => Promise<void>;
   setEditableInputActive: (active: boolean) => void | Promise<void>;
   setTextCompositionActive: (active: boolean) => void | Promise<void>;
@@ -81,6 +87,12 @@ const browserBridge: QuickNoteNativeBridge = {
   async saveSettings(settings) {
     writeStoredValue(SETTINGS_STORAGE_KEY, settings);
   },
+  async openNotificationSettings() {
+    // Browser preview cannot open macOS System Settings.
+  },
+  async testReminderNotification() {
+    // Browser preview cannot send native notifications.
+  },
   async registerHotkey() {
     // Browser preview does not support global shortcuts.
   },
@@ -146,5 +158,26 @@ export function subscribeToPanelWillOpen(listener: () => void) {
 
   return () => {
     window.removeEventListener(PANEL_WILL_OPEN_EVENT, handler);
+  };
+}
+
+export function subscribeToTodosUpdated(listener: (todos: TodoItem[]) => void) {
+  if (typeof window === "undefined") {
+    return () => {};
+  }
+
+  const handler = (event: Event) => {
+    const detail = (event as CustomEvent<TodoItem[]>).detail;
+    if (!Array.isArray(detail)) {
+      return;
+    }
+
+    listener(detail);
+  };
+
+  window.addEventListener(TODOS_UPDATED_EVENT, handler as EventListener);
+
+  return () => {
+    window.removeEventListener(TODOS_UPDATED_EVENT, handler as EventListener);
   };
 }

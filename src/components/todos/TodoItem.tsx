@@ -116,6 +116,7 @@ function TodoRowBody({
   const setReminder = useTodosStore((state) => state.setReminder);
   const status = getStatusMeta(todo, t.todos.doneFallback);
   const reminderButtonLabel = status.label === "undone" ? undefined : status.reminderLabel;
+  const completedReminderLabel = todo.done && todo.reminderAt ? status.reminderLabel : null;
   const isInteractive = !preview;
 
   return (
@@ -200,13 +201,25 @@ function TodoRowBody({
         </div>
 
         <div className="todo-row-actions">
-          <ReminderPicker
-            reminderAt={todo.reminderAt}
-            displayValue={reminderButtonLabel}
-            className={status.reminderClass}
-            disabled={preview}
-            onChange={(value) => setReminder(todo.id, value)}
-          />
+          {todo.done ? (
+            completedReminderLabel ? (
+              <span
+                className={`inline-flex max-w-full min-w-0 shrink items-center gap-1.5 rounded-full border px-2.5 py-1.5 text-[10.5px] font-semibold shadow-[0_8px_18px_rgba(61,49,34,0.04)] ${status.reminderClass}`}
+                title={completedReminderLabel}
+              >
+                {completedReminderLabel}
+              </span>
+            ) : null
+          ) : (
+            <ReminderPicker
+              todoTitle={todo.text}
+              reminderAt={todo.reminderAt}
+              displayValue={reminderButtonLabel}
+              className={status.reminderClass}
+              disabled={preview}
+              onChange={(value) => setReminder(todo.id, value)}
+            />
+          )}
 
           <motion.button
             type="button"

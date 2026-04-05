@@ -17,6 +17,7 @@ describe("settingsStore", () => {
       transitionStyle: "slide",
       animationSpeed: "slow",
       enableParticles: false,
+      enableReminderSound: false,
     });
 
     const state = useSettingsStore.getState();
@@ -29,6 +30,7 @@ describe("settingsStore", () => {
     expect(state.transitionStyle).toBe("slide");
     expect(state.animationSpeed).toBe("slow");
     expect(state.enableParticles).toBe(false);
+    expect(state.enableReminderSound).toBe(false);
   });
 
   it("updates individual settings fields", () => {
@@ -40,6 +42,7 @@ describe("settingsStore", () => {
     useSettingsStore.getState().setTransitionStyle("page");
     useSettingsStore.getState().setAnimationSpeed("rapid");
     useSettingsStore.getState().setEnableParticles(true);
+    useSettingsStore.getState().setEnableReminderSound(false);
 
     const state = useSettingsStore.getState();
     expect(state.activeTab).toBe("todos");
@@ -51,6 +54,7 @@ describe("settingsStore", () => {
     expect(state.transitionStyle).toBe("page");
     expect(state.animationSpeed).toBe("rapid");
     expect(state.enableParticles).toBe(true);
+    expect(state.enableReminderSound).toBe(false);
   });
 
   it("applies the preferred open section without overwriting the last stored section", () => {
@@ -101,6 +105,7 @@ describe("settingsStore", () => {
       transitionStyle: "slide",
       animationSpeed: "slow",
       enableParticles: false,
+      enableReminderSound: false,
     });
 
     useSettingsStore.getState().restoreDefaults();
@@ -113,6 +118,7 @@ describe("settingsStore", () => {
     expect(state.transitionStyle).toBe("page");
     expect(state.animationSpeed).toBe("mediate");
     expect(state.enableParticles).toBe(true);
+    expect(state.enableReminderSound).toBe(true);
     expect(state.panelPosition).toBeNull();
     expect(state.activeTab).toBe("notes");
     expect(state.lastActiveTab).toBe("notes");

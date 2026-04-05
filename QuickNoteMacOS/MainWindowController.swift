@@ -24,6 +24,7 @@ final class MainWindowController: NSObject, NSWindowDelegate, QuickNoteNativeBri
     }
     private let storage: AppStorage
     private let hotKeyManager: GlobalHotKeyManager
+    private let notificationManager: NotificationManager
     private let panel: FloatingPanel
     private let webViewController: WebViewController
     private let logger = Logger(subsystem: "com.quicknote.app", category: "Window")
@@ -35,9 +36,14 @@ final class MainWindowController: NSObject, NSWindowDelegate, QuickNoteNativeBri
 
     private static let hotKeyDebounceInterval: CFAbsoluteTime = 0.25
 
-    init(storage: AppStorage, hotKeyManager: GlobalHotKeyManager) {
+    private var isPanelPresented: Bool {
+        panel.isVisible
+    }
+
+    init(storage: AppStorage, hotKeyManager: GlobalHotKeyManager, notificationManager: NotificationManager) {
         self.storage = storage
         self.hotKeyManager = hotKeyManager
+        self.notificationManager = notificationManager
 
         panel = FloatingPanel(
             contentRect: NSRect(origin: .zero, size: Self.defaultPanelSize),
@@ -51,6 +57,11 @@ final class MainWindowController: NSObject, NSWindowDelegate, QuickNoteNativeBri
         super.init()
 
         webViewController.bridgeDelegate = self
+        self.notificationManager.onReminderResponse = { [weak self] todoID in
+            Task { @MainActor [weak self] in
+                self?.clearReminder(forTodoIDs: [todoID], todosOverride: nil)
+            }
+        }
 
         panel.delegate = self
         panel.isReleasedWhenClosed = false
@@ -102,7 +113,18 @@ final class MainWindowController: NSObject, NSWindowDelegate, QuickNoteNativeBri
         }
     }
 
+    func syncSavedTodoReminders() {
+        do {
+            let todos = try storage.loadTodos()
+            let settings = try storage.loadSettings()
+            syncTodoReminderNotifications(todos: todos, settings: settings, requestAuthorizationIfNeeded: true)
+        } catch {
+            logger.error("Failed to sync saved todo reminders. error=\(error.localizedDescription, privacy: .public)")
+        }
+    }
+
     func showMainWindow() {
+        NSApp.activate(ignoringOtherApps: true)
         configurePanelForGlobalOverlay()
         restoreDefaultPanelSizeIfNeeded()
         restorePanelPosition(on: activeScreen())
@@ -122,11 +144,7 @@ final class MainWindowController: NSObject, NSWindowDelegate, QuickNoteNativeBri
     }
 
     func toggleMainWindow() {
-        if panel.isVisible {
-            hideMainWindow()
-        } else {
-            showMainWindow()
-        }
+        togglePanel(reason: "manual-toggle")
     }
 
     private func handleHotKeyPressed() {
@@ -138,12 +156,8 @@ final class MainWindowController: NSObject, NSWindowDelegate, QuickNoteNativeBri
         }
 
         lastHotKeyPressTimestamp = now
-
-        if panel.isVisible && panel.occlusionState.contains(.visible) && panel.isKeyWindow {
-            hideMainWindow()
-        } else {
-            showMainWindow()
-        }
+        logToggleState(context: "Global hotkey received")
+        togglePanel(reason: "global-hotkey")
     }
 
     func loadAllData() throws -> [String: Any] {
@@ -156,6 +170,8 @@ final class MainWindowController: NSObject, NSWindowDelegate, QuickNoteNativeBri
 
     func saveTodos(_ todos: Any) throws {
         try storage.saveTodos(todos)
+        let settings = try storage.loadSettings()
+        syncTodoReminderNotifications(todos: todos, settings: settings, requestAuthorizationIfNeeded: true)
     }
 
     func saveSettings(_ settings: Any) throws {
@@ -171,6 +187,44 @@ final class MainWindowController: NSObject, NSWindowDelegate, QuickNoteNativeBri
             : fallbackShortcut
 
         try storage.saveSettings(settingsDictionary)
+        let todos = try storage.loadTodos()
+        let savedSettings = try storage.loadSettings()
+        syncTodoReminderNotifications(todos: todos, settings: savedSettings, requestAuthorizationIfNeeded: false)
+    }
+
+    func openNotificationSettings() throws {
+        let workspace = NSWorkspace.shared
+        let language = (try? storage.currentLanguage()) ?? .english
+        let candidateURLs = [
+            "x-apple.systempreferences:com.apple.Notifications-Settings.extension",
+            "x-apple.systempreferences:com.apple.preference.notifications",
+        ]
+
+        NSApp.activate(ignoringOtherApps: true)
+
+        for candidate in candidateURLs {
+            guard let url = URL(string: candidate) else {
+                continue
+            }
+
+            if workspace.open(url) {
+                return
+            }
+        }
+
+        let systemSettingsURL = URL(fileURLWithPath: "/System/Applications/System Settings.app")
+        if workspace.open(systemSettingsURL) {
+            return
+        }
+
+        throw QuickNoteBridgeError.invalidParameters(language.localization.notificationOpenSettingsFailedMessage)
+    }
+
+    func testReminderNotification(soundEnabled: Bool, language: QuickNoteLanguage) async throws {
+        try await notificationManager.scheduleTestNotification(
+            soundEnabled: soundEnabled,
+            language: language
+        )
     }
 
     func registerHotKey(shortcut: String) throws {
@@ -328,6 +382,28 @@ final class MainWindowController: NSObject, NSWindowDelegate, QuickNoteNativeBri
         )
     }
 
+    private func logToggleState(context: String) {
+        let appKeyWindowIsPanel = NSApp.keyWindow === panel
+        let appMainWindowIsPanel = NSApp.mainWindow === panel
+        let panelOccluded = panel.occlusionState.contains(.visible)
+
+        logger.info(
+            "\(context, privacy: .public). appActive=\(NSApp.isActive) panelVisible=\(self.panel.isVisible) panelPresented=\(self.isPanelPresented) panelKey=\(self.panel.isKeyWindow) panelMain=\(self.panel.isMainWindow) appKeyWindowIsPanel=\(appKeyWindowIsPanel) appMainWindowIsPanel=\(appMainWindowIsPanel) panelOcclusionVisible=\(panelOccluded)"
+        )
+    }
+
+    private func togglePanel(reason: String) {
+        logToggleState(context: "Toggling panel (\(reason)) before action")
+
+        if isPanelPresented {
+            hideMainWindow()
+        } else {
+            showMainWindow()
+        }
+
+        logToggleState(context: "Toggling panel (\(reason)) after action")
+    }
+
     private func configurePanelForGlobalOverlay() {
         panel.level = Self.overlayPanelLevel
         panel.collectionBehavior.formUnion(Self.overlayCollectionBehavior)
@@ -368,6 +444,187 @@ final class MainWindowController: NSObject, NSWindowDelegate, QuickNoteNativeBri
         panel.invalidateShadow()
         updatePanelPresentationForCurrentInteraction()
         logger.debug("\(context, privacy: .public): raised panel above the active Space.")
+    }
+
+    private func syncTodoReminderNotifications(
+        todos: Any,
+        settings: [String: Any],
+        requestAuthorizationIfNeeded: Bool
+    ) {
+        Task { @MainActor [weak self] in
+            guard let self else {
+                return
+            }
+
+            let soundEnabled = (settings["enableReminderSound"] as? Bool) ?? true
+            let language = QuickNoteLanguage(storedValue: settings["language"])
+            let deliveredTodoIDs = await self.notificationManager.consumeDeliveredTodoReminderIdentifiers()
+            let effectiveTodos = self.reconcileReminderState(
+                from: todos,
+                deliveredTodoIDs: Set(deliveredTodoIDs)
+            )
+            let reminders = self.reminderDescriptors(from: effectiveTodos, language: language)
+
+            do {
+                let scheduledReminders = try await self.notificationManager.replaceScheduledTodoReminders(
+                    with: reminders,
+                    soundEnabled: soundEnabled,
+                    language: language,
+                    requestAuthorizationIfNeeded: requestAuthorizationIfNeeded
+                )
+
+                self.logger.info(
+                    "Reminder sync completed. scheduledCount=\(scheduledReminders.count) targetCount=\(reminders.count)"
+                )
+            } catch {
+                self.logger.error("Reminder sync failed. error=\(error.localizedDescription, privacy: .public)")
+            }
+        }
+    }
+
+    private func reminderDescriptors(
+        from todos: Any,
+        language: QuickNoteLanguage
+    ) -> [TodoReminderDescriptor] {
+        guard let rawTodos = todos as? [[String: Any]] else {
+            return []
+        }
+
+        let now = Date()
+
+        return rawTodos.compactMap { todo in
+            let done = (todo["done"] as? Bool) ?? false
+            guard !done else {
+                return nil
+            }
+
+            guard
+                let id = todo["id"] as? String,
+                let reminderAt = todo["reminderAt"] as? Double ?? (todo["reminderAt"] as? Int).map(Double.init)
+            else {
+                return nil
+            }
+
+            let reminderDate = Date(timeIntervalSince1970: reminderAt / 1000)
+            guard reminderDate > now else {
+                return nil
+            }
+
+            let text = (todo["text"] as? String)?
+                .trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+
+            return TodoReminderDescriptor(
+                todoID: id,
+                notificationTitle: text.isEmpty ? language.localization.reminderNotificationTitle : text,
+                notificationBody: text.isEmpty
+                    ? language.localization.reminderNotificationFallbackBody
+                    : language.localization.reminderNotificationTitle,
+                reminderDate: reminderDate
+            )
+        }
+    }
+
+    private func reconcileReminderState(
+        from todos: Any,
+        deliveredTodoIDs: Set<String>
+    ) -> Any {
+        guard let rawTodos = todos as? [[String: Any]] else {
+            return todos
+        }
+
+        let now = Date().timeIntervalSince1970 * 1000
+        var didChange = false
+
+        let updatedTodos = rawTodos.map { todo -> [String: Any] in
+            var nextTodo = todo
+            let isDone = (todo["done"] as? Bool) ?? false
+            let id = todo["id"] as? String
+
+            guard
+                !isDone,
+                let reminderAt = todo["reminderAt"] as? Double ?? (todo["reminderAt"] as? Int).map(Double.init)
+            else {
+                return nextTodo
+            }
+
+            let shouldClear = reminderAt <= now || id.map(deliveredTodoIDs.contains) == true
+            guard shouldClear else {
+                return nextTodo
+            }
+
+            nextTodo["reminderAt"] = NSNull()
+            didChange = true
+            return nextTodo
+        }
+
+        guard didChange else {
+            return rawTodos
+        }
+
+        persistTodosAfterNativeUpdate(updatedTodos)
+        return updatedTodos
+    }
+
+    private func clearReminder(forTodoIDs todoIDs: [String], todosOverride: [[String: Any]]?) {
+        guard !todoIDs.isEmpty else {
+            return
+        }
+
+        let targetIDs = Set(todoIDs)
+
+        do {
+            let storedTodos = try storage.loadTodos() as? [[String: Any]]
+            let rawTodos = todosOverride ?? storedTodos ?? []
+            var didChange = false
+
+            let updatedTodos = rawTodos.map { todo -> [String: Any] in
+                var nextTodo = todo
+
+                guard
+                    let id = todo["id"] as? String,
+                    targetIDs.contains(id),
+                    !(todo["reminderAt"] is NSNull),
+                    todo["reminderAt"] != nil
+                else {
+                    return nextTodo
+                }
+
+                nextTodo["reminderAt"] = NSNull()
+                didChange = true
+                return nextTodo
+            }
+
+            guard didChange else {
+                return
+            }
+
+            persistTodosAfterNativeUpdate(updatedTodos)
+
+            if let settings = try? storage.loadSettings() {
+                for todoID in todoIDs {
+                    notificationManager.cancelReminder(forTodoID: todoID)
+                }
+
+                syncTodoReminderNotifications(
+                    todos: updatedTodos,
+                    settings: settings,
+                    requestAuthorizationIfNeeded: false
+                )
+            }
+        } catch {
+            logger.error(
+                "Failed to clear delivered todo reminders. ids=\(todoIDs.joined(separator: ","), privacy: .public) error=\(error.localizedDescription, privacy: .public)"
+            )
+        }
+    }
+
+    private func persistTodosAfterNativeUpdate(_ todos: [[String: Any]]) {
+        do {
+            try storage.saveTodos(todos)
+            webViewController.emitTodosUpdated(todos)
+        } catch {
+            logger.error("Failed to persist native todo reminder updates. error=\(error.localizedDescription, privacy: .public)")
+        }
     }
 
     private func installOverlayObservers() {

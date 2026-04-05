@@ -1,13 +1,16 @@
 import { AnimatePresence, motion } from "framer-motion";
 import { useEffect, useState, type ReactNode } from "react";
 import { registerHotkey } from "../../hooks/usePlatform";
+import { startWindowDrag } from "../../hooks/useWindowDrag";
 import { captureShortcutFromKeyEvent, getShortcutDisplayLabel } from "../../lib/hotkeyCapture";
 import { useI18n } from "../../lib/i18n";
 import { DEFAULT_SETTINGS } from "../../lib/models";
+import { getQuickNoteBridge, isNativeQuickNoteHost } from "../../lib/nativeBridge";
 import { useSettingsStore } from "../../store/settingsStore";
 import {
   CircleCheckBigIcon,
   ChineseLanguageIcon,
+  Clock3Icon,
   EnglishLanguageIcon,
   FastForwardIcon,
   GaugeIcon,
@@ -138,20 +141,25 @@ export function SettingsPanel({ onClose }: SettingsPanelProps) {
   const transitionStyle = useSettingsStore((state) => state.transitionStyle);
   const animationSpeed = useSettingsStore((state) => state.animationSpeed);
   const enableParticles = useSettingsStore((state) => state.enableParticles);
+  const enableReminderSound = useSettingsStore((state) => state.enableReminderSound);
   const setHotkey = useSettingsStore((state) => state.setHotkey);
   const setLanguage = useSettingsStore((state) => state.setLanguage);
   const setDefaultOpenSection = useSettingsStore((state) => state.setDefaultOpenSection);
   const setTransitionStyle = useSettingsStore((state) => state.setTransitionStyle);
   const setAnimationSpeed = useSettingsStore((state) => state.setAnimationSpeed);
   const setEnableParticles = useSettingsStore((state) => state.setEnableParticles);
+  const setEnableReminderSound = useSettingsStore((state) => state.setEnableReminderSound);
   const restoreDefaults = useSettingsStore((state) => state.restoreDefaults);
   const [capturedShortcut, setCapturedShortcut] = useState<string | null>(null);
   const [hotkeyDialogOpen, setHotkeyDialogOpen] = useState(false);
   const [hotkeyDialogFeedback, setHotkeyDialogFeedback] = useState<HotkeyFeedback | null>(null);
   const [hotkeyFeedback, setHotkeyFeedback] = useState<HotkeyFeedback | null>(null);
   const [defaultsFeedback, setDefaultsFeedback] = useState<HotkeyFeedback | null>(null);
+  const [notificationFeedback, setNotificationFeedback] = useState<HotkeyFeedback | null>(null);
   const [isApplyingHotkey, setIsApplyingHotkey] = useState(false);
   const [isRestoringDefaults, setIsRestoringDefaults] = useState(false);
+  const [isOpeningNotificationSettings, setIsOpeningNotificationSettings] = useState(false);
+  const [isTestingNotification, setIsTestingNotification] = useState(false);
 
   useEffect(() => {
     if (!hotkeyDialogOpen || typeof window === "undefined") {
@@ -292,6 +300,70 @@ export function SettingsPanel({ onClose }: SettingsPanelProps) {
       });
     } finally {
       setIsRestoringDefaults(false);
+    }
+  };
+
+  const handleTestReminderNotification = async () => {
+    if (isTestingNotification) {
+      return;
+    }
+
+    if (!isNativeQuickNoteHost()) {
+      setNotificationFeedback({
+        text: t.settings.reminderTestUnsupported,
+        tone: "info",
+      });
+      return;
+    }
+
+    setIsTestingNotification(true);
+    setNotificationFeedback(null);
+
+    try {
+      await getQuickNoteBridge().testReminderNotification({
+        soundEnabled: enableReminderSound,
+        language,
+      });
+      setNotificationFeedback({
+        text: enableReminderSound ? t.settings.reminderTestSoundSuccess : t.settings.reminderTestMutedSuccess,
+        tone: "success",
+      });
+    } catch (error) {
+      const message = error instanceof Error ? error.message : t.settings.reminderTestFailed;
+      setNotificationFeedback({
+        text: message,
+        tone: "error",
+      });
+    } finally {
+      setIsTestingNotification(false);
+    }
+  };
+
+  const handleOpenNotificationSettings = async () => {
+    if (isOpeningNotificationSettings) {
+      return;
+    }
+
+    if (!isNativeQuickNoteHost()) {
+      setNotificationFeedback({
+        text: t.settings.notificationOpenSettingsUnsupported,
+        tone: "info",
+      });
+      return;
+    }
+
+    setIsOpeningNotificationSettings(true);
+
+    try {
+      await getQuickNoteBridge().openNotificationSettings();
+    } catch (error) {
+      const message = error instanceof Error ? error.message : t.settings.notificationOpenSettingsFailed;
+      setNotificationFeedback({
+        text: message,
+        tone: "error",
+      });
+    } finally {
+      setIsOpeningNotificationSettings(false);
     }
   };
 
@@ -533,6 +605,80 @@ export function SettingsPanel({ onClose }: SettingsPanelProps) {
                   <ToggleButton enabled={enableParticles} onClick={() => setEnableParticles(!enableParticles)} />
                 </div>
               </div>
+
+              <div className="rounded-[20px] border border-[rgba(213,198,180,0.88)] bg-white/84 px-4 py-3">
+                <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3">
+                  <div className="min-w-0">
+                    <p className="inline-flex items-center gap-2 text-[13px] font-semibold text-[var(--brown-strong)]">
+                      <Clock3Icon size={14} />
+                      {t.settings.reminderSoundTitle}
+                    </p>
+                    <p className="mt-1 text-[12px] leading-6 text-[var(--muted)]">
+                      {t.settings.reminderSoundBody}
+                    </p>
+                  </div>
+                  <div className="flex justify-end">
+                    <ToggleButton
+                      enabled={enableReminderSound}
+                      onClick={() => setEnableReminderSound(!enableReminderSound)}
+                    />
+                  </div>
+                </div>
+                <div className="mt-3 border-t border-[rgba(213,198,180,0.72)] pt-3">
+                  <div className="flex flex-wrap items-center justify-between gap-3">
+                    <div className="min-w-0">
+                      <p className="text-[12px] font-semibold text-[var(--brown-strong)]">
+                        {t.settings.reminderTestTitle}
+                      </p>
+                      <p className="mt-1 text-[12px] leading-6 text-[var(--muted)]">
+                        {t.settings.reminderTestBody}
+                      </p>
+                    </div>
+                    <motion.button
+                      type="button"
+                      className="paper-button inline-flex shrink-0 items-center justify-center rounded-[14px] px-3 py-2 text-[12px] font-semibold text-[var(--dark-text)]"
+                      whileHover={{ y: -2, scale: 1.02 }}
+                      whileTap={{ scale: 0.985 }}
+                      onClick={handleTestReminderNotification}
+                    >
+                      {isTestingNotification ? `${t.settings.reminderTestButton}...` : t.settings.reminderTestButton}
+                    </motion.button>
+                  </div>
+                  <div className="mt-3 rounded-[18px] border border-[rgba(213,198,180,0.72)] bg-[rgba(255,252,248,0.78)] p-3">
+                    <div className="flex flex-wrap items-center justify-between gap-3">
+                      <div className="min-w-0">
+                        <p className="text-[12px] font-semibold text-[var(--brown-strong)]">
+                          {t.settings.notificationPermissionTitle}
+                        </p>
+                        <p className="mt-1 text-[12px] leading-6 text-[var(--muted)]">
+                          {t.settings.notificationPermissionBody}
+                        </p>
+                      </div>
+                      <motion.button
+                        type="button"
+                        className="paper-button inline-flex shrink-0 items-center justify-center rounded-[14px] px-3 py-2 text-[12px] font-semibold text-[var(--dark-text)]"
+                        whileHover={{ y: -2, scale: 1.02 }}
+                        whileTap={{ scale: 0.985 }}
+                        onClick={handleOpenNotificationSettings}
+                      >
+                        {isOpeningNotificationSettings
+                          ? `${t.settings.notificationOpenSettingsButton}...`
+                          : t.settings.notificationOpenSettingsButton}
+                      </motion.button>
+                    </div>
+                    <ol className="mt-3 space-y-1.5 pl-4 text-[11px] leading-5 text-[var(--muted)]">
+                      <li>{t.settings.notificationPermissionStepOne}</li>
+                      <li>{t.settings.notificationPermissionStepTwo}</li>
+                      <li>{t.settings.notificationPermissionStepThree}</li>
+                    </ol>
+                  </div>
+                  {notificationFeedback ? (
+                    <p className={`mt-3 text-[11px] font-medium leading-5 ${feedbackClassName(notificationFeedback.tone)}`}>
+                      {notificationFeedback.text}
+                    </p>
+                  ) : null}
+                </div>
+              </div>
             </div>
           </SettingsCard>
 
@@ -603,12 +749,12 @@ export function SettingsPanel({ onClose }: SettingsPanelProps) {
               role="dialog"
               aria-modal="true"
               aria-label={t.settings.dialogTitle}
-              data-no-window-drag="true"
               className="paper-panel w-full max-w-[420px] rounded-[28px] p-5 shadow-[0_30px_60px_rgba(30,25,21,0.2)]"
               initial={{ opacity: 0, scale: 0.96, y: 16 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.98, y: 10 }}
               transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
+              onPointerDownCapture={startWindowDrag}
               onClick={(event) => event.stopPropagation()}
             >
               <div className="mb-4 flex items-start justify-between gap-3">

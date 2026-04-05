@@ -26,6 +26,14 @@ describe("todosStore", () => {
     expect(useTodosStore.getState().todos[0]?.reminderAt).toBe(reminderAt);
   });
 
+  it("rejects reminder timestamps earlier than now", () => {
+    const created = useTodosStore.getState().addTodo("Past reminder");
+    const reminderAt = Date.now() - 60_000;
+
+    useTodosStore.getState().setReminder(created!.id, reminderAt);
+    expect(useTodosStore.getState().todos[0]?.reminderAt).toBeNull();
+  });
+
   it("keeps completed todos at the bottom and restored todos at the open tail", () => {
     useTodosStore.getState().initialize([]);
     const first = useTodosStore.getState().addTodo("First open");

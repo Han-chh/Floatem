@@ -15,7 +15,7 @@ import {
   setTextCompositionActive,
 } from "./hooks/usePlatform";
 import { useI18n } from "./lib/i18n";
-import { subscribeToPanelPosition, subscribeToPanelWillOpen } from "./lib/nativeBridge";
+import { subscribeToPanelPosition, subscribeToPanelWillOpen, subscribeToTodosUpdated } from "./lib/nativeBridge";
 import type { TabId } from "./lib/models";
 import { getTabMotionConfig } from "./lib/transitionMotion";
 import { useNotesStore } from "./store/notesStore";
@@ -72,6 +72,14 @@ function QuickNoteApp() {
       startTransition(() => {
         setShowSettings(false);
         useSettingsStore.getState().applyPreferredOpenSection();
+      });
+    });
+  }, []);
+
+  useEffect(() => {
+    return subscribeToTodosUpdated((todos) => {
+      startTransition(() => {
+        useTodosStore.getState().initialize(todos);
       });
     });
   }, []);

@@ -4,11 +4,13 @@ import AppKit
 final class AppDelegate: NSObject, NSApplicationDelegate {
     private let storage = AppStorage()
     private let hotKeyManager = GlobalHotKeyManager()
+    private let notificationManager = NotificationManager()
     private var currentLanguage: QuickNoteLanguage = .english
 
     private lazy var mainWindowController = MainWindowController(
         storage: storage,
-        hotKeyManager: hotKeyManager
+        hotKeyManager: hotKeyManager,
+        notificationManager: notificationManager
     )
 
     private weak var statusToggleItem: NSMenuItem?
@@ -45,6 +47,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     func applicationDidFinishLaunching(_ notification: Notification) {
         NSApp.setActivationPolicy(.accessory)
         currentLanguage = (try? storage.currentLanguage()) ?? .english
+        notificationManager.configure()
+        notificationManager.logCurrentAuthorizationStatus()
 
         configureMainMenu()
         configureStatusItem()
@@ -53,6 +57,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
         DispatchQueue.main.async { [weak self] in
             self?.mainWindowController.installSavedHotKey()
+            self?.mainWindowController.syncSavedTodoReminders()
             self?.mainWindowController.showMainWindow()
         }
     }
@@ -187,12 +192,14 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             object: nil,
             queue: .main
         ) { [weak self] notification in
-            guard let self else {
-                return
-            }
+            Task { @MainActor [weak self] in
+                guard let self else {
+                    return
+                }
 
-            self.currentLanguage = QuickNoteLanguage(storedValue: notification.userInfo?["language"])
-            self.updateLocalizedMenuTitles()
+                self.currentLanguage = QuickNoteLanguage(storedValue: notification.userInfo?["language"])
+                self.updateLocalizedMenuTitles()
+            }
         }
     }
 

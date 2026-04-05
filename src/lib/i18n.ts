@@ -87,6 +87,23 @@ type MessageCatalog = {
     particleFeedbackBody: string;
     particleFeedbackTitle: string;
     preciseLanguageApply: string;
+    notificationPermissionStepOne: string;
+    notificationPermissionStepThree: string;
+    notificationPermissionStepTwo: string;
+    notificationPermissionTitle: string;
+    notificationPermissionBody: string;
+    notificationOpenSettingsButton: string;
+    notificationOpenSettingsFailed: string;
+    notificationOpenSettingsUnsupported: string;
+    reminderTestButton: string;
+    reminderTestBody: string;
+    reminderTestFailed: string;
+    reminderTestMutedSuccess: string;
+    reminderTestSoundSuccess: string;
+    reminderTestTitle: string;
+    reminderTestUnsupported: string;
+    reminderSoundBody: string;
+    reminderSoundTitle: string;
     restoreDefaults: string;
     restoreDefaultsBody: string;
     restoreDefaultsFailed: (shortcut: string) => string;
@@ -117,33 +134,48 @@ type MessageCatalog = {
   };
   todos: {
     add: string;
+    calendarHint: string;
     changeReminder: string;
     clear: string;
     completeTask: string;
+    currentReminder: string;
     date: string;
     delete: string;
+    dialogSubtitle: string;
+    dialogTitle: string;
     done: string;
     doneCount: (count: number) => string;
     doneFallback: string;
     empty: string;
     hour: string;
     minute: string;
+    month: string;
+    nextMonth: string;
+    notScheduled: string;
     pickDateTime: string;
     precise: string;
+    previousMonth: string;
     quickAdd: string;
     quickAddPlaceholder: string;
+    quickShortcutsTitle: string;
     reminder: string;
+    reminderPastError: string;
     reorder: string;
     restoreTask: string;
     save: string;
+    scheduledFor: string;
     setReminder: string;
+    specificTimeTitle: string;
     statusDone: string;
     statusUndone: string;
     submitShortcut: string;
+    tomorrow: string;
     tomorrowMorning: string;
+    tomorrowTimePrompt: string;
     tonight: string;
     undoneCount: (count: number) => string;
     inOneHour: string;
+    year: string;
   };
 };
 
@@ -234,8 +266,25 @@ const messages: Record<AppLanguage, MessageCatalog> = {
       particleFeedbackBody: "Show burst effects when notes and todos are added, completed, or removed.",
       particleFeedbackTitle: "Particle feedback",
       preciseLanguageApply: "Apply language",
+      notificationPermissionStepOne: "Open the QuickNote item in the Notifications list.",
+      notificationPermissionStepThree: "Turn on sounds and choose a visible alert style.",
+      notificationPermissionStepTwo: "Turn on Allow notifications.",
+      notificationPermissionTitle: "Permission setup",
+      notificationPermissionBody: "If test delivery still fails, update QuickNote in Notifications:",
+      notificationOpenSettingsButton: "Open System Settings",
+      notificationOpenSettingsFailed: "QuickNote couldn't open System Settings.",
+      notificationOpenSettingsUnsupported: "This preview cannot open macOS System Settings.",
+      reminderTestButton: "Send test notification",
+      reminderTestBody: "Trigger a local macOS notification in about two seconds so you can verify alerts and sound.",
+      reminderTestFailed: "QuickNote could not schedule the test notification.",
+      reminderTestMutedSuccess: "Test notification scheduled. It will arrive silently in about two seconds.",
+      reminderTestSoundSuccess: "Test notification scheduled. It should arrive with sound in about two seconds.",
+      reminderTestTitle: "Test notification",
+      reminderTestUnsupported: "This preview cannot send native macOS notifications.",
+      reminderSoundBody: "Play the default notification sound when a todo reminder is delivered.",
+      reminderSoundTitle: "Reminder sound",
       restoreDefaults: "Restore defaults",
-      restoreDefaultsBody: "Reset language, shortcut, default section, transition style, switch speed, particle feedback, and saved panel position.",
+      restoreDefaultsBody: "Reset language, shortcut, default section, transition style, switch speed, particle feedback, reminder sound, and saved panel position.",
       restoreDefaultsFailed: (shortcut) => `Defaults were not restored. Keeping ${shortcut}.`,
       restoreDefaultsSuccess: "Default settings restored.",
       shortcutApply: "Apply shortcut",
@@ -264,11 +313,15 @@ const messages: Record<AppLanguage, MessageCatalog> = {
     },
     todos: {
       add: "Add task",
+      calendarHint: "Use the calendar to choose the day, then fine-tune the time below.",
       changeReminder: "Change reminder",
       clear: "Clear",
       completeTask: "Complete task",
+      currentReminder: "Current reminder",
       date: "Date",
       delete: "Delete todo",
+      dialogSubtitle: "Choose a date and time for this todo reminder.",
+      dialogTitle: "Set todo reminder",
       done: "done",
       doneCount: (count) => `${count} done`,
       doneFallback: "Done",
@@ -276,21 +329,32 @@ const messages: Record<AppLanguage, MessageCatalog> = {
       hour: "Hour",
       inOneHour: "In 1h",
       minute: "Minute",
+      month: "Month",
+      nextMonth: "Next month",
+      notScheduled: "Not scheduled",
       pickDateTime: "Pick date and time",
       precise: "precise",
+      previousMonth: "Previous month",
       quickAdd: "Quick add",
       quickAddPlaceholder: "Add a task",
+      quickShortcutsTitle: "Quick shortcuts",
       reminder: "Reminder",
+      reminderPastError: "Reminder time must be later than the current time.",
       reorder: "Reorder todo",
       restoreTask: "Restore task",
       save: "Save",
+      scheduledFor: "Scheduled for",
       setReminder: "Set reminder",
+      specificTimeTitle: "Specific time",
       statusDone: "done",
       statusUndone: "undone",
       submitShortcut: "Cmd+Enter",
+      tomorrow: "Tomorrow",
       tomorrowMorning: "Tomorrow 09:00",
+      tomorrowTimePrompt: "Tomorrow selected. Choose the hour and minute below.",
       tonight: "Tonight",
       undoneCount: (count) => `${count} undone`,
+      year: "Year",
     },
   },
   "zh-CN": {
@@ -379,8 +443,25 @@ const messages: Record<AppLanguage, MessageCatalog> = {
       particleFeedbackBody: "在新增、完成或删除笔记和待办时显示粒子反馈效果。",
       particleFeedbackTitle: "粒子反馈",
       preciseLanguageApply: "应用语言",
+      notificationPermissionStepOne: "在通知列表里找到并点开 QuickNote。",
+      notificationPermissionStepThree: "打开声音，并选择一个可见的提醒样式。",
+      notificationPermissionStepTwo: "打开“允许通知”。",
+      notificationPermissionTitle: "权限设置",
+      notificationPermissionBody: "如果测试通知仍然失败，请在通知设置里这样调整 QuickNote：",
+      notificationOpenSettingsButton: "打开系统设置",
+      notificationOpenSettingsFailed: "QuickNote 无法打开系统设置。",
+      notificationOpenSettingsUnsupported: "当前预览环境无法打开 macOS 系统设置。",
+      reminderTestButton: "发送测试通知",
+      reminderTestBody: "约 2 秒后触发一条本机 macOS 通知，用来确认提醒横幅和声音是否正常。",
+      reminderTestFailed: "QuickNote 无法安排这条测试通知。",
+      reminderTestMutedSuccess: "测试通知已加入队列，约 2 秒后会以静音方式送达。",
+      reminderTestSoundSuccess: "测试通知已加入队列，约 2 秒后应该会带声音送达。",
+      reminderTestTitle: "测试通知",
+      reminderTestUnsupported: "当前预览环境无法发送原生 macOS 通知。",
+      reminderSoundBody: "待办提醒送达时播放默认通知声音。",
+      reminderSoundTitle: "提醒声音",
       restoreDefaults: "恢复默认设置",
-      restoreDefaultsBody: "重置语言、快捷键、默认分区、切换样式、切换速度、粒子反馈，以及保存的窗口位置。",
+      restoreDefaultsBody: "重置语言、快捷键、默认分区、切换样式、切换速度、粒子反馈、提醒声音，以及保存的窗口位置。",
       restoreDefaultsFailed: (shortcut) => `默认设置未恢复，当前仍保留 ${shortcut}。`,
       restoreDefaultsSuccess: "默认设置已恢复。",
       shortcutApply: "应用快捷键",
@@ -409,11 +490,15 @@ const messages: Record<AppLanguage, MessageCatalog> = {
     },
     todos: {
       add: "添加任务",
+      calendarHint: "先在日历里选日期，再在下方微调时间。",
       changeReminder: "修改提醒",
       clear: "清除",
       completeTask: "完成任务",
+      currentReminder: "当前提醒",
       date: "日期",
       delete: "删除待办",
+      dialogSubtitle: "为这条待办选择提醒日期和时间。",
+      dialogTitle: "设置待办提醒",
       done: "已完成",
       doneCount: (count) => `${count} 项已完成`,
       doneFallback: "已完成",
@@ -421,21 +506,32 @@ const messages: Record<AppLanguage, MessageCatalog> = {
       hour: "小时",
       inOneHour: "1小时后",
       minute: "分钟",
+      month: "月份",
+      nextMonth: "下个月",
+      notScheduled: "未设置",
       pickDateTime: "选择日期和时间",
       precise: "精确",
+      previousMonth: "上个月",
       quickAdd: "快速添加",
       quickAddPlaceholder: "添加一项任务",
+      quickShortcutsTitle: "快捷选择",
       reminder: "提醒",
+      reminderPastError: "提醒时间必须晚于当前时间。",
       reorder: "重新排序待办",
       restoreTask: "恢复任务",
       save: "保存",
+      scheduledFor: "计划提醒时间",
       setReminder: "设置提醒",
+      specificTimeTitle: "具体时间",
       statusDone: "已完成",
       statusUndone: "未完成",
       submitShortcut: "Cmd+Enter",
+      tomorrow: "明天",
       tomorrowMorning: "明天 09:00",
+      tomorrowTimePrompt: "已选择明天，请继续选择具体时分。",
       tonight: "今晚",
       undoneCount: (count) => `${count} 项未完成`,
+      year: "年份",
     },
   },
 };

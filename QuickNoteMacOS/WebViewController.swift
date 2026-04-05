@@ -6,6 +6,7 @@ import WebKit
 final class WebViewController: NSViewController, WKNavigationDelegate {
     private static let bridgeName = "quickNoteNative"
     private static let panelWillOpenEventName = "quicknote:panel-will-open"
+    private static let todosUpdatedEventName = "quicknote:todos-updated"
     private static let frontendBootstrapProbeScript = """
     (() => {
       const root = document.getElementById("root");
@@ -133,6 +134,16 @@ final class WebViewController: NSViewController, WKNavigationDelegate {
         )
     }
 
+    func emitTodosUpdated(_ todos: Any) {
+        guard let json = jsonString(for: todos) else {
+            return
+        }
+
+        webView.evaluateJavaScript(
+            "window.dispatchEvent(new CustomEvent('\(Self.todosUpdatedEventName)', { detail: \(json) }));"
+        )
+    }
+
     private func loadFrontend() {
         guard let indexURL = Bundle.main.url(forResource: "index", withExtension: "html", subdirectory: "web") else {
             logger.error("Missing bundled frontend assets in QuickNote.app/Contents/Resources/web.")
@@ -240,6 +251,26 @@ final class WebViewController: NSViewController, WKNavigationDelegate {
             return
         }
 
+        if method == "testReminderNotification" {
+            let soundEnabled = params["soundEnabled"] as? Bool ?? true
+            let language = QuickNoteLanguage(storedValue: params["language"])
+
+            Task { @MainActor [weak self] in
+                guard let self else {
+                    return
+                }
+
+                do {
+                    try await self.bridgeDelegate?.testReminderNotification(soundEnabled: soundEnabled, language: language)
+                    self.sendResponse(id: id, ok: true, payload: NSNull())
+                } catch {
+                    let errorMessage = (error as? LocalizedError)?.errorDescription ?? error.localizedDescription
+                    self.sendResponse(id: id, ok: false, payload: errorMessage)
+                }
+            }
+            return
+        }
+
         do {
             let result: Any
 
@@ -263,6 +294,9 @@ final class WebViewController: NSViewController, WKNavigationDelegate {
                     throw QuickNoteBridgeError.invalidParameters("QuickNote expected settings data from JavaScript.")
                 }
                 try bridgeDelegate?.saveSettings(settings)
+                result = NSNull()
+            case "openNotificationSettings":
+                try bridgeDelegate?.openNotificationSettings()
                 result = NSNull()
             case "registerHotkey":
                 guard let shortcut = params["shortcut"] as? String else {
@@ -447,11 +481,13 @@ final class WebViewController: NSViewController, WKNavigationDelegate {
             object: nil,
             queue: .main
         ) { [weak self] notification in
-            guard let self else {
-                return
-            }
+            Task { @MainActor [weak self] in
+                guard let self else {
+                    return
+                }
 
-            self.currentLanguage = QuickNoteLanguage(storedValue: notification.userInfo?["language"])
+                self.currentLanguage = QuickNoteLanguage(storedValue: notification.userInfo?["language"])
+            }
         }
     }
 
@@ -498,6 +534,12 @@ final class WebViewController: NSViewController, WKNavigationDelegate {
         },
         saveSettings(settings) {
           return send("saveSettings", { settings });
+        },
+        openNotificationSettings() {
+          return send("openNotificationSettings");
+        },
+        testReminderNotification(options = {}) {
+          return send("testReminderNotification", options);
         },
         registerHotkey(shortcut) {
           return send("registerHotkey", { shortcut });
