@@ -1,5 +1,5 @@
-import type { AppLanguage, AppSettings, LoadAllResult, NoteCard, PanelPosition, TodoItem } from "./models";
-import { DEFAULT_SETTINGS, normalizeAppSettings } from "./models";
+import type { AppLanguage, AppSettings, NoteCard, NotesDocument, PanelPosition, RawLoadAllResult, TodoItem } from "./models";
+import { DEFAULT_SETTINGS, normalizeAppSettings, normalizeNotesDocument } from "./models";
 
 const NOTES_STORAGE_KEY = "quicknote.notes";
 const TODOS_STORAGE_KEY = "quicknote.todos";
@@ -23,8 +23,8 @@ export type TextColorPanelCloseDetail = {
 
 export type QuickNoteNativeBridge = {
   platform: "macos-appkit-wkwebview";
-  loadAllData: () => Promise<LoadAllResult>;
-  saveNotes: (cards: NoteCard[]) => Promise<void>;
+  loadAllData: () => Promise<RawLoadAllResult>;
+  saveNotes: (notes: NotesDocument) => Promise<void>;
   saveTodos: (todos: TodoItem[]) => Promise<void>;
   saveSettings: (settings: AppSettings) => Promise<void>;
   openNotificationSettings: () => Promise<void>;
@@ -85,7 +85,7 @@ const browserBridge: QuickNoteNativeBridge = {
     const settings = readStoredValue<Partial<AppSettings>>(SETTINGS_STORAGE_KEY, {});
 
     return {
-      notes: readStoredValue<NoteCard[]>(NOTES_STORAGE_KEY, []),
+      notes: normalizeNotesDocument(readStoredValue<NoteCard[] | NotesDocument>(NOTES_STORAGE_KEY, [])),
       todos: readStoredValue<TodoItem[]>(TODOS_STORAGE_KEY, []),
       settings: normalizeAppSettings({
         ...DEFAULT_SETTINGS,
@@ -93,8 +93,8 @@ const browserBridge: QuickNoteNativeBridge = {
       }),
     };
   },
-  async saveNotes(cards) {
-    writeStoredValue(NOTES_STORAGE_KEY, cards);
+  async saveNotes(notes) {
+    writeStoredValue(NOTES_STORAGE_KEY, notes);
   },
   async saveTodos(todos) {
     writeStoredValue(TODOS_STORAGE_KEY, todos);

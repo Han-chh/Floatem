@@ -14,17 +14,16 @@ async function boot(page: Page) {
   });
 }
 
-test("notes toolbar supports formatting, color, copy, paste, clear, and select all", async ({ page }) => {
+test("notes toolbar supports formatting, copy, paste, clear, and select all", async ({ page }) => {
   await boot(page);
 
   await page.getByRole("button", { name: "Add note" }).click();
 
   const firstNote = page.getByTestId("note-card").first();
-  const editor = page.getByRole("textbox").nth(1);
+  const editor = firstNote.getByRole("textbox").nth(1);
   const boldButton = firstNote.getByRole("button", { name: "Bold" });
   const italicButton = firstNote.getByRole("button", { name: "Italic" });
   const underlineButton = firstNote.getByRole("button", { name: "Underline" });
-  const colorButton = firstNote.getByRole("button", { name: "Color", exact: true });
   const copyButton = firstNote.getByRole("button", { name: "Copy" });
   const pasteButton = firstNote.getByRole("button", { name: "Paste" });
   const clearButton = firstNote.getByRole("button", { name: "Clear format" });
@@ -42,6 +41,7 @@ test("notes toolbar supports formatting, color, copy, paste, clear, and select a
 
   await boldButton.click();
   await expect(boldButton).toHaveAttribute("aria-pressed", "true");
+  await editor.click();
   await page.keyboard.type("Bold");
   await boldButton.click();
   await expect(boldButton).toHaveAttribute("aria-pressed", "false");
@@ -59,19 +59,10 @@ test("notes toolbar supports formatting, color, copy, paste, clear, and select a
   await page.keyboard.press("Meta+U");
   await expect(underlineButton).toHaveAttribute("aria-pressed", "false");
 
-  await page.keyboard.press("Meta+A");
-  await colorButton.click();
-  await page.getByRole("button", { name: "Use #2F6BFF for note" }).click();
-
-  await expect
-    .poll(() =>
-      editor.locator("strong").evaluate((element) => getComputedStyle(element.parentElement!).color),
-    )
-    .toBe("rgb(47, 107, 255)");
-
   await copyButton.click();
   await expect.poll(() => page.evaluate(() => navigator.clipboard.readText())).toBe("Bold plain Italic Underline");
 
+  await page.keyboard.press("Meta+A");
   await clearButton.click();
   await expect(editor).toContainText("Bold plain Italic Underline");
   await expect(editor.locator("strong")).toHaveCount(0);

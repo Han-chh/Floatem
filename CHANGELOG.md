@@ -2,6 +2,17 @@
 
 All notable repository changes are recorded here.
 
+## v0.3.0 - 2026-04-06
+
+Purpose:
+- Replace note-level color picking with reusable group management so notes can be organized, labeled, and filtered from a dedicated control surface.
+
+Contents:
+- Upgrade notes persistence from a flat card array to a backward-compatible `cards + groups` document, add note-group CRUD in the store, and keep ungrouped notes on a neutral gray accent by default.
+- Add a dedicated groups panel on the Notes page for creating, editing, deleting, recoloring, and checkbox-filtering groups, while reusing the same expanded color-picker module used by the rich-text toolbar.
+- Convert the old note color action into a group selector, show the active group name where `Focus card` used to appear, and keep compact-window behavior workable by moving the groups panel below the stack on short heights.
+- Refresh unit, integration, and layout coverage for the new grouping flow and bump the repository version to `0.3.0`.
+
 ## v0.2.4 - 2026-04-05
 
 Purpose:

@@ -11,15 +11,31 @@ export type PanelPosition = {
   y: number;
 };
 
+export type NoteGroup = {
+  id: string;
+  name: string;
+  color: string;
+  createdAt: number;
+  updatedAt: number;
+};
+
 export type NoteCard = {
   id: string;
   title: string;
   dotColor: string;
+  groupId: string | null;
   collapsed: boolean;
   content: Descendant[];
   createdAt: number;
   updatedAt: number;
 };
+
+export type NotesDocument = {
+  cards: NoteCard[];
+  groups: NoteGroup[];
+};
+
+export type StoredNotesData = NoteCard[] | NotesDocument;
 
 export type TodoItem = {
   id: string;
@@ -42,8 +58,14 @@ export type AppSettings = {
   enableReminderSound: boolean;
 };
 
+export type RawLoadAllResult = {
+  notes: StoredNotesData;
+  todos: TodoItem[];
+  settings: AppSettings;
+};
+
 export type LoadAllResult = {
-  notes: NoteCard[];
+  notes: NotesDocument;
   todos: TodoItem[];
   settings: AppSettings;
 };
@@ -56,6 +78,9 @@ export const NOTE_DOT_COLORS = [
   "#7B5CFA",
   "#3F9CA8",
 ] as const;
+
+export const DEFAULT_NOTE_GROUP_COLOR = NOTE_DOT_COLORS[0];
+export const DEFAULT_UNGROUPED_NOTE_COLOR = "#C8C0B5";
 
 export const DEFAULT_NOTE_CONTENT: Descendant[] = [
   {
@@ -76,6 +101,14 @@ export const DEFAULT_SETTINGS: AppSettings = {
   enableParticles: true,
   enableReminderSound: true,
 };
+
+function isNonEmptyString(value: unknown): value is string {
+  return typeof value === "string" && value.trim().length > 0;
+}
+
+function normalizeColor(value: unknown, fallback: string) {
+  return isNonEmptyString(value) ? value.trim() : fallback;
+}
 
 export function normalizeLanguage(value: unknown): AppLanguage {
   return value === "zh-CN" ? "zh-CN" : "en";
@@ -162,18 +195,39 @@ function createId(prefix: string) {
   return `${prefix}-${uuid ?? `${Date.now()}-${Math.round(Math.random() * 1e6)}`}`;
 }
 
-export function createNoteCard(overrides: Partial<NoteCard> = {}): NoteCard {
+export function createEmptyNotesDocument(): NotesDocument {
+  return {
+    cards: [],
+    groups: [],
+  };
+}
+
+export function createNoteGroup(overrides: Partial<NoteGroup> = {}): NoteGroup {
   const now = Date.now();
+  const createdAt = typeof overrides.createdAt === "number" ? overrides.createdAt : now;
 
   return {
-    id: createId("note"),
-    title: "",
-    dotColor: NOTE_DOT_COLORS[0],
-    collapsed: false,
-    content: DEFAULT_NOTE_CONTENT,
-    createdAt: now,
-    updatedAt: now,
-    ...overrides,
+    id: isNonEmptyString(overrides.id) ? overrides.id.trim() : createId("group"),
+    name: isNonEmptyString(overrides.name) ? overrides.name.trim() : "New group",
+    color: normalizeColor(overrides.color, DEFAULT_NOTE_GROUP_COLOR),
+    createdAt,
+    updatedAt: typeof overrides.updatedAt === "number" ? overrides.updatedAt : createdAt,
+  };
+}
+
+export function createNoteCard(overrides: Partial<NoteCard> = {}): NoteCard {
+  const now = Date.now();
+  const createdAt = typeof overrides.createdAt === "number" ? overrides.createdAt : now;
+
+  return {
+    id: isNonEmptyString(overrides.id) ? overrides.id.trim() : createId("note"),
+    title: typeof overrides.title === "string" ? overrides.title : "",
+    dotColor: normalizeColor(overrides.dotColor, DEFAULT_UNGROUPED_NOTE_COLOR),
+    groupId: isNonEmptyString(overrides.groupId) ? overrides.groupId.trim() : null,
+    collapsed: typeof overrides.collapsed === "boolean" ? overrides.collapsed : false,
+    content: Array.isArray(overrides.content) ? overrides.content : DEFAULT_NOTE_CONTENT,
+    createdAt,
+    updatedAt: typeof overrides.updatedAt === "number" ? overrides.updatedAt : createdAt,
   };
 }
 
@@ -186,4 +240,73 @@ export function createTodoItem(text: string, overrides: Partial<TodoItem> = {}):
     createdAt: Date.now(),
     ...overrides,
   };
+}
+
+export function normalizeNoteGroup(value: unknown, index: number): NoteGroup {
+  const candidate = value && typeof value === "object" ? (value as Partial<NoteGroup>) : {};
+  const fallbackColor = NOTE_DOT_COLORS[index % NOTE_DOT_COLORS.length] ?? DEFAULT_NOTE_GROUP_COLOR;
+  const now = Date.now();
+  const createdAt = typeof candidate.createdAt === "number" ? candidate.createdAt : now;
+
+  return {
+    id: isNonEmptyString(candidate.id) ? candidate.id.trim() : createId("group"),
+    name: isNonEmptyString(candidate.name) ? candidate.name.trim() : `Group ${index + 1}`,
+    color: normalizeColor(candidate.color, fallbackColor),
+    createdAt,
+    updatedAt: typeof candidate.updatedAt === "number" ? candidate.updatedAt : createdAt,
+  };
+}
+
+export function normalizeNoteCard(value: unknown): NoteCard {
+  const candidate = value && typeof value === "object" ? (value as Partial<NoteCard>) : {};
+  const now = Date.now();
+  const createdAt = typeof candidate.createdAt === "number" ? candidate.createdAt : now;
+
+  return {
+    id: isNonEmptyString(candidate.id) ? candidate.id.trim() : createId("note"),
+    title: typeof candidate.title === "string" ? candidate.title : "",
+    dotColor: normalizeColor(candidate.dotColor, DEFAULT_UNGROUPED_NOTE_COLOR),
+    groupId: isNonEmptyString(candidate.groupId) ? candidate.groupId.trim() : null,
+    collapsed: typeof candidate.collapsed === "boolean" ? candidate.collapsed : false,
+    content: Array.isArray(candidate.content) ? candidate.content : DEFAULT_NOTE_CONTENT,
+    createdAt,
+    updatedAt: typeof candidate.updatedAt === "number" ? candidate.updatedAt : createdAt,
+  };
+}
+
+export function normalizeNotesDocument(value: unknown): NotesDocument {
+  const candidate =
+    value && typeof value === "object" && !Array.isArray(value) ? (value as Partial<NotesDocument>) : null;
+  const groups = Array.isArray(candidate?.groups) ? candidate.groups.map((group, index) => normalizeNoteGroup(group, index)) : [];
+  const groupsById = new Map(groups.map((group) => [group.id, group] as const));
+  const rawCards = Array.isArray(value) ? value : Array.isArray(candidate?.cards) ? candidate.cards : [];
+
+  return {
+    cards: rawCards.map((card) => {
+      const normalizedCard = normalizeNoteCard(card);
+      const matchedGroup = normalizedCard.groupId ? groupsById.get(normalizedCard.groupId) ?? null : null;
+
+      if (!matchedGroup) {
+        return {
+          ...normalizedCard,
+          groupId: null,
+          dotColor: normalizeColor(normalizedCard.dotColor, DEFAULT_UNGROUPED_NOTE_COLOR),
+        };
+      }
+
+      return {
+        ...normalizedCard,
+        dotColor: matchedGroup.color,
+      };
+    }),
+    groups,
+  };
+}
+
+export function resolveNoteGroup(note: Pick<NoteCard, "groupId">, groups: NoteGroup[]) {
+  return note.groupId ? groups.find((group) => group.id === note.groupId) ?? null : null;
+}
+
+export function resolveNoteAccentColor(note: Pick<NoteCard, "dotColor" | "groupId">, groups: NoteGroup[]) {
+  return resolveNoteGroup(note, groups)?.color ?? note.dotColor ?? DEFAULT_UNGROUPED_NOTE_COLOR;
 }

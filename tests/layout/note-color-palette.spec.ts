@@ -22,7 +22,7 @@ test("note text color palette stays fully visible in a compact window", async ({
   const note = page.getByTestId("note-card").first();
   const colorButton = note.getByRole("button", { name: "Color", exact: true });
 
-  await colorButton.click();
+  await colorButton.dispatchEvent("pointerdown");
 
   const palette = page.getByTestId("note-text-color-palette");
   await expect(palette).toBeVisible();

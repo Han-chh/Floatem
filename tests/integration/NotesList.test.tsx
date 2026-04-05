@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 import { createNoteCard, DEFAULT_NOTE_CONTENT } from "../../src/lib/models";
@@ -19,6 +19,28 @@ describe("NotesList", () => {
 
     await user.click(screen.getByRole("button", { name: "Delete note" }));
     expect(screen.queryByPlaceholderText("Untitled note")).not.toBeInTheDocument();
+  });
+
+  it("creates groups, assigns notes, and filters the list", async () => {
+    const user = userEvent.setup();
+    render(<NotesList />);
+
+    await user.click(screen.getByRole("button", { name: "Add note" }));
+
+    const note = screen.getByTestId("note-card");
+    expect(within(note).getByText("No group")).toBeInTheDocument();
+
+    await user.type(screen.getByRole("textbox", { name: "Group name" }), "Work");
+    await user.click(screen.getByRole("button", { name: "Create group" }));
+
+    expect(screen.getByRole("checkbox", { name: "Toggle Work filter" })).toBeChecked();
+
+    await user.click(within(note).getByRole("button", { name: "Change note group" }));
+    await user.click(screen.getByRole("button", { name: "Work" }));
+    expect(within(note).getByText("Work")).toBeInTheDocument();
+
+    await user.click(screen.getByRole("checkbox", { name: "Toggle Work filter" }));
+    expect(screen.getByText("No notes match the selected groups.")).toBeInTheDocument();
   });
 
   it("does not refresh edited time when the editor only gains focus", async () => {

@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
-import { createNoteCard, DEFAULT_NOTE_CONTENT } from "../../src/lib/models";
+import { createNoteCard, createNoteGroup, DEFAULT_NOTE_CONTENT, DEFAULT_UNGROUPED_NOTE_COLOR } from "../../src/lib/models";
 import { useNotesStore } from "../../src/store/notesStore";
 
 describe("notesStore", () => {
@@ -23,6 +23,43 @@ describe("notesStore", () => {
     expect(useNotesStore.getState().cards[1]?.title).toBe("Updated");
   });
 
+  it("creates, assigns, updates, and deletes groups", () => {
+    const card = createNoteCard({ id: "note-a", title: "A" });
+    const group = createNoteGroup({
+      id: "group-work",
+      name: "Work",
+      color: "#2F6BFF",
+    });
+
+    useNotesStore.getState().initialize({
+      cards: [card],
+      groups: [group],
+    });
+
+    const travel = useNotesStore.getState().createGroup({
+      color: "#1FA87A",
+      name: "Travel",
+    });
+
+    expect(useNotesStore.getState().groups).toHaveLength(2);
+
+    useNotesStore.getState().assignGroupToCard("note-a", travel.id);
+    expect(useNotesStore.getState().cards[0]?.groupId).toBe(travel.id);
+    expect(useNotesStore.getState().cards[0]?.dotColor).toBe("#1FA87A");
+
+    useNotesStore.getState().updateGroup(travel.id, {
+      color: "#F4B942",
+      name: "Trips",
+    });
+    expect(useNotesStore.getState().groups.find((item) => item.id === travel.id)?.name).toBe("Trips");
+    expect(useNotesStore.getState().cards[0]?.dotColor).toBe("#F4B942");
+
+    useNotesStore.getState().deleteGroup(travel.id);
+    expect(useNotesStore.getState().groups).toHaveLength(1);
+    expect(useNotesStore.getState().cards[0]?.groupId).toBeNull();
+    expect(useNotesStore.getState().cards[0]?.dotColor).toBe(DEFAULT_UNGROUPED_NOTE_COLOR);
+  });
+
   it("only refreshes edited time for real text changes", () => {
     const note = createNoteCard({
       id: "note-a",
@@ -36,7 +73,7 @@ describe("notesStore", () => {
     const nowSpy = vi.spyOn(Date, "now").mockReturnValue(9_000);
 
     useNotesStore.getState().toggleCollapsed("note-a");
-    useNotesStore.getState().updateDotColor("note-a", "#2F6BFF");
+    useNotesStore.getState().assignGroupToCard("note-a", null);
     useNotesStore.getState().updateCardTitle("note-a", "Draft");
     useNotesStore.getState().updateCardContent("note-a", DEFAULT_NOTE_CONTENT);
 

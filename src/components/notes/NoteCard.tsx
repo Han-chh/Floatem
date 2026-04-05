@@ -3,7 +3,12 @@ import { CSS } from "@dnd-kit/utilities";
 import { motion } from "framer-motion";
 import { useEffect, useRef, useState, type CSSProperties, type Ref } from "react";
 import { formatCompactEditedLabel, useI18n } from "../../lib/i18n";
-import { NOTE_DOT_COLORS, type NoteCard as NoteCardModel } from "../../lib/models";
+import {
+  resolveNoteAccentColor,
+  resolveNoteGroup,
+  type NoteCard as NoteCardModel,
+  type NoteGroup,
+} from "../../lib/models";
 import { syncTextareaHeight } from "../../lib/resizeTextarea";
 import { useNotesStore } from "../../store/notesStore";
 import { ChevronsUpDownIcon, PaletteIcon, Trash2Icon } from "../icons/AppIcons";
@@ -17,38 +22,41 @@ type NoteCardProps = {
 
 type NoteCardBodyProps = {
   note: NoteCardModel;
+  accentColor: string;
   editedLabel: string;
+  groupLabel: string;
+  groups: NoteGroup[];
+  onAssignGroup?: (groupId: string | null) => void;
   onDelete?: (target: DOMRect) => void;
   onToggleCollapsed?: () => void;
   onUpdateTitle?: (value: string, element: HTMLTextAreaElement) => void;
   onUpdateContent?: (value: NoteCardModel["content"]) => void;
-  onUpdateDotColor?: (color: string) => void;
-  showPalette?: boolean;
-  setShowPalette?: (nextValue: boolean) => void;
+  showGroupMenu?: boolean;
+  setShowGroupMenu?: (nextValue: boolean) => void;
   titleRef?: Ref<HTMLTextAreaElement>;
   isDraggingPlaceholder?: boolean;
   isDropTargetPreview?: boolean;
   preview?: boolean;
 };
 
-const NOTE_PALETTE_COLUMNS = Math.min(5, Math.max(3, Math.ceil(Math.sqrt(NOTE_DOT_COLORS.length))));
-const NOTE_PALETTE_NATURAL_WIDTH = NOTE_PALETTE_COLUMNS * 28 + (NOTE_PALETTE_COLUMNS - 1) * 6 + 16;
-const NOTE_PALETTE_STYLE: CSSProperties = {
-  gridTemplateColumns: `repeat(${NOTE_PALETTE_COLUMNS}, minmax(0, 1fr))`,
-  width: `min(${NOTE_PALETTE_NATURAL_WIDTH}px, calc(100cqi - 96px), calc(100vw - 96px))`,
+const GROUP_MENU_STYLE: CSSProperties = {
   maxHeight: "min(240px, calc(100vh - 128px))",
+  width: "min(224px, calc(100cqi - 96px), calc(100vw - 96px))",
 };
 
 function NoteCardBody({
   note,
+  accentColor,
   editedLabel,
+  groupLabel,
+  groups,
+  onAssignGroup,
   onDelete,
   onToggleCollapsed,
   onUpdateTitle,
   onUpdateContent,
-  onUpdateDotColor,
-  showPalette = false,
-  setShowPalette,
+  showGroupMenu = false,
+  setShowGroupMenu,
   titleRef,
   isDraggingPlaceholder = false,
   isDropTargetPreview = false,
@@ -71,19 +79,17 @@ function NoteCardBody({
       />
       <div
         className="pointer-events-none absolute -right-6 top-4 h-20 w-20 rounded-full border-[8px] opacity-24"
-        style={{ borderColor: note.dotColor }}
+        style={{ borderColor: accentColor }}
       />
-      <div
-        className="pointer-events-none absolute left-5 top-2.5 h-3.5 w-12 -rotate-[10deg] rounded-[5px] border border-white/65 bg-[rgba(255,255,255,0.48)]"
-      />
+      <div className="pointer-events-none absolute left-5 top-2.5 h-3.5 w-12 -rotate-[10deg] rounded-[5px] border border-white/65 bg-[rgba(255,255,255,0.48)]" />
       <div
         className="pointer-events-none absolute right-12 top-2.5 h-3.5 w-10 rotate-[12deg] rounded-[5px] border border-white/60"
-        style={{ backgroundColor: `${note.dotColor}26` }}
+        style={{ backgroundColor: `${accentColor}26` }}
       />
       <div
         className="pointer-events-none absolute inset-x-6 top-0 h-1.5 rounded-b-full opacity-90"
         style={{
-          background: `linear-gradient(90deg, ${note.dotColor}, rgba(255,255,255,0.88), ${note.dotColor})`,
+          background: `linear-gradient(90deg, ${accentColor}, rgba(255,255,255,0.88), ${accentColor})`,
         }}
       />
 
@@ -123,10 +129,10 @@ function NoteCardBody({
             <div className="note-card-chip-group">
               <span
                 className="status-chip"
-                style={{ color: note.dotColor, backgroundColor: `${note.dotColor}1f` }}
+                style={{ color: accentColor, backgroundColor: `${accentColor}1f` }}
               >
                 <PaletteIcon size={12} />
-                {t.notes.focusCard}
+                {groupLabel}
               </span>
               <span className="note-secondary-chip status-chip" data-tone="neutral">
                 {editedLabel}
@@ -138,50 +144,83 @@ function NoteCardBody({
                 <motion.button
                   type="button"
                   className="note-card-action-button paper-icon-button relative rounded-[9px]"
-                  aria-label={t.notes.changeColor}
+                  aria-label={t.notes.changeGroup}
                   whileHover={isInteractive ? { y: -1.5, scale: 1.03 } : undefined}
                   whileTap={isInteractive ? { scale: 0.97 } : undefined}
                   onPointerDown={isInteractive ? (event) => event.stopPropagation() : undefined}
-                  onClick={isInteractive && setShowPalette ? () => setShowPalette(!showPalette) : undefined}
+                  onClick={isInteractive && setShowGroupMenu ? () => setShowGroupMenu(!showGroupMenu) : undefined}
                   style={{
-                    borderColor: `${note.dotColor}72`,
-                    background: `linear-gradient(180deg, rgba(255,255,255,0.98), ${note.dotColor}14), rgba(255,255,255,0.96)`,
-                    boxShadow: `0 0 0 3px ${note.dotColor}14, 0 10px 18px rgba(61,49,34,0.08), inset 0 1px 0 rgba(255,255,255,0.88)`,
+                    borderColor: `${accentColor}72`,
+                    background: `linear-gradient(180deg, rgba(255,255,255,0.98), ${accentColor}14), rgba(255,255,255,0.96)`,
+                    boxShadow: `0 0 0 3px ${accentColor}14, 0 10px 18px rgba(61,49,34,0.08), inset 0 1px 0 rgba(255,255,255,0.88)`,
                   }}
-                  >
+                >
                   <span
                     className="inline-flex h-3 w-3 rounded-full border border-white/70 shadow-[0_4px_8px_rgba(0,0,0,0.08)]"
-                    style={{ backgroundColor: note.dotColor }}
+                    style={{ backgroundColor: accentColor }}
                   />
-                  <span className="sr-only">{t.notes.changeColor}</span>
+                  <span className="sr-only">{t.notes.changeGroup}</span>
                 </motion.button>
                 <span className="pointer-events-none absolute -top-8 left-1/2 z-10 -translate-x-1/2 rounded-full bg-[rgba(30,25,21,0.94)] px-2 py-1 text-[10px] font-semibold leading-none whitespace-nowrap text-white opacity-0 shadow-[0_10px_20px_rgba(30,25,21,0.18)] transition-all duration-75 ease-out group-hover:-translate-y-1 group-hover:opacity-100">
-                  {t.notes.color}
+                  {t.notes.group}
                 </span>
-                {isInteractive && showPalette && setShowPalette && onUpdateDotColor ? (
+                {isInteractive && showGroupMenu && setShowGroupMenu && onAssignGroup ? (
                   <motion.div
                     initial={{ opacity: 0, x: 6, scale: 0.96 }}
                     animate={{ opacity: 1, x: 0, scale: 1 }}
                     exit={{ opacity: 0, x: 4, scale: 0.98 }}
-                    className="note-color-popover paper-card absolute right-[calc(100%+10px)] top-[-4px] z-40 grid justify-items-center gap-1.5 rounded-[18px] p-2"
-                    style={NOTE_PALETTE_STYLE}
+                    className="note-color-popover paper-card absolute right-[calc(100%+10px)] top-[-4px] z-40 space-y-1.5 rounded-[18px] p-2"
+                    style={GROUP_MENU_STYLE}
+                    onPointerDown={(event) => {
+                      event.preventDefault();
+                      event.stopPropagation();
+                    }}
                   >
-                    {NOTE_DOT_COLORS.map((color) => (
-                      <motion.button
-                        key={color}
+                    <button
+                      type="button"
+                      className={`flex w-full items-center gap-2 rounded-[14px] border px-3 py-2 text-left text-[12px] font-semibold ${
+                        note.groupId === null
+                          ? "border-[rgba(30,25,21,0.18)] bg-[rgba(30,25,21,0.06)] text-[var(--dark-text)]"
+                          : "border-transparent bg-[rgba(255,255,255,0.52)] text-[var(--dark-text)]"
+                      }`}
+                      onClick={() => {
+                        onAssignGroup(null);
+                        setShowGroupMenu(false);
+                      }}
+                    >
+                      <span className="h-3 w-3 shrink-0 rounded-full border border-white/80 bg-[var(--muted)] shadow-[0_2px_6px_rgba(0,0,0,0.08)]" />
+                      <span className="min-w-0 flex-1 truncate">{t.notes.noGroup}</span>
+                    </button>
+                    {groups.map((group) => (
+                      <button
+                        key={group.id}
                         type="button"
-                        className="h-[22px] w-[22px] rounded-full border border-[var(--border)]"
-                        style={{ backgroundColor: color }}
-                        aria-label={t.notes.useColor(color)}
-                        whileHover={{ scale: 1.08 }}
-                        whileTap={{ scale: 0.94 }}
-                        onPointerDown={(event) => event.stopPropagation()}
-                        onClick={() => {
-                          onUpdateDotColor(color);
-                          setShowPalette(false);
+                        className={`flex w-full items-center gap-2 rounded-[14px] border px-3 py-2 text-left text-[12px] font-semibold ${
+                          note.groupId === group.id
+                            ? "bg-[rgba(255,255,255,0.88)] shadow-[0_8px_16px_rgba(61,49,34,0.10)]"
+                            : "bg-[rgba(255,255,255,0.52)]"
+                        }`}
+                        style={{
+                          borderColor: note.groupId === group.id ? `${group.color}42` : "rgba(213,198,180,0.72)",
+                          color: note.groupId === group.id ? group.color : "var(--dark-text)",
                         }}
-                      />
+                        onClick={() => {
+                          onAssignGroup(group.id);
+                          setShowGroupMenu(false);
+                        }}
+                      >
+                        <span
+                          className="h-3 w-3 shrink-0 rounded-full border border-white/80 shadow-[0_2px_6px_rgba(0,0,0,0.08)]"
+                          style={{ backgroundColor: group.color }}
+                        />
+                        <span className="min-w-0 flex-1 truncate">{group.name}</span>
+                      </button>
                     ))}
+                    {groups.length === 0 ? (
+                      <p className="wrap-anywhere rounded-[14px] border border-dashed border-[rgba(213,198,180,0.82)] bg-[rgba(255,255,255,0.52)] px-3 py-2 text-[11px] leading-5 text-[var(--muted)]">
+                        {t.notes.groupMenuEmpty}
+                      </p>
+                    ) : null}
                   </motion.div>
                 ) : null}
               </div>
@@ -239,26 +278,37 @@ function NoteCardBody({
 }
 
 export function NoteCardPreview({ note, width }: { note: NoteCardModel; width?: number }) {
-  const { language } = useI18n();
+  const { language, t } = useI18n();
+  const groups = useNotesStore((state) => state.groups);
   const editedLabel = formatCompactEditedLabel(note.updatedAt, language);
+  const accentColor = resolveNoteAccentColor(note, groups);
+  const groupLabel = resolveNoteGroup(note, groups)?.name ?? t.notes.noGroup;
 
   return (
     <div
       className="paper-card cq-card relative overflow-hidden rounded-[28px] border border-[rgba(213,198,180,0.92)] bg-[linear-gradient(180deg,rgba(255,252,248,0.98),rgba(255,247,239,0.95))] shadow-[0_30px_60px_rgba(61,49,34,0.22)]"
       style={{ width: width ?? undefined, maxWidth: "calc(100vw - 48px)" }}
     >
-      <NoteCardBody note={note} editedLabel={editedLabel} preview />
+      <NoteCardBody
+        note={note}
+        accentColor={accentColor}
+        editedLabel={editedLabel}
+        groupLabel={groupLabel}
+        groups={groups}
+        preview
+      />
     </div>
   );
 }
 
 export function NoteCard({ note, onDelete, dropPreview = false }: NoteCardProps) {
   const { language, t } = useI18n();
+  const groups = useNotesStore((state) => state.groups);
   const toggleCollapsed = useNotesStore((state) => state.toggleCollapsed);
   const updateCardTitle = useNotesStore((state) => state.updateCardTitle);
   const updateCardContent = useNotesStore((state) => state.updateCardContent);
-  const updateDotColor = useNotesStore((state) => state.updateDotColor);
-  const [showPalette, setShowPalette] = useState(false);
+  const assignGroupToCard = useNotesStore((state) => state.assignGroupToCard);
+  const [showGroupMenu, setShowGroupMenu] = useState(false);
   const titleRef = useRef<HTMLTextAreaElement | null>(null);
   const cardRef = useRef<HTMLElement | null>(null);
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
@@ -276,7 +326,34 @@ export function NoteCard({ note, onDelete, dropPreview = false }: NoteCardProps)
     }
   }, [note.id, note.title]);
 
+  useEffect(() => {
+    if (!showGroupMenu || typeof document === "undefined") {
+      return;
+    }
+
+    const handlePointerDown = (event: PointerEvent) => {
+      const target = event.target;
+      if (!(target instanceof Node)) {
+        return;
+      }
+
+      if (cardRef.current?.contains(target)) {
+        return;
+      }
+
+      setShowGroupMenu(false);
+    };
+
+    document.addEventListener("pointerdown", handlePointerDown, true);
+
+    return () => {
+      document.removeEventListener("pointerdown", handlePointerDown, true);
+    };
+  }, [showGroupMenu]);
+
   const editedLabel = formatCompactEditedLabel(note.updatedAt, language);
+  const accentColor = resolveNoteAccentColor(note, groups);
+  const groupLabel = resolveNoteGroup(note, groups)?.name ?? t.notes.noGroup;
 
   return (
     <motion.article
@@ -297,14 +374,18 @@ export function NoteCard({ note, onDelete, dropPreview = false }: NoteCardProps)
       data-testid="note-card"
       data-note-card-id={note.id}
       className={`paper-card cq-card relative rounded-[28px] border border-[rgba(213,198,180,0.92)] bg-[linear-gradient(180deg,rgba(255,252,248,0.98),rgba(255,247,239,0.95))] shadow-[0_18px_36px_rgba(61,49,34,0.10)] cursor-grab active:cursor-grabbing ${
-        showPalette ? "z-30 overflow-visible" : "overflow-hidden"
+        showGroupMenu ? "z-30 overflow-visible" : "overflow-hidden"
       } ${
         isDragging ? "border-transparent bg-[rgba(255,255,255,0.08)] shadow-none" : ""
       }`}
     >
       <NoteCardBody
         note={note}
+        accentColor={accentColor}
         editedLabel={editedLabel}
+        groupLabel={groupLabel}
+        groups={groups}
+        onAssignGroup={(groupId) => assignGroupToCard(note.id, groupId)}
         onDelete={(target) => onDelete(note.id, cardRef.current?.getBoundingClientRect() ?? target)}
         onToggleCollapsed={() => toggleCollapsed(note.id)}
         onUpdateTitle={(value, element) => {
@@ -312,9 +393,8 @@ export function NoteCard({ note, onDelete, dropPreview = false }: NoteCardProps)
           updateCardTitle(note.id, value);
         }}
         onUpdateContent={(value) => updateCardContent(note.id, value)}
-        onUpdateDotColor={(color) => updateDotColor(note.id, color)}
-        showPalette={showPalette}
-        setShowPalette={setShowPalette}
+        showGroupMenu={showGroupMenu}
+        setShowGroupMenu={setShowGroupMenu}
         titleRef={titleRef}
         isDraggingPlaceholder={isDragging}
         isDropTargetPreview={dropPreview}

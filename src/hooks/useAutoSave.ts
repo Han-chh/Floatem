@@ -16,7 +16,7 @@ export function useAutoSave() {
 
   useEffect(() => {
     const unsubscribeNotes = useNotesStore.subscribe(
-      (state) => ({ cards: state.cards, isLoaded: state.isLoaded }),
+      (state) => ({ cards: state.cards, groups: state.groups, isLoaded: state.isLoaded }),
       (nextState) => {
         if (!nextState.isLoaded) {
           return;
@@ -32,7 +32,10 @@ export function useAutoSave() {
         }
 
         notesTimer.current = window.setTimeout(() => {
-          void saveNotes(nextState.cards);
+          void saveNotes({
+            cards: nextState.cards,
+            groups: nextState.groups,
+          });
         }, SAVE_DELAY);
       },
     );

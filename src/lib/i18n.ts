@@ -24,22 +24,41 @@ type MessageCatalog = {
     add: string;
     cards: (count: number) => string;
     changeColor: string;
+    changeGroup: string;
+    changeGroupColor: string;
     collapse: string;
     color: string;
     copy: string;
+    createGroup: string;
+    createGroupTitle: string;
     delete: string;
+    deleteGroup: (name: string) => string;
     dragHint: string;
     dragPreview: string;
     dragPreviewEditing: string;
+    editGroup: (name: string) => string;
+    editGroupTitle: string;
     editorPlaceholder: string;
     empty: string;
+    filteredEmpty: string;
     focusCard: string;
     fold: string;
+    group: string;
+    groupColor: string;
+    groupManagerBody: string;
+    groupManagerTitle: string;
+    groupMenuEmpty: string;
+    groupName: string;
+    groupNamePlaceholder: string;
+    groups: (count: number) => string;
+    groupsEmpty: string;
     italic: string;
     moreColors: string;
+    noGroup: string;
     open: string;
     reorder: string;
     showColors: string;
+    toggleGroupFilter: (name: string) => string;
     titleAria: string;
     toolbarClear: string;
     underline: string;
@@ -206,23 +225,42 @@ const messages: Record<AppLanguage, MessageCatalog> = {
       bold: "Bold",
       cards: (count) => `${count} cards`,
       changeColor: "Change note color",
+      changeGroup: "Change note group",
+      changeGroupColor: "Change group color",
       collapse: "Collapse note",
       color: "Color",
       copy: "Copy",
+      createGroup: "Create group",
+      createGroupTitle: "Create group",
       delete: "Delete note",
+      deleteGroup: (name) => `Delete ${name} group`,
       dragHint: "Drag to sort cards and keep the stack compact.",
       dragPreview: "Drag preview.",
       dragPreviewEditing: "Editing preview of this card while dragging.",
+      editGroup: (name) => `Edit ${name} group`,
+      editGroupTitle: "Edit group",
       editorPlaceholder: "Capture the note while it is fresh...",
       empty: "No notes yet. Tap the plus button below to start a new card.",
+      filteredEmpty: "No notes match the selected groups.",
       focusCard: "Focus card",
       fold: "Fold",
+      group: "Group",
+      groupColor: "Group color",
+      groupManagerBody: "Create note groups, rename them, tune their colors, and filter the stack with checkboxes.",
+      groupManagerTitle: "Groups",
+      groupMenuEmpty: "Create groups in the manager above, then assign them from the card menu.",
+      groupName: "Group name",
+      groupNamePlaceholder: "Enter a group name",
+      groups: (count) => `${count} groups`,
+      groupsEmpty: "No groups yet. New notes stay ungrouped until you create one here.",
       italic: "Italic",
       moreColors: "More Colors",
+      noGroup: "No group",
       open: "Open",
       paste: "Paste",
       reorder: "Reorder note",
       showColors: "Show Colors",
+      toggleGroupFilter: (name) => `Toggle ${name} filter`,
       titleAria: "Note title",
       toolbarClear: "Clear format",
       underline: "Underline",
@@ -385,23 +423,42 @@ const messages: Record<AppLanguage, MessageCatalog> = {
       bold: "加粗",
       cards: (count) => `${count} 张卡片`,
       changeColor: "更改笔记颜色",
+      changeGroup: "更改笔记分组",
+      changeGroupColor: "更改分组颜色",
       collapse: "折叠笔记",
       color: "颜色",
       copy: "复制",
+      createGroup: "创建分组",
+      createGroupTitle: "创建分组",
       delete: "删除笔记",
+      deleteGroup: (name) => `删除分组 ${name}`,
       dragHint: "拖动即可调整卡片顺序，让笔记列表保持紧凑。",
       dragPreview: "拖动预览。",
       dragPreviewEditing: "正在拖动这张卡片的编辑预览。",
+      editGroup: (name) => `编辑分组 ${name}`,
+      editGroupTitle: "编辑分组",
       editorPlaceholder: "趁灵感还新鲜，赶紧记下来……",
       empty: "还没有笔记。点击下方加号开始新建卡片。",
+      filteredEmpty: "当前筛选下没有匹配的笔记。",
       focusCard: "聚焦卡片",
       fold: "折叠",
+      group: "分组",
+      groupColor: "分组颜色",
+      groupManagerBody: "在这里创建、重命名、调色和删除分组，也可以用复选框筛选要显示的卡片。",
+      groupManagerTitle: "分组管理",
+      groupMenuEmpty: "先在上方创建分组，再从卡片菜单里为笔记分配分组。",
+      groupName: "分组名称",
+      groupNamePlaceholder: "输入分组名称",
+      groups: (count) => `${count} 个分组`,
+      groupsEmpty: "还没有分组。新建的笔记会保持未分组状态，直到你在这里创建分组。",
       italic: "斜体",
       moreColors: "更多颜色",
+      noGroup: "未分组",
       open: "展开",
       paste: "粘贴",
       reorder: "重新排序笔记",
       showColors: "显示颜色面板",
+      toggleGroupFilter: (name) => `切换 ${name} 的筛选`,
       titleAria: "笔记标题",
       toolbarClear: "清除格式",
       underline: "下划线",

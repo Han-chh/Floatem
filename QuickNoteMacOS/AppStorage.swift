@@ -12,7 +12,7 @@ final class AppStorage {
 
     func loadAllData() throws -> [String: Any] {
         [
-            "notes": try readJSONArray(at: notesURL),
+            "notes": try loadNotes(),
             "todos": try readJSONArray(at: todosURL),
             "settings": try loadSettings(),
         ]
@@ -62,6 +62,10 @@ final class AppStorage {
 
     func saveNotes(_ notes: Any) throws {
         try saveJSONObject(notes, to: notesURL)
+    }
+
+    func loadNotes() throws -> Any {
+        try readJSONObject(at: notesURL) ?? []
     }
 
     func loadTodos() throws -> [Any] {

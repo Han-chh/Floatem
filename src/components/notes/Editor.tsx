@@ -1,9 +1,9 @@
-import { createEditor } from "slate";
+import { createEditor, Range, Transforms } from "slate";
 import { withHistory } from "slate-history";
 import type { Descendant } from "slate";
 import { Editable, ReactEditor, Slate, withReact } from "slate-react";
 import type { RenderElementProps, RenderLeafProps } from "slate-react";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { isPrimaryShortcut } from "../../lib/isPrimaryShortcut";
 import { useI18n } from "../../lib/i18n";
 import { readPlainTextFromClipboard, writePlainTextToClipboard } from "../../lib/plainTextClipboard";
@@ -69,8 +69,19 @@ export function Editor({ content, onChange }: EditorProps) {
   });
   const [pendingTextColor, setPendingTextColor] = useState<string | null>(null);
   const [isColorPaletteOpen, setIsColorPaletteOpen] = useState(false);
+  const colorSelectionRef = useRef<Range | null>(null);
   const isEmptyEditor = () => getAllPlainText(editor).length === 0;
   const hasExpandedSelection = () => Boolean(getSelectedPlainText(editor));
+  const rememberColorSelection = () => {
+    colorSelectionRef.current = editor.selection ? (JSON.parse(JSON.stringify(editor.selection)) as Range) : null;
+  };
+  const restoreColorSelection = () => {
+    if (!colorSelectionRef.current) {
+      return;
+    }
+
+    Transforms.select(editor, colorSelectionRef.current);
+  };
   const syncActiveFormats = () => {
     setFormattingState({
       activeColor: getActiveTextColor(editor),
@@ -120,9 +131,13 @@ export function Editor({ content, onChange }: EditorProps) {
     syncActiveFormats();
   };
   const handleApplyColor = (color: string) => {
+    ReactEditor.focus(editor);
+    restoreColorSelection();
+
     if (isEmptyEditor() && !hasExpandedSelection()) {
       setPendingTextColor(color);
       setIsColorPaletteOpen(false);
+      colorSelectionRef.current = null;
       syncActiveFormatsWithColor(color);
       restoreEditorFocus();
       return;
@@ -131,10 +146,14 @@ export function Editor({ content, onChange }: EditorProps) {
     setTextColor(editor, color);
     setPendingTextColor(null);
     setIsColorPaletteOpen(false);
+    colorSelectionRef.current = null;
     syncActiveFormats();
     restoreEditorFocus();
   };
   const handlePreviewColor = (color: string) => {
+    ReactEditor.focus(editor);
+    restoreColorSelection();
+
     if (isEmptyEditor() && !hasExpandedSelection()) {
       setPendingTextColor(color);
       syncActiveFormatsWithColor(color);
@@ -149,6 +168,7 @@ export function Editor({ content, onChange }: EditorProps) {
     clearTextFormatting(editor);
     setPendingTextColor(null);
     setIsColorPaletteOpen(false);
+    colorSelectionRef.current = null;
     syncActiveFormats();
     restoreEditorFocus();
   };
@@ -202,7 +222,13 @@ export function Editor({ content, onChange }: EditorProps) {
           onCopy={() => void handleCopy("all")}
           onPaste={() => void handlePaste()}
           onPreviewColor={handlePreviewColor}
-          onToggleColorPalette={() => setIsColorPaletteOpen((current) => !current)}
+          onToggleColorPalette={() => {
+            if (!isColorPaletteOpen) {
+              rememberColorSelection();
+            }
+
+            setIsColorPaletteOpen((current) => !current);
+          }}
           onToggleFormat={handleToggleFormat}
         />
         <Editable
