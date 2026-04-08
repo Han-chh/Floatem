@@ -138,6 +138,49 @@ for (const viewport of VIEWPORTS) {
       await expectNoHorizontalOverflow(page);
     });
 
+    test("note group dialog stays fixed, matches reminder dialog height, and scroll hint buttons jump to bottom and top", async ({ page }) => {
+      await seedNotes(page, createDenseGroupFixture());
+      await bootPreview(page);
+
+      await page.getByRole("button", { name: "Change note group" }).first().click();
+
+      const dialog = page.getByRole("dialog", { name: "Manage groups" });
+      const scrollRegion = page.getByTestId("note-group-dialog-scroll-region");
+      const scrollIndicator = page.getByTestId("note-group-dialog-scroll-indicator");
+      const scrollToBottomButton = page.getByRole("button", { name: "Scroll to bottom" });
+      await expectWithinViewport(page, dialog);
+      await expect(scrollRegion).toBeVisible();
+      await expect(scrollIndicator).toBeVisible();
+      await expect(scrollIndicator).toHaveAttribute("data-scroll-direction", "down");
+      await expect(scrollToBottomButton).toBeVisible();
+
+      const dialogBox = await dialog.boundingBox();
+      expect(dialogBox).not.toBeNull();
+      expect(dialogBox!.height).toBeLessThanOrEqual(viewport.height - 30);
+
+      const overflow = await scrollRegion.evaluate((element) => ({
+        clientHeight: element.clientHeight,
+        scrollHeight: element.scrollHeight,
+      }));
+      expect(overflow.scrollHeight).toBeGreaterThan(overflow.clientHeight);
+
+      await scrollToBottomButton.click();
+      await expect.poll(() =>
+        scrollRegion.evaluate((element) => Math.round(element.scrollTop))
+      ).toBeGreaterThan(0);
+      await expect(scrollIndicator).toHaveAttribute("data-scroll-direction", "up");
+
+      const scrollToTopButton = page.getByRole("button", { name: "Scroll to top" });
+      await expect(scrollToTopButton).toBeVisible();
+      await scrollToTopButton.click();
+      await expect.poll(() =>
+        scrollRegion.evaluate((element) => Math.round(element.scrollTop))
+      ).toBe(0);
+      await expect(scrollIndicator).toHaveAttribute("data-scroll-direction", "down");
+
+      await expectNoHorizontalOverflow(page);
+    });
+
     test("todos layout keeps text, reminder control, and actions visible", async ({ page }) => {
       await bootPreview(page);
 
@@ -152,7 +195,22 @@ for (const viewport of VIEWPORTS) {
       await expectWithinViewport(page, page.getByRole("button", { name: "Complete task" }));
       await expectWithinViewport(page, page.getByRole("button", { name: "Delete todo" }));
       await expectWithinViewport(page, page.getByRole("button", { name: "Set reminder" }));
+      await page.getByRole("button", { name: "Set reminder" }).click();
+      const dialog = page.getByRole("dialog", { name: "Set todo reminder" });
+      const scrollRegion = page.getByTestId("todo-reminder-scroll-region");
+      await expectWithinViewport(page, dialog);
+      const dialogBox = await dialog.boundingBox();
+      expect(dialogBox).not.toBeNull();
+      expect(dialogBox!.height).toBeLessThanOrEqual(viewport.height - 30);
       await expectNoSelfOverflow(draft);
+      const overflow = await scrollRegion.evaluate((element) => ({
+        clientHeight: element.clientHeight,
+        scrollHeight: element.scrollHeight,
+      }));
+      expect(overflow.clientHeight).toBeGreaterThan(0);
+      if (viewport.height <= 560) {
+        expect(overflow.scrollHeight).toBeGreaterThan(overflow.clientHeight);
+      }
       await expectNoHorizontalOverflow(page);
     });
 

@@ -18,6 +18,8 @@ type MessageCatalog = {
     english: string;
     language: string;
     save: string;
+    scrollToBottom: string;
+    scrollToTop: string;
     simplifiedChinese: string;
   };
   notes: {
@@ -228,6 +230,8 @@ const messages: Record<AppLanguage, MessageCatalog> = {
       english: "English",
       language: "Language",
       save: "Save",
+      scrollToBottom: "Scroll to bottom",
+      scrollToTop: "Scroll to top",
       simplifiedChinese: "Simplified Chinese",
     },
     notes: {
@@ -436,6 +440,8 @@ const messages: Record<AppLanguage, MessageCatalog> = {
       english: "English",
       language: "语言",
       save: "保存",
+      scrollToBottom: "滚动到底部",
+      scrollToTop: "滚动到顶部",
       simplifiedChinese: "简体中文",
     },
     notes: {

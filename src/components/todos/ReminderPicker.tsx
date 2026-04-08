@@ -4,7 +4,6 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { useI18n } from "../../lib/i18n";
 import { buildReminderTimestamp, isFutureReminderTimestamp } from "../../lib/reminders";
-import { startWindowDrag } from "../../hooks/useWindowDrag";
 import { Clock3Icon, XIcon } from "../icons/AppIcons";
 
 type ReminderPickerProps = {
@@ -309,7 +308,7 @@ export function ReminderPicker({
               {isOpen ? (
                 <motion.div
                   data-no-window-drag="true"
-                  className="fixed inset-0 z-[90] overflow-y-auto bg-[rgba(30,25,21,0.24)] px-5 py-4 backdrop-blur-[10px]"
+                  className="fixed inset-0 z-[90] flex items-start justify-center overflow-hidden bg-[rgba(30,25,21,0.24)] px-5 py-4 backdrop-blur-[10px]"
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   exit={{ opacity: 0 }}
@@ -319,12 +318,11 @@ export function ReminderPicker({
                     role="dialog"
                     aria-modal="true"
                     aria-label={t.todos.dialogTitle}
-                    className="paper-panel mx-auto my-4 flex max-h-[calc(100vh-32px)] w-full max-w-[468px] flex-col overflow-hidden rounded-[28px] p-5 shadow-[0_30px_60px_rgba(30,25,21,0.2)]"
+                    className="paper-panel grid h-full max-h-[calc(100dvh-32px)] min-h-0 w-full max-w-[468px] grid-rows-[auto_minmax(140px,1fr)] overflow-hidden rounded-[28px] p-5 shadow-[0_30px_60px_rgba(30,25,21,0.2)]"
                     initial={{ opacity: 0, scale: 0.96, y: 16 }}
                     animate={{ opacity: 1, scale: 1, y: 0 }}
                     exit={{ opacity: 0, scale: 0.98, y: 10 }}
                     transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
-                    onPointerDownCapture={startWindowDrag}
                     onClick={(event) => event.stopPropagation()}
                   >
                     <div className="mb-4 flex items-start justify-between gap-3">
@@ -354,14 +352,14 @@ export function ReminderPicker({
                       </motion.button>
                     </div>
 
-                    <form
-                      className="flex min-h-0 flex-1 flex-col gap-4"
-                      onSubmit={(event) => {
-                        event.preventDefault();
-                        handleSave();
-                      }}
-                    >
-                      <div className="paper-scroll min-h-0 flex-1 space-y-4 overflow-y-auto pr-1">
+                    <div data-testid="todo-reminder-scroll-region" className="paper-scroll min-h-0 overflow-y-auto pr-1">
+                      <form
+                        className="flex min-h-full flex-col gap-4"
+                        onSubmit={(event) => {
+                          event.preventDefault();
+                          handleSave();
+                        }}
+                      >
                         <div className="rounded-[20px] border border-[rgba(213,198,180,0.88)] bg-white/84 p-4">
                           <p className="text-[11px] font-semibold uppercase tracking-[0.08em] text-[var(--muted)]">
                             {t.todos.currentReminder}
@@ -646,51 +644,51 @@ export function ReminderPicker({
                         ) : helperMessage ? (
                           <p className="text-[11px] font-medium leading-5 text-[#2853C7]">{helperMessage}</p>
                         ) : null}
-                      </div>
 
-                      <div className="flex items-center justify-between gap-2">
-                        <motion.button
-                          type="button"
-                          data-no-window-drag="true"
-                          className="rounded-full px-2.5 py-1.5 text-[10.5px] font-semibold text-[var(--muted)]"
-                          whileHover={{ y: -1 }}
-                          whileTap={{ scale: 0.97 }}
-                          onClick={() => {
-                            setValidationMessage(null);
-                            setHelperMessage(null);
-                            onChange(null);
-                            setIsOpen(false);
-                          }}
-                        >
-                          {t.common.clear}
-                        </motion.button>
-
-                        <div className="flex items-center gap-2">
+                        <div className="mt-auto flex items-center justify-between gap-2 pt-1">
                           <motion.button
                             type="button"
                             data-no-window-drag="true"
-                            className="paper-button inline-flex items-center justify-center rounded-[14px] px-3.5 py-2.5 text-[12px] font-semibold text-[var(--dark-text)]"
-                            whileHover={{ y: -1.5, scale: 1.01 }}
-                            whileTap={{ scale: 0.985 }}
-                            onClick={closeDialog}
+                            className="rounded-full px-2.5 py-1.5 text-[10.5px] font-semibold text-[var(--muted)]"
+                            whileHover={{ y: -1 }}
+                            whileTap={{ scale: 0.97 }}
+                            onClick={() => {
+                              setValidationMessage(null);
+                              setHelperMessage(null);
+                              onChange(null);
+                              setIsOpen(false);
+                            }}
                           >
-                            {t.common.close}
+                            {t.common.clear}
                           </motion.button>
-                          <motion.button
-                            type="submit"
-                            data-no-window-drag="true"
-                            disabled={!draftDate}
-                            className={`paper-button paper-button-primary inline-flex items-center justify-center rounded-[14px] px-3.5 py-2.5 text-[12px] font-semibold ${
-                              draftDate ? "" : "cursor-not-allowed opacity-60"
-                            }`}
-                            whileHover={draftDate ? { y: -1.5, scale: 1.01 } : undefined}
-                            whileTap={draftDate ? { scale: 0.985 } : undefined}
-                          >
-                            {t.common.save}
-                          </motion.button>
+
+                          <div className="flex items-center gap-2">
+                            <motion.button
+                              type="button"
+                              data-no-window-drag="true"
+                              className="paper-button inline-flex items-center justify-center rounded-[14px] px-3.5 py-2.5 text-[12px] font-semibold text-[var(--dark-text)]"
+                              whileHover={{ y: -1.5, scale: 1.01 }}
+                              whileTap={{ scale: 0.985 }}
+                              onClick={closeDialog}
+                            >
+                              {t.common.close}
+                            </motion.button>
+                            <motion.button
+                              type="submit"
+                              data-no-window-drag="true"
+                              disabled={!draftDate}
+                              className={`paper-button paper-button-primary inline-flex items-center justify-center rounded-[14px] px-3.5 py-2.5 text-[12px] font-semibold ${
+                                draftDate ? "" : "cursor-not-allowed opacity-60"
+                              }`}
+                              whileHover={draftDate ? { y: -1.5, scale: 1.01 } : undefined}
+                              whileTap={draftDate ? { scale: 0.985 } : undefined}
+                            >
+                              {t.common.save}
+                            </motion.button>
+                          </div>
                         </div>
-                      </div>
-                    </form>
+                      </form>
+                    </div>
                   </motion.div>
                 </motion.div>
               ) : null}

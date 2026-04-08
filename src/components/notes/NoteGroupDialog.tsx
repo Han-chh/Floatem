@@ -1,11 +1,18 @@
 import { AnimatePresence, motion } from "framer-motion";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import { startWindowDrag } from "../../hooks/useWindowDrag";
 import { useI18n } from "../../lib/i18n";
 import { DEFAULT_NOTE_GROUP_COLOR, resolveNoteGroup } from "../../lib/models";
 import { useNotesStore } from "../../store/notesStore";
-import { PaletteIcon, PlusIcon, SquarePenIcon, Trash2Icon, XIcon } from "../icons/AppIcons";
+import {
+  ChevronDownIcon,
+  ChevronUpIcon,
+  PaletteIcon,
+  PlusIcon,
+  SquarePenIcon,
+  Trash2Icon,
+  XIcon,
+} from "../icons/AppIcons";
 import { ColorPickerPopover } from "./ColorPickerPopover";
 
 type NoteGroupDialogProps = {
@@ -20,6 +27,17 @@ function normalizeGroupNameKey(name: string) {
   return name.trim().toLocaleLowerCase();
 }
 
+function readScrollHintState(element: HTMLDivElement) {
+  const maxScrollTop = Math.max(0, element.scrollHeight - element.clientHeight);
+  const hasOverflow = maxScrollTop > 2;
+
+  return {
+    canScrollDown: hasOverflow && element.scrollTop < maxScrollTop - 2,
+    canScrollUp: element.scrollTop > 2,
+    hasOverflow,
+  };
+}
+
 export function NoteGroupDialog({ noteId, isOpen, onClose }: NoteGroupDialogProps) {
   const { t } = useI18n();
   const cards = useNotesStore((state) => state.cards);
@@ -31,12 +49,18 @@ export function NoteGroupDialog({ noteId, isOpen, onClose }: NoteGroupDialogProp
   const note = cards.find((card) => card.id === noteId) ?? null;
   const colorButtonRef = useRef<HTMLButtonElement | null>(null);
   const draftInputRef = useRef<HTMLInputElement | null>(null);
+  const scrollRegionRef = useRef<HTMLDivElement | null>(null);
   const [editorMode, setEditorMode] = useState<GroupEditorMode | null>(null);
   const [editingGroupId, setEditingGroupId] = useState<string | null>(null);
   const [draftName, setDraftName] = useState("");
   const [draftColor, setDraftColor] = useState<string>(DEFAULT_NOTE_GROUP_COLOR);
   const [isColorPickerOpen, setIsColorPickerOpen] = useState(false);
   const [isDeleteMode, setIsDeleteMode] = useState(false);
+  const [scrollHintState, setScrollHintState] = useState({
+    canScrollDown: false,
+    canScrollUp: false,
+    hasOverflow: false,
+  });
   const currentGroup = note ? resolveNoteGroup(note, groups) : null;
   const isEditorOpen = editorMode !== null;
   const isEditing = editorMode === "edit";
@@ -143,6 +167,46 @@ export function NoteGroupDialog({ noteId, isOpen, onClose }: NoteGroupDialogProp
     }
   }, [groups.length, isDeleteMode]);
 
+  useEffect(() => {
+    if (!isOpen || typeof window === "undefined") {
+      setScrollHintState({
+        canScrollDown: false,
+        canScrollUp: false,
+        hasOverflow: false,
+      });
+      return;
+    }
+
+    const element = scrollRegionRef.current;
+    if (!element) {
+      return;
+    }
+
+    const updateScrollHintState = () => {
+      setScrollHintState(readScrollHintState(element));
+    };
+
+    updateScrollHintState();
+    const animationFrame = window.requestAnimationFrame(updateScrollHintState);
+    element.addEventListener("scroll", updateScrollHintState, { passive: true });
+    window.addEventListener("resize", updateScrollHintState);
+
+    const resizeObserver =
+      typeof ResizeObserver === "undefined"
+        ? null
+        : new ResizeObserver(() => {
+            updateScrollHintState();
+          });
+    resizeObserver?.observe(element);
+
+    return () => {
+      window.cancelAnimationFrame(animationFrame);
+      element.removeEventListener("scroll", updateScrollHintState);
+      window.removeEventListener("resize", updateScrollHintState);
+      resizeObserver?.disconnect();
+    };
+  }, [currentGroup?.id, groups.length, isDeleteMode, isOpen, note?.groupId]);
+
   if (typeof document === "undefined" || !note) {
     return null;
   }
@@ -216,18 +280,28 @@ export function NoteGroupDialog({ noteId, isOpen, onClose }: NoteGroupDialogProp
     deleteGroup(groupId);
   };
 
+  const handleScrollHintClick = (direction: "down" | "up") => {
+    const element = scrollRegionRef.current;
+    if (!element) {
+      return;
+    }
+
+    element.scrollTop = direction === "up" ? 0 : element.scrollHeight;
+    setScrollHintState(readScrollHintState(element));
+  };
+
   const editorDialogTitle = isEditing ? t.notes.editGroupTitle : t.notes.createGroupTitle;
+  const dialogMaxHeight = "calc(100dvh - 32px)";
 
   return createPortal(
     <AnimatePresence>
       {isOpen ? (
         <>
           <motion.div
-            className="fixed inset-0 z-[90] overflow-y-auto bg-[rgba(30,25,21,0.24)] px-5 py-4 backdrop-blur-[10px]"
+            className="fixed inset-0 z-[90] flex items-start justify-center overflow-hidden bg-[rgba(30,25,21,0.24)] px-5 py-4 backdrop-blur-[10px]"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            onPointerDownCapture={startWindowDrag}
             onClick={() => {
               resetDialogState();
               onClose();
@@ -237,12 +311,12 @@ export function NoteGroupDialog({ noteId, isOpen, onClose }: NoteGroupDialogProp
               role="dialog"
               aria-modal="true"
               aria-label={t.notes.groupManagerTitle}
-              className="paper-panel mx-auto my-4 flex max-h-[calc(100vh-32px)] w-full max-w-[480px] flex-col overflow-hidden rounded-[28px] p-5 shadow-[0_30px_60px_rgba(30,25,21,0.2)]"
+              className="paper-panel relative flex w-full max-w-[480px] flex-col overflow-hidden rounded-[28px] p-5 shadow-[0_30px_60px_rgba(30,25,21,0.2)]"
+              style={{ maxHeight: dialogMaxHeight }}
               initial={{ opacity: 0, scale: 0.96, y: 16 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.98, y: 10 }}
               transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
-              onPointerDownCapture={startWindowDrag}
               onClick={(event) => event.stopPropagation()}
             >
               <div className="mb-4 flex items-start justify-between gap-3">
@@ -268,7 +342,11 @@ export function NoteGroupDialog({ noteId, isOpen, onClose }: NoteGroupDialogProp
                 </motion.button>
               </div>
 
-              <div className="paper-scroll min-h-0 flex-1 space-y-4 overflow-y-auto pr-1">
+              <div
+                ref={scrollRegionRef}
+                data-testid="note-group-dialog-scroll-region"
+                className="paper-scroll min-h-0 flex-1 space-y-4 overflow-y-auto pr-1"
+              >
                 <div className="flex min-h-[72px] items-center justify-center gap-3 px-3 text-center">
                   <span
                     className="inline-flex h-3.5 w-3.5 shrink-0 rounded-full border border-white/80 shadow-[0_2px_6px_rgba(0,0,0,0.08)]"
@@ -400,6 +478,75 @@ export function NoteGroupDialog({ noteId, isOpen, onClose }: NoteGroupDialogProp
                   ) : null}
                 </div>
               </div>
+
+              <AnimatePresence>
+                {scrollHintState.hasOverflow ? (
+                  <motion.div
+                    key="group-dialog-scroll-indicator"
+                    data-testid="note-group-dialog-scroll-indicator"
+                    data-scroll-direction={
+                      scrollHintState.canScrollUp && scrollHintState.canScrollDown
+                        ? "both"
+                        : scrollHintState.canScrollUp
+                          ? "up"
+                          : "down"
+                    }
+                    className="absolute right-3 top-1/2 z-10 -translate-y-1/2 rounded-full border border-[rgba(156,126,94,0.2)] bg-[rgba(255,252,248,0.9)] p-2 text-[var(--brown-strong)] shadow-[0_12px_24px_rgba(61,49,34,0.12)]"
+                    initial={{ opacity: 0, x: 8, scale: 0.94 }}
+                    animate={{ opacity: 1, x: 0, scale: 1 }}
+                    exit={{ opacity: 0, x: 6, scale: 0.96 }}
+                    transition={{ duration: 0.18, ease: [0.22, 1, 0.36, 1] }}
+                  >
+                    <div className="flex flex-col gap-1">
+                      {scrollHintState.canScrollUp ? (
+                        <motion.button
+                          type="button"
+                          aria-label={t.common.scrollToTop}
+                          data-testid="note-group-dialog-scroll-to-top"
+                          data-no-window-drag="true"
+                          className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-[rgba(255,255,255,0.92)] text-[var(--brown-strong)] shadow-[0_8px_16px_rgba(61,49,34,0.08)]"
+                          whileHover={{ y: -1, scale: 1.04 }}
+                          whileTap={{ scale: 0.96 }}
+                          onClick={(event) => {
+                            event.stopPropagation();
+                            handleScrollHintClick("up");
+                          }}
+                        >
+                          <motion.span
+                            animate={{ y: [0, -2, 0] }}
+                            transition={{ duration: 1.2, ease: "easeInOut", repeat: Number.POSITIVE_INFINITY }}
+                          >
+                            <ChevronUpIcon size={14} />
+                          </motion.span>
+                        </motion.button>
+                      ) : null}
+
+                      {scrollHintState.canScrollDown ? (
+                        <motion.button
+                          type="button"
+                          aria-label={t.common.scrollToBottom}
+                          data-testid="note-group-dialog-scroll-to-bottom"
+                          data-no-window-drag="true"
+                          className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-[rgba(255,255,255,0.92)] text-[var(--brown-strong)] shadow-[0_8px_16px_rgba(61,49,34,0.08)]"
+                          whileHover={{ y: 1, scale: 1.04 }}
+                          whileTap={{ scale: 0.96 }}
+                          onClick={(event) => {
+                            event.stopPropagation();
+                            handleScrollHintClick("down");
+                          }}
+                        >
+                          <motion.span
+                            animate={{ y: [0, 2, 0] }}
+                            transition={{ duration: 1.2, ease: "easeInOut", repeat: Number.POSITIVE_INFINITY }}
+                          >
+                            <ChevronDownIcon size={14} />
+                          </motion.span>
+                        </motion.button>
+                      ) : null}
+                    </div>
+                  </motion.div>
+                ) : null}
+              </AnimatePresence>
             </motion.div>
           </motion.div>
 
@@ -410,7 +557,6 @@ export function NoteGroupDialog({ noteId, isOpen, onClose }: NoteGroupDialogProp
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
-                onPointerDownCapture={startWindowDrag}
                 onClick={resetEditorState}
               >
                 <motion.div
@@ -422,7 +568,6 @@ export function NoteGroupDialog({ noteId, isOpen, onClose }: NoteGroupDialogProp
                   animate={{ opacity: 1, scale: 1, y: 0 }}
                   exit={{ opacity: 0, scale: 0.98, y: 8 }}
                   transition={{ duration: 0.18, ease: [0.22, 1, 0.36, 1] }}
-                  onPointerDownCapture={startWindowDrag}
                   onClick={(event) => event.stopPropagation()}
                 >
                   <div className="mb-4 flex items-start justify-between gap-3">
