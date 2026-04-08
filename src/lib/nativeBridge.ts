@@ -39,6 +39,7 @@ export type QuickNoteNativeBridge = {
   setTextCompositionActive: (active: boolean) => void | Promise<void>;
   writeClipboardText: (text: string) => Promise<void>;
   hidePanelWindow: () => Promise<void>;
+  quitApplication: () => Promise<void>;
   startWindowDrag: () => Promise<void>;
   reportFrontendReady: () => void | Promise<void>;
   reportFrontendError: (message: string, source?: string) => void | Promise<void>;
@@ -144,6 +145,9 @@ const browserBridge: QuickNoteNativeBridge = {
   },
   async hidePanelWindow() {
     // Browser preview keeps the current tab visible.
+  },
+  async quitApplication() {
+    // Browser preview cannot terminate a native macOS app.
   },
   async startWindowDrag() {
     // Browser preview uses the normal browser window chrome.

@@ -137,6 +137,10 @@ type MessageCatalog = {
     reminderTestUnsupported: string;
     reminderSoundBody: string;
     reminderSoundTitle: string;
+    quitApplication: string;
+    quitApplicationBody: string;
+    quitApplicationButton: string;
+    quitApplicationFailed: string;
     restoreDefaults: string;
     restoreDefaultsBody: string;
     restoreDefaultsFailed: (shortcut: string) => string;
@@ -349,6 +353,10 @@ const messages: Record<AppLanguage, MessageCatalog> = {
       reminderTestUnsupported: "This preview cannot send native macOS notifications.",
       reminderSoundBody: "Play the default notification sound when a todo reminder is delivered.",
       reminderSoundTitle: "Reminder sound",
+      quitApplication: "Quit application",
+      quitApplicationBody: "Fully terminate QuickNote instead of only hiding the floating panel.",
+      quitApplicationButton: "Quit QuickNote",
+      quitApplicationFailed: "QuickNote could not quit from the current environment.",
       restoreDefaults: "Restore defaults",
       restoreDefaultsBody: "Reset language, shortcut, default section, transition style, switch speed, particle feedback, reminder sound, and saved panel position.",
       restoreDefaultsFailed: (shortcut) => `Defaults were not restored. Keeping ${shortcut}.`,
@@ -559,6 +567,10 @@ const messages: Record<AppLanguage, MessageCatalog> = {
       reminderTestUnsupported: "当前预览环境无法发送原生 macOS 通知。",
       reminderSoundBody: "待办提醒送达时播放默认通知声音。",
       reminderSoundTitle: "提醒声音",
+      quitApplication: "退出应用",
+      quitApplicationBody: "完全结束 QuickNote，而不只是隐藏悬浮面板。",
+      quitApplicationButton: "完全退出 QuickNote",
+      quitApplicationFailed: "当前环境下无法退出 QuickNote。",
       restoreDefaults: "恢复默认设置",
       restoreDefaultsBody: "重置语言、快捷键、默认分区、切换样式、切换速度、粒子反馈、提醒声音，以及保存的窗口位置。",
       restoreDefaultsFailed: (shortcut) => `默认设置未恢复，当前仍保留 ${shortcut}。`,

@@ -113,6 +113,22 @@ final class NotificationManager: NSObject, @preconcurrency UNUserNotificationCen
         )
     }
 
+    func requestAuthorizationOnLaunchIfNeeded(language: QuickNoteLanguage) async {
+        do {
+            let snapshot = try await requestAuthorizationIfNeeded(
+                language: language,
+                activateAppIfNeeded: true
+            )
+            logger.info(
+                "Launch-time notification authorization check completed. \(snapshot.logDescription, privacy: .public)"
+            )
+        } catch {
+            logger.error(
+                "Launch-time notification authorization request failed. error=\(error.localizedDescription, privacy: .public)"
+            )
+        }
+    }
+
     func scheduleTestNotification(soundEnabled: Bool, language: QuickNoteLanguage) async throws {
         let snapshot = try await ensureSchedulingAuthorization(
             language: language,

@@ -29,6 +29,7 @@ describe("NotesList", () => {
       setTextCompositionActive: vi.fn(),
       writeClipboardText,
       hidePanelWindow: vi.fn(async () => {}),
+      quitApplication: vi.fn(async () => {}),
       startWindowDrag: vi.fn(async () => {}),
       reportFrontendReady: vi.fn(),
       reportFrontendError: vi.fn(),

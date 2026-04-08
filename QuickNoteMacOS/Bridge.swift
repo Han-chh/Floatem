@@ -15,6 +15,7 @@ protocol QuickNoteNativeBridgeHandling: AnyObject {
     func setTextCompositionActiveFromBridge(_ active: Bool)
     func writeClipboardText(_ text: String)
     func hideMainWindowFromBridge()
+    func quitApplicationFromBridge()
     func startWindowDragFromBridge() throws
 }
 

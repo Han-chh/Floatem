@@ -159,6 +159,7 @@ export function SettingsPanel({ onClose }: SettingsPanelProps) {
   const [isApplyingHotkey, setIsApplyingHotkey] = useState(false);
   const [isRestoringDefaults, setIsRestoringDefaults] = useState(false);
   const [isOpeningNotificationSettings, setIsOpeningNotificationSettings] = useState(false);
+  const [isQuittingApplication, setIsQuittingApplication] = useState(false);
   const [isTestingNotification, setIsTestingNotification] = useState(false);
 
   useEffect(() => {
@@ -364,6 +365,33 @@ export function SettingsPanel({ onClose }: SettingsPanelProps) {
       });
     } finally {
       setIsOpeningNotificationSettings(false);
+    }
+  };
+
+  const handleQuitApplication = async () => {
+    if (isQuittingApplication) {
+      return;
+    }
+
+    if (!isNativeQuickNoteHost()) {
+      setNotificationFeedback({
+        text: t.settings.quitApplicationFailed,
+        tone: "info",
+      });
+      return;
+    }
+
+    setIsQuittingApplication(true);
+
+    try {
+      await getQuickNoteBridge().quitApplication();
+    } catch (error) {
+      const message = error instanceof Error ? error.message : t.settings.quitApplicationFailed;
+      setNotificationFeedback({
+        text: message,
+        tone: "error",
+      });
+      setIsQuittingApplication(false);
     }
   };
 
@@ -727,6 +755,26 @@ export function SettingsPanel({ onClose }: SettingsPanelProps) {
                     onClick={() => void handleRestoreDefaults()}
                   >
                     {isRestoringDefaults ? `${t.settings.restoreDefaults}...` : t.settings.restoreDefaults}
+                  </motion.button>
+                </div>
+              </div>
+              <div className="flex flex-col gap-3 rounded-[20px] border border-[rgba(226,132,112,0.28)] bg-[rgba(255,248,245,0.92)] px-4 py-4">
+                <div className="min-w-0">
+                  <p className="text-[12px] font-semibold text-[rgb(150,68,52)]">{t.settings.quitApplication}</p>
+                  <p className="mt-2 text-[12px] leading-6 text-[var(--muted)]">
+                    {t.settings.quitApplicationBody}
+                  </p>
+                </div>
+                <div className="flex flex-wrap items-center justify-end gap-3">
+                  <motion.button
+                    type="button"
+                    data-no-window-drag="true"
+                    className="inline-flex shrink-0 items-center justify-center rounded-[14px] border border-[rgba(201,93,68,0.32)] bg-[rgba(201,93,68,0.12)] px-3.5 py-2.5 text-[12px] font-semibold text-[rgb(150,68,52)]"
+                    whileHover={{ y: -1.5, scale: 1.01 }}
+                    whileTap={{ scale: 0.985 }}
+                    onClick={() => void handleQuitApplication()}
+                  >
+                    {isQuittingApplication ? `${t.settings.quitApplicationButton}...` : t.settings.quitApplicationButton}
                   </motion.button>
                 </div>
               </div>

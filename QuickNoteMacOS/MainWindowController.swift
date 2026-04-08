@@ -299,6 +299,10 @@ final class MainWindowController: NSObject, NSWindowDelegate, QuickNoteNativeBri
         hideMainWindow()
     }
 
+    func quitApplicationFromBridge() {
+        NSApp.terminate(nil)
+    }
+
     func startWindowDragFromBridge() throws {
         guard let currentEvent = NSApp.currentEvent else {
             throw QuickNoteBridgeError.invalidParameters("QuickNote could not access the current mouse event for dragging.")

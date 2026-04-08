@@ -63,9 +63,23 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         updateLocalizedMenuTitles()
 
         DispatchQueue.main.async { [weak self] in
-            self?.mainWindowController.installSavedHotKey()
-            self?.mainWindowController.syncSavedTodoReminders()
-            self?.mainWindowController.showMainWindow()
+            guard let self else {
+                return
+            }
+
+            Task { @MainActor [weak self] in
+                guard let self else {
+                    return
+                }
+
+                await self.notificationManager.requestAuthorizationOnLaunchIfNeeded(
+                    language: self.currentLanguage
+                )
+            }
+
+            self.mainWindowController.installSavedHotKey()
+            self.mainWindowController.syncSavedTodoReminders()
+            self.mainWindowController.showMainWindow()
         }
     }
 

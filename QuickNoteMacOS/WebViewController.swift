@@ -347,6 +347,9 @@ final class WebViewController: NSViewController, WKNavigationDelegate {
             case "hidePanelWindow":
                 bridgeDelegate?.hideMainWindowFromBridge()
                 result = NSNull()
+            case "quitApplication":
+                bridgeDelegate?.quitApplicationFromBridge()
+                result = NSNull()
             case "startWindowDrag":
                 try bridgeDelegate?.startWindowDragFromBridge()
                 result = NSNull()
@@ -596,6 +599,9 @@ final class WebViewController: NSViewController, WKNavigationDelegate {
         },
         hidePanelWindow() {
           return send("hidePanelWindow");
+        },
+        quitApplication() {
+          return send("quitApplication");
         },
         startWindowDrag() {
           return send("startWindowDrag");
