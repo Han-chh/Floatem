@@ -1,6 +1,7 @@
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
+import { DEFAULT_SETTINGS } from "../../src/lib/models";
 import { TodoList } from "../../src/components/todos/TodoList";
 
 describe("TodoList", () => {
@@ -40,5 +41,60 @@ describe("TodoList", () => {
     const deleteButtons = screen.getAllByRole("button", { name: "Delete todo" });
     await user.click(deleteButtons[deleteButtons.length - 1]!);
     expect(screen.queryByText("Ship docs")).not.toBeInTheDocument();
+  });
+
+  it("uses the native clipboard bridge for Cmd+C and Cmd+V in the macOS host", async () => {
+    const user = userEvent.setup();
+    const originalBridge = window.quickNoteNative;
+    const clipboard = { value: "" };
+    const writeClipboardText = vi.fn(async (text: string) => {
+      clipboard.value = text;
+    });
+    const readClipboardText = vi.fn(async () => clipboard.value);
+
+    window.quickNoteNative = {
+      platform: "macos-appkit-wkwebview",
+      loadAllData: vi.fn(async () => ({ notes: [], todos: [], settings: DEFAULT_SETTINGS })),
+      saveNotes: vi.fn(async () => {}),
+      saveTodos: vi.fn(async () => {}),
+      saveSettings: vi.fn(async () => {}),
+      openNotificationSettings: vi.fn(async () => {}),
+      openTextColorPanel: vi.fn(async () => {}),
+      testReminderNotification: vi.fn(async () => {}),
+      readClipboardText,
+      registerHotkey: vi.fn(async () => {}),
+      setEditableInputActive: vi.fn(),
+      setTextCompositionActive: vi.fn(),
+      writeClipboardText,
+      hidePanelWindow: vi.fn(async () => {}),
+      startWindowDrag: vi.fn(async () => {}),
+      reportFrontendReady: vi.fn(),
+      reportFrontendError: vi.fn(),
+    };
+
+    render(<TodoList />);
+
+    try {
+      const input = screen.getByLabelText("Quick add");
+      await user.click(input);
+      await user.type(input, "Ship docs");
+      await user.keyboard("{Meta>}{a}{/Meta}");
+      await user.keyboard("{Meta>}{c}{/Meta}");
+
+      await waitFor(() => {
+        expect(writeClipboardText).toHaveBeenLastCalledWith("Ship docs");
+      });
+
+      clipboard.value = "Native paste";
+
+      await user.keyboard("{Meta>}{a}{/Meta}");
+      await user.keyboard("{Meta>}{v}{/Meta}");
+
+      await waitFor(() => {
+        expect(input).toHaveValue("Native paste");
+      });
+    } finally {
+      window.quickNoteNative = originalBridge;
+    }
   });
 });

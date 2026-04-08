@@ -515,8 +515,10 @@
 
   .note-toolbar-grid {
     display: flex;
-    flex-wrap: wrap;
-    gap: 5px;
+    flex-wrap: nowrap;
+    align-items: center;
+    gap: 4px;
+    min-width: 0;
   }
 
   .todo-row-grid {

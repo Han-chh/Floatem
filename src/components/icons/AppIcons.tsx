@@ -55,6 +55,17 @@ export function SlidersHorizontalIcon(props: IconProps) {
   );
 }
 
+export function GroupFilterIcon(props: IconProps) {
+  return (
+    <BaseIcon {...props}>
+      <path d="M4 6h16" />
+      <path d="M7 11h10" />
+      <path d="M10.5 16h3" />
+      <path d="M10.5 16v4l3-1.8V16" />
+    </BaseIcon>
+  );
+}
+
 export function SquarePenIcon(props: IconProps) {
   return (
     <BaseIcon {...props}>
@@ -184,6 +195,24 @@ export function PasteIcon(props: IconProps) {
       <path d="m12 10 3 3" />
       <path d="m12 16 3-3" />
       <path d="M9 13h6" />
+    </BaseIcon>
+  );
+}
+
+export function UndoIcon(props: IconProps) {
+  return (
+    <BaseIcon {...props}>
+      <path d="m9 8-4 4 4 4" />
+      <path d="M20 18a6 6 0 0 0-6-6H5" />
+    </BaseIcon>
+  );
+}
+
+export function RedoIcon(props: IconProps) {
+  return (
+    <BaseIcon {...props}>
+      <path d="m15 8 4 4-4 4" />
+      <path d="M4 18a6 6 0 0 1 6-6h9" />
     </BaseIcon>
   );
 }

@@ -22,6 +22,8 @@ type MessageCatalog = {
   };
   notes: {
     add: string;
+    addGroup: string;
+    allGroups: string;
     cards: (count: number) => string;
     changeColor: string;
     changeGroup: string;
@@ -32,6 +34,7 @@ type MessageCatalog = {
     createGroup: string;
     createGroupTitle: string;
     delete: string;
+    deleteGroupAction: string;
     deleteGroup: (name: string) => string;
     dragHint: string;
     dragPreview: string;
@@ -40,6 +43,9 @@ type MessageCatalog = {
     editGroupTitle: string;
     editorPlaceholder: string;
     empty: string;
+    filterDialogSubtitle: string;
+    filterDialogTitle: string;
+    filterGroups: string;
     filteredEmpty: string;
     focusCard: string;
     fold: string;
@@ -49,7 +55,9 @@ type MessageCatalog = {
     groupManagerTitle: string;
     groupMenuEmpty: string;
     groupName: string;
+    groupNameDuplicate: string;
     groupNamePlaceholder: string;
+    groupTotal: (count: number) => string;
     groups: (count: number) => string;
     groupsEmpty: string;
     italic: string;
@@ -57,10 +65,12 @@ type MessageCatalog = {
     noGroup: string;
     open: string;
     reorder: string;
+    redo: string;
     showColors: string;
     toggleGroupFilter: (name: string) => string;
     titleAria: string;
     toolbarClear: string;
+    undo: string;
     underline: string;
     untitled: string;
     useColor: (color: string) => string;
@@ -222,6 +232,8 @@ const messages: Record<AppLanguage, MessageCatalog> = {
     },
     notes: {
       add: "Add note",
+      addGroup: "Add group",
+      allGroups: "All",
       bold: "Bold",
       cards: (count) => `${count} cards`,
       changeColor: "Change note color",
@@ -233,36 +245,44 @@ const messages: Record<AppLanguage, MessageCatalog> = {
       createGroup: "Create group",
       createGroupTitle: "Create group",
       delete: "Delete note",
+      deleteGroupAction: "Delete group",
       deleteGroup: (name) => `Delete ${name} group`,
-      dragHint: "Drag to sort cards and keep the stack compact.",
+      dragHint: "Drag to sort cards",
       dragPreview: "Drag preview.",
       dragPreviewEditing: "Editing preview of this card while dragging.",
       editGroup: (name) => `Edit ${name} group`,
       editGroupTitle: "Edit group",
       editorPlaceholder: "Capture the note while it is fresh...",
       empty: "No notes yet. Tap the plus button below to start a new card.",
+      filterDialogSubtitle: "Choose which groups stay visible in Notes.",
+      filterDialogTitle: "Filter groups",
+      filterGroups: "Filter groups",
       filteredEmpty: "No notes match the selected groups.",
       focusCard: "Focus card",
       fold: "Fold",
       group: "Group",
       groupColor: "Group color",
-      groupManagerBody: "Create note groups, rename them, tune their colors, and filter the stack with checkboxes.",
-      groupManagerTitle: "Groups",
-      groupMenuEmpty: "Create groups in the manager above, then assign them from the card menu.",
+      groupManagerBody: "Create groups, rename them, change their colors, delete them, and assign this card from one dialog.",
+      groupManagerTitle: "Manage groups",
+      groupMenuEmpty: "Choose a group below, or create a new one here first.",
       groupName: "Group name",
+      groupNameDuplicate: "Group names must be unique.",
       groupNamePlaceholder: "Enter a group name",
+      groupTotal: (count) => `${count} groups total`,
       groups: (count) => `${count} groups`,
-      groupsEmpty: "No groups yet. New notes stay ungrouped until you create one here.",
+      groupsEmpty: "No groups yet. This note stays ungrouped until you create one here.",
       italic: "Italic",
       moreColors: "More Colors",
       noGroup: "No group",
       open: "Open",
       paste: "Paste",
       reorder: "Reorder note",
+      redo: "Redo",
       showColors: "Show Colors",
       toggleGroupFilter: (name) => `Toggle ${name} filter`,
       titleAria: "Note title",
       toolbarClear: "Clear format",
+      undo: "Undo",
       underline: "Underline",
       untitled: "Untitled note",
       useColor: (color) => `Use ${color} for note`,
@@ -420,6 +440,8 @@ const messages: Record<AppLanguage, MessageCatalog> = {
     },
     notes: {
       add: "新增笔记",
+      addGroup: "添加分组",
+      allGroups: "全部",
       bold: "加粗",
       cards: (count) => `${count} 张卡片`,
       changeColor: "更改笔记颜色",
@@ -431,36 +453,44 @@ const messages: Record<AppLanguage, MessageCatalog> = {
       createGroup: "创建分组",
       createGroupTitle: "创建分组",
       delete: "删除笔记",
+      deleteGroupAction: "删除分组",
       deleteGroup: (name) => `删除分组 ${name}`,
-      dragHint: "拖动即可调整卡片顺序，让笔记列表保持紧凑。",
+      dragHint: "拖动调整卡片顺序",
       dragPreview: "拖动预览。",
       dragPreviewEditing: "正在拖动这张卡片的编辑预览。",
       editGroup: (name) => `编辑分组 ${name}`,
       editGroupTitle: "编辑分组",
       editorPlaceholder: "趁灵感还新鲜，赶紧记下来……",
       empty: "还没有笔记。点击下方加号开始新建卡片。",
+      filterDialogSubtitle: "选择在 Notes 主界面中需要显示的分组。",
+      filterDialogTitle: "筛选分组",
+      filterGroups: "筛选分组",
       filteredEmpty: "当前筛选下没有匹配的笔记。",
       focusCard: "聚焦卡片",
       fold: "折叠",
       group: "分组",
       groupColor: "分组颜色",
-      groupManagerBody: "在这里创建、重命名、调色和删除分组，也可以用复选框筛选要显示的卡片。",
-      groupManagerTitle: "分组管理",
-      groupMenuEmpty: "先在上方创建分组，再从卡片菜单里为笔记分配分组。",
+      groupManagerBody: "在这个对话框里可以创建、重命名、调色、删除分组，也能直接给当前卡片分配分组。",
+      groupManagerTitle: "管理分组",
+      groupMenuEmpty: "可以直接选择下方分组，或者先在这里创建一个新分组。",
       groupName: "分组名称",
+      groupNameDuplicate: "分组名称必须唯一，不能重复。",
       groupNamePlaceholder: "输入分组名称",
+      groupTotal: (count) => `当前共 ${count} 个分组`,
       groups: (count) => `${count} 个分组`,
-      groupsEmpty: "还没有分组。新建的笔记会保持未分组状态，直到你在这里创建分组。",
+      groupsEmpty: "还没有分组。当前卡片会保持未分组状态，直到你在这里创建分组。",
       italic: "斜体",
       moreColors: "更多颜色",
       noGroup: "未分组",
       open: "展开",
       paste: "粘贴",
       reorder: "重新排序笔记",
+      redo: "重做",
       showColors: "显示颜色面板",
       toggleGroupFilter: (name) => `切换 ${name} 的筛选`,
       titleAria: "笔记标题",
       toolbarClear: "清除格式",
+      undo: "撤销",
       underline: "下划线",
       untitled: "未命名笔记",
       useColor: (color) => `使用 ${color} 作为笔记颜色`,

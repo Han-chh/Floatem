@@ -28,6 +28,7 @@ type ColorPickerPopoverProps = {
   onApplyColor: (color: string) => void;
   onClose: () => void;
   onPreviewColor?: (color: string) => void;
+  zIndexClassName?: string;
 };
 
 function clampValue(value: number, min: number, max: number) {
@@ -83,6 +84,7 @@ export function ColorPickerPopover({
   onApplyColor,
   onClose,
   onPreviewColor,
+  zIndexClassName = "z-[80]",
 }: ColorPickerPopoverProps) {
   const { t } = useI18n();
   const htmlColorInputRef = useRef<HTMLInputElement | null>(null);
@@ -227,7 +229,7 @@ export function ColorPickerPopover({
         ref={paletteRef}
         data-no-window-drag="true"
         data-testid={dataTestId}
-        className="z-[80] rounded-[16px] border border-[rgba(213,198,180,0.94)] bg-[rgba(255,251,246,0.98)] p-2 shadow-[0_18px_32px_rgba(61,49,34,0.16)] backdrop-blur-sm"
+        className={`${zIndexClassName} rounded-[16px] border border-[rgba(213,198,180,0.94)] bg-[rgba(255,251,246,0.98)] p-2 shadow-[0_18px_32px_rgba(61,49,34,0.16)] backdrop-blur-sm`}
         style={
           colorPaletteStyle
             ? { ...colorPaletteStyle, width: colorPaletteMetrics.width }
@@ -276,7 +278,6 @@ export function ColorPickerPopover({
               onPointerDown={(event) => {
                 event.preventDefault();
                 event.stopPropagation();
-                setColorPaletteStyle(null);
                 setColorPaletteMode("expanded");
               }}
             >

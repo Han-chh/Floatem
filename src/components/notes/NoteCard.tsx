@@ -1,18 +1,14 @@
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { motion } from "framer-motion";
-import { useEffect, useRef, useState, type CSSProperties, type Ref } from "react";
+import { useEffect, useRef, useState, type Ref } from "react";
 import { formatCompactEditedLabel, useI18n } from "../../lib/i18n";
-import {
-  resolveNoteAccentColor,
-  resolveNoteGroup,
-  type NoteCard as NoteCardModel,
-  type NoteGroup,
-} from "../../lib/models";
+import { resolveNoteAccentColor, resolveNoteGroup, type NoteCard as NoteCardModel } from "../../lib/models";
 import { syncTextareaHeight } from "../../lib/resizeTextarea";
 import { useNotesStore } from "../../store/notesStore";
 import { ChevronsUpDownIcon, PaletteIcon, Trash2Icon } from "../icons/AppIcons";
 import { Editor } from "./Editor";
+import { NoteGroupDialog } from "./NoteGroupDialog";
 
 type NoteCardProps = {
   note: NoteCardModel;
@@ -25,23 +21,15 @@ type NoteCardBodyProps = {
   accentColor: string;
   editedLabel: string;
   groupLabel: string;
-  groups: NoteGroup[];
-  onAssignGroup?: (groupId: string | null) => void;
   onDelete?: (target: DOMRect) => void;
+  onOpenGroupDialog?: () => void;
   onToggleCollapsed?: () => void;
   onUpdateTitle?: (value: string, element: HTMLTextAreaElement) => void;
   onUpdateContent?: (value: NoteCardModel["content"]) => void;
-  showGroupMenu?: boolean;
-  setShowGroupMenu?: (nextValue: boolean) => void;
   titleRef?: Ref<HTMLTextAreaElement>;
   isDraggingPlaceholder?: boolean;
   isDropTargetPreview?: boolean;
   preview?: boolean;
-};
-
-const GROUP_MENU_STYLE: CSSProperties = {
-  maxHeight: "min(240px, calc(100vh - 128px))",
-  width: "min(224px, calc(100cqi - 96px), calc(100vw - 96px))",
 };
 
 function NoteCardBody({
@@ -49,14 +37,11 @@ function NoteCardBody({
   accentColor,
   editedLabel,
   groupLabel,
-  groups,
-  onAssignGroup,
   onDelete,
+  onOpenGroupDialog,
   onToggleCollapsed,
   onUpdateTitle,
   onUpdateContent,
-  showGroupMenu = false,
-  setShowGroupMenu,
   titleRef,
   isDraggingPlaceholder = false,
   isDropTargetPreview = false,
@@ -148,7 +133,7 @@ function NoteCardBody({
                   whileHover={isInteractive ? { y: -1.5, scale: 1.03 } : undefined}
                   whileTap={isInteractive ? { scale: 0.97 } : undefined}
                   onPointerDown={isInteractive ? (event) => event.stopPropagation() : undefined}
-                  onClick={isInteractive && setShowGroupMenu ? () => setShowGroupMenu(!showGroupMenu) : undefined}
+                  onClick={isInteractive ? onOpenGroupDialog : undefined}
                   style={{
                     borderColor: `${accentColor}72`,
                     background: `linear-gradient(180deg, rgba(255,255,255,0.98), ${accentColor}14), rgba(255,255,255,0.96)`,
@@ -164,65 +149,6 @@ function NoteCardBody({
                 <span className="pointer-events-none absolute -top-8 left-1/2 z-10 -translate-x-1/2 rounded-full bg-[rgba(30,25,21,0.94)] px-2 py-1 text-[10px] font-semibold leading-none whitespace-nowrap text-white opacity-0 shadow-[0_10px_20px_rgba(30,25,21,0.18)] transition-all duration-75 ease-out group-hover:-translate-y-1 group-hover:opacity-100">
                   {t.notes.group}
                 </span>
-                {isInteractive && showGroupMenu && setShowGroupMenu && onAssignGroup ? (
-                  <motion.div
-                    initial={{ opacity: 0, x: 6, scale: 0.96 }}
-                    animate={{ opacity: 1, x: 0, scale: 1 }}
-                    exit={{ opacity: 0, x: 4, scale: 0.98 }}
-                    className="note-color-popover paper-card absolute right-[calc(100%+10px)] top-[-4px] z-40 space-y-1.5 rounded-[18px] p-2"
-                    style={GROUP_MENU_STYLE}
-                    onPointerDown={(event) => {
-                      event.preventDefault();
-                      event.stopPropagation();
-                    }}
-                  >
-                    <button
-                      type="button"
-                      className={`flex w-full items-center gap-2 rounded-[14px] border px-3 py-2 text-left text-[12px] font-semibold ${
-                        note.groupId === null
-                          ? "border-[rgba(30,25,21,0.18)] bg-[rgba(30,25,21,0.06)] text-[var(--dark-text)]"
-                          : "border-transparent bg-[rgba(255,255,255,0.52)] text-[var(--dark-text)]"
-                      }`}
-                      onClick={() => {
-                        onAssignGroup(null);
-                        setShowGroupMenu(false);
-                      }}
-                    >
-                      <span className="h-3 w-3 shrink-0 rounded-full border border-white/80 bg-[var(--muted)] shadow-[0_2px_6px_rgba(0,0,0,0.08)]" />
-                      <span className="min-w-0 flex-1 truncate">{t.notes.noGroup}</span>
-                    </button>
-                    {groups.map((group) => (
-                      <button
-                        key={group.id}
-                        type="button"
-                        className={`flex w-full items-center gap-2 rounded-[14px] border px-3 py-2 text-left text-[12px] font-semibold ${
-                          note.groupId === group.id
-                            ? "bg-[rgba(255,255,255,0.88)] shadow-[0_8px_16px_rgba(61,49,34,0.10)]"
-                            : "bg-[rgba(255,255,255,0.52)]"
-                        }`}
-                        style={{
-                          borderColor: note.groupId === group.id ? `${group.color}42` : "rgba(213,198,180,0.72)",
-                          color: note.groupId === group.id ? group.color : "var(--dark-text)",
-                        }}
-                        onClick={() => {
-                          onAssignGroup(group.id);
-                          setShowGroupMenu(false);
-                        }}
-                      >
-                        <span
-                          className="h-3 w-3 shrink-0 rounded-full border border-white/80 shadow-[0_2px_6px_rgba(0,0,0,0.08)]"
-                          style={{ backgroundColor: group.color }}
-                        />
-                        <span className="min-w-0 flex-1 truncate">{group.name}</span>
-                      </button>
-                    ))}
-                    {groups.length === 0 ? (
-                      <p className="wrap-anywhere rounded-[14px] border border-dashed border-[rgba(213,198,180,0.82)] bg-[rgba(255,255,255,0.52)] px-3 py-2 text-[11px] leading-5 text-[var(--muted)]">
-                        {t.notes.groupMenuEmpty}
-                      </p>
-                    ) : null}
-                  </motion.div>
-                ) : null}
               </div>
               <motion.button
                 type="button"
@@ -294,7 +220,6 @@ export function NoteCardPreview({ note, width }: { note: NoteCardModel; width?: 
         accentColor={accentColor}
         editedLabel={editedLabel}
         groupLabel={groupLabel}
-        groups={groups}
         preview
       />
     </div>
@@ -307,8 +232,7 @@ export function NoteCard({ note, onDelete, dropPreview = false }: NoteCardProps)
   const toggleCollapsed = useNotesStore((state) => state.toggleCollapsed);
   const updateCardTitle = useNotesStore((state) => state.updateCardTitle);
   const updateCardContent = useNotesStore((state) => state.updateCardContent);
-  const assignGroupToCard = useNotesStore((state) => state.assignGroupToCard);
-  const [showGroupMenu, setShowGroupMenu] = useState(false);
+  const [isGroupDialogOpen, setIsGroupDialogOpen] = useState(false);
   const titleRef = useRef<HTMLTextAreaElement | null>(null);
   const cardRef = useRef<HTMLElement | null>(null);
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
@@ -326,79 +250,53 @@ export function NoteCard({ note, onDelete, dropPreview = false }: NoteCardProps)
     }
   }, [note.id, note.title]);
 
-  useEffect(() => {
-    if (!showGroupMenu || typeof document === "undefined") {
-      return;
-    }
-
-    const handlePointerDown = (event: PointerEvent) => {
-      const target = event.target;
-      if (!(target instanceof Node)) {
-        return;
-      }
-
-      if (cardRef.current?.contains(target)) {
-        return;
-      }
-
-      setShowGroupMenu(false);
-    };
-
-    document.addEventListener("pointerdown", handlePointerDown, true);
-
-    return () => {
-      document.removeEventListener("pointerdown", handlePointerDown, true);
-    };
-  }, [showGroupMenu]);
-
   const editedLabel = formatCompactEditedLabel(note.updatedAt, language);
   const accentColor = resolveNoteAccentColor(note, groups);
   const groupLabel = resolveNoteGroup(note, groups)?.name ?? t.notes.noGroup;
 
   return (
-    <motion.article
-      ref={setArticleRef}
-      layout
-      initial={{ opacity: 0, y: 12, scale: 0.98 }}
-      animate={{ opacity: 1, y: 0, scale: 1 }}
-      exit={{ opacity: 0, y: -14, scale: 0.94 }}
-      transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
-      style={{
-        transform: CSS.Transform.toString(transform),
-        transition,
-      }}
-      {...attributes}
-      {...listeners}
-      data-no-window-drag="true"
-      aria-label={t.notes.reorder}
-      data-testid="note-card"
-      data-note-card-id={note.id}
-      className={`paper-card cq-card relative rounded-[28px] border border-[rgba(213,198,180,0.92)] bg-[linear-gradient(180deg,rgba(255,252,248,0.98),rgba(255,247,239,0.95))] shadow-[0_18px_36px_rgba(61,49,34,0.10)] cursor-grab active:cursor-grabbing ${
-        showGroupMenu ? "z-30 overflow-visible" : "overflow-hidden"
-      } ${
-        isDragging ? "border-transparent bg-[rgba(255,255,255,0.08)] shadow-none" : ""
-      }`}
-    >
-      <NoteCardBody
-        note={note}
-        accentColor={accentColor}
-        editedLabel={editedLabel}
-        groupLabel={groupLabel}
-        groups={groups}
-        onAssignGroup={(groupId) => assignGroupToCard(note.id, groupId)}
-        onDelete={(target) => onDelete(note.id, cardRef.current?.getBoundingClientRect() ?? target)}
-        onToggleCollapsed={() => toggleCollapsed(note.id)}
-        onUpdateTitle={(value, element) => {
-          syncTextareaHeight(element);
-          updateCardTitle(note.id, value);
+    <>
+      <motion.article
+        ref={setArticleRef}
+        layout
+        initial={{ opacity: 0, y: 12, scale: 0.98 }}
+        animate={{ opacity: 1, y: 0, scale: 1 }}
+        exit={{ opacity: 0, y: -14, scale: 0.94 }}
+        transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
+        style={{
+          transform: CSS.Transform.toString(transform),
+          transition,
         }}
-        onUpdateContent={(value) => updateCardContent(note.id, value)}
-        showGroupMenu={showGroupMenu}
-        setShowGroupMenu={setShowGroupMenu}
-        titleRef={titleRef}
-        isDraggingPlaceholder={isDragging}
-        isDropTargetPreview={dropPreview}
-      />
-    </motion.article>
+        {...attributes}
+        {...listeners}
+        data-no-window-drag="true"
+        aria-label={t.notes.reorder}
+        data-testid="note-card"
+        data-note-card-id={note.id}
+        className={`paper-card cq-card relative overflow-hidden rounded-[28px] border border-[rgba(213,198,180,0.92)] bg-[linear-gradient(180deg,rgba(255,252,248,0.98),rgba(255,247,239,0.95))] shadow-[0_18px_36px_rgba(61,49,34,0.10)] cursor-grab active:cursor-grabbing ${
+          isDragging ? "border-transparent bg-[rgba(255,255,255,0.08)] shadow-none" : ""
+        }`}
+      >
+        <NoteCardBody
+          note={note}
+          accentColor={accentColor}
+          editedLabel={editedLabel}
+          groupLabel={groupLabel}
+          onDelete={(target) => onDelete(note.id, cardRef.current?.getBoundingClientRect() ?? target)}
+          onOpenGroupDialog={() => setIsGroupDialogOpen(true)}
+          onToggleCollapsed={() => toggleCollapsed(note.id)}
+          onUpdateTitle={(value, element) => {
+            syncTextareaHeight(element);
+            updateCardTitle(note.id, value);
+          }}
+          onUpdateContent={(value) => updateCardContent(note.id, value)}
+          titleRef={titleRef}
+          isDraggingPlaceholder={isDragging}
+          isDropTargetPreview={dropPreview}
+        />
+      </motion.article>
+
+      <NoteGroupDialog noteId={note.id} isOpen={isGroupDialogOpen} onClose={() => setIsGroupDialogOpen(false)} />
+    </>
   );
 }

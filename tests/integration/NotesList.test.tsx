@@ -1,11 +1,49 @@
-import { render, screen, within } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
-import { createNoteCard, DEFAULT_NOTE_CONTENT } from "../../src/lib/models";
+import { createNoteCard, createNoteGroup, DEFAULT_NOTE_CONTENT, DEFAULT_SETTINGS } from "../../src/lib/models";
 import { NotesList } from "../../src/components/notes/NotesList";
 import { useNotesStore } from "../../src/store/notesStore";
 
 describe("NotesList", () => {
+  function installNativeBridge() {
+    const originalBridge = window.quickNoteNative;
+    const clipboard = { value: "" };
+    const writeClipboardText = vi.fn(async (text: string) => {
+      clipboard.value = text;
+    });
+    const readClipboardText = vi.fn(async () => clipboard.value);
+
+    window.quickNoteNative = {
+      platform: "macos-appkit-wkwebview",
+      loadAllData: vi.fn(async () => ({ notes: [], todos: [], settings: DEFAULT_SETTINGS })),
+      saveNotes: vi.fn(async () => {}),
+      saveTodos: vi.fn(async () => {}),
+      saveSettings: vi.fn(async () => {}),
+      openNotificationSettings: vi.fn(async () => {}),
+      openTextColorPanel: vi.fn(async () => {}),
+      testReminderNotification: vi.fn(async () => {}),
+      readClipboardText,
+      registerHotkey: vi.fn(async () => {}),
+      setEditableInputActive: vi.fn(),
+      setTextCompositionActive: vi.fn(),
+      writeClipboardText,
+      hidePanelWindow: vi.fn(async () => {}),
+      startWindowDrag: vi.fn(async () => {}),
+      reportFrontendReady: vi.fn(),
+      reportFrontendError: vi.fn(),
+    };
+
+    return {
+      clipboard,
+      readClipboardText,
+      restore() {
+        window.quickNoteNative = originalBridge;
+      },
+      writeClipboardText,
+    };
+  }
+
   it("adds and deletes a note card", async () => {
     const user = userEvent.setup();
     render(<NotesList />);
@@ -15,13 +53,15 @@ describe("NotesList", () => {
     expect(screen.getByRole("button", { name: "Copy" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Paste" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Clear format" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Undo" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Redo" })).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Image" })).not.toBeInTheDocument();
 
     await user.click(screen.getByRole("button", { name: "Delete note" }));
     expect(screen.queryByPlaceholderText("Untitled note")).not.toBeInTheDocument();
   });
 
-  it("creates groups, assigns notes, and filters the list", async () => {
+  it("manages groups from the card dialog", async () => {
     const user = userEvent.setup();
     render(<NotesList />);
 
@@ -29,18 +69,39 @@ describe("NotesList", () => {
 
     const note = screen.getByTestId("note-card");
     expect(within(note).getByText("No group")).toBeInTheDocument();
-
-    await user.type(screen.getByRole("textbox", { name: "Group name" }), "Work");
-    await user.click(screen.getByRole("button", { name: "Create group" }));
-
-    expect(screen.getByRole("checkbox", { name: "Toggle Work filter" })).toBeChecked();
+    expect(screen.queryByRole("textbox", { name: "Group name" })).not.toBeInTheDocument();
 
     await user.click(within(note).getByRole("button", { name: "Change note group" }));
+    expect(screen.getByRole("dialog", { name: "Manage groups" })).toBeInTheDocument();
+    expect(screen.queryByRole("textbox", { name: "Group name" })).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: "Add group" }));
+    const createDialog = screen.getByRole("dialog", { name: "Create group" });
+    await user.type(within(createDialog).getByRole("textbox", { name: "Group name" }), "Work");
+    await user.click(within(createDialog).getByRole("button", { name: "Create group" }));
     await user.click(screen.getByRole("button", { name: "Work" }));
     expect(within(note).getByText("Work")).toBeInTheDocument();
 
-    await user.click(screen.getByRole("checkbox", { name: "Toggle Work filter" }));
-    expect(screen.getByText("No notes match the selected groups.")).toBeInTheDocument();
+    await user.click(within(note).getByRole("button", { name: "Change note group" }));
+    await user.click(screen.getByRole("button", { name: "Edit Work group" }));
+
+    const editDialog = screen.getByRole("dialog", { name: "Edit group" });
+    const groupNameInput = within(editDialog).getByRole("textbox", { name: "Group name" });
+    await user.clear(groupNameInput);
+    await user.type(groupNameInput, "Focus");
+    await user.click(within(editDialog).getByRole("button", { name: "Save" }));
+    await waitFor(() => {
+      expect(screen.queryByRole("dialog", { name: "Edit group" })).not.toBeInTheDocument();
+    });
+    expect(screen.getByRole("button", { name: "Focus" })).toBeInTheDocument();
+
+    const manageDialog = screen.getByRole("dialog", { name: "Manage groups" });
+    await user.click(within(manageDialog).getByRole("button", { name: "Delete group" }));
+    await user.click(screen.getByRole("button", { name: "Delete Focus group" }));
+    expect(screen.getByText("No groups yet. This note stays ungrouped until you create one here.")).toBeInTheDocument();
+
+    await user.click(within(screen.getByRole("dialog", { name: "Manage groups" })).getByRole("button", { name: "Close" }));
+    expect(within(note).getByText("No group")).toBeInTheDocument();
   });
 
   it("does not refresh edited time when the editor only gains focus", async () => {
@@ -95,7 +156,160 @@ describe("NotesList", () => {
     expect(screen.getByText("Cmd+I")).toBeInTheDocument();
     expect(screen.getByText("Cmd+U")).toBeInTheDocument();
     expect(screen.getByText("Cmd+C")).toBeInTheDocument();
+    expect(screen.getByText("Cmd+Z")).toBeInTheDocument();
+    expect(screen.getByText("Cmd+Shift+Z")).toBeInTheDocument();
     expect(screen.getByText("Cmd+V")).toBeInTheDocument();
+  });
+
+  it("supports undo and redo from the toolbar", async () => {
+    const bridge = installNativeBridge();
+    const user = userEvent.setup();
+    render(<NotesList />);
+
+    try {
+      await user.click(screen.getByRole("button", { name: "Add note" }));
+
+      const note = screen.getByTestId("note-card");
+      const editor = within(note).getAllByRole("textbox")[1]!;
+      const pasteButton = within(note).getByRole("button", { name: "Paste" });
+      const undoButton = within(note).getByRole("button", { name: "Undo" });
+      const redoButton = within(note).getByRole("button", { name: "Redo" });
+
+      expect(undoButton).toHaveAttribute("aria-disabled", "true");
+      expect(redoButton).toHaveAttribute("aria-disabled", "true");
+
+      bridge.clipboard.value = "Version one";
+      await user.click(pasteButton);
+
+      await waitFor(() => {
+        expect(editor).toHaveTextContent("Version one");
+        expect(undoButton).toHaveAttribute("aria-disabled", "false");
+      });
+
+      await user.click(undoButton);
+      await waitFor(() => {
+        expect(editor).not.toHaveTextContent("Version one");
+        expect(redoButton).toHaveAttribute("aria-disabled", "false");
+      });
+
+      await user.click(redoButton);
+      await waitFor(() => {
+        expect(editor).toHaveTextContent("Version one");
+      });
+    } finally {
+      bridge.restore();
+    }
+  });
+
+  it("uses the native clipboard bridge for editor copy shortcuts and paste buttons", async () => {
+    const bridge = installNativeBridge();
+    const user = userEvent.setup();
+    useNotesStore.getState().initialize([
+      createNoteCard({
+        id: "note-native-clipboard",
+        title: "Bridge",
+        content: [{ type: "paragraph", children: [{ text: "Bridge note" }] }],
+      }),
+    ]);
+
+    render(<NotesList />);
+
+    try {
+      const firstNote = screen.getByTestId("note-card");
+      await user.click(within(firstNote).getByRole("button", { name: "Copy" }));
+
+      await waitFor(() => {
+        expect(bridge.writeClipboardText).toHaveBeenLastCalledWith("Bridge note");
+      });
+
+      const firstEditor = within(firstNote).getAllByRole("textbox")[1]!;
+      fireEvent.keyDown(firstEditor, { key: "c", metaKey: true });
+
+      await waitFor(() => {
+        expect(bridge.writeClipboardText).toHaveBeenLastCalledWith("Bridge note");
+      });
+
+      bridge.clipboard.value = "Native bridge paste";
+
+      await user.click(screen.getByRole("button", { name: "Add note" }));
+      const latestNote = screen.getAllByTestId("note-card")[0]!;
+      await user.click(within(latestNote).getByRole("button", { name: "Paste" }));
+
+      await waitFor(() => {
+        const latestEditor = within(latestNote).getAllByRole("textbox")[1]!;
+        expect(latestEditor).toHaveTextContent("Native bridge paste");
+      });
+
+    } finally {
+      bridge.restore();
+    }
+  });
+
+  it("filters visible cards by selected groups", async () => {
+    useNotesStore.getState().initialize({
+      cards: [
+        createNoteCard({
+          id: "note-work",
+          title: "Work card",
+          groupId: "Work",
+          dotColor: "#2F6BFF",
+          content: [{ type: "paragraph", children: [{ text: "Work details" }] }],
+        }),
+        createNoteCard({
+          id: "note-ideas",
+          title: "Ideas card",
+          groupId: "Ideas",
+          dotColor: "#1FA87A",
+          content: [{ type: "paragraph", children: [{ text: "Ideas details" }] }],
+        }),
+        createNoteCard({
+          id: "note-loose",
+          title: "Loose card",
+          groupId: null,
+          content: [{ type: "paragraph", children: [{ text: "Loose details" }] }],
+        }),
+      ],
+      groups: [
+        createNoteGroup({ id: "Work", name: "Work", color: "#2F6BFF" }),
+        createNoteGroup({ id: "Ideas", name: "Ideas", color: "#1FA87A" }),
+      ],
+    });
+
+    const user = userEvent.setup();
+    render(<NotesList />);
+
+    expect(screen.getByText("Work card")).toBeInTheDocument();
+    expect(screen.getByText("Ideas card")).toBeInTheDocument();
+    expect(screen.getByText("Loose card")).toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: "Filter groups" }));
+    const dialog = screen.getByRole("dialog", { name: "Filter groups" });
+
+    expect(within(dialog).getByRole("checkbox", { name: /^All/ })).toBeChecked();
+    expect(within(dialog).getByRole("checkbox", { name: /^No group/ })).toBeChecked();
+    expect(within(dialog).getByRole("checkbox", { name: /^Work/ })).toBeChecked();
+    expect(within(dialog).getByRole("checkbox", { name: /^Ideas/ })).toBeChecked();
+
+    await user.click(within(dialog).getByRole("checkbox", { name: /^Work/ }));
+
+    expect(within(dialog).getByRole("checkbox", { name: /^All/ })).not.toBeChecked();
+    expect(within(dialog).getByRole("checkbox", { name: /^Work/ })).not.toBeChecked();
+    await waitFor(() => {
+      expect(screen.queryByText("Work card")).not.toBeInTheDocument();
+    });
+    expect(screen.getByText("Ideas card")).toBeInTheDocument();
+    expect(screen.getByText("Loose card")).toBeInTheDocument();
+
+    await user.click(within(dialog).getByRole("checkbox", { name: /^All/ }));
+
+    expect(within(dialog).getByRole("checkbox", { name: /^All/ })).toBeChecked();
+    expect(within(dialog).getByRole("checkbox", { name: /^Work/ })).toBeChecked();
+    expect(within(dialog).getByRole("checkbox", { name: /^Ideas/ })).toBeChecked();
+    await waitFor(() => {
+      expect(screen.getByText("Work card")).toBeInTheDocument();
+    });
+    expect(screen.getByText("Ideas card")).toBeInTheDocument();
+    expect(screen.getByText("Loose card")).toBeInTheDocument();
   });
 
   it("renders the text color palette in a floating layer", async () => {

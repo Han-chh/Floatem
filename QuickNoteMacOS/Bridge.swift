@@ -38,6 +38,13 @@ enum QuickNoteLanguage: String {
                 menuToggleApp: "Toggle QuickNote",
                 menuQuit: "Quit",
                 menuQuitApp: "Quit QuickNote",
+                menuEdit: "Edit",
+                menuUndo: "Undo",
+                menuRedo: "Redo",
+                menuCut: "Cut",
+                menuCopy: "Copy",
+                menuPaste: "Paste",
+                menuSelectAll: "Select All",
                 loadingTitle: "Loading QuickNote...",
                 loadingDetail: "Preparing the local app interface.",
                 missingInterfaceTitle: "QuickNote couldn't load its interface.",
@@ -65,6 +72,13 @@ enum QuickNoteLanguage: String {
                 menuToggleApp: "显示或隐藏 QuickNote",
                 menuQuit: "退出",
                 menuQuitApp: "退出 QuickNote",
+                menuEdit: "编辑",
+                menuUndo: "撤销",
+                menuRedo: "重做",
+                menuCut: "剪切",
+                menuCopy: "复制",
+                menuPaste: "粘贴",
+                menuSelectAll: "全选",
                 loadingTitle: "正在加载 QuickNote...",
                 loadingDetail: "正在准备本地应用界面。",
                 missingInterfaceTitle: "QuickNote 无法加载界面。",
@@ -104,6 +118,13 @@ struct QuickNoteLocalization {
     let menuToggleApp: String
     let menuQuit: String
     let menuQuitApp: String
+    let menuEdit: String
+    let menuUndo: String
+    let menuRedo: String
+    let menuCut: String
+    let menuCopy: String
+    let menuPaste: String
+    let menuSelectAll: String
     let loadingTitle: String
     let loadingDetail: String
     let missingInterfaceTitle: String

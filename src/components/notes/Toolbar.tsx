@@ -8,14 +8,17 @@ import {
   ItalicIcon,
   PaletteIcon,
   PasteIcon,
+  RedoIcon,
+  UndoIcon,
   UnderlineIcon,
 } from "../icons/AppIcons";
 import { ColorPickerPopover } from "./ColorPickerPopover";
-import { TEXT_COLOR_PRESETS, TEXT_FORMAT_SHORTCUTS, type TextFormat } from "./textFormatting";
+import { TEXT_COLOR_PRESETS, TEXT_FORMAT_SHORTCUTS, TEXT_HISTORY_SHORTCUTS, type TextFormat } from "./textFormatting";
 
 type ToolbarItem = {
-  action?: "clear" | "color" | "copy" | "paste";
+  action?: "clear" | "color" | "copy" | "paste" | "redo" | "undo";
   activeTone?: string;
+  disabled?: boolean;
   format?: TextFormat;
   icon: ComponentType<{ size?: number }>;
   label: string;
@@ -27,6 +30,8 @@ type ToolbarItem = {
 type ToolbarProps = {
   activeColor: string | null;
   activeFormats: Record<TextFormat, boolean>;
+  canRedo: boolean;
+  canUndo: boolean;
   isColorPaletteOpen: boolean;
   onApplyColor: (color: string) => void;
   onClearFormatting: () => void;
@@ -34,13 +39,17 @@ type ToolbarProps = {
   onCopy: () => void;
   onPaste: () => void;
   onPreviewColor: (color: string) => void;
+  onRedo: () => void;
   onToggleColorPalette: () => void;
   onToggleFormat: (format: TextFormat) => void;
+  onUndo: () => void;
 };
 
 export function Toolbar({
   activeColor,
   activeFormats,
+  canRedo,
+  canUndo,
   isColorPaletteOpen,
   onApplyColor,
   onClearFormatting,
@@ -48,8 +57,10 @@ export function Toolbar({
   onCopy,
   onPaste,
   onPreviewColor,
+  onRedo,
   onToggleColorPalette,
   onToggleFormat,
+  onUndo,
 }: ToolbarProps) {
   const { t } = useI18n();
   const colorButtonRef = useRef<HTMLButtonElement | null>(null);
@@ -108,9 +119,30 @@ export function Toolbar({
       icon: ClearIcon,
       tone: "text-[#A24A2D] bg-[rgba(255,122,89,0.12)]",
     },
+    {
+      action: "undo",
+      disabled: !canUndo,
+      label: t.notes.undo,
+      icon: UndoIcon,
+      shortcut: TEXT_HISTORY_SHORTCUTS.undo,
+      tone: "text-[#7A5E39] bg-[rgba(191,155,101,0.12)]",
+    },
+    {
+      action: "redo",
+      disabled: !canRedo,
+      label: t.notes.redo,
+      icon: RedoIcon,
+      shortcut: TEXT_HISTORY_SHORTCUTS.redo,
+      tone: "text-[#3B6D8A] bg-[rgba(63,156,168,0.12)]",
+      tooltipClassName: "right-0 translate-x-0",
+    },
   ];
 
-  const handleAction = (action?: ToolbarItem["action"]) => {
+  const handleAction = (action?: ToolbarItem["action"], disabled?: boolean) => {
+    if (disabled) {
+      return;
+    }
+
     if (action === "color") {
       onToggleColorPalette();
       return;
@@ -126,6 +158,16 @@ export function Toolbar({
       return;
     }
 
+    if (action === "undo") {
+      onUndo();
+      return;
+    }
+
+    if (action === "redo") {
+      onRedo();
+      return;
+    }
+
     if (action === "clear") {
       onClearFormatting();
     }
@@ -133,9 +175,9 @@ export function Toolbar({
 
   return (
     <div
-      className="paper-card note-toolbar-grid relative rounded-[15px] bg-[rgba(255,250,244,0.66)] px-1.25 py-1.25"
+      className="paper-card note-toolbar-grid relative rounded-[14px] bg-[rgba(255,250,244,0.66)] px-1 py-1"
     >
-      {toolItems.map(({ action, activeTone, format, label, icon: Icon, shortcut, tone, tooltipClassName }, index) => {
+      {toolItems.map(({ action, activeTone, disabled, format, label, icon: Icon, shortcut, tone, tooltipClassName }, index) => {
         const isActive =
           format ? activeFormats[format] : action === "color" ? Boolean(activeColor) || isColorPaletteOpen : false;
 
@@ -145,23 +187,36 @@ export function Toolbar({
             type="button"
             ref={action === "color" ? colorButtonRef : undefined}
             aria-label={label}
+            aria-disabled={disabled ? "true" : "false"}
             aria-pressed={format ? isActive : undefined}
             onPointerDown={
               format
                 ? (event) => {
+                    if (disabled) {
+                      return;
+                    }
+
                     event.preventDefault();
                     event.stopPropagation();
                     onToggleFormat(format);
                   }
                 : (event) => {
+                    if (disabled) {
+                      return;
+                    }
+
                     event.preventDefault();
                     event.stopPropagation();
-                    handleAction(action);
+                    handleAction(action, disabled);
                   }
             }
             onClick={
               format || action
                 ? (event) => {
+                    if (disabled) {
+                      return;
+                    }
+
                     if (event.detail !== 0) {
                       return;
                     }
@@ -173,23 +228,25 @@ export function Toolbar({
                       return;
                     }
 
-                    handleAction(action);
+                    handleAction(action, disabled);
                   }
                 : undefined
             }
-            className={`group relative inline-flex h-7 w-7 items-center justify-center rounded-[9px] border border-[rgba(213,198,180,0.86)] shadow-[0_6px_12px_rgba(61,49,34,0.05)] transition-[background-color,border-color,color,box-shadow] ${
+            className={`group relative inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-[8px] border border-[rgba(213,198,180,0.86)] shadow-[0_5px_10px_rgba(61,49,34,0.05)] transition-[background-color,border-color,color,box-shadow] ${
               isActive && activeTone ? activeTone : tone
+            } ${
+              disabled ? "opacity-45 saturate-75" : ""
             }`}
             initial={{ opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.18, delay: 0.02 * index }}
-            whileHover={{ y: -1.5, scale: 1.03 }}
-            whileTap={{ scale: 0.97 }}
+            whileHover={disabled ? undefined : { y: -1.5, scale: 1.03 }}
+            whileTap={disabled ? undefined : { scale: 0.97 }}
           >
-            <Icon size={12} />
+            <Icon size={11} />
             {action === "color" ? (
               <span
-                className="pointer-events-none absolute bottom-1 right-1 h-2 w-2 rounded-full border border-white/75"
+                className="pointer-events-none absolute bottom-[3px] right-[3px] h-1.5 w-1.5 rounded-full border border-white/75"
                 style={{ backgroundColor: activeColor ?? TEXT_COLOR_PRESETS[0] }}
               />
             ) : null}

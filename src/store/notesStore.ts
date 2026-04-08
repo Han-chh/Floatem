@@ -23,8 +23,8 @@ type NotesState = {
   updateCardTitle: (id: string, title: string) => void;
   updateCardContent: (id: string, content: Descendant[]) => void;
   assignGroupToCard: (cardId: string, groupId: string | null) => void;
-  createGroup: (input: Pick<NoteGroup, "name" | "color">) => NoteGroup;
-  updateGroup: (id: string, input: Pick<NoteGroup, "name" | "color">) => void;
+  createGroup: (input: Pick<NoteGroup, "name" | "color">) => NoteGroup | null;
+  updateGroup: (id: string, input: Pick<NoteGroup, "name" | "color">) => boolean;
   deleteGroup: (id: string) => void;
   toggleCollapsed: (id: string) => void;
   moveCard: (activeId: string, overId: string) => void;
@@ -74,6 +74,22 @@ function isSameContent(left: Descendant[], right: Descendant[]) {
   }
 
   return JSON.stringify(left) === JSON.stringify(right);
+}
+
+function normalizeGroupNameKey(name: string) {
+  return name.trim().toLocaleLowerCase();
+}
+
+function hasConflictingGroupName(groups: NoteGroup[], name: string, excludedId?: string) {
+  const normalizedName = normalizeGroupNameKey(name);
+
+  return groups.some((group) => {
+    if (group.id === excludedId) {
+      return false;
+    }
+
+    return normalizeGroupNameKey(group.name) === normalizedName;
+  });
 }
 
 export const useNotesStore = create<NotesState>()(
@@ -150,18 +166,30 @@ export const useNotesStore = create<NotesState>()(
       });
     },
     createGroup: (input) => {
-      const group = createNoteGroup({
-        name: input.name,
-        color: input.color,
-      });
+      const nextName = input.name.trim();
+      let group: NoteGroup | null = null;
 
-      set((state) => ({
-        groups: [...state.groups, group],
-      }));
+      set((state) => {
+        if (!nextName || hasConflictingGroupName(state.groups, nextName)) {
+          return state;
+        }
+
+        group = createNoteGroup({
+          id: nextName,
+          name: nextName,
+          color: input.color,
+        });
+
+        return {
+          groups: [...state.groups, group],
+        };
+      });
 
       return group;
     },
     updateGroup: (id, input) => {
+      let didSucceed = false;
+
       set((state) => {
         const previousGroup = state.groups.find((group) => group.id === id);
         if (!previousGroup) {
@@ -169,8 +197,15 @@ export const useNotesStore = create<NotesState>()(
         }
 
         const nextName = input.name.trim();
+        if (!nextName || hasConflictingGroupName(state.groups, nextName, id)) {
+          return state;
+        }
+
         const nextColor = input.color.trim();
-        const didChange = previousGroup.name !== nextName || previousGroup.color !== nextColor;
+        const nextId = nextName;
+        const didChange =
+          previousGroup.id !== nextId || previousGroup.name !== nextName || previousGroup.color !== nextColor;
+        didSucceed = true;
 
         if (!didChange) {
           return state;
@@ -179,6 +214,7 @@ export const useNotesStore = create<NotesState>()(
         const updatedAt = Date.now();
         const groups = updateGroupById(state.groups, id, (group) => ({
           ...group,
+          id: nextId,
           name: nextName,
           color: nextColor,
           updatedAt,
@@ -187,6 +223,7 @@ export const useNotesStore = create<NotesState>()(
           card.groupId === id
             ? {
                 ...card,
+                groupId: nextId,
                 dotColor: nextColor,
               }
             : card,
@@ -197,6 +234,8 @@ export const useNotesStore = create<NotesState>()(
           cards,
         };
       });
+
+      return didSucceed;
     },
     deleteGroup: (id) => {
       set((state) => ({

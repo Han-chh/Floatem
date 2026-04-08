@@ -41,20 +41,43 @@ describe("notesStore", () => {
       name: "Travel",
     });
 
+    expect(travel).not.toBeNull();
+    if (!travel) {
+      throw new Error("Expected group creation to succeed.");
+    }
+
     expect(useNotesStore.getState().groups).toHaveLength(2);
+    expect(travel.id).toBe("Travel");
+
+    expect(
+      useNotesStore.getState().createGroup({
+        color: "#7B5CFA",
+        name: "travel",
+      }),
+    ).toBeNull();
 
     useNotesStore.getState().assignGroupToCard("note-a", travel.id);
     expect(useNotesStore.getState().cards[0]?.groupId).toBe(travel.id);
     expect(useNotesStore.getState().cards[0]?.dotColor).toBe("#1FA87A");
 
-    useNotesStore.getState().updateGroup(travel.id, {
-      color: "#F4B942",
-      name: "Trips",
-    });
-    expect(useNotesStore.getState().groups.find((item) => item.id === travel.id)?.name).toBe("Trips");
+    expect(
+      useNotesStore.getState().updateGroup(travel.id, {
+        color: "#F4B942",
+        name: "Trips",
+      }),
+    ).toBe(true);
+    expect(useNotesStore.getState().groups.find((item) => item.id === "Trips")?.name).toBe("Trips");
+    expect(useNotesStore.getState().cards[0]?.groupId).toBe("Trips");
     expect(useNotesStore.getState().cards[0]?.dotColor).toBe("#F4B942");
 
-    useNotesStore.getState().deleteGroup(travel.id);
+    expect(
+      useNotesStore.getState().updateGroup("Trips", {
+        color: "#2F6BFF",
+        name: "Work",
+      }),
+    ).toBe(false);
+
+    useNotesStore.getState().deleteGroup("Trips");
     expect(useNotesStore.getState().groups).toHaveLength(1);
     expect(useNotesStore.getState().cards[0]?.groupId).toBeNull();
     expect(useNotesStore.getState().cards[0]?.dotColor).toBe(DEFAULT_UNGROUPED_NOTE_COLOR);

@@ -1,11 +1,12 @@
 import { createEditor, Range, Transforms } from "slate";
-import { withHistory } from "slate-history";
+import { HistoryEditor, withHistory } from "slate-history";
 import type { Descendant } from "slate";
 import { Editable, ReactEditor, Slate, withReact } from "slate-react";
 import type { RenderElementProps, RenderLeafProps } from "slate-react";
 import { useRef, useState } from "react";
 import { isPrimaryShortcut } from "../../lib/isPrimaryShortcut";
 import { useI18n } from "../../lib/i18n";
+import { isNativeQuickNoteHost } from "../../lib/nativeBridge";
 import { readPlainTextFromClipboard, writePlainTextToClipboard } from "../../lib/plainTextClipboard";
 import { DEFAULT_NOTE_CONTENT } from "../../lib/models";
 import { withColorMark } from "../../lib/slate-plugins/withColorMark";
@@ -14,6 +15,7 @@ import {
   clearTextFormatting,
   getActiveTextColor,
   getAllPlainText,
+  getTextHistoryHotkey,
   getSelectedPlainText,
   getTextFormatHotkey,
   insertPlainText,
@@ -56,9 +58,11 @@ function renderLeaf(props: RenderLeafProps) {
 export function Editor({ content, onChange }: EditorProps) {
   const { t } = useI18n();
   const [editor] = useState(() => withColorMark(withHistory(withReact(createEditor()))));
-  const [formattingState, setFormattingState] = useState<{
+  const [toolbarState, setToolbarState] = useState<{
     activeColor: string | null;
     activeFormats: Record<TextFormat, boolean>;
+    canRedo: boolean;
+    canUndo: boolean;
   }>({
     activeColor: null,
     activeFormats: {
@@ -66,6 +70,8 @@ export function Editor({ content, onChange }: EditorProps) {
       italic: false,
       underline: false,
     },
+    canRedo: false,
+    canUndo: false,
   });
   const [pendingTextColor, setPendingTextColor] = useState<string | null>(null);
   const [isColorPaletteOpen, setIsColorPaletteOpen] = useState(false);
@@ -82,30 +88,25 @@ export function Editor({ content, onChange }: EditorProps) {
 
     Transforms.select(editor, colorSelectionRef.current);
   };
-  const syncActiveFormats = () => {
-    setFormattingState({
-      activeColor: getActiveTextColor(editor),
-      activeFormats: {
-        bold: isTextFormatActive(editor, "bold"),
-        italic: isTextFormatActive(editor, "italic"),
-        underline: isTextFormatActive(editor, "underline"),
-      },
-    });
-  };
-  const syncActiveFormatsWithColor = (color: string | null) => {
-    setFormattingState({
-      activeColor: color,
-      activeFormats: {
-        bold: isTextFormatActive(editor, "bold"),
-        italic: isTextFormatActive(editor, "italic"),
-        underline: isTextFormatActive(editor, "underline"),
-      },
+  const readToolbarState = (activeColorOverride?: string | null) => ({
+    activeColor: activeColorOverride === undefined ? getActiveTextColor(editor) : activeColorOverride,
+    activeFormats: {
+      bold: isTextFormatActive(editor, "bold"),
+      italic: isTextFormatActive(editor, "italic"),
+      underline: isTextFormatActive(editor, "underline"),
+    },
+    canRedo: editor.history.redos.length > 0,
+    canUndo: editor.history.undos.length > 0,
+  });
+  const syncToolbarState = (activeColorOverride?: string | null) => {
+    setToolbarState({
+      ...readToolbarState(activeColorOverride),
     });
   };
   const restoreEditorFocus = () => {
     const focusEditor = () => {
       ReactEditor.focus(editor);
-      syncActiveFormats();
+      syncToolbarState();
     };
 
     if (typeof window === "undefined") {
@@ -116,9 +117,14 @@ export function Editor({ content, onChange }: EditorProps) {
     focusEditor();
     window.requestAnimationFrame(focusEditor);
   };
+  const getCopyText = (mode: "selection" | "all" | "selection-or-all" = "selection") => {
+    const selectedText = getSelectedPlainText(editor);
+
+    return mode === "all" ? getAllPlainText(editor) : mode === "selection-or-all" ? selectedText || getAllPlainText(editor) : selectedText;
+  };
   const handleToggleFormat = (format: TextFormat) => {
     toggleTextFormat(editor, format);
-    syncActiveFormats();
+    syncToolbarState();
     restoreEditorFocus();
   };
   const commitPendingTextColor = () => {
@@ -128,7 +134,7 @@ export function Editor({ content, onChange }: EditorProps) {
 
     setTextColor(editor, pendingTextColor);
     setPendingTextColor(null);
-    syncActiveFormats();
+    syncToolbarState();
   };
   const handleApplyColor = (color: string) => {
     ReactEditor.focus(editor);
@@ -138,7 +144,7 @@ export function Editor({ content, onChange }: EditorProps) {
       setPendingTextColor(color);
       setIsColorPaletteOpen(false);
       colorSelectionRef.current = null;
-      syncActiveFormatsWithColor(color);
+      syncToolbarState(color);
       restoreEditorFocus();
       return;
     }
@@ -147,7 +153,7 @@ export function Editor({ content, onChange }: EditorProps) {
     setPendingTextColor(null);
     setIsColorPaletteOpen(false);
     colorSelectionRef.current = null;
-    syncActiveFormats();
+    syncToolbarState();
     restoreEditorFocus();
   };
   const handlePreviewColor = (color: string) => {
@@ -156,26 +162,24 @@ export function Editor({ content, onChange }: EditorProps) {
 
     if (isEmptyEditor() && !hasExpandedSelection()) {
       setPendingTextColor(color);
-      syncActiveFormatsWithColor(color);
+      syncToolbarState(color);
       return;
     }
 
     setTextColor(editor, color);
     setPendingTextColor(null);
-    syncActiveFormats();
+    syncToolbarState();
   };
   const handleClearFormatting = () => {
     clearTextFormatting(editor);
     setPendingTextColor(null);
     setIsColorPaletteOpen(false);
     colorSelectionRef.current = null;
-    syncActiveFormats();
+    syncToolbarState();
     restoreEditorFocus();
   };
   const handleCopy = async (mode: "selection" | "all" | "selection-or-all" = "selection") => {
-    const selectedText = getSelectedPlainText(editor);
-    const text =
-      mode === "all" ? getAllPlainText(editor) : mode === "selection-or-all" ? selectedText || getAllPlainText(editor) : selectedText;
+    const text = getCopyText(mode);
 
     if (!text) {
       restoreEditorFocus();
@@ -188,18 +192,42 @@ export function Editor({ content, onChange }: EditorProps) {
   const handlePaste = async () => {
     const text = await readPlainTextFromClipboard();
 
+    insertPastedText(text);
+  };
+  const insertPastedText = (text: string) => {
     if (!text) {
       restoreEditorFocus();
       return;
     }
 
+    commitPendingTextColor();
     insertPlainText(editor, text);
     setIsColorPaletteOpen(false);
-    syncActiveFormats();
+    syncToolbarState();
+    restoreEditorFocus();
+  };
+  const handleUndo = () => {
+    if (editor.history.undos.length === 0) {
+      restoreEditorFocus();
+      return;
+    }
+
+    HistoryEditor.undo(editor);
+    syncToolbarState();
+    restoreEditorFocus();
+  };
+  const handleRedo = () => {
+    if (editor.history.redos.length === 0) {
+      restoreEditorFocus();
+      return;
+    }
+
+    HistoryEditor.redo(editor);
+    syncToolbarState();
     restoreEditorFocus();
   };
   const handleChange = (value: Descendant[]) => {
-    syncActiveFormats();
+    syncToolbarState();
     const hasDocumentChange = editor.operations.some((operation) => operation.type !== "set_selection");
 
     if (!hasDocumentChange) {
@@ -213,15 +241,18 @@ export function Editor({ content, onChange }: EditorProps) {
     <Slate editor={editor} initialValue={content.length > 0 ? content : DEFAULT_NOTE_CONTENT} onChange={handleChange}>
       <div className="space-y-2">
         <Toolbar
-          activeColor={formattingState.activeColor ?? pendingTextColor}
-          activeFormats={formattingState.activeFormats}
+          activeColor={toolbarState.activeColor ?? pendingTextColor}
+          activeFormats={toolbarState.activeFormats}
+          canRedo={toolbarState.canRedo}
+          canUndo={toolbarState.canUndo}
           isColorPaletteOpen={isColorPaletteOpen}
           onApplyColor={handleApplyColor}
           onClearFormatting={handleClearFormatting}
           onCloseColorPalette={() => setIsColorPaletteOpen(false)}
-          onCopy={() => void handleCopy("all")}
+          onCopy={() => void handleCopy("selection-or-all")}
           onPaste={() => void handlePaste()}
           onPreviewColor={handlePreviewColor}
+          onRedo={handleRedo}
           onToggleColorPalette={() => {
             if (!isColorPaletteOpen) {
               rememberColorSelection();
@@ -230,10 +261,23 @@ export function Editor({ content, onChange }: EditorProps) {
             setIsColorPaletteOpen((current) => !current);
           }}
           onToggleFormat={handleToggleFormat}
+          onUndo={handleUndo}
         />
         <Editable
           onDOMBeforeInput={(event) => {
             const inputEvent = event as InputEvent;
+
+            if (inputEvent.inputType === "historyUndo") {
+              event.preventDefault();
+              handleUndo();
+              return;
+            }
+
+            if (inputEvent.inputType === "historyRedo") {
+              event.preventDefault();
+              handleRedo();
+              return;
+            }
 
             if (
               pendingTextColor &&
@@ -247,29 +291,48 @@ export function Editor({ content, onChange }: EditorProps) {
           }}
           onPointerDown={(event) => event.stopPropagation()}
           onCopy={(event) => {
-            const text = getSelectedPlainText(editor);
+            const text = getCopyText("selection-or-all");
 
             if (!text) {
               return;
             }
 
             event.preventDefault();
+            if (isNativeQuickNoteHost()) {
+              void handleCopy("selection-or-all");
+              return;
+            }
+
             event.clipboardData.setData("text/plain", text);
           }}
           onPaste={(event) => {
             event.preventDefault();
             const text = event.clipboardData.getData("text/plain");
 
-            if (!text) {
+            if (text) {
+              insertPastedText(text);
               return;
             }
 
-            commitPendingTextColor();
-            insertPlainText(editor, text);
-            setIsColorPaletteOpen(false);
-            syncActiveFormats();
+            if (isNativeQuickNoteHost()) {
+              void handlePaste();
+            }
           }}
           onKeyDown={(event) => {
+            const historyAction = getTextHistoryHotkey(event);
+
+            if (historyAction) {
+              event.preventDefault();
+
+              if (historyAction === "undo") {
+                handleUndo();
+                return;
+              }
+
+              handleRedo();
+              return;
+            }
+
             const format = getTextFormatHotkey(event);
 
             if (format) {
@@ -281,8 +344,20 @@ export function Editor({ content, onChange }: EditorProps) {
             if (isPrimaryShortcut(event, "a")) {
               event.preventDefault();
               selectAllText(editor);
-              syncActiveFormats();
+              syncToolbarState();
               restoreEditorFocus();
+              return;
+            }
+
+            if (isPrimaryShortcut(event, "c")) {
+              event.preventDefault();
+              void handleCopy("selection-or-all");
+              return;
+            }
+
+            if (isPrimaryShortcut(event, "v")) {
+              event.preventDefault();
+              void handlePaste();
             }
           }}
           className="surface-field wrap-anywhere min-h-[76px] rounded-[20px] px-3 py-3 text-[12.25px] leading-[1.6] outline-none"

@@ -65,6 +65,7 @@ for (const viewport of VIEWPORTS) {
     test("notes layout keeps controls and title visible", async ({ page }) => {
       await bootPreview(page);
 
+      await expectWithinViewport(page, page.getByRole("button", { name: "Filter groups" }));
       await page.getByRole("button", { name: "Add note" }).click();
       const title = page.getByLabel("Note title");
       await title.fill(LONG_NOTE);
@@ -73,6 +74,8 @@ for (const viewport of VIEWPORTS) {
       await expectWithinViewport(page, page.getByTestId("note-card").first());
       await expectWithinViewport(page, page.getByRole("button", { name: "Collapse note" }));
       await expectWithinViewport(page, page.getByRole("button", { name: "Delete note" }));
+      await page.getByRole("button", { name: "Filter groups" }).click();
+      await expectWithinViewport(page, page.getByRole("dialog", { name: "Filter groups" }));
       await expectNoSelfOverflow(title);
       await expectNoHorizontalOverflow(page);
     });

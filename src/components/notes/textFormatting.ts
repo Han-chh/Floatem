@@ -2,11 +2,17 @@ import { Editor as SlateEditor, Range, Transforms, type Editor as SlateEditorTyp
 import { isPrimaryShortcut } from "../../lib/isPrimaryShortcut";
 
 export type TextFormat = "bold" | "italic" | "underline";
+export type TextHistoryAction = "undo" | "redo";
 
 export const TEXT_FORMAT_SHORTCUTS: Record<TextFormat, string> = {
   bold: "Cmd+B",
   italic: "Cmd+I",
   underline: "Cmd+U",
+};
+
+export const TEXT_HISTORY_SHORTCUTS: Record<TextHistoryAction, string> = {
+  undo: "Cmd+Z",
+  redo: "Cmd+Shift+Z",
 };
 
 export const TEXT_COLOR_PRESETS = [
@@ -180,6 +186,24 @@ export function getTextFormatHotkey(event: {
 
   if (isPrimaryShortcut(event, "u")) {
     return "underline";
+  }
+
+  return null;
+}
+
+export function getTextHistoryHotkey(event: {
+  altKey: boolean;
+  ctrlKey: boolean;
+  key: string;
+  metaKey: boolean;
+  shiftKey: boolean;
+}) {
+  if (isPrimaryShortcut(event, "z")) {
+    return "undo";
+  }
+
+  if ((event.metaKey || event.ctrlKey) && !event.altKey && event.shiftKey && event.key.toLowerCase() === "z") {
+    return "redo";
   }
 
   return null;

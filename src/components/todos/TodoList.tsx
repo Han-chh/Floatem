@@ -22,6 +22,7 @@ import {
 import { useDragPointerTracking } from "../../hooks/useDragPointerTracking";
 import { isPrimaryShortcut } from "../../lib/isPrimaryShortcut";
 import { useI18n } from "../../lib/i18n";
+import { isNativeQuickNoteHost } from "../../lib/nativeBridge";
 import { readPlainTextFromClipboard, writePlainTextToClipboard } from "../../lib/plainTextClipboard";
 import { ParticleField } from "../feedback/ParticleField";
 import { CornerDownLeftIcon } from "../icons/AppIcons";
@@ -361,6 +362,11 @@ export function TodoList() {
                 }
 
                 event.preventDefault();
+                if (isNativeQuickNoteHost()) {
+                  void writePlainTextToClipboard(text);
+                  return;
+                }
+
                 event.clipboardData.setData("text/plain", text);
               }}
               onInput={(event) => syncTextareaHeight(event.currentTarget)}
@@ -368,11 +374,14 @@ export function TodoList() {
                 event.preventDefault();
                 const text = event.clipboardData.getData("text/plain");
 
-                if (!text) {
+                if (text) {
+                  replaceDraftSelection(event.currentTarget, text);
                   return;
                 }
 
-                replaceDraftSelection(event.currentTarget, text);
+                if (isNativeQuickNoteHost()) {
+                  void handleDraftPaste(event.currentTarget);
+                }
               }}
               onKeyDown={handleDraftKeyDown}
               placeholder={t.todos.quickAddPlaceholder}

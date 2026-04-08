@@ -17,6 +17,13 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private weak var statusQuitItem: NSMenuItem?
     private weak var mainMenuToggleItem: NSMenuItem?
     private weak var mainMenuQuitItem: NSMenuItem?
+    private weak var mainMenuEditItem: NSMenuItem?
+    private weak var mainMenuUndoItem: NSMenuItem?
+    private weak var mainMenuRedoItem: NSMenuItem?
+    private weak var mainMenuCutItem: NSMenuItem?
+    private weak var mainMenuCopyItem: NSMenuItem?
+    private weak var mainMenuPasteItem: NSMenuItem?
+    private weak var mainMenuSelectAllItem: NSMenuItem?
     private var languageObserver: NSObjectProtocol?
 
     private var localization: QuickNoteLocalization {
@@ -183,6 +190,52 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         mainMenuQuitItem = quitItem
 
         appMenuItem.submenu = appMenu
+
+        let editMenuItem = NSMenuItem(title: localization.menuEdit, action: nil, keyEquivalent: "")
+        mainMenu.addItem(editMenuItem)
+        mainMenuEditItem = editMenuItem
+
+        let editMenu = NSMenu(title: localization.menuEdit)
+
+        let undoItem = NSMenuItem(title: localization.menuUndo, action: Selector(("undo:")), keyEquivalent: "z")
+        undoItem.keyEquivalentModifierMask = [.command]
+        editMenu.addItem(undoItem)
+        mainMenuUndoItem = undoItem
+
+        let redoItem = NSMenuItem(title: localization.menuRedo, action: Selector(("redo:")), keyEquivalent: "Z")
+        redoItem.keyEquivalentModifierMask = [.command, .shift]
+        editMenu.addItem(redoItem)
+        mainMenuRedoItem = redoItem
+
+        editMenu.addItem(NSMenuItem.separator())
+
+        let cutItem = NSMenuItem(title: localization.menuCut, action: #selector(NSText.cut(_:)), keyEquivalent: "x")
+        cutItem.keyEquivalentModifierMask = [.command]
+        editMenu.addItem(cutItem)
+        mainMenuCutItem = cutItem
+
+        let copyItem = NSMenuItem(title: localization.menuCopy, action: #selector(NSText.copy(_:)), keyEquivalent: "c")
+        copyItem.keyEquivalentModifierMask = [.command]
+        editMenu.addItem(copyItem)
+        mainMenuCopyItem = copyItem
+
+        let pasteItem = NSMenuItem(title: localization.menuPaste, action: #selector(NSText.paste(_:)), keyEquivalent: "v")
+        pasteItem.keyEquivalentModifierMask = [.command]
+        editMenu.addItem(pasteItem)
+        mainMenuPasteItem = pasteItem
+
+        editMenu.addItem(NSMenuItem.separator())
+
+        let selectAllItem = NSMenuItem(
+            title: localization.menuSelectAll,
+            action: #selector(NSResponder.selectAll(_:)),
+            keyEquivalent: "a"
+        )
+        selectAllItem.keyEquivalentModifierMask = [.command]
+        editMenu.addItem(selectAllItem)
+        mainMenuSelectAllItem = selectAllItem
+
+        editMenuItem.submenu = editMenu
         NSApp.mainMenu = mainMenu
     }
 
@@ -208,5 +261,13 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         statusQuitItem?.title = localization.menuQuit
         mainMenuToggleItem?.title = localization.menuToggleApp
         mainMenuQuitItem?.title = localization.menuQuitApp
+        mainMenuEditItem?.title = localization.menuEdit
+        mainMenuEditItem?.submenu?.title = localization.menuEdit
+        mainMenuUndoItem?.title = localization.menuUndo
+        mainMenuRedoItem?.title = localization.menuRedo
+        mainMenuCutItem?.title = localization.menuCut
+        mainMenuCopyItem?.title = localization.menuCopy
+        mainMenuPasteItem?.title = localization.menuPaste
+        mainMenuSelectAllItem?.title = localization.menuSelectAll
     }
 }

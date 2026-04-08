@@ -315,7 +315,8 @@ final class MainWindowController: NSObject, NSWindowDelegate, QuickNoteNativeBri
     }
 
     func windowDidBecomeKey(_ notification: Notification) {
-        if activeTextColorPanelRequestID != nil {
+        if dismissTextColorPanelIfNeededForPanelFocus(context: "Panel became key") {
+            logPanelState(context: "Panel became key")
             return
         }
 
@@ -324,7 +325,8 @@ final class MainWindowController: NSObject, NSWindowDelegate, QuickNoteNativeBri
     }
 
     func windowDidBecomeMain(_ notification: Notification) {
-        if activeTextColorPanelRequestID != nil {
+        if dismissTextColorPanelIfNeededForPanelFocus(context: "Panel became main") {
+            logPanelState(context: "Panel became main")
             return
         }
 
@@ -533,6 +535,17 @@ final class MainWindowController: NSObject, NSWindowDelegate, QuickNoteNativeBri
         if emitClose, let requestID {
             webViewController.emitTextColorPanelClose(requestID: requestID)
         }
+    }
+
+    private func dismissTextColorPanelIfNeededForPanelFocus(context: String) -> Bool {
+        guard activeTextColorPanelRequestID != nil, NSColorPanel.shared.isVisible else {
+            return false
+        }
+
+        dismissTextColorPanel(emitClose: true)
+        updatePanelPresentationForCurrentInteraction()
+        logger.debug("\(context, privacy: .public): dismissed text color panel after the main panel regained focus.")
+        return true
     }
 
     private func positionTextColorPanel(_ colorPanel: NSColorPanel) {

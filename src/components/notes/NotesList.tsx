@@ -19,9 +19,13 @@ import { useParticleField } from "../../hooks/useParticleField";
 import { useNotesStore } from "../../store/notesStore";
 import { useSettingsStore } from "../../store/settingsStore";
 import { ParticleField } from "../feedback/ParticleField";
-import { PlusIcon } from "../icons/AppIcons";
+import { GroupFilterIcon, PlusIcon } from "../icons/AppIcons";
 import { NoteCard, NoteCardPreview } from "./NoteCard";
-import { NotesGroupPanel, UNGROUPED_GROUP_FILTER_ID } from "./NotesGroupPanel";
+import { NOTE_FILTER_UNGROUPED_KEY, NoteGroupFilterDialog } from "./NoteGroupFilterDialog";
+
+type NoteGroupFilterState =
+  | { mode: "all" }
+  | { mode: "custom"; keys: string[] };
 
 export function NotesList() {
   const { t } = useI18n();
@@ -35,68 +39,46 @@ export function NotesList() {
   const [activeDragId, setActiveDragId] = useState<string | null>(null);
   const [activeDragOverId, setActiveDragOverId] = useState<string | null>(null);
   const [activeDragWidth, setActiveDragWidth] = useState<number | null>(null);
-  const [selectedGroupFilters, setSelectedGroupFilters] = useState<string[] | null>(null);
-  const [isCompactHeight, setIsCompactHeight] = useState(() => (typeof window === "undefined" ? false : window.innerHeight < 540));
+  const [isFilterDialogOpen, setIsFilterDialogOpen] = useState(false);
+  const [groupFilterState, setGroupFilterState] = useState<NoteGroupFilterState>({ mode: "all" });
   const { bursts, fieldRef, spawnBurst } = useParticleField();
   const sensors = useSensors(
     useSensor(PointerSensor, {
       activationConstraint: { distance: 4 },
     }),
   );
+  const baseVisibleCards = useMemo(
+    () => cards.filter((card) => !removingIds.includes(card.id)),
+    [cards, removingIds],
+  );
   const availableFilterKeys = useMemo(
-    () => [UNGROUPED_GROUP_FILTER_ID, ...groups.map((group) => group.id)],
+    () => [NOTE_FILTER_UNGROUPED_KEY, ...groups.map((group) => group.id)],
     [groups],
   );
-
-  const matchesGroupFilter = (groupId: string | null) => {
-    if (selectedGroupFilters === null) {
-      return true;
+  const selectedFilterKeys = useMemo(() => {
+    if (groupFilterState.mode === "all") {
+      return availableFilterKeys;
     }
 
-    return selectedGroupFilters.includes(groupId ?? UNGROUPED_GROUP_FILTER_ID);
-  };
+    return availableFilterKeys.filter((key) => groupFilterState.keys.includes(key));
+  }, [availableFilterKeys, groupFilterState]);
+  const selectedFilterKeySet = useMemo(() => new Set(selectedFilterKeys), [selectedFilterKeys]);
+  const allGroupsSelected = groupFilterState.mode === "all" || selectedFilterKeys.length === availableFilterKeys.length;
+  const visibleCards = useMemo(() => {
+    if (allGroupsSelected) {
+      return baseVisibleCards;
+    }
 
-  const visibleCards = cards
-    .filter((card) => !removingIds.includes(card.id))
-    .filter((card) => matchesGroupFilter(card.groupId));
-  const activeDragCard = cards.find((card) => card.id === activeDragId) ?? null;
+    return baseVisibleCards.filter((card) =>
+      selectedFilterKeySet.has(card.groupId ?? NOTE_FILTER_UNGROUPED_KEY),
+    );
+  }, [allGroupsSelected, baseVisibleCards, selectedFilterKeySet]);
+  const activeDragCard =
+    visibleCards.find((card) => card.id === activeDragId) ??
+    baseVisibleCards.find((card) => card.id === activeDragId) ??
+    null;
   const dragPointerCoordinates = useDragPointerTracking(Boolean(activeDragId));
-
-  useEffect(() => {
-    setSelectedGroupFilters((current) => {
-      if (current === null) {
-        return null;
-      }
-
-      const next = current.filter((key) => availableFilterKeys.includes(key));
-
-      if (next.length === 0) {
-        return [];
-      }
-
-      if (next.length === availableFilterKeys.length) {
-        return null;
-      }
-
-      return next;
-    });
-  }, [availableFilterKeys]);
-
-  useEffect(() => {
-    if (typeof window === "undefined") {
-      return;
-    }
-
-    const handleResize = () => {
-      setIsCompactHeight(window.innerHeight < 540);
-    };
-
-    window.addEventListener("resize", handleResize);
-
-    return () => {
-      window.removeEventListener("resize", handleResize);
-    };
-  }, []);
+  const isFilterActive = !allGroupsSelected;
 
   useEffect(() => {
     if (!activeDragId || !dragPointerCoordinates || typeof document === "undefined") {
@@ -115,6 +97,24 @@ export function NotesList() {
 
     setActiveDragOverId(nextTarget);
   }, [activeDragId, dragPointerCoordinates]);
+
+  useEffect(() => {
+    setGroupFilterState((current) => {
+      if (current.mode === "all") {
+        return current;
+      }
+
+      const nextKeys = availableFilterKeys.filter((key) => current.keys.includes(key));
+      const isUnchanged =
+        nextKeys.length === current.keys.length && nextKeys.every((key, index) => key === current.keys[index]);
+
+      if (nextKeys.length === availableFilterKeys.length) {
+        return { mode: "all" };
+      }
+
+      return isUnchanged ? current : { mode: "custom", keys: nextKeys };
+    });
+  }, [availableFilterKeys]);
 
   const handleAddCard = (target: DOMRect) => {
     const card = addCard();
@@ -173,37 +173,28 @@ export function NotesList() {
     moveCard(activeId, overId);
   };
 
-  const handleToggleGroupFilter = (key: string) => {
-    setSelectedGroupFilters((current) => {
-      const allKeys = new Set(availableFilterKeys);
-      const next = current === null ? new Set(allKeys) : new Set(current);
+  const handleSelectAllGroups = () => {
+    setGroupFilterState({ mode: "all" });
+  };
 
-      if (next.has(key)) {
-        next.delete(key);
-      } else {
-        next.add(key);
+  const handleToggleFilterKey = (key: string) => {
+    setGroupFilterState((current) => {
+      const baseKeys =
+        current.mode === "all" ? availableFilterKeys : availableFilterKeys.filter((item) => current.keys.includes(item));
+      const hasKey = baseKeys.includes(key);
+      const nextKeys = hasKey ? baseKeys.filter((item) => item !== key) : [...baseKeys, key];
+      const normalizedKeys = availableFilterKeys.filter((item) => nextKeys.includes(item));
+
+      if (normalizedKeys.length === availableFilterKeys.length) {
+        return { mode: "all" };
       }
 
-      if (next.size === allKeys.size) {
-        return null;
-      }
-
-      return Array.from(next);
+      return { mode: "custom", keys: normalizedKeys };
     });
   };
 
-  const groupPanel = (
-    <NotesGroupPanel
-      cards={cards}
-      selectedFilterKeys={selectedGroupFilters}
-      onToggleFilter={handleToggleGroupFilter}
-    />
-  );
-
   return (
     <section className="cq-module flex h-full min-h-0 flex-col gap-3">
-      {isCompactHeight ? null : groupPanel}
-
       <motion.div
         initial={{ opacity: 0, y: 8 }}
         animate={{ opacity: 1, y: 0 }}
@@ -218,7 +209,7 @@ export function NotesList() {
             animate={{ opacity: 1, y: 0 }}
             className="flex h-full items-center justify-center rounded-[24px] border border-dashed border-[rgba(213,198,180,0.88)] bg-[rgba(255,255,255,0.34)] px-6 text-center text-[13px] leading-6 text-[var(--muted)]"
           >
-            {cards.length === 0 ? t.notes.empty : t.notes.filteredEmpty}
+            {baseVisibleCards.length === 0 ? t.notes.empty : t.notes.filteredEmpty}
           </motion.div>
         ) : (
           <DndContext
@@ -265,8 +256,6 @@ export function NotesList() {
         )}
       </motion.div>
 
-      {isCompactHeight ? groupPanel : null}
-
       <motion.div
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
@@ -280,6 +269,27 @@ export function NotesList() {
         </p>
         <motion.button
           type="button"
+          aria-label={t.notes.filterGroups}
+          aria-pressed={isFilterActive}
+          title={t.notes.filterGroups}
+          className={`paper-button relative inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-full ${
+            isFilterActive
+              ? "border-[rgba(156,126,94,0.5)] bg-[linear-gradient(180deg,rgba(255,251,246,0.98),rgba(255,240,224,0.95))] text-[var(--brown-strong)] shadow-[0_14px_28px_rgba(156,126,94,0.16)]"
+              : ""
+          }`}
+          whileHover={{ y: -2, scale: 1.03 }}
+          whileTap={{ scale: 0.97 }}
+          onClick={() => setIsFilterDialogOpen(true)}
+        >
+          <GroupFilterIcon size={16} />
+          {isFilterActive ? (
+            <span className="absolute -right-0.5 -top-0.5 inline-flex min-w-[18px] items-center justify-center rounded-full bg-[var(--brown-strong)] px-1.5 py-0.5 text-[9px] font-bold leading-none text-white shadow-[0_8px_16px_rgba(61,49,34,0.18)]">
+              {selectedFilterKeys.length}
+            </span>
+          ) : null}
+        </motion.button>
+        <motion.button
+          type="button"
           aria-label={t.notes.add}
           className="paper-button paper-button-primary inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-full"
           whileHover={{ y: -2, scale: 1.03 }}
@@ -289,6 +299,15 @@ export function NotesList() {
           <PlusIcon size={18} />
         </motion.button>
       </motion.div>
+
+      <NoteGroupFilterDialog
+        isOpen={isFilterDialogOpen}
+        allSelected={allGroupsSelected}
+        selectedKeys={selectedFilterKeySet}
+        onClose={() => setIsFilterDialogOpen(false)}
+        onSelectAll={handleSelectAllGroups}
+        onToggleFilter={handleToggleFilterKey}
+      />
     </section>
   );
 }

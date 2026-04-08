@@ -14,7 +14,7 @@ async function boot(page: Page) {
   });
 }
 
-test("notes toolbar supports formatting, copy, paste, clear, and select all", async ({ page }) => {
+test("notes toolbar supports formatting, copy, paste, undo, redo, clear, and select all", async ({ page }) => {
   await boot(page);
 
   await page.getByRole("button", { name: "Add note" }).click();
@@ -25,6 +25,8 @@ test("notes toolbar supports formatting, copy, paste, clear, and select all", as
   const italicButton = firstNote.getByRole("button", { name: "Italic" });
   const underlineButton = firstNote.getByRole("button", { name: "Underline" });
   const copyButton = firstNote.getByRole("button", { name: "Copy" });
+  const undoButton = firstNote.getByRole("button", { name: "Undo" });
+  const redoButton = firstNote.getByRole("button", { name: "Redo" });
   const pasteButton = firstNote.getByRole("button", { name: "Paste" });
   const clearButton = firstNote.getByRole("button", { name: "Clear format" });
 
@@ -36,6 +38,21 @@ test("notes toolbar supports formatting, copy, paste, clear, and select all", as
   await expect(page.getByText("Cmd+U")).toBeVisible();
   await copyButton.hover();
   await expect(page.getByText("Cmd+C")).toBeVisible();
+  const copyBox = await copyButton.boundingBox();
+  const pasteBox = await pasteButton.boundingBox();
+  const redoBox = await redoButton.boundingBox();
+  const boldBox = await boldButton.boundingBox();
+  expect(copyBox).not.toBeNull();
+  expect(pasteBox).not.toBeNull();
+  expect(redoBox).not.toBeNull();
+  expect(boldBox).not.toBeNull();
+  expect(pasteBox!.x).toBeGreaterThan(copyBox!.x);
+  expect(Math.abs(pasteBox!.y - copyBox!.y)).toBeLessThan(1);
+  expect(Math.abs(redoBox!.y - boldBox!.y)).toBeLessThan(1);
+  await undoButton.hover();
+  await expect(page.getByText("Cmd+Z")).toBeVisible();
+  await redoButton.hover();
+  await expect(page.getByText("Cmd+Shift+Z")).toBeVisible();
   await pasteButton.hover();
   await expect(page.getByText("Cmd+V")).toBeVisible();
 
@@ -62,9 +79,34 @@ test("notes toolbar supports formatting, copy, paste, clear, and select all", as
   await copyButton.click();
   await expect.poll(() => page.evaluate(() => navigator.clipboard.readText())).toBe("Bold plain Italic Underline");
 
+  await page.evaluate(() => navigator.clipboard.writeText(""));
+  await editor.click();
+  await page.keyboard.press("Meta+C");
+  await expect.poll(() => page.evaluate(() => navigator.clipboard.readText())).toBe("Bold plain Italic Underline");
+
   await page.keyboard.press("Meta+A");
   await clearButton.click();
   await expect(editor).toContainText("Bold plain Italic Underline");
+  await expect(editor.locator("strong")).toHaveCount(0);
+  await expect(editor.locator("em")).toHaveCount(0);
+  await expect(editor.locator("u")).toHaveCount(0);
+
+  await undoButton.click();
+  await expect(editor.locator("strong")).toHaveCount(1);
+  await expect(editor.locator("em")).toHaveCount(1);
+  await expect(editor.locator("u")).toHaveCount(1);
+
+  await redoButton.click();
+  await expect(editor.locator("strong")).toHaveCount(0);
+  await expect(editor.locator("em")).toHaveCount(0);
+  await expect(editor.locator("u")).toHaveCount(0);
+
+  await page.keyboard.press("Meta+Z");
+  await expect(editor.locator("strong")).toHaveCount(1);
+  await expect(editor.locator("em")).toHaveCount(1);
+  await expect(editor.locator("u")).toHaveCount(1);
+
+  await page.keyboard.press("Meta+Shift+Z");
   await expect(editor.locator("strong")).toHaveCount(0);
   await expect(editor.locator("em")).toHaveCount(0);
   await expect(editor.locator("u")).toHaveCount(0);
