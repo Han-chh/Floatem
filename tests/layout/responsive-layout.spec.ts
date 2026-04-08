@@ -9,6 +9,35 @@ const VIEWPORTS = [
 
 const LONG_NOTE = "Supercalifragilisticexpialidocious-note-title-".repeat(4);
 const LONG_TODO = "Follow up with the product team about the responsive layout edge cases ".repeat(3).trim();
+const GROUP_COLORS = ["#2F6BFF", "#1FA87A", "#F4B942", "#7B5CFA", "#FF7A59", "#3F9CA8"];
+
+function createDenseGroupFixture(groupCount = 18) {
+  const now = Date.now();
+  const groups = Array.from({ length: groupCount }, (_, index) => {
+    const id = `Group ${index + 1}`;
+
+    return {
+      id,
+      name: id,
+      color: GROUP_COLORS[index % GROUP_COLORS.length] ?? GROUP_COLORS[0],
+      createdAt: now + index,
+      updatedAt: now + index,
+    };
+  });
+
+  const cards = groups.map((group, index) => ({
+    id: `note-${index + 1}`,
+    title: `${group.name} note`,
+    dotColor: group.color,
+    groupId: group.id,
+    collapsed: false,
+    content: [{ type: "paragraph", children: [{ text: `${group.name} details` }] }],
+    createdAt: now + index,
+    updatedAt: now + index,
+  }));
+
+  return { cards, groups };
+}
 
 async function bootPreview(page: Page) {
   await page.emulateMedia({ reducedMotion: "reduce" });
@@ -22,6 +51,12 @@ async function bootPreview(page: Page) {
       }
     `,
   });
+}
+
+async function seedNotes(page: Page, notes: unknown) {
+  await page.addInitScript((seed) => {
+    window.localStorage.setItem("quicknote.notes", JSON.stringify(seed));
+  }, notes);
 }
 
 async function expectWithinViewport(page: Page, locator: Locator) {
@@ -77,6 +112,29 @@ for (const viewport of VIEWPORTS) {
       await page.getByRole("button", { name: "Filter groups" }).click();
       await expectWithinViewport(page, page.getByRole("dialog", { name: "Filter groups" }));
       await expectNoSelfOverflow(title);
+      await expectNoHorizontalOverflow(page);
+    });
+
+    test("group filter dialog grows until two thirds of the window and then scrolls", async ({ page }) => {
+      await seedNotes(page, createDenseGroupFixture());
+      await bootPreview(page);
+
+      await page.getByRole("button", { name: "Filter groups" }).click();
+
+      const dialog = page.getByRole("dialog", { name: "Filter groups" });
+      const scrollRegion = page.getByTestId("note-group-filter-scroll-region");
+      await expectWithinViewport(page, dialog);
+      await expect(scrollRegion).toBeVisible();
+
+      const dialogBox = await dialog.boundingBox();
+      expect(dialogBox).not.toBeNull();
+      expect(dialogBox!.height).toBeLessThanOrEqual(viewport.height * (2 / 3) + 2);
+
+      const overflow = await scrollRegion.evaluate((element) => ({
+        clientHeight: element.clientHeight,
+        scrollHeight: element.scrollHeight,
+      }));
+      expect(overflow.scrollHeight).toBeGreaterThan(overflow.clientHeight);
       await expectNoHorizontalOverflow(page);
     });
 

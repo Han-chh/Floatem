@@ -290,19 +290,34 @@ describe("NotesList", () => {
     expect(within(dialog).getByRole("checkbox", { name: /^Work/ })).toBeChecked();
     expect(within(dialog).getByRole("checkbox", { name: /^Ideas/ })).toBeChecked();
 
+    await user.click(within(dialog).getByRole("checkbox", { name: /^All/ }));
+
+    expect(within(dialog).getByRole("checkbox", { name: /^All/ })).not.toBeChecked();
+    expect(within(dialog).getByRole("checkbox", { name: /^No group/ })).not.toBeChecked();
+    expect(within(dialog).getByRole("checkbox", { name: /^Work/ })).not.toBeChecked();
+    await waitFor(() => {
+      expect(screen.queryByText("Loose card")).not.toBeInTheDocument();
+      expect(screen.queryByText("Ideas card")).not.toBeInTheDocument();
+      expect(screen.queryByText("Work card")).not.toBeInTheDocument();
+    });
+    expect(screen.getByText("No notes match the selected groups.")).toBeInTheDocument();
+
     await user.click(within(dialog).getByRole("checkbox", { name: /^Work/ }));
 
     expect(within(dialog).getByRole("checkbox", { name: /^All/ })).not.toBeChecked();
-    expect(within(dialog).getByRole("checkbox", { name: /^Work/ })).not.toBeChecked();
+    expect(within(dialog).getByRole("checkbox", { name: /^No group/ })).not.toBeChecked();
+    expect(within(dialog).getByRole("checkbox", { name: /^Work/ })).toBeChecked();
+    expect(within(dialog).getByRole("checkbox", { name: /^Ideas/ })).not.toBeChecked();
     await waitFor(() => {
-      expect(screen.queryByText("Work card")).not.toBeInTheDocument();
+      expect(screen.getByText("Work card")).toBeInTheDocument();
     });
-    expect(screen.getByText("Ideas card")).toBeInTheDocument();
-    expect(screen.getByText("Loose card")).toBeInTheDocument();
+    expect(screen.queryByText("Ideas card")).not.toBeInTheDocument();
+    expect(screen.queryByText("Loose card")).not.toBeInTheDocument();
 
     await user.click(within(dialog).getByRole("checkbox", { name: /^All/ }));
 
     expect(within(dialog).getByRole("checkbox", { name: /^All/ })).toBeChecked();
+    expect(within(dialog).getByRole("checkbox", { name: /^No group/ })).toBeChecked();
     expect(within(dialog).getByRole("checkbox", { name: /^Work/ })).toBeChecked();
     expect(within(dialog).getByRole("checkbox", { name: /^Ideas/ })).toBeChecked();
     await waitFor(() => {

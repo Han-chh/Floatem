@@ -174,7 +174,16 @@ export function NotesList() {
   };
 
   const handleSelectAllGroups = () => {
-    setGroupFilterState({ mode: "all" });
+    setGroupFilterState((current) => {
+      const currentKeys =
+        current.mode === "all" ? availableFilterKeys : availableFilterKeys.filter((key) => current.keys.includes(key));
+
+      if (currentKeys.length === availableFilterKeys.length) {
+        return { mode: "custom", keys: [] };
+      }
+
+      return { mode: "all" };
+    });
   };
 
   const handleToggleFilterKey = (key: string) => {

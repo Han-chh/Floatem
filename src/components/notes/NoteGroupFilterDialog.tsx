@@ -66,6 +66,7 @@ export function NoteGroupFilterDialog({
   const { t } = useI18n();
   const cards = useNotesStore((state) => state.cards);
   const groups = useNotesStore((state) => state.groups);
+  const dialogMaxHeight = "calc(100dvh * 2 / 3)";
   const groupCounts = useMemo(() => {
     const nextCounts = new Map<string, number>();
 
@@ -104,7 +105,7 @@ export function NoteGroupFilterDialog({
     <AnimatePresence>
       {isOpen ? (
         <motion.div
-          className="fixed inset-0 z-[90] overflow-y-auto bg-[rgba(30,25,21,0.16)] px-4 py-4 backdrop-blur-[8px]"
+          className="fixed inset-0 z-[90] flex items-start justify-center overflow-y-auto bg-[rgba(30,25,21,0.16)] px-4 py-4 backdrop-blur-[8px]"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
@@ -115,7 +116,8 @@ export function NoteGroupFilterDialog({
             role="dialog"
             aria-modal="true"
             aria-label={t.notes.filterDialogTitle}
-            className="paper-panel mx-auto my-4 w-full max-w-[360px] rounded-[26px] p-4 shadow-[0_28px_56px_rgba(30,25,21,0.2)]"
+            className="paper-panel my-4 flex w-full max-w-[360px] flex-col overflow-hidden rounded-[26px] p-4 shadow-[0_28px_56px_rgba(30,25,21,0.2)]"
+            style={{ maxHeight: dialogMaxHeight }}
             initial={{ opacity: 0, scale: 0.96, y: 14 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.98, y: 8 }}
@@ -151,8 +153,9 @@ export function NoteGroupFilterDialog({
             </div>
 
             <div
+              data-testid="note-group-filter-scroll-region"
               data-no-window-drag="true"
-              className="paper-scroll mt-3 flex max-h-[52vh] flex-col gap-2 overflow-y-auto pr-1"
+              className="paper-scroll mt-3 min-h-0 flex flex-1 flex-col gap-2 overflow-y-auto pr-1"
             >
               <FilterOptionRow
                 checked={allSelected}
