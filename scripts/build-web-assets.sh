@@ -2,7 +2,11 @@
 
 set -euo pipefail
 
-REPO_ROOT="${SRCROOT:-$(cd "$(dirname "$0")/.." && pwd)}"
+if [ -n "${SRCROOT:-}" ]; then
+  REPO_ROOT="$(cd "$SRCROOT/../.." && pwd)"
+else
+  REPO_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+fi
 export PATH="/opt/homebrew/bin:/usr/local/bin:$PATH"
 
 cd "$REPO_ROOT"
@@ -22,17 +26,21 @@ fi
 
 needs_frontend_build=0
 
-if [ ! -f "$REPO_ROOT/dist/index.html" ]; then
+FRONTEND_DIR="$REPO_ROOT/apps/frontend"
+FRONTEND_DIST_DIR="$FRONTEND_DIR/dist"
+
+if [ ! -f "$FRONTEND_DIST_DIR/index.html" ]; then
   needs_frontend_build=1
 elif find \
-  "$REPO_ROOT/src" \
-  "$REPO_ROOT/index.html" \
+  "$FRONTEND_DIR/src" \
+  "$FRONTEND_DIR/index.html" \
+  "$FRONTEND_DIR/vite.config.ts" \
+  "$FRONTEND_DIR/tsconfig.json" \
+  "$FRONTEND_DIR/tsconfig.node.json" \
+  "$REPO_ROOT/packages" \
   "$REPO_ROOT/package.json" \
   "$REPO_ROOT/pnpm-lock.yaml" \
-  "$REPO_ROOT/tsconfig.json" \
-  "$REPO_ROOT/tsconfig.node.json" \
-  "$REPO_ROOT/vite.config.ts" \
-  -newer "$REPO_ROOT/dist/index.html" \
+  -newer "$FRONTEND_DIST_DIR/index.html" \
   -print -quit 2>/dev/null | grep -q .
 then
   needs_frontend_build=1
@@ -40,13 +48,13 @@ fi
 
 if [ "$needs_frontend_build" -eq 1 ]; then
   echo "info: rebuilding frontend bundle before copying web assets"
-  "$PNPM_BIN" build
+  "$PNPM_BIN" frontend:build
 fi
 
 NATIVE_WEB_DIR="$REPO_ROOT/build/native-web"
 
 echo "info: preparing WKWebView-safe frontend bundle"
-"$NODE_BIN" "$REPO_ROOT/scripts/prepare-native-web-assets.mjs" "$REPO_ROOT/dist" "$NATIVE_WEB_DIR"
+"$NODE_BIN" "$REPO_ROOT/scripts/prepare-native-web-assets.mjs" "$FRONTEND_DIST_DIR" "$NATIVE_WEB_DIR"
 
 if [ -z "${TARGET_BUILD_DIR:-}" ] || [ -z "${UNLOCALIZED_RESOURCES_FOLDER_PATH:-}" ]; then
   exit 0

@@ -6,10 +6,10 @@ REPO_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 
 cd "$REPO_ROOT"
 
-pnpm build
+pnpm frontend:build
 
 xcodebuild \
-  -project QuickNote.xcodeproj \
+  -project apps/mac-host/QuickNote.xcodeproj \
   -scheme QuickNote \
   -configuration Debug \
   -derivedDataPath build/DerivedData \

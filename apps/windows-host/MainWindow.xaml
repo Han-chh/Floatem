@@ -1,0 +1,18 @@
+<Window x:Class="QuickNote.Windows.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:wv2="clr-namespace:Microsoft.Web.WebView2.Wpf;assembly=Microsoft.Web.WebView2.Wpf"
+        Title="QuickNote"
+        Width="400"
+        Height="680"
+        MinWidth="320"
+        MinHeight="480"
+        WindowStartupLocation="CenterScreen"
+        ShowInTaskbar="True"
+        Topmost="True"
+        Background="#F7F2E8"
+        SourceInitialized="OnSourceInitialized">
+  <Border Background="#F7F2E8">
+    <wv2:WebView2 x:Name="WebView" />
+  </Border>
+</Window>

@@ -1,0 +1,6 @@
+{
+  "name": "@quicknote/frontend",
+  "private": true,
+  "version": "0.3.4",
+  "type": "module"
+}

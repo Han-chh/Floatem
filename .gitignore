@@ -16,6 +16,8 @@ dist
 build
 dist-ssr
 coverage
+apps/windows-host/bin/
+apps/windows-host/obj/
 playwright-report/
 test-results/
 *.tsbuildinfo

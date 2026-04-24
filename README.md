@@ -1,38 +1,42 @@
 # QuickNote
 
-QuickNote is now a pure macOS native host:
+QuickNote is a cross-platform desktop app with a shared React frontend and isolated native host layers.
 
-- `AppKit` owns the app lifecycle, menu bar item, Dock presence, window toggling, and global shortcut.
-- `WKWebView` loads the existing React/Vite frontend so the notes and todos UI stays visually consistent.
-- Frontend state persists to JSON in `~/Library/Application Support/com.quicknote.app/`.
+- `apps/frontend`: shared React/Vite UI.
+- `apps/mac-host`: AppKit/WKWebView host.
+- `apps/windows-host`: C# WPF/WebView2 host using Win32 APIs for global hotkeys and topmost behavior.
+- `packages/native-bridge`: typed frontend/host bridge contract.
+- `packages/branding`: shared app identity metadata.
 
-## Project Layout
+## Docs
 
-- `QuickNote.xcodeproj`: native macOS app target.
-- `QuickNoteMacOS/`: Swift host, window controller, global hotkey manager, and bridge code.
-- `src/`: existing React UI and business logic.
-- `scripts/build-web-assets.sh`: copies built Vite assets into the app bundle.
+- [Architecture](docs/architecture.md)
+- [macOS setup](docs/macos-setup.md)
+- [Windows setup](docs/windows-setup.md)
 
-## Run
+## Run Frontend Only
+
+```bash
+pnpm install
+pnpm dev
+```
+
+## Run macOS
 
 1. `pnpm install`
 2. `pnpm macos:run`
 
-That command builds the frontend, compiles the native app, and opens:
+## Run Windows
 
-- `build/DerivedData/Build/Products/Debug/QuickNote.app`
+On Windows:
 
-## Build Only
+```powershell
+pnpm install
+pnpm windows:run
+```
 
-- `pnpm build`: build the frontend bundle.
-- `pnpm macos:build`: build the frontend and compile the native macOS app.
+## Build
 
-## Xcode Workflow
-
-If you want to run from Xcode:
-
-1. `pnpm build`
-2. Open `QuickNote.xcodeproj`
-3. Run the `QuickNote` scheme
-
-The Xcode target copies `dist/` into the bundle during the build, so the frontend bundle must already exist.
+- `pnpm build`: build the shared frontend.
+- `pnpm macos:build`: build frontend and macOS host.
+- `pnpm windows:build`: build frontend and Windows host.
