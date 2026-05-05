@@ -6,6 +6,7 @@ import WebKit
 final class WebViewController: NSViewController, WKNavigationDelegate {
     private static let bridgeName = "quickNoteHost"
     private static let panelWillOpenEventName = "quicknote:panel-will-open"
+    private static let hotkeyRegistrationStateEventName = "quicknote:hotkey-registration-state"
     private static let textColorPanelChangeEventName = "quicknote:text-color-panel-change"
     private static let textColorPanelCloseEventName = "quicknote:text-color-panel-close"
     private static let todosUpdatedEventName = "quicknote:todos-updated"
@@ -133,6 +134,16 @@ final class WebViewController: NSViewController, WKNavigationDelegate {
         )
     }
 
+    func emitHotkeyRegistrationState(_ state: [String: Any]) {
+        guard let json = jsonString(for: state) else {
+            return
+        }
+
+        webView.evaluateJavaScript(
+            "window.dispatchEvent(new CustomEvent('\(Self.hotkeyRegistrationStateEventName)', { detail: \(json) }));"
+        )
+    }
+
     func emitTextColorPanelChange(requestID: String, colorHex: String) {
         let payload: [String: Any] = [
             "color": colorHex,
@@ -242,6 +253,9 @@ final class WebViewController: NSViewController, WKNavigationDelegate {
         switch method {
         case "frontendReady":
             logger.info("Frontend reported that the initial UI is ready.")
+            if let state = bridgeDelegate?.currentHotKeyRegistrationState() {
+                emitHotkeyRegistrationState(state)
+            }
             hideLoadingOverlay()
             return
         case "setEditableInputActive":
@@ -330,6 +344,8 @@ final class WebViewController: NSViewController, WKNavigationDelegate {
                 ]
             case "loadAllData":
                 result = try bridgeDelegate?.loadAllData() ?? [:]
+            case "getHotkeyRegistrationState":
+                result = bridgeDelegate?.currentHotKeyRegistrationState() ?? [:]
             case "saveNotes":
                 guard let cards = params["cards"] else {
                     throw QuickNoteBridgeError.invalidParameters("QuickNote expected notes data from JavaScript.")
@@ -688,6 +704,9 @@ final class WebViewController: NSViewController, WKNavigationDelegate {
         },
         testReminderNotification(options = {}) {
           return send("testReminderNotification", options);
+        },
+        getHotkeyRegistrationState() {
+          return send("getHotkeyRegistrationState");
         },
         readClipboardText() {
           return send("readClipboardText");

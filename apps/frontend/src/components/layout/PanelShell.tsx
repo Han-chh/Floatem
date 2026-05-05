@@ -9,6 +9,7 @@ import { TabBar } from "./TabBar";
 type PanelShellProps = {
   activeTab: TabId;
   animationSpeed: AnimationSpeed;
+  banner?: ReactNode;
   onTabChange: (tab: TabId) => void;
   children: ReactNode;
   settingsPanel: ReactNode;
@@ -20,6 +21,7 @@ type PanelShellProps = {
 export function PanelShell({
   activeTab,
   animationSpeed,
+  banner,
   onTabChange,
   children,
   settingsPanel,
@@ -128,6 +130,7 @@ export function PanelShell({
                       </div>
 
                       <TabBar activeTab={activeTab} onTabChange={onTabChange} />
+                      {banner ? <div>{banner}</div> : null}
                     </div>
                   </motion.header>
 

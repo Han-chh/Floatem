@@ -36,6 +36,10 @@ export async function registerHotkey(shortcut: string) {
   await getQuickNoteBridge().registerHotkey(shortcut);
 }
 
+export async function getHotkeyRegistrationState() {
+  return await getQuickNoteBridge().getHotkeyRegistrationState();
+}
+
 export async function setEditableInputActive(active: boolean) {
   await getQuickNoteBridge().setEditableInputActive(active);
 }

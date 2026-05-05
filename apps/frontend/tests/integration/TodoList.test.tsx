@@ -87,6 +87,10 @@ describe("TodoList", () => {
       scheduleNotification: vi.fn(async () => {}),
       openTextColorPanel: vi.fn(async () => {}),
       testReminderNotification: vi.fn(async () => {}),
+      getHotkeyRegistrationState: vi.fn(async () => ({
+        shortcut: DEFAULT_SETTINGS.hotkey,
+        registration: "registered" as const,
+      })),
       readClipboardText,
       registerHotkey: vi.fn(async () => {}),
       registerGlobalShortcut: vi.fn(async () => {}),

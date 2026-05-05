@@ -90,6 +90,9 @@ final class MainWindowController: NSObject, NSWindowDelegate, QuickNoteNativeBri
         hotKeyManager.onHotKeyPressed = { [weak self] in
             self?.handleHotKeyPressed()
         }
+        hotKeyManager.onRegistrationStateChanged = { [weak self] state in
+            self?.webViewController.emitHotkeyRegistrationState(self?.hotKeyRegistrationStatePayload(from: state) ?? [:])
+        }
     }
 
     deinit {
@@ -291,6 +294,10 @@ final class MainWindowController: NSObject, NSWindowDelegate, QuickNoteNativeBri
             soundEnabled: soundEnabled,
             language: language
         )
+    }
+
+    func currentHotKeyRegistrationState() -> [String: Any] {
+        hotKeyRegistrationStatePayload(from: hotKeyManager.registrationState)
     }
 
     func registerHotKey(shortcut: String) throws {
@@ -933,5 +940,18 @@ final class MainWindowController: NSObject, NSWindowDelegate, QuickNoteNativeBri
                 self.bringPanelToFront(context: "App became active")
             }
         }
+    }
+
+    private func hotKeyRegistrationStatePayload(from state: GlobalHotKeyManager.RegistrationState) -> [String: Any] {
+        var payload: [String: Any] = [
+            "shortcut": state.shortcut,
+            "registration": state.registration,
+        ]
+
+        if let message = state.message, !message.isEmpty {
+            payload["message"] = message
+        }
+
+        return payload
     }
 }

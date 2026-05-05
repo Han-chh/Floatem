@@ -342,6 +342,16 @@ export function Clock3Icon(props: IconProps) {
   );
 }
 
+export function AlertTriangleIcon(props: IconProps) {
+  return (
+    <BaseIcon {...props}>
+      <path d="m12 4 8 14H4L12 4Z" />
+      <path d="M12 9v4.5" />
+      <path d="M12 17h.01" />
+    </BaseIcon>
+  );
+}
+
 export function FastForwardIcon(props: IconProps) {
   return (
     <BaseIcon {...props}>

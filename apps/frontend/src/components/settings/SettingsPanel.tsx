@@ -8,6 +8,7 @@ import { getQuickNoteBridge, isNativeQuickNoteHost } from "../../lib/nativeBridg
 import { getSettingsMenuMotionConfig, type TransitionDirection } from "../../lib/transitionMotion";
 import { useSettingsStore } from "../../store/settingsStore";
 import {
+  AlertTriangleIcon,
   ChevronDownIcon,
   ChineseLanguageIcon,
   CircleCheckBigIcon,
@@ -271,6 +272,7 @@ function FirstLevelAction({
 export function SettingsPanel({ onClose }: SettingsPanelProps) {
   const { t } = useI18n();
   const hotkey = useSettingsStore((state) => state.hotkey);
+  const hotkeyRegistrationState = useSettingsStore((state) => state.hotkeyRegistrationState);
   const language = useSettingsStore((state) => state.language);
   const panelPosition = useSettingsStore((state) => state.panelPosition);
   const defaultOpenSection = useSettingsStore((state) => state.defaultOpenSection);
@@ -387,6 +389,7 @@ export function SettingsPanel({ onClose }: SettingsPanelProps) {
     ],
     [enableReminderSound, hotkey, language, panelPosition, t, transitionStyle],
   );
+  const showHotkeyConflictWarning = hotkeyRegistrationState?.registration === "conflict";
 
   const currentCategory = categories.find((category) => category.id === activeCategory) ?? null;
   const categoryMotion = getSettingsMenuMotionConfig(transitionStyle, animationSpeed);
@@ -652,6 +655,7 @@ export function SettingsPanel({ onClose }: SettingsPanelProps) {
                     hotkey={hotkey}
                     defaultOpenSection={defaultOpenSection}
                     lastActiveTab={lastActiveTab}
+                    hotkeyRegistrationState={hotkeyRegistrationState}
                     hotkeyFeedback={hotkeyFeedback}
                     openHotkeyDialog={openHotkeyDialog}
                     setDefaultOpenSection={setDefaultOpenSection}
@@ -727,6 +731,12 @@ export function SettingsPanel({ onClose }: SettingsPanelProps) {
               </div>
 
               <div className="space-y-3">
+                {showHotkeyConflictWarning ? (
+                  <PersistentHotkeyConflictWarning
+                    shortcut={hotkeyRegistrationState.shortcut}
+                    message={hotkeyRegistrationState.message}
+                  />
+                ) : null}
                 {categories.map((category) => (
                   <CategoryButton
                     key={category.id}
@@ -913,6 +923,7 @@ function ShortcutSettings({
   hotkey,
   defaultOpenSection,
   lastActiveTab,
+  hotkeyRegistrationState,
   hotkeyFeedback,
   openHotkeyDialog,
   setDefaultOpenSection,
@@ -920,15 +931,25 @@ function ShortcutSettings({
   hotkey: string;
   defaultOpenSection: "last" | "notes" | "todos";
   lastActiveTab: "notes" | "todos";
+  hotkeyRegistrationState: import("@quicknote/native-bridge").HotkeyRegistrationState | null;
   hotkeyFeedback: HotkeyFeedback | null;
   openHotkeyDialog: () => void;
   setDefaultOpenSection: (section: "last" | "notes" | "todos") => void;
 }) {
   const { t } = useI18n();
+  const showHotkeyConflictWarning = hotkeyRegistrationState?.registration === "conflict";
 
   return (
     <>
       <SettingSection title={t.settings.globalShortcutTitle} description={t.settings.hotkeyHint}>
+        {showHotkeyConflictWarning ? (
+          <div className="mb-3">
+            <PersistentHotkeyConflictWarning
+              shortcut={hotkeyRegistrationState.shortcut}
+              message={hotkeyRegistrationState.message}
+            />
+          </div>
+        ) : null}
         <SettingRow
           icon={<KeyboardIcon size={15} />}
           title={getShortcutDisplayLabel(hotkey)}
@@ -966,6 +987,31 @@ function ShortcutSettings({
         </div>
       </SettingSection>
     </>
+  );
+}
+
+function PersistentHotkeyConflictWarning({
+  shortcut,
+  message,
+}: {
+  shortcut: string;
+  message?: string;
+}) {
+  const { t } = useI18n();
+
+  return (
+    <div className="rounded-[22px] border border-[rgba(201,93,68,0.32)] bg-[rgba(201,93,68,0.12)] px-4 py-3.5 text-[rgb(150,68,52)]">
+      <div className="flex items-start gap-3">
+        <span className="mt-0.5 inline-flex shrink-0">
+          <AlertTriangleIcon size={16} />
+        </span>
+        <div className="min-w-0">
+          <p className="text-[13px] font-semibold">{t.settings.hotkeyConflictTitle}</p>
+          <p className="mt-1 text-[12px] leading-6">{t.settings.hotkeyConflictBody(shortcut)}</p>
+          {message ? <p className="mt-1 text-[11px] leading-5 opacity-90">{message}</p> : null}
+        </div>
+      </div>
+    </div>
   );
 }
 

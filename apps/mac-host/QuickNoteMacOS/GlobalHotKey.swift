@@ -6,9 +6,21 @@ import OSLog
 final class GlobalHotKeyManager {
     static let defaultShortcut = "Cmd+Shift+Space"
 
+    struct RegistrationState {
+        let shortcut: String
+        let registration: String
+        let message: String?
+    }
+
     var onHotKeyPressed: (() -> Void)?
+    var onRegistrationStateChanged: ((RegistrationState) -> Void)?
 
     private(set) var registeredShortcut: String?
+    private(set) var registrationState = RegistrationState(
+        shortcut: defaultShortcut,
+        registration: "unsupported",
+        message: nil
+    )
 
     private var eventHandlerRef: EventHandlerRef?
     private var hotKeyRef: EventHotKeyRef?
@@ -46,11 +58,20 @@ final class GlobalHotKeyManager {
         )
 
         guard status == noErr, let hotKeyRef else {
+            let message = GlobalHotKeyError.registrationFailed(status).errorDescription
+            registrationState = RegistrationState(
+                shortcut: shortcut,
+                registration: "conflict",
+                message: message
+            )
+            onRegistrationStateChanged?(registrationState)
             throw GlobalHotKeyError.registrationFailed(status)
         }
 
         self.hotKeyRef = hotKeyRef
         registeredShortcut = shortcut
+        registrationState = RegistrationState(shortcut: shortcut, registration: "registered", message: nil)
+        onRegistrationStateChanged?(registrationState)
         logger.info("Registered global shortcut: \(shortcut, privacy: .public)")
     }
 

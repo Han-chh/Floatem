@@ -1,4 +1,10 @@
-import type { HostBridge, HostCapabilities, NotificationRequest, ShortcutConfig } from "@quicknote/native-bridge";
+import type {
+  HostBridge,
+  HostCapabilities,
+  HotkeyRegistrationState,
+  NotificationRequest,
+  ShortcutConfig,
+} from "@quicknote/native-bridge";
 import { hostEventNames } from "@quicknote/native-bridge";
 import type { AppLanguage, AppSettings, NoteCard, NotesDocument, PanelPosition, RawLoadAllResult, TodoItem } from "./models";
 import { DEFAULT_SETTINGS, normalizeAppSettings, normalizeNotesDocument } from "./models";
@@ -9,6 +15,7 @@ const SETTINGS_STORAGE_KEY = "quicknote.settings";
 
 export const PANEL_POSITION_EVENT = hostEventNames.panelPosition;
 export const PANEL_WILL_OPEN_EVENT = hostEventNames.panelWillOpen;
+export const HOTKEY_REGISTRATION_STATE_EVENT = hostEventNames.hotkeyRegistrationState;
 export const TEXT_COLOR_PANEL_OPEN_EVENT = hostEventNames.textColorPanelOpen;
 export const TEXT_COLOR_PANEL_CHANGE_EVENT = hostEventNames.textColorPanelChange;
 export const TEXT_COLOR_PANEL_CLOSE_EVENT = hostEventNames.textColorPanelClose;
@@ -28,6 +35,7 @@ export type QuickNoteNativeBridge = HostBridge<RawLoadAllResult, NotesDocument, 
     soundEnabled?: boolean;
     language?: AppLanguage;
   }) => Promise<void>;
+  getHotkeyRegistrationState: () => Promise<HotkeyRegistrationState>;
   registerHotkey: (shortcut: string | ShortcutConfig) => Promise<void>;
   hidePanelWindow: () => Promise<void>;
 };
@@ -134,6 +142,13 @@ const browserBridge: QuickNoteNativeBridge = {
   },
   async testReminderNotification() {
     // Browser preview cannot send native notifications.
+  },
+  async getHotkeyRegistrationState() {
+    return {
+      shortcut: DEFAULT_SETTINGS.hotkey,
+      registration: "unsupported",
+      message: "Browser preview does not support global shortcuts.",
+    } satisfies HotkeyRegistrationState;
   },
   async readClipboardText() {
     if (typeof navigator === "undefined" || !navigator.clipboard?.readText) {
@@ -251,6 +266,28 @@ export function subscribeToPanelWillOpen(listener: () => void) {
 
   return () => {
     window.removeEventListener(PANEL_WILL_OPEN_EVENT, handler);
+  };
+}
+
+export function subscribeToHotkeyRegistrationState(listener: (state: HotkeyRegistrationState) => void) {
+  if (typeof window === "undefined") {
+    return () => {};
+  }
+
+  const handler = (event: Event) => {
+    const detail = (event as CustomEvent<HotkeyRegistrationState>).detail;
+
+    if (!detail || typeof detail.shortcut !== "string" || typeof detail.registration !== "string") {
+      return;
+    }
+
+    listener(detail);
+  };
+
+  window.addEventListener(HOTKEY_REGISTRATION_STATE_EVENT, handler as EventListener);
+
+  return () => {
+    window.removeEventListener(HOTKEY_REGISTRATION_STATE_EVENT, handler as EventListener);
   };
 }
 

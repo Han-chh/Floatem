@@ -12,7 +12,8 @@ QuickNote is a cross-platform desktop app with a shared React frontend and isola
 
 - [Architecture](docs/architecture.md)
 - [macOS setup](docs/macos-setup.md)
-- [Windows setup](docs/windows-setup.md)
+- [Windows setup (host features)](docs/windows-setup.md)
+- [Windows dev environment](docs/windows-dev-setup.md)
 
 ## Run Frontend Only
 

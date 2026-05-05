@@ -72,7 +72,8 @@ public partial class MainWindow : Window
 
     public void ToggleWindow()
     {
-        if (IsVisible && IsActive)
+        // Match macOS panel toggle: use visibility, not IsActive (hotkey must hide when focus is elsewhere).
+        if (IsVisible && WindowState != WindowState.Minimized)
         {
             HideWindow();
         }
@@ -123,7 +124,14 @@ public partial class MainWindow : Window
 
         bridge = new HostBridgeController(this, WebView, storage, hotKeys, notifications);
         await bridge.InstallAsync();
-        hotKeys.Register(storage.LoadSettings()["hotkey"]?.GetValue<string>() ?? "Ctrl+Shift+Space");
+        try
+        {
+            hotKeys.Register(storage.LoadSettings()["hotkey"]?.GetValue<string>() ?? "Ctrl+Shift+Space");
+        }
+        catch (InvalidOperationException)
+        {
+            // Same as startup: shortcut may be unavailable; UI can surface feedback when the user changes it.
+        }
         notifications.SyncTodoReminders(storage.LoadTodos(), storage.LoadSettings());
 
         WebView.Source = ResolveFrontendUri(WebView.CoreWebView2);

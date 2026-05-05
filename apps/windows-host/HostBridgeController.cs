@@ -26,6 +26,7 @@ internal sealed class HostBridgeController
         this.storage = storage;
         this.hotKeys = hotKeys;
         this.notifications = notifications;
+        this.hotKeys.RegistrationStateChanged += (_, state) => _ = EmitHotkeyRegistrationStateAsync(state);
     }
 
     public async Task InstallAsync()
@@ -43,6 +44,11 @@ internal sealed class HostBridgeController
     {
         var detail = new JsonObject { ["shortcut"] = shortcut };
         return DispatchEventAsync("quicknote:shortcut-invoked", detail);
+    }
+
+    public Task EmitHotkeyRegistrationStateAsync(Native.Win32HotKeyManager.RegistrationState? state = null)
+    {
+        return DispatchEventAsync("quicknote:hotkey-registration-state", ToHotkeyRegistrationState(state ?? hotKeys.GetRegistrationState()));
     }
 
     private async void OnWebMessageReceived(object? sender, CoreWebView2WebMessageReceivedEventArgs e)
@@ -79,6 +85,8 @@ internal sealed class HostBridgeController
         switch (method)
         {
             case "frontendReady":
+                _ = EmitHotkeyRegistrationStateAsync();
+                return Task.FromResult<JsonNode?>(null);
             case "setEditableInputActive":
             case "setTextCompositionActive":
                 return Task.FromResult<JsonNode?>(null);
@@ -89,6 +97,8 @@ internal sealed class HostBridgeController
                 return Task.FromResult<JsonNode?>(Capabilities());
             case "loadAllData":
                 return Task.FromResult<JsonNode?>(storage.LoadAllData());
+            case "getHotkeyRegistrationState":
+                return Task.FromResult<JsonNode?>(ToHotkeyRegistrationState(hotKeys.GetRegistrationState()));
             case "saveNotes":
                 storage.SaveNotes(parameters["cards"]?.DeepClone() ?? new JsonArray());
                 return Task.FromResult<JsonNode?>(null);
@@ -264,6 +274,22 @@ internal sealed class HostBridgeController
         }
     }
 
+    private static JsonObject ToHotkeyRegistrationState(Native.Win32HotKeyManager.RegistrationState state)
+    {
+        var payload = new JsonObject
+        {
+            ["shortcut"] = state.Shortcut,
+            ["registration"] = state.Registration,
+        };
+
+        if (!string.IsNullOrWhiteSpace(state.Message))
+        {
+            payload["message"] = state.Message;
+        }
+
+        return payload;
+    }
+
     private const string BridgeScript = """
 (() => {
   if (window.quickNoteHost) {
@@ -300,6 +326,7 @@ internal sealed class HostBridgeController
     scheduleNotification: (request = {}) => send("scheduleNotification", request),
     openTextColorPanel: () => Promise.resolve(),
     testReminderNotification: (options = {}) => send("testReminderNotification", options),
+    getHotkeyRegistrationState: () => send("getHotkeyRegistrationState"),
     readClipboardText: () => send("readClipboardText"),
     writeClipboardText: (text) => send("writeClipboardText", { text: String(text ?? "") }),
     registerHotkey: (shortcut) => {

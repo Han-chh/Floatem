@@ -57,6 +57,25 @@ describe("settingsStore", () => {
     expect(state.enableReminderSound).toBe(false);
   });
 
+  it("tracks the transient hotkey registration state separately from persisted settings", () => {
+    useSettingsStore.getState().setHotkeyRegistrationState({
+      shortcut: "Ctrl+Shift+Space",
+      registration: "conflict",
+      message: "Shortcut is already in use.",
+    });
+
+    let state = useSettingsStore.getState();
+    expect(state.hotkeyRegistrationState).toEqual({
+      shortcut: "Ctrl+Shift+Space",
+      registration: "conflict",
+      message: "Shortcut is already in use.",
+    });
+
+    useSettingsStore.getState().restoreDefaults();
+    state = useSettingsStore.getState();
+    expect(state.hotkeyRegistrationState).toBeNull();
+  });
+
   it("applies the preferred open section without overwriting the last stored section", () => {
     useSettingsStore.getState().hydrateSettings({
       activeTab: "todos",

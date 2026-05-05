@@ -1,5 +1,7 @@
 # Windows Host Setup
 
+For a full **Windows developer onboarding** guide (prerequisite versions, troubleshooting, Vite + WebView2 debugging), see [windows-dev-setup.md](./windows-dev-setup.md). Optional read-only checks: `powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\windows\setup-dev.ps1`.
+
 ## Requirements
 
 - Windows 10 19041 or newer, or Windows 11

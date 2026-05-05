@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.ComponentModel;
 using System.Windows;
@@ -8,13 +9,17 @@ namespace QuickNote.Windows.Native;
 
 internal sealed partial class Win32HotKeyManager : IDisposable
 {
+    internal readonly record struct RegistrationState(string Shortcut, string Registration, string? Message = null);
+
     private const int HotKeyId = 0x514E;
     private const int WmHotKey = 0x0312;
     private readonly Window window;
     private HwndSource? source;
     private string registeredShortcut = "Ctrl+Shift+Space";
+    private RegistrationState registrationState = new("Ctrl+Shift+Space", "unsupported", null);
 
     public event EventHandler<string>? HotKeyPressed;
+    public event EventHandler<RegistrationState>? RegistrationStateChanged;
 
     public Win32HotKeyManager(Window window)
     {
@@ -23,7 +28,15 @@ internal sealed partial class Win32HotKeyManager : IDisposable
         {
             source = HwndSource.FromHwnd(new WindowInteropHelper(window).Handle);
             source?.AddHook(WndProc);
-            Register(registeredShortcut);
+            try
+            {
+                Register(registeredShortcut);
+            }
+            catch (InvalidOperationException ex)
+            {
+                // Reserved or taken by another app — do not crash startup; user can pick another shortcut in Settings.
+                Debug.WriteLine($"QuickNote: initial global hotkey not registered: {ex.Message}");
+            }
         };
     }
 
@@ -33,6 +46,7 @@ internal sealed partial class Win32HotKeyManager : IDisposable
         if (source is null)
         {
             registeredShortcut = nextShortcut;
+            registrationState = new(nextShortcut, "unsupported", null);
             return;
         }
 
@@ -42,12 +56,19 @@ internal sealed partial class Win32HotKeyManager : IDisposable
         if (!RegisterHotKey(source.Handle, HotKeyId, parsed.Modifiers, parsed.VirtualKey))
         {
             var error = Marshal.GetLastWin32Error();
-            TryRestorePreviousShortcut(previousShortcut);
-            throw new InvalidOperationException(
-                $"Windows could not register global shortcut '{nextShortcut}'. The shortcut may be reserved or already in use. Win32 error {error}: {new Win32Exception(error).Message}");
+            var message =
+                $"Windows could not register global shortcut '{nextShortcut}'. The shortcut may be reserved or already in use. Win32 error {error}: {new Win32Exception(error).Message}";
+            if (!TryRestorePreviousShortcut(previousShortcut))
+            {
+                registrationState = new(nextShortcut, "conflict", message);
+                RegistrationStateChanged?.Invoke(this, registrationState);
+            }
+            throw new InvalidOperationException(message);
         }
 
         registeredShortcut = nextShortcut;
+        registrationState = new(nextShortcut, "registered", null);
+        RegistrationStateChanged?.Invoke(this, registrationState);
     }
 
     public void Unregister()
@@ -64,6 +85,11 @@ internal sealed partial class Win32HotKeyManager : IDisposable
         source?.RemoveHook(WndProc);
     }
 
+    public RegistrationState GetRegistrationState()
+    {
+        return registrationState;
+    }
+
     private IntPtr WndProc(IntPtr hwnd, int msg, IntPtr wParam, IntPtr lParam, ref bool handled)
     {
         if (msg == WmHotKey && wParam.ToInt32() == HotKeyId)
@@ -75,11 +101,11 @@ internal sealed partial class Win32HotKeyManager : IDisposable
         return IntPtr.Zero;
     }
 
-    private void TryRestorePreviousShortcut(string previousShortcut)
+    private bool TryRestorePreviousShortcut(string previousShortcut)
     {
         if (source is null || string.IsNullOrWhiteSpace(previousShortcut))
         {
-            return;
+            return false;
         }
 
         try
@@ -88,12 +114,17 @@ internal sealed partial class Win32HotKeyManager : IDisposable
             if (RegisterHotKey(source.Handle, HotKeyId, parsed.Modifiers, parsed.VirtualKey))
             {
                 registeredShortcut = previousShortcut;
+                registrationState = new(previousShortcut, "registered", null);
+                RegistrationStateChanged?.Invoke(this, registrationState);
+                return true;
             }
         }
         catch
         {
             // The original registration is best-effort after a failed shortcut change.
         }
+
+        return false;
     }
 
     [LibraryImport("user32.dll", SetLastError = true)]

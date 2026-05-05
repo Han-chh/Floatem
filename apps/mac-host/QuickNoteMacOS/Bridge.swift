@@ -12,6 +12,7 @@ protocol QuickNoteNativeBridgeHandling: AnyObject {
     func scheduleNotification(id: String?, title: String, body: String, scheduledAt: Date?, soundEnabled: Bool) async throws
     func openTextColorPanel(requestID: String, colorHex: String?) throws
     func testReminderNotification(soundEnabled: Bool, language: QuickNoteLanguage) async throws
+    func currentHotKeyRegistrationState() -> [String: Any]
     func readClipboardText() -> String
     func registerHotKey(shortcut: String) throws
     func setEditableInputActiveFromBridge(_ active: Bool)

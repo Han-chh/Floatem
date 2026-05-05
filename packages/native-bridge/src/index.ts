@@ -35,9 +35,16 @@ export type ShortcutConfig = {
   shortcut: string;
 };
 
+export type HotkeyRegistrationState = {
+  shortcut: string;
+  registration: "registered" | "conflict" | "unsupported";
+  message?: string;
+};
+
 export type HostEventMap = {
   "panel-position": { x: number; y: number };
   "panel-will-open": undefined;
+  "hotkey-registration-state": HotkeyRegistrationState;
   "text-color-panel-open": undefined;
   "text-color-panel-change": { color: string; requestId: string };
   "text-color-panel-close": { requestId: string };
@@ -66,6 +73,7 @@ export type HostBridge<TLoadAllResult, TNotes, TTodos, TSettings> = {
   scheduleNotification: (request: NotificationRequest) => Promise<void>;
   openTextColorPanel: (options: { color?: string; requestId: string }) => Promise<void>;
   testReminderNotification: (options?: { soundEnabled?: boolean; language?: string }) => Promise<void>;
+  getHotkeyRegistrationState: () => Promise<HotkeyRegistrationState>;
   readClipboardText: () => Promise<string>;
   writeClipboardText: (text: string) => Promise<void>;
   registerHotkey: (shortcut: string | ShortcutConfig) => Promise<void>;
@@ -82,6 +90,7 @@ export type HostBridge<TLoadAllResult, TNotes, TTodos, TSettings> = {
 export const hostEventNames = {
   panelPosition: "quicknote:panel-position",
   panelWillOpen: "quicknote:panel-will-open",
+  hotkeyRegistrationState: "quicknote:hotkey-registration-state",
   textColorPanelOpen: "quicknote:text-color-panel-open",
   textColorPanelChange: "quicknote:text-color-panel-change",
   textColorPanelClose: "quicknote:text-color-panel-close",

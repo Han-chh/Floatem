@@ -114,6 +114,10 @@ type MessageCatalog = {
     englishMode: string;
     firstLevelActionsTitle: string;
     globalShortcutTitle: string;
+    hotkeyConflictBannerBody: (shortcut: string) => string;
+    hotkeyConflictBannerTitle: string;
+    hotkeyConflictBody: (shortcut: string) => string;
+    hotkeyConflictTitle: string;
     hotkeyHint: string;
     languageEnglishBody: string;
     languageSectionSubtitle: string;
@@ -347,6 +351,12 @@ const messages: Record<AppLanguage, MessageCatalog> = {
       englishMode: "English",
       firstLevelActionsTitle: "Actions",
       globalShortcutTitle: "Global shortcut",
+      hotkeyConflictBannerBody: (shortcut) =>
+        `Global shortcut ${shortcut} is conflicting with another app or system shortcut. Change it in Settings.`,
+      hotkeyConflictBannerTitle: "Global shortcut conflict",
+      hotkeyConflictBody: (shortcut) =>
+        `QuickNote could not register ${shortcut}. The shortcut is already reserved or in use by another app. Pick a different shortcut to restore summon and hide.`,
+      hotkeyConflictTitle: "Shortcut conflict detected",
       hotkeyHint: "Click change, then press your new shortcut combination.",
       languageEnglishBody: "Keep the interface in English.",
       languageSectionSubtitle: "Switch the app interface language instantly.",
@@ -578,6 +588,12 @@ const messages: Record<AppLanguage, MessageCatalog> = {
       englishMode: "English",
       firstLevelActionsTitle: "操作",
       globalShortcutTitle: "全局快捷键",
+      hotkeyConflictBannerBody: (shortcut) =>
+        `\u5168\u5c40\u5feb\u6377\u952e ${shortcut} \u6b63\u5728\u4e0e\u5176\u4ed6\u5e94\u7528\u6216\u7cfb\u7edf\u5feb\u6377\u952e\u51b2\u7a81\uff0c\u8bf7\u5728\u8bbe\u7f6e\u4e2d\u4fee\u6539\u3002`,
+      hotkeyConflictBannerTitle: "\u5168\u5c40\u5feb\u6377\u952e\u51b2\u7a81",
+      hotkeyConflictBody: (shortcut) =>
+        `QuickNote \u65e0\u6cd5\u6ce8\u518c ${shortcut}\u3002\u8fd9\u7ec4\u5feb\u6377\u952e\u5df2\u88ab\u7cfb\u7edf\u4fdd\u7559\u6216\u88ab\u5176\u4ed6\u5e94\u7528\u5360\u7528\uff0c\u8bf7\u66f4\u6362\u4e3a\u5176\u4ed6\u5feb\u6377\u952e\u4ee5\u6062\u590d\u5524\u8d77\u548c\u9690\u85cf\u80fd\u529b\u3002`,
+      hotkeyConflictTitle: "\u68c0\u6d4b\u5230\u5feb\u6377\u952e\u51b2\u7a81",
       hotkeyHint: "点击更改，然后按下你想要的新快捷键组合。",
       languageEnglishBody: "界面保持为英文。",
       languageSectionSubtitle: "立即切换应用界面语言。",

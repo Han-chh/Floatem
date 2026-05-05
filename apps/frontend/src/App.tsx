@@ -5,9 +5,11 @@ import { NotesList } from "./components/notes/NotesList";
 import { FigmaNotesHomePreview } from "./components/preview/FigmaNotesHomePreview";
 import { SettingsPanel } from "./components/settings/SettingsPanel";
 import { TodoList } from "./components/todos/TodoList";
+import { AlertTriangleIcon } from "./components/icons/AppIcons";
 import { useAutoSave } from "./hooks/useAutoSave";
 import { useHotkey } from "./hooks/useHotkey";
 import {
+  getHotkeyRegistrationState,
   loadAllData,
   reportFrontendError,
   reportFrontendReady,
@@ -18,6 +20,7 @@ import { useI18n } from "./lib/i18n";
 import {
   subscribeToPanelPosition,
   subscribeToPanelWillOpen,
+  subscribeToHotkeyRegistrationState,
   subscribeToTextColorPanelClose,
   subscribeToTextColorPanelOpen,
   subscribeToTodosUpdated,
@@ -58,6 +61,7 @@ function QuickNoteApp() {
   const { t } = useI18n();
   const activeTab = useSettingsStore((state) => state.activeTab);
   const hotkey = useSettingsStore((state) => state.hotkey);
+  const hotkeyRegistrationState = useSettingsStore((state) => state.hotkeyRegistrationState);
   const transitionStyle = useSettingsStore((state) => state.transitionStyle);
   const animationSpeed = useSettingsStore((state) => state.animationSpeed);
   const setActiveTab = useSettingsStore((state) => state.setActiveTab);
@@ -93,6 +97,23 @@ function QuickNoteApp() {
         useSettingsStore.getState().applyPreferredOpenSection();
       });
     });
+  }, []);
+
+  useEffect(() => {
+    const settingsStore = useSettingsStore.getState();
+    const unsubscribe = subscribeToHotkeyRegistrationState((state) => {
+      settingsStore.setHotkeyRegistrationState(state);
+    });
+
+    void getHotkeyRegistrationState()
+      .then((state) => {
+        settingsStore.setHotkeyRegistrationState(state);
+      })
+      .catch((error) => {
+        console.error("QuickNote failed to read the current hotkey registration state.", error);
+      });
+
+    return unsubscribe;
   }, []);
 
   useEffect(() => {
@@ -240,11 +261,29 @@ function QuickNoteApp() {
 
   const tabDirection = getTabDirection(activeTab);
   const tabMotion = getTabMotionConfig(transitionStyle, animationSpeed);
+  const showHotkeyConflictBanner = hotkeyRegistrationState?.registration === "conflict";
 
   return (
     <PanelShell
       activeTab={activeTab}
       animationSpeed={animationSpeed}
+      banner={
+        showHotkeyConflictBanner ? (
+          <div className="rounded-[20px] border border-[rgba(201,93,68,0.32)] bg-[rgba(201,93,68,0.12)] px-3.5 py-3 text-[12px] text-[rgb(150,68,52)]">
+            <div className="flex items-start gap-2.5">
+              <span className="mt-0.5 inline-flex shrink-0">
+                <AlertTriangleIcon size={15} />
+              </span>
+              <div className="min-w-0">
+                <p className="font-semibold">{t.settings.hotkeyConflictBannerTitle}</p>
+                <p className="mt-1 leading-5">
+                  {t.settings.hotkeyConflictBannerBody(hotkeyRegistrationState.shortcut)}
+                </p>
+              </div>
+            </div>
+          </div>
+        ) : null
+      }
       onTabChange={setActiveTab}
       showSettings={showSettings}
       onToggleSettings={() => setShowSettings((current) => !current)}

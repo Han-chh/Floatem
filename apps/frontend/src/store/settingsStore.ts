@@ -1,5 +1,6 @@
 import { create } from "zustand";
 import { subscribeWithSelector } from "zustand/middleware";
+import type { HotkeyRegistrationState } from "@quicknote/native-bridge";
 import {
   DEFAULT_SETTINGS,
   type AnimationSpeed,
@@ -14,10 +15,12 @@ import {
 } from "../lib/models";
 
 type SettingsState = AppSettings & {
+  hotkeyRegistrationState: HotkeyRegistrationState | null;
   isLoaded: boolean;
   applyPreferredOpenSection: () => void;
   hydrateSettings: (settings: Partial<AppSettings>) => void;
   restoreDefaults: () => void;
+  setHotkeyRegistrationState: (state: HotkeyRegistrationState | null) => void;
   setActiveTab: (tab: TabId) => void;
   setDefaultOpenSection: (defaultOpenSection: DefaultOpenSection) => void;
   setHotkey: (hotkey: string) => void;
@@ -32,6 +35,7 @@ type SettingsState = AppSettings & {
 
 const initialState = () => ({
   ...DEFAULT_SETTINGS,
+  hotkeyRegistrationState: null,
   isLoaded: false,
 });
 
@@ -54,8 +58,12 @@ export const useSettingsStore = create<SettingsState>()(
     restoreDefaults: () => {
       set({
         ...DEFAULT_SETTINGS,
+        hotkeyRegistrationState: null,
         isLoaded: true,
       });
+    },
+    setHotkeyRegistrationState: (hotkeyRegistrationState) => {
+      set({ hotkeyRegistrationState });
     },
     setActiveTab: (activeTab) => {
       set({
