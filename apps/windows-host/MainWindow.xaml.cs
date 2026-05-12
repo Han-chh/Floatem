@@ -126,7 +126,7 @@ public partial class MainWindow : Window
         await bridge.InstallAsync();
         try
         {
-            hotKeys.Register(storage.LoadSettings()["hotkey"]?.GetValue<string>() ?? "Ctrl+Shift+Space");
+            hotKeys.Register(storage.LoadSettings()["hotkey"]?.GetValue<string>() ?? "Shift+Space");
         }
         catch (InvalidOperationException)
         {

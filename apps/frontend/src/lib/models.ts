@@ -43,6 +43,7 @@ export type TodoItem = {
   done: boolean;
   reminderAt: number | null;
   createdAt: number;
+  dateKey: string;
 };
 
 export type AppSettings = {
@@ -90,7 +91,7 @@ export const DEFAULT_NOTE_CONTENT: Descendant[] = [
 ];
 
 export const DEFAULT_SETTINGS: AppSettings = {
-  hotkey: "Cmd+Shift+Space",
+  hotkey: "Shift+Space",
   language: "en",
   panelPosition: null,
   activeTab: "notes",
@@ -232,14 +233,53 @@ export function createNoteCard(overrides: Partial<NoteCard> = {}): NoteCard {
 }
 
 export function createTodoItem(text: string, overrides: Partial<TodoItem> = {}): TodoItem {
+  const createdAt = typeof overrides.createdAt === "number" ? overrides.createdAt : Date.now();
+
   return {
     id: createId("todo"),
     text,
     done: false,
     reminderAt: null,
-    createdAt: Date.now(),
+    createdAt,
+    dateKey: formatLocalDateKey(new Date(createdAt)),
     ...overrides,
   };
+}
+
+export function formatLocalDateKey(date: Date) {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
+
+export function parseLocalDateKey(dateKey: string) {
+  const [year, month, day] = dateKey.split("-").map((part) => Number(part));
+
+  if (!year || !month || !day) {
+    return new Date();
+  }
+
+  return new Date(year, month - 1, day);
+}
+
+export function normalizeTodoItem(value: unknown, fallbackDateKey = formatLocalDateKey(new Date())): TodoItem {
+  const candidate = value && typeof value === "object" ? (value as Partial<TodoItem>) : {};
+  const createdAt = typeof candidate.createdAt === "number" ? candidate.createdAt : Date.now();
+  const dateKey =
+    typeof candidate.dateKey === "string" && /^\d{4}-\d{2}-\d{2}$/.test(candidate.dateKey)
+      ? candidate.dateKey
+      : fallbackDateKey;
+  const idOverride = isNonEmptyString(candidate.id) ? { id: candidate.id.trim() } : {};
+
+  return createTodoItem(typeof candidate.text === "string" ? candidate.text : "", {
+    ...idOverride,
+    text: typeof candidate.text === "string" ? candidate.text : "",
+    done: Boolean(candidate.done),
+    reminderAt: typeof candidate.reminderAt === "number" ? candidate.reminderAt : null,
+    createdAt,
+    dateKey,
+  });
 }
 
 export function normalizeNoteGroup(value: unknown, index: number): NoteGroup {

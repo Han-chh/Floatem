@@ -15,8 +15,8 @@ internal sealed partial class Win32HotKeyManager : IDisposable
     private const int WmHotKey = 0x0312;
     private readonly Window window;
     private HwndSource? source;
-    private string registeredShortcut = "Ctrl+Shift+Space";
-    private RegistrationState registrationState = new("Ctrl+Shift+Space", "unsupported", null);
+    private string registeredShortcut = "Shift+Space";
+    private RegistrationState registrationState = new("Shift+Space", "unsupported", null);
 
     public event EventHandler<string>? HotKeyPressed;
     public event EventHandler<RegistrationState>? RegistrationStateChanged;

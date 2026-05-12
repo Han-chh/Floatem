@@ -18,7 +18,7 @@ export function TabBar({ activeTab, onTabChange }: TabBarProps) {
 
   return (
     <div
-      className="w-full rounded-[22px] border border-[var(--border)]/80 bg-[rgba(30,25,21,0.05)] p-[5px] shadow-[inset_0_1px_0_rgba(255,255,255,0.55)]"
+      className="w-full rounded-[16px] border border-[var(--border)]/80 bg-[rgba(30,25,21,0.05)] p-[3px] shadow-[inset_0_1px_0_rgba(255,255,255,0.55)]"
       role="tablist"
       aria-label={t.app.sectionsAria}
     >
@@ -33,7 +33,7 @@ export function TabBar({ activeTab, onTabChange }: TabBarProps) {
             role="tab"
             aria-selected={activeTab === tab.id}
             className={clsx(
-              "relative min-w-0 rounded-[16px] px-3 py-2.5 text-[12px] font-semibold tracking-[0.01em] text-[var(--muted)]",
+              "relative min-w-0 rounded-[12px] px-2 py-1.5 text-[11px] font-semibold tracking-normal text-[var(--muted)]",
               activeTab === tab.id &&
                 "text-[var(--dark-text)] shadow-[0_10px_20px_rgba(61,49,34,0.12)]",
             )}
@@ -44,12 +44,12 @@ export function TabBar({ activeTab, onTabChange }: TabBarProps) {
             {activeTab === tab.id ? (
               <motion.span
                 layoutId="tab-pill"
-                className="absolute inset-0 rounded-[16px] bg-[linear-gradient(180deg,rgba(255,255,255,0.98),rgba(250,245,237,0.94))] shadow-[inset_0_1px_0_rgba(255,255,255,0.9)]"
+                className="absolute inset-0 rounded-[12px] bg-[linear-gradient(180deg,rgba(255,255,255,0.98),rgba(250,245,237,0.94))] shadow-[inset_0_1px_0_rgba(255,255,255,0.9)]"
                 transition={{ type: "spring", stiffness: 340, damping: 30 }}
               />
             ) : null}
-            <span className="relative z-10 flex items-center justify-center gap-2 wrap-anywhere">
-              <Icon size={16} />
+            <span className="relative z-10 flex items-center justify-center gap-1.5 wrap-anywhere">
+              <Icon size={13} />
               <span>{tab.label}</span>
             </span>
           </motion.button>

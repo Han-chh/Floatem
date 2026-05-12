@@ -3,6 +3,7 @@ import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 import { DEFAULT_SETTINGS } from "../../src/lib/models";
 import { TodoList } from "../../src/components/todos/TodoList";
+import { formatLocalDateKey } from "../../src/lib/models";
 
 describe("TodoList", () => {
   it("adds, completes, and deletes a todo with Enter submission while keeping Cmd+Enter for new lines", async () => {
@@ -151,5 +152,45 @@ describe("TodoList", () => {
     });
     expect(screen.getByText("Ship release notes")).toBeInTheDocument();
     expect(screen.queryByText("Draft release notes")).not.toBeInTheDocument();
+  });
+
+  it("switches todo card views by calendar date and shows per-day counts", async () => {
+    const user = userEvent.setup();
+    const today = new Date();
+    const tomorrow = new Date(today);
+    tomorrow.setDate(today.getDate() + 1);
+    const todayKey = formatLocalDateKey(today);
+    const tomorrowKey = formatLocalDateKey(tomorrow);
+
+    render(<TodoList />);
+
+    await user.type(screen.getByLabelText("Quick add"), "Today task");
+    await user.keyboard("{Enter}");
+
+    await user.click(screen.getByRole("button", { name: "Open todo calendar" }));
+    expect(screen.getByRole("dialog", { name: "Todo calendar" })).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: `today, ${todayKey}: 1 todos, 0 done, 1 undone` }),
+    ).toBeInTheDocument();
+
+    await user.click(
+      screen.getByRole("button", { name: `tomorrow, ${tomorrowKey}: 0 todos, 0 done, 0 undone` }),
+    );
+    expect(screen.queryByText("Today task")).not.toBeInTheDocument();
+
+    await user.type(screen.getByLabelText("Quick add"), "Tomorrow task");
+    await user.keyboard("{Enter}");
+    expect(screen.getByText("Tomorrow task")).toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: "Open todo calendar" }));
+    expect(
+      screen.getByRole("button", { name: `tomorrow, ${tomorrowKey}: 1 todos, 0 done, 1 undone` }),
+    ).toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: `today, ${todayKey}: 1 todos, 0 done, 1 undone` }));
+    expect(screen.getByText("Today task")).toBeInTheDocument();
+    await waitFor(() => {
+      expect(screen.queryByText("Tomorrow task")).not.toBeInTheDocument();
+    });
   });
 });

@@ -11,6 +11,17 @@ import {
 import { SortableContext, verticalListSortingStrategy } from "@dnd-kit/sortable";
 import { AnimatePresence, motion } from "framer-motion";
 import {
+  addDays,
+  endOfMonth,
+  endOfWeek,
+  format,
+  isSameDay,
+  isTomorrow,
+  isYesterday,
+  startOfMonth,
+  startOfWeek,
+} from "date-fns";
+import {
   useEffect,
   useMemo,
   useRef,
@@ -23,11 +34,18 @@ import { createPortal } from "react-dom";
 import { useDragPointerTracking } from "../../hooks/useDragPointerTracking";
 import { isPrimaryShortcut } from "../../lib/isPrimaryShortcut";
 import { useI18n } from "../../lib/i18n";
-import type { TodoItem as TodoItemModel } from "../../lib/models";
+import { formatLocalDateKey, parseLocalDateKey, type TodoItem as TodoItemModel } from "../../lib/models";
 import { isNativeQuickNoteHost } from "../../lib/nativeBridge";
 import { readPlainTextFromClipboard, writePlainTextToClipboard } from "../../lib/plainTextClipboard";
 import { ParticleField } from "../feedback/ParticleField";
-import { CornerDownLeftIcon, SquarePenIcon, XIcon } from "../icons/AppIcons";
+import {
+  ChevronLeftIcon,
+  ChevronRightIcon,
+  CircleCheckBigIcon,
+  CornerDownLeftIcon,
+  SquarePenIcon,
+  XIcon,
+} from "../icons/AppIcons";
 import { useParticleField } from "../../hooks/useParticleField";
 import { centerOverlayToCursor, syncLatestDragPointerCoordinates } from "../../lib/dnd/centerOverlayToCursor";
 import { resolveDragReorderTarget } from "../../lib/dnd/resolveDragReorderTarget";
@@ -36,10 +54,115 @@ import { useSettingsStore } from "../../store/settingsStore";
 import { useTodosStore } from "../../store/todosStore";
 import { CompletedTodoItem, TodoItem, TodoItemPreview } from "./TodoItem";
 
+const WEEKDAY_LABELS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"] as const;
+
+type TodoDayStats = {
+  total: number;
+  done: number;
+  undone: number;
+};
+
+function getRelativeDateLabel(date: Date) {
+  if (isSameDay(date, new Date())) {
+    return "today";
+  }
+
+  if (isYesterday(date)) {
+    return "yesterday";
+  }
+
+  if (isTomorrow(date)) {
+    return "tomorrow";
+  }
+
+  return null;
+}
+
+function getRelativeDateMarker(date: Date, language: "en" | "zh-CN") {
+  const label = getRelativeDateLabel(date);
+
+  if (label === "today") {
+    return language === "zh-CN" ? "\u4eca" : "tdy";
+  }
+
+  if (label === "yesterday") {
+    return language === "zh-CN" ? "\u6628" : "yday";
+  }
+
+  if (label === "tomorrow") {
+    return language === "zh-CN" ? "\u660e" : "tmr";
+  }
+
+  return null;
+}
+
+function buildCalendarDays(monthDate: Date) {
+  const monthStart = startOfMonth(monthDate);
+  const monthEnd = endOfMonth(monthDate);
+  const calendarStart = startOfWeek(monthStart);
+  const calendarEnd = endOfWeek(monthEnd);
+  const days: Date[] = [];
+
+  for (let day = calendarStart; day <= calendarEnd; day = addDays(day, 1)) {
+    days.push(day);
+  }
+
+  return days;
+}
+
+function buildTodoStats(todos: TodoItemModel[]) {
+  return todos.reduce((statsByDate, todo) => {
+    const current = statsByDate.get(todo.dateKey) ?? { total: 0, done: 0, undone: 0 };
+    current.total += 1;
+    if (todo.done) {
+      current.done += 1;
+    } else {
+      current.undone += 1;
+    }
+    statsByDate.set(todo.dateKey, current);
+    return statsByDate;
+  }, new Map<string, TodoDayStats>());
+}
+
+function TodoDayStatusIcon({ stats, isSelected }: { stats: TodoDayStats; isSelected: boolean }) {
+  if (stats.total === 0) {
+    return (
+      <span
+        aria-hidden="true"
+        className={`block h-1 w-5 rounded-full ${
+          isSelected ? "bg-[rgba(255,255,255,0.46)]" : "bg-[rgba(145,145,145,0.66)]"
+        }`}
+      />
+    );
+  }
+
+  if (stats.undone === 0) {
+    return (
+      <span
+        aria-hidden="true"
+        className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-[rgba(42,154,98,0.95)] text-white shadow-[0_5px_10px_rgba(42,154,98,0.2)]"
+      >
+        <CircleCheckBigIcon size={15} />
+      </span>
+    );
+  }
+
+  return (
+    <span
+      aria-hidden="true"
+      className="inline-flex h-6 min-w-[1.5rem] items-center justify-center rounded-full border border-[rgba(197,55,55,0.28)] bg-[rgba(205,63,63,0.96)] px-1.5 text-[11px] font-extrabold leading-none text-white shadow-[0_5px_10px_rgba(205,63,63,0.18)]"
+    >
+      {stats.undone}
+    </span>
+  );
+}
+
 export function TodoList() {
-  const { t } = useI18n();
+  const { t, language } = useI18n();
   const todos = useTodosStore((state) => state.todos);
+  const selectedDateKey = useTodosStore((state) => state.selectedDateKey);
   const addTodo = useTodosStore((state) => state.addTodo);
+  const selectDate = useTodosStore((state) => state.selectDate);
   const updateTodoText = useTodosStore((state) => state.updateTodoText);
   const moveTodo = useTodosStore((state) => state.moveTodo);
   const toggleTodo = useTodosStore((state) => state.toggleTodo);
@@ -52,6 +175,9 @@ export function TodoList() {
   const [activeDragId, setActiveDragId] = useState<string | null>(null);
   const [activeDragOverId, setActiveDragOverId] = useState<string | null>(null);
   const [activeDragWidth, setActiveDragWidth] = useState<number | null>(null);
+  const [clock, setClock] = useState(() => new Date());
+  const [isCalendarOpen, setIsCalendarOpen] = useState(false);
+  const [calendarMonth, setCalendarMonth] = useState(() => startOfMonth(parseLocalDateKey(selectedDateKey)));
   const formRef = useRef<HTMLFormElement>(null);
   const draftRef = useRef<HTMLTextAreaElement | null>(null);
   const editInputRef = useRef<HTMLInputElement | null>(null);
@@ -61,10 +187,13 @@ export function TodoList() {
       activationConstraint: { distance: 6 },
     }),
   );
+  const selectedDate = useMemo(() => parseLocalDateKey(selectedDateKey), [selectedDateKey]);
+  const selectedDateLabel = getRelativeDateLabel(selectedDate);
+  const todoStatsByDate = useMemo(() => buildTodoStats(todos), [todos]);
 
   const visibleTodos = useMemo(
-    () => todos.filter((todo) => !removingIds.includes(todo.id)),
-    [removingIds, todos],
+    () => todos.filter((todo) => todo.dateKey === selectedDateKey && !removingIds.includes(todo.id)),
+    [removingIds, selectedDateKey, todos],
   );
   const openTodos = visibleTodos.filter((todo) => !todo.done);
   const doneTodos = visibleTodos.filter((todo) => todo.done);
@@ -72,10 +201,38 @@ export function TodoList() {
   const activeDragIndex = activeDragId ? openTodos.findIndex((todo) => todo.id === activeDragId) : -1;
   const activeDragOrder = activeDragIndex >= 0 ? activeDragIndex + 1 : undefined;
   const editingTodo = editingTodoId ? (todos.find((todo) => todo.id === editingTodoId) ?? null) : null;
+  const calendarQuickDates = useMemo(
+    () => [
+      { id: "today", label: t.todos.today, date: clock },
+      { id: "tomorrow", label: t.todos.tomorrow, date: addDays(clock, 1) },
+      { id: "yesterday", label: t.todos.yesterday, date: addDays(clock, -1) },
+    ],
+    [clock, t.todos.today, t.todos.tomorrow, t.todos.yesterday],
+  );
   const normalizedEditDraft = editDraft.trim();
   const isEditSaveDisabled =
     normalizedEditDraft.length === 0 || normalizedEditDraft === (editingTodo?.text.trim() ?? "");
   const dragPointerCoordinates = useDragPointerTracking(Boolean(activeDragId));
+
+  useEffect(() => {
+    const timer = window.setInterval(() => {
+      setClock(new Date());
+    }, 30_000);
+
+    return () => {
+      window.clearInterval(timer);
+    };
+  }, []);
+
+  useEffect(() => {
+    setCalendarMonth(startOfMonth(selectedDate));
+  }, [selectedDate]);
+
+  useEffect(() => {
+    if (isCalendarOpen) {
+      setCalendarMonth(startOfMonth(selectedDate));
+    }
+  }, [isCalendarOpen, selectedDate]);
 
   useEffect(() => {
     if (!activeDragId || !dragPointerCoordinates || typeof document === "undefined") {
@@ -148,6 +305,11 @@ export function TodoList() {
     if (enableParticles && nextDone) {
       spawnBurst(target, "green");
     }
+  };
+
+  const handleSelectDate = (date: Date) => {
+    selectDate(formatLocalDateKey(date));
+    setIsCalendarOpen(false);
   };
 
   const handleDragStart = (event: DragStartEvent) => {
@@ -293,6 +455,32 @@ export function TodoList() {
 
   return (
     <section className="cq-module flex h-full min-h-0 flex-col gap-2.5">
+      <motion.button
+        type="button"
+        data-no-window-drag="true"
+        aria-label="Open todo calendar"
+        className="paper-button flex w-full items-center justify-between gap-3 rounded-[20px] px-3.5 py-2.5 text-left"
+        initial={{ opacity: 0, y: 6 }}
+        animate={{ opacity: 1, y: 0 }}
+        whileHover={{ y: -1.5, scale: 1.005 }}
+        whileTap={{ scale: 0.985 }}
+        onClick={() => setIsCalendarOpen(true)}
+      >
+        <span className="min-w-0">
+          <span className="block font-display text-[19px] font-semibold leading-none tracking-normal text-[var(--brown-strong)]">
+            {format(selectedDate, "yyyy.MM.dd")}
+          </span>
+          <span className="mt-1 block truncate text-[11px] font-semibold leading-4 text-[var(--muted)]">
+            {format(clock, "HH:mm")} · {format(selectedDate, "EEEE")}
+          </span>
+        </span>
+        {selectedDateLabel ? (
+          <span className="shrink-0 rounded-[12px] border border-[rgba(81,127,145,0.14)] bg-[rgba(239,248,249,0.86)] px-2.5 py-1 text-[10.5px] font-bold leading-none text-[var(--status-upcoming)]">
+            {selectedDateLabel}
+          </span>
+        ) : null}
+      </motion.button>
+
       <motion.div
         initial={{ opacity: 0, y: 8 }}
         animate={{ opacity: 1, y: 0 }}
@@ -474,6 +662,144 @@ export function TodoList() {
       {typeof document !== "undefined"
         ? createPortal(
             <AnimatePresence>
+              {isCalendarOpen ? (
+                <motion.div
+                  data-no-window-drag="true"
+                  className="quicknote-modal-backdrop fixed inset-0 z-[88] flex items-center justify-center bg-[rgba(30,25,21,0.24)] px-5 py-6 backdrop-blur-[10px]"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  onClick={() => setIsCalendarOpen(false)}
+                >
+                  <motion.div
+                    role="dialog"
+                    aria-modal="true"
+                    aria-label="Todo calendar"
+                    className="paper-panel flex max-h-[calc(100dvh-3rem)] w-full max-w-[430px] flex-col overflow-hidden rounded-[24px] p-4 shadow-[0_26px_48px_rgba(30,25,21,0.24)]"
+                    initial={{ opacity: 0, scale: 0.95, y: 12 }}
+                    animate={{ opacity: 1, scale: 1, y: 0 }}
+                    exit={{ opacity: 0, scale: 0.98, y: 8 }}
+                    transition={{ duration: 0.18, ease: [0.22, 1, 0.36, 1] }}
+                    onClick={(event) => event.stopPropagation()}
+                  >
+                    <div className="mb-3 flex items-center justify-between gap-3">
+                      <motion.button
+                        type="button"
+                        aria-label="Previous month"
+                        data-no-window-drag="true"
+                        className="paper-icon-button inline-flex h-9 w-9 min-h-0 min-w-0 rounded-[12px]"
+                        whileHover={{ y: -1.5, scale: 1.03 }}
+                        whileTap={{ scale: 0.97 }}
+                        onClick={() => setCalendarMonth((current) => addDays(startOfMonth(current), -1))}
+                      >
+                        <ChevronLeftIcon size={14} />
+                      </motion.button>
+                      <div className="min-w-0 text-center">
+                        <p className="font-display text-[21px] font-semibold leading-none tracking-normal text-[var(--brown-strong)]">
+                          {format(calendarMonth, "MMMM yyyy")}
+                        </p>
+                      </div>
+                      <motion.button
+                        type="button"
+                        aria-label="Next month"
+                        data-no-window-drag="true"
+                        className="paper-icon-button inline-flex h-9 w-9 min-h-0 min-w-0 rounded-[12px]"
+                        whileHover={{ y: -1.5, scale: 1.03 }}
+                        whileTap={{ scale: 0.97 }}
+                        onClick={() => setCalendarMonth((current) => addDays(endOfMonth(current), 1))}
+                      >
+                        <ChevronRightIcon size={14} />
+                      </motion.button>
+                    </div>
+
+                    <div className="paper-scroll min-h-0 overflow-y-auto pr-1">
+                      <div className="grid grid-cols-7 gap-1.5">
+                        {WEEKDAY_LABELS.map((label) => (
+                          <div
+                            key={label}
+                            className="text-center text-[10px] font-bold uppercase leading-5 text-[var(--muted)]"
+                          >
+                            {label}
+                          </div>
+                        ))}
+                        {buildCalendarDays(calendarMonth).map((day) => {
+                          const dateKey = formatLocalDateKey(day);
+                          const stats = todoStatsByDate.get(dateKey) ?? { total: 0, done: 0, undone: 0 };
+                          const isCurrentMonth = day.getMonth() === calendarMonth.getMonth();
+                          const isSelected = dateKey === selectedDateKey;
+                          const relativeLabel = getRelativeDateLabel(day);
+                          const relativeMarker = getRelativeDateMarker(day, language);
+
+                          return (
+                            <motion.button
+                              key={dateKey}
+                              type="button"
+                              data-no-window-drag="true"
+                              aria-label={`${relativeLabel ? `${relativeLabel}, ` : ""}${format(day, "yyyy-MM-dd")}: ${stats.total} todos, ${stats.done} done, ${stats.undone} undone`}
+                              className={`min-h-[58px] rounded-[14px] border px-1.5 py-1.5 text-left transition-colors ${
+                                isSelected
+                                  ? "border-[rgba(30,25,21,0.68)] bg-[rgba(30,25,21,0.9)] text-white shadow-[0_12px_22px_rgba(30,25,21,0.16)]"
+                                  : "border-[rgba(213,198,180,0.74)] bg-[rgba(255,255,255,0.58)] text-[var(--dark-text)]"
+                              } ${isCurrentMonth ? "" : "opacity-50"}`}
+                              whileHover={{ y: -1.5, scale: 1.02 }}
+                              whileTap={{ scale: 0.97 }}
+                              onClick={() => handleSelectDate(day)}
+                            >
+                              <span className="flex h-4 items-center justify-center gap-1">
+                                <span className="text-[12px] font-bold leading-none">{format(day, "d")}</span>
+                                {relativeMarker ? (
+                                  <span
+                                    aria-hidden="true"
+                                    className={`inline-flex h-4 min-w-4 items-center justify-center rounded-full px-1 text-[9px] font-extrabold leading-none ${
+                                      isSelected
+                                        ? "bg-[rgba(255,255,255,0.18)] text-white"
+                                        : "bg-[rgba(239,248,249,0.96)] text-[var(--status-upcoming)]"
+                                    }`}
+                                  >
+                                    {relativeMarker}
+                                  </span>
+                                ) : null}
+                              </span>
+                              <span className="mt-3 flex h-6 items-center justify-center">
+                                <TodoDayStatusIcon stats={stats} isSelected={isSelected} />
+                              </span>
+                            </motion.button>
+                          );
+                        })}
+                      </div>
+                    </div>
+
+                    <div className="mt-4 flex shrink-0 flex-wrap items-center justify-between gap-2">
+                      <div className="flex min-w-0 flex-wrap items-center gap-1.5">
+                        {calendarQuickDates.map((quickDate) => (
+                          <motion.button
+                            key={quickDate.id}
+                            type="button"
+                            data-no-window-drag="true"
+                            className="inline-flex items-center justify-center rounded-[12px] border border-[rgba(47,107,255,0.45)] bg-[rgba(239,248,249,0.72)] px-2.5 py-2 text-[11px] font-semibold text-[var(--status-upcoming)] shadow-[0_8px_16px_rgba(47,107,255,0.08)] transition-colors hover:border-[rgba(47,107,255,0.68)] hover:bg-[rgba(239,248,249,0.94)]"
+                            whileHover={{ y: -1.5, scale: 1.01 }}
+                            whileTap={{ scale: 0.985 }}
+                            onClick={() => handleSelectDate(quickDate.date)}
+                          >
+                            {quickDate.label}
+                          </motion.button>
+                        ))}
+                      </div>
+                      <motion.button
+                        type="button"
+                        data-no-window-drag="true"
+                        className="paper-button inline-flex items-center justify-center rounded-[14px] px-3.5 py-2.5 text-[12px] font-semibold text-[var(--dark-text)]"
+                        whileHover={{ y: -1.5, scale: 1.01 }}
+                        whileTap={{ scale: 0.985 }}
+                        onClick={() => setIsCalendarOpen(false)}
+                      >
+                        {t.common.close}
+                      </motion.button>
+                    </div>
+                  </motion.div>
+                </motion.div>
+              ) : null}
+
               {editingTodo ? (
                 <motion.div
                   data-no-window-drag="true"

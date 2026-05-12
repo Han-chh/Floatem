@@ -81,4 +81,24 @@ describe("todosStore", () => {
       "Beta:true",
     ]);
   });
+
+  it("keeps separate todo card records for each selected date", () => {
+    useTodosStore.getState().initialize([]);
+    useTodosStore.getState().selectDate("2026-05-12");
+    const today = useTodosStore.getState().addTodo("Today task");
+
+    useTodosStore.getState().selectDate("2026-05-13");
+    const tomorrow = useTodosStore.getState().addTodo("Tomorrow task");
+    useTodosStore.getState().toggleTodo(tomorrow!.id);
+
+    const todos = useTodosStore.getState().todos;
+    expect(todos.filter((todo) => todo.dateKey === "2026-05-12").map((todo) => todo.text)).toEqual([
+      "Today task",
+    ]);
+    expect(todos.filter((todo) => todo.dateKey === "2026-05-13").map((todo) => `${todo.text}:${todo.done}`)).toEqual([
+      "Tomorrow task:true",
+    ]);
+    expect(today?.dateKey).toBe("2026-05-12");
+    expect(tomorrow?.dateKey).toBe("2026-05-13");
+  });
 });

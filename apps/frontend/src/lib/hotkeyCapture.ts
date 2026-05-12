@@ -31,7 +31,7 @@ const CODE_TO_KEY_LABEL: Record<string, string> = {
 };
 
 export function getShortcutDisplayLabel(shortcut: string) {
-  return shortcut || "Cmd+Shift+Space";
+  return shortcut || "Shift+Space";
 }
 
 function resolveKeyLabel(event: CapturableKeyboardEvent) {

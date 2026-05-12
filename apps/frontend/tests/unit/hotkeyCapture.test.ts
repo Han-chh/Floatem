@@ -80,6 +80,6 @@ describe("hotkeyCapture", () => {
   });
 
   it("falls back to the default display label when the shortcut is empty", () => {
-    expect(getShortcutDisplayLabel("")).toBe("Cmd+Shift+Space");
+    expect(getShortcutDisplayLabel("")).toBe("Shift+Space");
   });
 });

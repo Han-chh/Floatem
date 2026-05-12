@@ -36,7 +36,7 @@ describe("settingsStore", () => {
   it("updates individual settings fields", () => {
     useSettingsStore.getState().setActiveTab("todos");
     useSettingsStore.getState().setDefaultOpenSection("notes");
-    useSettingsStore.getState().setHotkey("Cmd+Shift+Space");
+    useSettingsStore.getState().setHotkey("Shift+Space");
     useSettingsStore.getState().setLanguage("zh-CN");
     useSettingsStore.getState().setPanelPosition({ x: 12, y: 16 });
     useSettingsStore.getState().setTransitionStyle("page");
@@ -47,7 +47,7 @@ describe("settingsStore", () => {
     const state = useSettingsStore.getState();
     expect(state.activeTab).toBe("todos");
     expect(state.defaultOpenSection).toBe("notes");
-    expect(state.hotkey).toBe("Cmd+Shift+Space");
+    expect(state.hotkey).toBe("Shift+Space");
     expect(state.language).toBe("zh-CN");
     expect(state.lastActiveTab).toBe("todos");
     expect(state.panelPosition).toEqual({ x: 12, y: 16 });
@@ -131,7 +131,7 @@ describe("settingsStore", () => {
 
     const state = useSettingsStore.getState();
     expect(state.isLoaded).toBe(true);
-    expect(state.hotkey).toBe("Cmd+Shift+Space");
+    expect(state.hotkey).toBe("Shift+Space");
     expect(state.language).toBe("en");
     expect(state.defaultOpenSection).toBe("last");
     expect(state.transitionStyle).toBe("page");

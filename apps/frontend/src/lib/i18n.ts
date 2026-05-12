@@ -226,6 +226,7 @@ type MessageCatalog = {
     statusDone: string;
     statusUndone: string;
     submitHint: string;
+    today: string;
     tomorrow: string;
     tomorrowMorning: string;
     tomorrowTimePrompt: string;
@@ -235,6 +236,7 @@ type MessageCatalog = {
     undoneCount: (count: number) => string;
     inOneHour: string;
     year: string;
+    yesterday: string;
   };
 };
 
@@ -466,6 +468,7 @@ const messages: Record<AppLanguage, MessageCatalog> = {
       statusDone: "done",
       statusUndone: "undone",
       submitHint: "Cmd+Enter for newline",
+      today: "Today",
       tomorrow: "Tomorrow",
       tomorrowMorning: "Tomorrow 09:00",
       tomorrowTimePrompt: "Tomorrow selected. Choose the hour and minute below.",
@@ -474,6 +477,7 @@ const messages: Record<AppLanguage, MessageCatalog> = {
       titlePlaceholder: "Update task title",
       undoneCount: (count) => `${count} undone`,
       year: "Year",
+      yesterday: "Yesterday",
     },
   },
   "zh-CN": {
@@ -703,6 +707,7 @@ const messages: Record<AppLanguage, MessageCatalog> = {
       statusDone: "已完成",
       statusUndone: "未完成",
       submitHint: "Cmd+Enter 换行",
+      today: "\u4eca\u5929",
       tomorrow: "明天",
       tomorrowMorning: "明天 09:00",
       tomorrowTimePrompt: "已选择明天，请继续选择具体时分。",
@@ -711,6 +716,7 @@ const messages: Record<AppLanguage, MessageCatalog> = {
       titlePlaceholder: "更新任务标题",
       undoneCount: (count) => `${count} 项未完成`,
       year: "年份",
+      yesterday: "\u6628\u5929",
     },
   },
 };

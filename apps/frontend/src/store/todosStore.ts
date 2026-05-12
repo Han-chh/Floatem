@@ -1,14 +1,16 @@
 import { arrayMove } from "@dnd-kit/sortable";
 import { create } from "zustand";
 import { subscribeWithSelector } from "zustand/middleware";
-import { createTodoItem, type TodoItem } from "../lib/models";
+import { createTodoItem, formatLocalDateKey, normalizeTodoItem, type TodoItem } from "../lib/models";
 import { isFutureReminderTimestamp } from "../lib/reminders";
 
 type TodosState = {
   todos: TodoItem[];
+  selectedDateKey: string;
   isLoaded: boolean;
   initialize: (todos: TodoItem[]) => void;
   addTodo: (text: string) => TodoItem | null;
+  selectDate: (dateKey: string) => void;
   updateTodoText: (id: string, text: string) => boolean;
   toggleTodo: (id: string) => void;
   moveTodo: (activeId: string, overId: string) => void;
@@ -25,14 +27,21 @@ function partitionTodos(todos: TodoItem[]) {
 
 const initialState = () => ({
   todos: [] as TodoItem[],
+  selectedDateKey: formatLocalDateKey(new Date()),
   isLoaded: false,
 });
+
+function replaceTodosForDate(todos: TodoItem[], dateKey: string, nextTodosForDate: TodoItem[]) {
+  return [...todos.filter((todo) => todo.dateKey !== dateKey), ...nextTodosForDate];
+}
 
 export const useTodosStore = create<TodosState>()(
   subscribeWithSelector((set) => ({
     ...initialState(),
     initialize: (todos) => {
-      const { openTodos, doneTodos } = partitionTodos(todos);
+      const fallbackDateKey = formatLocalDateKey(new Date());
+      const normalizedTodos = todos.map((todo) => normalizeTodoItem(todo, fallbackDateKey));
+      const { openTodos, doneTodos } = partitionTodos(normalizedTodos);
       set({
         todos: [...openTodos, ...doneTodos],
         isLoaded: true,
@@ -44,14 +53,22 @@ export const useTodosStore = create<TodosState>()(
         return null;
       }
 
-      const todo = createTodoItem(cleanText);
+      let createdTodo: TodoItem | null = null;
       set((state) => ({
         todos: (() => {
-          const { openTodos, doneTodos } = partitionTodos(state.todos);
-          return [...openTodos, todo, ...doneTodos];
+          const todo = createTodoItem(cleanText, { dateKey: state.selectedDateKey });
+          createdTodo = todo;
+          const todosForDate = state.todos.filter((item) => item.dateKey === state.selectedDateKey);
+          const { openTodos, doneTodos } = partitionTodos(todosForDate);
+          return replaceTodosForDate(state.todos, state.selectedDateKey, [...openTodos, todo, ...doneTodos]);
         })(),
       }));
-      return todo;
+      return createdTodo;
+    },
+    selectDate: (dateKey) => {
+      set({
+        selectedDateKey: /^\d{4}-\d{2}-\d{2}$/.test(dateKey) ? dateKey : formatLocalDateKey(new Date()),
+      });
     },
     updateTodoText: (id, text) => {
       const cleanText = text.trim();
@@ -82,7 +99,7 @@ export const useTodosStore = create<TodosState>()(
           return state;
         }
 
-        const rest = state.todos.filter((todo) => todo.id !== id);
+        const rest = state.todos.filter((todo) => todo.id !== id && todo.dateKey === target.dateKey);
         const { openTodos, doneTodos } = partitionTodos(rest);
         const nextTodo = {
           ...target,
@@ -90,9 +107,11 @@ export const useTodosStore = create<TodosState>()(
         };
 
         return {
-          todos: target.done
-            ? [...openTodos, nextTodo, ...doneTodos]
-            : [...openTodos, ...doneTodos, nextTodo],
+          todos: replaceTodosForDate(
+            state.todos,
+            target.dateKey,
+            target.done ? [...openTodos, nextTodo, ...doneTodos] : [...openTodos, ...doneTodos, nextTodo],
+          ),
         };
       });
     },
@@ -102,7 +121,15 @@ export const useTodosStore = create<TodosState>()(
       }
 
       set((state) => {
-        const { openTodos, doneTodos } = partitionTodos(state.todos);
+        const activeTodo = state.todos.find((todo) => todo.id === activeId);
+        const overTodo = state.todos.find((todo) => todo.id === overId);
+
+        if (!activeTodo || !overTodo || activeTodo.dateKey !== overTodo.dateKey) {
+          return state;
+        }
+
+        const todosForDate = state.todos.filter((todo) => todo.dateKey === activeTodo.dateKey);
+        const { openTodos, doneTodos } = partitionTodos(todosForDate);
         const activeIndex = openTodos.findIndex((todo) => todo.id === activeId);
         const overIndex = openTodos.findIndex((todo) => todo.id === overId);
 
@@ -111,7 +138,10 @@ export const useTodosStore = create<TodosState>()(
         }
 
         return {
-          todos: [...arrayMove(openTodos, activeIndex, overIndex), ...doneTodos],
+          todos: replaceTodosForDate(state.todos, activeTodo.dateKey, [
+            ...arrayMove(openTodos, activeIndex, overIndex),
+            ...doneTodos,
+          ]),
         };
       });
     },

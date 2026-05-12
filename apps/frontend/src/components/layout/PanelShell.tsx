@@ -110,22 +110,22 @@ export function PanelShell({
                       delay: getPanelChromeDelay(0.03),
                       ease: [0.22, 1, 0.36, 1],
                     }}
-                    className="paper-panel mb-3 rounded-[30px] px-4 py-3"
+                    className="paper-panel mb-2 rounded-[24px] px-3 py-2"
                   >
-                    <div className="space-y-3">
-                      <div className="flex min-w-0 items-center justify-between gap-3">
-                        <p className="font-display text-[clamp(22px,6vw,28px)] font-semibold tracking-[-0.05em] text-[var(--brown-strong)]">
+                    <div className="space-y-1.5">
+                      <div className="flex min-w-0 items-center justify-between gap-2.5">
+                        <p className="font-display text-[clamp(16px,4.5vw,19px)] font-semibold tracking-normal text-[var(--brown-strong)]">
                           QuickNote
                         </p>
                         <motion.button
                           type="button"
                           aria-label={t.app.settings}
-                          className="paper-icon-button shrink-0"
-                          whileHover={{ y: -2, scale: 1.02 }}
+                          className="paper-icon-button h-[30px] w-[30px] min-h-0 min-w-0 shrink-0 rounded-[11px]"
+                          whileHover={{ y: -1.5, scale: 1.02 }}
                           whileTap={{ scale: 0.985 }}
                           onClick={onToggleSettings}
                         >
-                          <SlidersHorizontalIcon size={18} />
+                          <SlidersHorizontalIcon size={14} />
                         </motion.button>
                       </div>
 

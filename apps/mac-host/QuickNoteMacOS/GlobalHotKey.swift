@@ -4,7 +4,7 @@ import Foundation
 import OSLog
 
 final class GlobalHotKeyManager {
-    static let defaultShortcut = "Cmd+Shift+Space"
+    static let defaultShortcut = "Shift+Space"
 
     struct RegistrationState {
         let shortcut: String

@@ -126,7 +126,7 @@ internal sealed class HostBridgeController
                 return Task.FromResult<JsonNode?>(null);
             case "registerHotkey":
             case "registerGlobalShortcut":
-                hotKeys.Register(parameters["shortcut"]?.GetValue<string>() ?? "Ctrl+Shift+Space");
+                hotKeys.Register(parameters["shortcut"]?.GetValue<string>() ?? "Shift+Space");
                 return Task.FromResult<JsonNode?>(null);
             case "unregisterHotkey":
                 hotKeys.Unregister();

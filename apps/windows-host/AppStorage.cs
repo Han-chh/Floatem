@@ -33,7 +33,7 @@ internal sealed class AppStorage
             }
         }
 
-        settings["hotkey"] = NormalizeShortcut(settings["hotkey"]?.GetValue<string>() ?? "Ctrl+Shift+Space");
+        settings["hotkey"] = NormalizeShortcut(settings["hotkey"]?.GetValue<string>() ?? "Shift+Space");
         SaveJson("settings.json", settings);
         return settings;
     }
@@ -61,7 +61,7 @@ internal sealed class AppStorage
             merged[pair.Key] = pair.Value?.DeepClone();
         }
 
-        merged["hotkey"] = NormalizeShortcut(merged["hotkey"]?.GetValue<string>() ?? "Ctrl+Shift+Space");
+        merged["hotkey"] = NormalizeShortcut(merged["hotkey"]?.GetValue<string>() ?? "Shift+Space");
         SaveJson("settings.json", merged);
     }
 
@@ -69,7 +69,7 @@ internal sealed class AppStorage
     {
         if (string.IsNullOrWhiteSpace(shortcut))
         {
-            return "Ctrl+Shift+Space";
+            return "Shift+Space";
         }
 
         var tokens = shortcut
@@ -80,7 +80,7 @@ internal sealed class AppStorage
                     : token)
             .ToArray();
 
-        return tokens.Length == 0 ? "Ctrl+Shift+Space" : string.Join("+", tokens);
+        return tokens.Length == 0 ? "Shift+Space" : string.Join("+", tokens);
     }
 
     private JsonNode? ReadJson(string fileName)
@@ -99,7 +99,7 @@ internal sealed class AppStorage
     {
         return new JsonObject
         {
-            ["hotkey"] = "Ctrl+Shift+Space",
+            ["hotkey"] = "Shift+Space",
             ["language"] = "en",
             ["panelPosition"] = null,
             ["activeTab"] = "notes",
