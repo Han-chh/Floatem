@@ -328,6 +328,7 @@ export function NoteGroupDialog({ noteId, isOpen, onClose }: NoteGroupDialogProp
                 <motion.button
                   type="button"
                   aria-label={t.common.close}
+                  data-tooltip={t.common.close}
                   data-no-window-drag="true"
                   className="paper-button inline-flex shrink-0 items-center justify-center gap-1.5 rounded-[14px] px-3 py-2 text-[12px] font-semibold text-[var(--dark-text)]"
                   whileHover={{ y: -2, scale: 1.02 }}
@@ -370,7 +371,7 @@ export function NoteGroupDialog({ noteId, isOpen, onClose }: NoteGroupDialogProp
                       type="button"
                       aria-label={t.notes.deleteGroupAction}
                       aria-pressed={isDeleteMode}
-                      title={t.notes.deleteGroupAction}
+                      data-tooltip={t.notes.deleteGroupAction}
                       disabled={groups.length === 0}
                       className={`paper-icon-button inline-flex h-8 w-8 min-h-0 min-w-0 rounded-full ${
                         isDeleteMode
@@ -387,7 +388,7 @@ export function NoteGroupDialog({ noteId, isOpen, onClose }: NoteGroupDialogProp
                     <motion.button
                       type="button"
                       aria-label={t.notes.addGroup}
-                      title={t.notes.addGroup}
+                      data-tooltip={t.notes.addGroup}
                       className="paper-icon-button inline-flex h-8 w-8 min-h-0 min-w-0 rounded-full"
                       whileHover={{ y: -1.5, scale: 1.03 }}
                       whileTap={{ scale: 0.97 }}
@@ -401,7 +402,7 @@ export function NoteGroupDialog({ noteId, isOpen, onClose }: NoteGroupDialogProp
                     <button
                       type="button"
                       aria-label={t.notes.noGroup}
-                      title={t.notes.noGroup}
+                      data-tooltip={t.notes.noGroup}
                       className={`flex w-full items-center gap-3 rounded-[18px] border px-3 py-2 text-left text-[12.5px] font-semibold ${
                         note.groupId === null
                           ? "border-[rgba(30,25,21,0.16)] bg-[rgba(30,25,21,0.06)] text-[var(--dark-text)]"
@@ -421,7 +422,7 @@ export function NoteGroupDialog({ noteId, isOpen, onClose }: NoteGroupDialogProp
                         <button
                           type="button"
                           aria-label={group.name}
-                          title={group.name}
+                          data-tooltip={group.name}
                           className={`flex flex-1 items-center gap-3 rounded-[18px] border px-3 py-2 text-left text-[12.5px] font-semibold ${
                             note.groupId === group.id
                               ? "bg-[rgba(255,255,255,0.92)] shadow-[0_8px_16px_rgba(61,49,34,0.10)]"
@@ -448,7 +449,8 @@ export function NoteGroupDialog({ noteId, isOpen, onClose }: NoteGroupDialogProp
                         <motion.button
                           type="button"
                           aria-label={isDeleteMode ? t.notes.deleteGroup(group.name) : t.notes.editGroup(group.name)}
-                          title={isDeleteMode ? t.notes.deleteGroup(group.name) : t.notes.editGroup(group.name)}
+                          data-tooltip={isDeleteMode ? t.notes.deleteGroup(group.name) : t.notes.editGroup(group.name)}
+                          data-tooltip-align="left"
                           className={`paper-icon-button inline-flex h-9 w-9 min-h-0 min-w-0 rounded-[12px] ${
                             isDeleteMode
                               ? "paper-button-danger border-[rgba(190,75,56,0.28)] bg-[rgba(190,75,56,0.12)] text-[#B64B2E]"
@@ -502,6 +504,8 @@ export function NoteGroupDialog({ noteId, isOpen, onClose }: NoteGroupDialogProp
                         <motion.button
                           type="button"
                           aria-label={t.common.scrollToTop}
+                          data-tooltip={t.common.scrollToTop}
+                          data-tooltip-align="left"
                           data-testid="note-group-dialog-scroll-to-top"
                           data-no-window-drag="true"
                           className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-[rgba(255,255,255,0.92)] text-[var(--brown-strong)] shadow-[0_8px_16px_rgba(61,49,34,0.08)]"
@@ -525,6 +529,8 @@ export function NoteGroupDialog({ noteId, isOpen, onClose }: NoteGroupDialogProp
                         <motion.button
                           type="button"
                           aria-label={t.common.scrollToBottom}
+                          data-tooltip={t.common.scrollToBottom}
+                          data-tooltip-align="left"
                           data-testid="note-group-dialog-scroll-to-bottom"
                           data-no-window-drag="true"
                           className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-[rgba(255,255,255,0.92)] text-[var(--brown-strong)] shadow-[0_8px_16px_rgba(61,49,34,0.08)]"
@@ -579,6 +585,7 @@ export function NoteGroupDialog({ noteId, isOpen, onClose }: NoteGroupDialogProp
                     <motion.button
                       type="button"
                       aria-label={t.common.close}
+                      data-tooltip={t.common.close}
                       data-no-window-drag="true"
                       className="paper-icon-button inline-flex h-9 w-9 min-h-0 min-w-0 rounded-[12px]"
                       whileHover={{ y: -1.5, scale: 1.03 }}
@@ -619,6 +626,7 @@ export function NoteGroupDialog({ noteId, isOpen, onClose }: NoteGroupDialogProp
                         ref={colorButtonRef}
                         type="button"
                         aria-label={t.notes.changeGroupColor}
+                        data-tooltip={t.notes.changeGroupColor}
                         className="group relative inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-[14px] border border-[rgba(213,198,180,0.88)] bg-[rgba(255,255,255,0.82)] text-[#2853C7] shadow-[0_10px_20px_rgba(61,49,34,0.08)]"
                         whileHover={{ y: -1.5, scale: 1.03 }}
                         whileTap={{ scale: 0.97 }}
@@ -645,6 +653,7 @@ export function NoteGroupDialog({ noteId, isOpen, onClose }: NoteGroupDialogProp
                     <div className="flex flex-wrap gap-2">
                       <motion.button
                         type="submit"
+                        data-tooltip={isEditing ? t.common.save : t.notes.createGroup}
                         className="paper-button inline-flex items-center justify-center rounded-[13px] px-3 py-2 text-[12px] font-semibold text-[var(--dark-text)]"
                         whileHover={isSaveDisabled ? undefined : { y: -1.5, scale: 1.01 }}
                         whileTap={isSaveDisabled ? undefined : { scale: 0.98 }}
@@ -654,6 +663,7 @@ export function NoteGroupDialog({ noteId, isOpen, onClose }: NoteGroupDialogProp
                       </motion.button>
                       <motion.button
                         type="button"
+                        data-tooltip={t.common.cancel}
                         className="paper-button inline-flex items-center justify-center rounded-[13px] px-3 py-2 text-[12px] font-semibold text-[var(--muted)]"
                         whileHover={{ y: -1.5, scale: 1.01 }}
                         whileTap={{ scale: 0.98 }}
@@ -664,6 +674,7 @@ export function NoteGroupDialog({ noteId, isOpen, onClose }: NoteGroupDialogProp
                       {isEditing ? (
                         <motion.button
                           type="button"
+                          data-tooltip={t.notes.deleteGroupAction}
                           className="paper-button paper-button-danger inline-flex items-center justify-center gap-1.5 rounded-[13px] px-3 py-2 text-[12px] font-semibold"
                           whileHover={{ y: -1.5, scale: 1.01 }}
                           whileTap={{ scale: 0.98 }}

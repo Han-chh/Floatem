@@ -1,6 +1,7 @@
 using System.IO;
 using System.Windows;
 using System.Windows.Interop;
+using System.Windows.Threading;
 using Microsoft.Web.WebView2.Core;
 using QuickNote.Windows.Native;
 
@@ -15,9 +16,11 @@ public partial class MainWindow : Window
     private readonly AppStorage storage = new();
     private readonly NotificationScheduler notifications;
     private readonly Win32HotKeyManager hotKeys;
+    private readonly DispatcherTimer topmostReinforcementTimer;
     private HostBridgeController? bridge;
     private HwndSource? source;
     private bool allowApplicationShutdown;
+    private bool alwaysOnTopEnabled = true;
 
     public MainWindow()
     {
@@ -25,14 +28,27 @@ public partial class MainWindow : Window
         Title = Branding.DisplayName;
 
         notifications = new NotificationScheduler(Branding.DisplayName);
+        notifications.NotificationInvoked += (_, _) =>
+        {
+            Dispatcher.Invoke(ShowWindow);
+        };
         hotKeys = new Win32HotKeyManager(this);
         hotKeys.HotKeyPressed += (_, shortcut) =>
         {
             ToggleWindow();
             _ = bridge?.EmitShortcutInvokedAsync(shortcut);
         };
+        topmostReinforcementTimer = new DispatcherTimer(DispatcherPriority.Background)
+        {
+            Interval = TimeSpan.FromMilliseconds(350),
+        };
+        topmostReinforcementTimer.Tick += (_, _) => ReinforceAlwaysOnTop();
 
         Loaded += OnLoaded;
+        Activated += (_, _) => ReinforceAlwaysOnTop();
+        Deactivated += (_, _) => ReinforceAlwaysOnTop();
+        StateChanged += (_, _) => ReinforceAlwaysOnTop();
+        IsVisibleChanged += (_, _) => ReinforceAlwaysOnTop();
         Closing += (_, e) =>
         {
             if (allowApplicationShutdown)
@@ -52,6 +68,7 @@ public partial class MainWindow : Window
             }
             hotKeys.Dispose();
             notifications.Dispose();
+            topmostReinforcementTimer.Stop();
         };
     }
 
@@ -59,15 +76,18 @@ public partial class MainWindow : Window
     {
         Show();
         WindowState = WindowState.Normal;
-        Topmost = true;
+        alwaysOnTopEnabled = true;
+        Topmost = alwaysOnTopEnabled;
         Activate();
         WindowInterop.BringTopmostToFront(this);
+        topmostReinforcementTimer.Start();
         _ = bridge?.EmitPanelWillOpenAsync();
     }
 
     public void HideWindow()
     {
         Hide();
+        topmostReinforcementTimer.Stop();
     }
 
     public void ToggleWindow()
@@ -85,11 +105,28 @@ public partial class MainWindow : Window
 
     public void SetAlwaysOnTop(bool enabled)
     {
+        alwaysOnTopEnabled = enabled;
         Topmost = enabled;
-        if (enabled)
+        WindowInterop.SetTopmost(this, enabled, activate: enabled);
+        if (enabled && IsVisible)
         {
-            WindowInterop.BringTopmostToFront(this);
+            topmostReinforcementTimer.Start();
         }
+        else
+        {
+            topmostReinforcementTimer.Stop();
+        }
+    }
+
+    private void ReinforceAlwaysOnTop()
+    {
+        if (!alwaysOnTopEnabled || !IsVisible || WindowState == WindowState.Minimized)
+        {
+            return;
+        }
+
+        Topmost = true;
+        WindowInterop.SetTopmost(this, enabled: true, activate: false);
     }
 
     public void MinimizeWindow()

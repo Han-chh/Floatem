@@ -1,11 +1,16 @@
-import { render, screen, waitFor } from "@testing-library/react";
+import { act, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { describe, expect, it, vi } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { DEFAULT_SETTINGS } from "../../src/lib/models";
 import { TodoList } from "../../src/components/todos/TodoList";
 import { formatLocalDateKey } from "../../src/lib/models";
+import { useSettingsStore } from "../../src/store/settingsStore";
 
 describe("TodoList", () => {
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
   it("adds, completes, and deletes a todo with Enter submission while keeping Cmd+Enter for new lines", async () => {
     const user = userEvent.setup();
     render(<TodoList />);
@@ -154,6 +159,25 @@ describe("TodoList", () => {
     expect(screen.queryByText("Draft release notes")).not.toBeInTheDocument();
   });
 
+  it("focuses the quick add input when Enter is pressed outside text fields", async () => {
+    const user = userEvent.setup();
+    render(<TodoList />);
+
+    const calendarButton = screen.getByRole("button", { name: "Open todo calendar" });
+    const input = screen.getByLabelText("Quick add");
+
+    calendarButton.focus();
+    await user.keyboard("{Enter}");
+
+    expect(input).toHaveFocus();
+    expect(screen.queryByRole("dialog", { name: "Todo calendar" })).not.toBeInTheDocument();
+
+    await user.keyboard("Ship docs");
+    await user.keyboard(" ");
+
+    expect(input).toHaveValue("Ship docs ");
+  });
+
   it("switches todo card views by calendar date and shows per-day counts", async () => {
     const user = userEvent.setup();
     const today = new Date();
@@ -192,5 +216,35 @@ describe("TodoList", () => {
     await waitFor(() => {
       expect(screen.queryByText("Tomorrow task")).not.toBeInTheDocument();
     });
+  });
+
+  it("moves the current todo date when timezone changes across a date boundary", async () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date(Date.UTC(2026, 4, 13, 1, 0)));
+    act(() => {
+      useSettingsStore.getState().setTimeZone("Asia/Shanghai");
+    });
+
+    render(<TodoList />);
+    expect(screen.getByRole("button", { name: "Open todo calendar" })).toHaveTextContent("2026.05.13");
+
+    act(() => {
+      useSettingsStore.getState().setTimeZone("America/New_York");
+    });
+
+    expect(screen.getByRole("button", { name: "Open todo calendar" })).toHaveTextContent("2026.05.12");
+  });
+
+  it("uses the configured 12-hour clock in todo time displays", () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date(Date.UTC(2026, 4, 13, 13, 5)));
+    act(() => {
+      useSettingsStore.getState().setTimeZone("UTC");
+      useSettingsStore.getState().setTimeFormat("12h");
+    });
+
+    render(<TodoList />);
+
+    expect(screen.getByRole("button", { name: "Open todo calendar" })).toHaveTextContent("1:05 PM");
   });
 });

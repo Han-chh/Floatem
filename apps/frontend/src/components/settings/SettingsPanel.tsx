@@ -3,8 +3,9 @@ import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { registerHotkey } from "../../hooks/usePlatform";
 import { captureShortcutFromKeyEvent, getShortcutDisplayLabel } from "../../lib/hotkeyCapture";
 import { useI18n } from "../../lib/i18n";
-import { DEFAULT_SETTINGS } from "../../lib/models";
+import { DEFAULT_SETTINGS, getSelectableTimeZones, getSystemTimeZone, type TimeFormat } from "../../lib/models";
 import { getQuickNoteBridge, isNativeQuickNoteHost } from "../../lib/nativeBridge";
+import { formatTimeInTimeZone } from "../../lib/timeZoneDate";
 import { getSettingsMenuMotionConfig, type TransitionDirection } from "../../lib/transitionMotion";
 import { useSettingsStore } from "../../store/settingsStore";
 import {
@@ -19,7 +20,6 @@ import {
   GaugeIcon,
   HourglassIcon,
   KeyboardIcon,
-  MapPinIcon,
   NotebookPenIcon,
   SlidersHorizontalIcon,
   SparklesIcon,
@@ -37,7 +37,9 @@ type HotkeyFeedback = {
   tone: FeedbackTone;
 };
 
-type SettingsCategoryId = "general" | "shortcuts" | "motion" | "notifications" | "system";
+type SettingsCategoryId = "general" | "shortcuts" | "motion" | "notifications" | "about";
+
+const FEEDBACK_AUTO_DISMISS_MS = 4_000;
 
 function OptionButton({
   selected,
@@ -53,6 +55,7 @@ function OptionButton({
   return (
     <motion.button
       type="button"
+      data-tooltip={typeof children === "string" ? children : undefined}
       className={`flex min-w-0 items-center justify-between gap-3 rounded-[18px] border px-4 py-3 text-left text-[13px] font-semibold ${
         selected
           ? "border-[rgba(47,107,255,0.18)] bg-[rgba(47,107,255,0.10)] text-[#2853C7]"
@@ -78,14 +81,18 @@ function OptionButton({
 function ToggleButton({
   enabled,
   onClick,
+  tooltip,
 }: {
   enabled: boolean;
   onClick: () => void;
+  tooltip: string;
 }) {
   return (
     <motion.button
       type="button"
       aria-pressed={enabled}
+      data-tooltip={tooltip}
+      data-tooltip-align="left"
       className={`relative inline-flex h-8 w-14 shrink-0 items-center overflow-visible rounded-full border transition-colors ${
         enabled
           ? "border-[rgba(31,168,122,0.2)] bg-[rgba(31,168,122,0.18)]"
@@ -117,6 +124,25 @@ function feedbackClassName(tone: FeedbackTone) {
   return "text-[var(--muted)]";
 }
 
+function useAutoDismissFeedback(
+  feedback: HotkeyFeedback | null,
+  setFeedback: (feedback: HotkeyFeedback | null) => void,
+) {
+  useEffect(() => {
+    if (!feedback || feedback.tone === "info" || typeof window === "undefined") {
+      return;
+    }
+
+    const timer = window.setTimeout(() => {
+      setFeedback(null);
+    }, FEEDBACK_AUTO_DISMISS_MS);
+
+    return () => {
+      window.clearTimeout(timer);
+    };
+  }, [feedback, setFeedback]);
+}
+
 function SettingSection({
   title,
   description,
@@ -127,7 +153,7 @@ function SettingSection({
   children: ReactNode;
 }) {
   return (
-    <section className="paper-card rounded-[24px] p-4">
+    <section className="paper-card w-full rounded-[24px] p-4">
       <div className="mb-3 min-w-0">
         <h3 className="font-display text-[17px] font-semibold tracking-normal text-[var(--brown-strong)]">
           {title}
@@ -153,7 +179,7 @@ function SettingRow({
   children?: ReactNode;
 }) {
   return (
-    <div className="surface-field rounded-[20px] px-4 py-3">
+    <div className="surface-field w-full rounded-[20px] px-4 py-3">
       <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3">
         <div className="flex min-w-0 items-start gap-3">
           {icon ? (
@@ -189,6 +215,7 @@ function CategoryButton({
   return (
     <motion.button
       type="button"
+      data-tooltip={title}
       className="paper-card group grid w-full grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-3 rounded-[24px] p-4 text-left"
       whileHover={{ y: -2, scale: 1.006 }}
       whileTap={{ scale: 0.99 }}
@@ -252,6 +279,7 @@ function FirstLevelAction({
           <motion.button
             type="button"
             data-no-window-drag="true"
+            data-tooltip={buttonLabel}
             className={
               danger
                 ? "inline-flex shrink-0 items-center justify-center rounded-[14px] border border-[rgba(201,93,68,0.32)] bg-[rgba(201,93,68,0.12)] px-3.5 py-2.5 text-[12px] font-semibold text-[rgb(150,68,52)]"
@@ -274,7 +302,8 @@ export function SettingsPanel({ onClose }: SettingsPanelProps) {
   const hotkey = useSettingsStore((state) => state.hotkey);
   const hotkeyRegistrationState = useSettingsStore((state) => state.hotkeyRegistrationState);
   const language = useSettingsStore((state) => state.language);
-  const panelPosition = useSettingsStore((state) => state.panelPosition);
+  const timeZone = useSettingsStore((state) => state.timeZone);
+  const timeFormat = useSettingsStore((state) => state.timeFormat);
   const defaultOpenSection = useSettingsStore((state) => state.defaultOpenSection);
   const lastActiveTab = useSettingsStore((state) => state.lastActiveTab);
   const transitionStyle = useSettingsStore((state) => state.transitionStyle);
@@ -283,6 +312,8 @@ export function SettingsPanel({ onClose }: SettingsPanelProps) {
   const enableReminderSound = useSettingsStore((state) => state.enableReminderSound);
   const setHotkey = useSettingsStore((state) => state.setHotkey);
   const setLanguage = useSettingsStore((state) => state.setLanguage);
+  const setTimeZone = useSettingsStore((state) => state.setTimeZone);
+  const setTimeFormat = useSettingsStore((state) => state.setTimeFormat);
   const setDefaultOpenSection = useSettingsStore((state) => state.setDefaultOpenSection);
   const setTransitionStyle = useSettingsStore((state) => state.setTransitionStyle);
   const setAnimationSpeed = useSettingsStore((state) => state.setAnimationSpeed);
@@ -304,6 +335,12 @@ export function SettingsPanel({ onClose }: SettingsPanelProps) {
   const [isOpeningNotificationSettings, setIsOpeningNotificationSettings] = useState(false);
   const [isQuittingApplication, setIsQuittingApplication] = useState(false);
   const [isTestingNotification, setIsTestingNotification] = useState(false);
+
+  useAutoDismissFeedback(hotkeyDialogFeedback, setHotkeyDialogFeedback);
+  useAutoDismissFeedback(hotkeyFeedback, setHotkeyFeedback);
+  useAutoDismissFeedback(defaultsFeedback, setDefaultsFeedback);
+  useAutoDismissFeedback(notificationFeedback, setNotificationFeedback);
+  useAutoDismissFeedback(systemFeedback, setSystemFeedback);
 
   useEffect(() => {
     scrollRegionRef.current?.scrollTo({ top: 0 });
@@ -356,7 +393,7 @@ export function SettingsPanel({ onClose }: SettingsPanelProps) {
         icon: <SlidersHorizontalIcon size={18} />,
         title: t.settings.categoryGeneralTitle,
         description: t.settings.categoryGeneralDescription,
-        meta: language === "en" ? t.settings.englishMode : t.settings.zhMode,
+        meta: `${language === "en" ? t.settings.englishMode : t.settings.zhMode} / ${timeZone}`,
       },
       {
         id: "shortcuts" as const,
@@ -380,14 +417,14 @@ export function SettingsPanel({ onClose }: SettingsPanelProps) {
         meta: enableReminderSound ? t.settings.reminderSoundTitle : t.settings.reminderMutedMeta,
       },
       {
-        id: "system" as const,
-        icon: <MapPinIcon size={18} />,
-        title: t.settings.categorySystemTitle,
-        description: t.settings.categorySystemDescription,
-        meta: panelPosition ? `x ${panelPosition.x}  y ${panelPosition.y}` : t.settings.unset,
+        id: "about" as const,
+        icon: <NotebookPenIcon size={18} />,
+        title: t.settings.categoryAboutTitle,
+        description: t.settings.categoryAboutDescription,
+        meta: t.settings.dataScopeTitle,
       },
     ],
-    [enableReminderSound, hotkey, language, panelPosition, t, transitionStyle],
+    [enableReminderSound, hotkey, language, t, timeZone, transitionStyle],
   );
   const showHotkeyConflictWarning = hotkeyRegistrationState?.registration === "conflict";
 
@@ -606,32 +643,31 @@ export function SettingsPanel({ onClose }: SettingsPanelProps) {
               style={categoryMotion.contentStyle}
               className="min-h-full will-change-transform"
             >
-              <div className="relative z-40 mb-5 grid grid-cols-[minmax(0,1fr)_auto] gap-3 overflow-visible">
-                <div className="min-w-0">
-                  <div className="mb-3 inline-flex h-12 w-12 items-center justify-center rounded-[17px] bg-[rgba(47,107,255,0.10)] text-[#2853C7]">
-                    {currentCategory.icon}
+              <div className="relative z-40 mb-5 overflow-visible">
+                <div className="mb-4 flex min-w-0 items-start justify-between gap-3">
+                  <div className="flex min-w-0 items-center gap-2">
+                    <motion.button
+                      type="button"
+                      data-tooltip={t.settings.backToSettings}
+                      className="paper-button inline-flex h-11 max-w-full shrink-0 items-center gap-2 rounded-full px-3 py-2 text-[12px] font-semibold text-[var(--muted)]"
+                      whileHover={{ y: -2, scale: 1.02 }}
+                      whileTap={{ scale: 0.985 }}
+                      onClick={closeCategory}
+                    >
+                      <CornerDownLeftIcon size={14} />
+                      <span className="whitespace-nowrap">{t.settings.backToSettings}</span>
+                    </motion.button>
+                    <div
+                      data-testid="settings-category-toolbar-icon"
+                      className="inline-flex h-12 w-12 shrink-0 items-center justify-center rounded-[17px] bg-[rgba(47,107,255,0.10)] text-[#2853C7]"
+                    >
+                      {currentCategory.icon}
+                    </div>
                   </div>
-                  <h2 className="font-display text-[26px] font-semibold tracking-normal text-[var(--brown-strong)]">
-                    {currentCategory.title}
-                  </h2>
-                  <p className="mt-2 max-w-[58ch] text-[13px] leading-6 text-[var(--muted)]">
-                    {currentCategory.description}
-                  </p>
-                </div>
-                <div className="flex shrink-0 items-start gap-2">
-                  <motion.button
-                    type="button"
-                    className="paper-button inline-flex h-11 items-center gap-2 rounded-full px-3 py-2 text-[12px] font-semibold text-[var(--muted)]"
-                    whileHover={{ y: -2, scale: 1.02 }}
-                    whileTap={{ scale: 0.985 }}
-                    onClick={closeCategory}
-                  >
-                    <CornerDownLeftIcon size={14} />
-                    {t.settings.backToSettings}
-                  </motion.button>
                   <motion.button
                     type="button"
                     aria-label={t.common.close}
+                    data-tooltip={t.common.close}
                     className="paper-icon-button h-11 w-11 shrink-0"
                     whileHover={{ y: -2, scale: 1.02 }}
                     whileTap={{ scale: 0.985 }}
@@ -640,13 +676,28 @@ export function SettingsPanel({ onClose }: SettingsPanelProps) {
                     <XIcon size={16} />
                   </motion.button>
                 </div>
+                <div
+                  data-testid="settings-category-title-frame"
+                  className="w-full min-w-0 px-1 py-1"
+                >
+                  <h2 className="font-display text-[26px] font-semibold tracking-normal text-[var(--brown-strong)]">
+                    {currentCategory.title}
+                  </h2>
+                  <p className="mt-2 max-w-[58ch] text-[13px] leading-6 text-[var(--muted)]">
+                    {currentCategory.description}
+                  </p>
+                </div>
               </div>
 
-              <div className="space-y-4 pb-2">
+              <div className="grid w-full gap-4 pb-2">
                 {activeCategory === "general" ? (
                   <GeneralSettings
                     language={language}
                     setLanguage={setLanguage}
+                    timeZone={timeZone}
+                    setTimeZone={setTimeZone}
+                    timeFormat={timeFormat}
+                    setTimeFormat={setTimeFormat}
                   />
                 ) : null}
 
@@ -685,8 +736,8 @@ export function SettingsPanel({ onClose }: SettingsPanelProps) {
                   />
                 ) : null}
 
-                {activeCategory === "system" ? (
-                  <SystemSettings panelPosition={panelPosition} />
+                {activeCategory === "about" ? (
+                  <AboutQuickNoteSettings />
                 ) : null}
               </div>
             </motion.div>
@@ -721,6 +772,7 @@ export function SettingsPanel({ onClose }: SettingsPanelProps) {
                 <motion.button
                   type="button"
                   aria-label={t.common.close}
+                  data-tooltip={t.common.close}
                   className="paper-icon-button h-11 w-11 shrink-0 self-start"
                   whileHover={{ y: -2, scale: 1.02 }}
                   whileTap={{ scale: 0.985 }}
@@ -807,6 +859,7 @@ export function SettingsPanel({ onClose }: SettingsPanelProps) {
                 <motion.button
                   type="button"
                   aria-label={t.common.close}
+                  data-tooltip={t.common.close}
                   data-no-window-drag="true"
                   className="paper-icon-button shrink-0"
                   whileHover={{ y: -2, scale: 1.02 }}
@@ -844,6 +897,7 @@ export function SettingsPanel({ onClose }: SettingsPanelProps) {
                   <motion.button
                     type="button"
                     data-no-window-drag="true"
+                    data-tooltip={t.common.cancel}
                     className="paper-button inline-flex items-center justify-center rounded-[14px] px-3.5 py-2.5 text-[12px] font-semibold text-[var(--dark-text)]"
                     whileHover={{ y: -1.5, scale: 1.01 }}
                     whileTap={{ scale: 0.985 }}
@@ -854,6 +908,7 @@ export function SettingsPanel({ onClose }: SettingsPanelProps) {
                   <motion.button
                     type="button"
                     data-no-window-drag="true"
+                    data-tooltip={t.settings.shortcutApply}
                     className="paper-button paper-button-primary inline-flex items-center justify-center rounded-[14px] px-3.5 py-2.5 text-[12px] font-semibold"
                     whileHover={{ y: -1.5, scale: 1.01 }}
                     whileTap={{ scale: 0.985 }}
@@ -886,9 +941,17 @@ function getTransitionLabel(transitionStyle: "lift" | "page" | "slide", t: Retur
 function GeneralSettings({
   language,
   setLanguage,
+  timeZone,
+  setTimeZone,
+  timeFormat,
+  setTimeFormat,
 }: {
   language: "en" | "zh-CN";
   setLanguage: (language: "en" | "zh-CN") => void;
+  timeZone: string;
+  setTimeZone: (timeZone: string) => void;
+  timeFormat: TimeFormat;
+  setTimeFormat: (timeFormat: TimeFormat) => void;
 }) {
   const { t } = useI18n();
 
@@ -908,14 +971,191 @@ function GeneralSettings({
         </p>
       </SettingSection>
 
-      <SettingSection title={t.settings.aboutTitle} description={t.settings.aboutSubtitle}>
-        <div className="grid gap-3">
-          <SettingRow icon={<NotebookPenIcon size={15} />} title={t.settings.aboutNotesTitle} description={t.settings.aboutNotesBody} />
-          <SettingRow icon={<CircleCheckBigIcon size={15} />} title={t.settings.aboutTodosTitle} description={t.settings.aboutTodosBody} />
-          <SettingRow icon={<SlidersHorizontalIcon size={15} />} title={t.settings.aboutTrayFlowTitle} description={t.settings.aboutTrayFlowBody} />
-        </div>
-      </SettingSection>
+      <TimeZoneSettings
+        timeZone={timeZone}
+        timeFormat={timeFormat}
+        setTimeZone={setTimeZone}
+        setTimeFormat={setTimeFormat}
+      />
     </>
+  );
+}
+
+function TimeZoneSettings({
+  timeZone,
+  timeFormat,
+  setTimeZone,
+  setTimeFormat,
+}: {
+  timeZone: string;
+  timeFormat: TimeFormat;
+  setTimeZone: (timeZone: string) => void;
+  setTimeFormat: (timeFormat: TimeFormat) => void;
+}) {
+  const { t } = useI18n();
+  const [systemTimeZone, setSystemTimeZone] = useState(() => getSystemTimeZone());
+  const [now, setNow] = useState(() => new Date());
+  const [isTimeZoneMenuOpen, setIsTimeZoneMenuOpen] = useState(false);
+  const timeZoneMenuRef = useRef<HTMLDivElement | null>(null);
+  const timeZoneOptions = useMemo(() => {
+    const options = new Set([...getSelectableTimeZones(systemTimeZone), timeZone]);
+    return Array.from(options).sort((first, second) => first.localeCompare(second));
+  }, [systemTimeZone, timeZone]);
+
+  useEffect(() => {
+    const timer = window.setInterval(() => {
+      setNow(new Date());
+    }, 30_000);
+
+    return () => {
+      window.clearInterval(timer);
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!isTimeZoneMenuOpen || typeof window === "undefined") {
+      return;
+    }
+
+    const handlePointerDown = (event: PointerEvent) => {
+      if (!timeZoneMenuRef.current?.contains(event.target as Node)) {
+        setIsTimeZoneMenuOpen(false);
+      }
+    };
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        setIsTimeZoneMenuOpen(false);
+      }
+    };
+
+    window.addEventListener("pointerdown", handlePointerDown);
+    window.addEventListener("keydown", handleKeyDown);
+
+    return () => {
+      window.removeEventListener("pointerdown", handlePointerDown);
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [isTimeZoneMenuOpen]);
+
+  const useSystemTimeZone = () => {
+    const currentSystemTimeZone = getSystemTimeZone();
+    setSystemTimeZone(currentSystemTimeZone);
+    setTimeZone(currentSystemTimeZone);
+    setIsTimeZoneMenuOpen(false);
+  };
+
+  return (
+    <SettingSection title={t.settings.timeZoneTitle} description={t.settings.timeZoneSubtitle}>
+      <div className="grid gap-3">
+        <div className="surface-field rounded-[20px] px-4 py-3">
+          <div className="flex flex-col items-start gap-3">
+            <div className="flex min-w-0 items-start gap-3">
+              <span className="mt-0.5 inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-[14px] bg-[rgba(47,107,255,0.08)] text-[#2853C7]">
+                <Clock3Icon size={15} />
+              </span>
+              <div className="min-w-0">
+                <p className="text-[12px] font-semibold text-[var(--muted)]">{t.settings.timeZoneCurrentLabel}</p>
+                <p className="truncate text-[13px] font-semibold text-[var(--brown-strong)]">{timeZone}</p>
+                <p className="mt-1 text-[12px] leading-6 text-[var(--muted)]">
+                  {t.settings.timeZoneCurrentTime(formatTimeInTimeZone(now, timeZone, timeFormat))}
+                </p>
+              </div>
+            </div>
+            <motion.button
+              type="button"
+              data-no-window-drag="true"
+              data-tooltip={t.settings.timeZoneUseSystem}
+              className="paper-button paper-button-secondary inline-flex w-full shrink-0 items-center justify-center rounded-[14px] px-3 py-2 text-center text-[12px] font-semibold leading-5"
+              whileHover={{ y: -1.5, scale: 1.01 }}
+              whileTap={{ scale: 0.985 }}
+              onClick={useSystemTimeZone}
+            >
+              {t.settings.timeZoneUseSystem}
+            </motion.button>
+          </div>
+
+          <div className="mt-3 grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3 rounded-[16px] border border-[rgba(213,198,180,0.78)] bg-white/76 px-3 py-3">
+            <div className="min-w-0">
+              <p className="text-[13px] font-semibold text-[var(--brown-strong)]">{t.settings.timeFormatTitle}</p>
+              <p className="mt-1 text-[12px] leading-5 text-[var(--muted)]">
+                {timeFormat === "24h" ? t.settings.timeFormat24Body : t.settings.timeFormat12Body}
+              </p>
+            </div>
+            <div className="flex justify-end">
+              <ToggleButton
+                enabled={timeFormat === "24h"}
+                tooltip={t.settings.timeFormatTitle}
+                onClick={() => setTimeFormat(timeFormat === "24h" ? "12h" : "24h")}
+              />
+            </div>
+          </div>
+
+          <div ref={timeZoneMenuRef} className="relative mt-3">
+            <p className="mb-1 block text-[11px] font-semibold text-[var(--muted)]" id="quicknote-time-zone-label">
+              {t.settings.timeZoneSelectLabel}
+            </p>
+            <button
+              type="button"
+              id="quicknote-time-zone"
+              aria-expanded={isTimeZoneMenuOpen}
+              aria-haspopup="listbox"
+              aria-labelledby="quicknote-time-zone-label quicknote-time-zone"
+              data-no-window-drag="true"
+              data-tooltip={t.settings.timeZoneSelectLabel}
+              className="flex w-full items-center justify-between gap-3 rounded-[16px] border border-[rgba(213,198,180,0.88)] bg-white/92 px-3 py-2.5 text-left text-[12px] font-semibold text-[var(--brown-strong)] outline-none focus:border-[rgba(47,107,255,0.45)]"
+              onClick={() => setIsTimeZoneMenuOpen((open) => !open)}
+            >
+              <span className="min-w-0 truncate">{timeZone}</span>
+              <ChevronDownIcon className={isTimeZoneMenuOpen ? "rotate-180" : ""} size={14} />
+            </button>
+            {isTimeZoneMenuOpen ? (
+              <div
+                role="listbox"
+                aria-labelledby="quicknote-time-zone-label"
+                className="absolute left-0 right-0 top-[calc(100%+6px)] z-50 max-h-64 overflow-y-auto rounded-[18px] border border-[rgba(213,198,180,0.92)] bg-white p-1.5 shadow-[0_18px_36px_rgba(30,25,21,0.14)]"
+              >
+                {timeZoneOptions.map((option) => {
+                  const selected = option === timeZone;
+
+                  return (
+                    <button
+                      key={option}
+                      type="button"
+                      role="option"
+                      aria-selected={selected}
+                      data-no-window-drag="true"
+                      data-tooltip={t.settings.timeZoneOptionLabel(option, formatTimeInTimeZone(now, option, timeFormat))}
+                      className={`grid w-full grid-cols-[minmax(0,1fr)_auto] items-center gap-3 rounded-[14px] px-3 py-2.5 text-left text-[12px] ${
+                        selected
+                          ? "bg-[rgba(47,107,255,0.10)] text-[#2853C7]"
+                          : "text-[var(--brown-strong)] hover:bg-[rgba(30,25,21,0.05)]"
+                      }`}
+                      onClick={() => {
+                        setTimeZone(option);
+                        setIsTimeZoneMenuOpen(false);
+                      }}
+                    >
+                      <span className="min-w-0">
+                        <span className="block truncate font-semibold">{option}</span>
+                        <span className="mt-0.5 block truncate text-[11px] text-[var(--muted)]">
+                          {formatTimeInTimeZone(now, option, timeFormat)}
+                        </span>
+                      </span>
+                      <span className={`h-2.5 w-2.5 shrink-0 rounded-full ${selected ? "bg-[var(--accent-cobalt)]" : "bg-transparent"}`} />
+                    </button>
+                  );
+                })}
+              </div>
+            ) : null}
+          </div>
+
+          <p className="mt-2 text-[11px] leading-5 text-[var(--muted)]">
+            {t.settings.timeZoneSystemLabel(systemTimeZone)}
+          </p>
+        </div>
+      </div>
+    </SettingSection>
   );
 }
 
@@ -958,6 +1198,7 @@ function ShortcutSettings({
             <motion.button
               type="button"
               data-no-window-drag="true"
+              data-tooltip={t.common.change}
               className="paper-button paper-button-secondary inline-flex shrink-0 items-center justify-center rounded-[14px] px-3 py-2 text-[12px] font-semibold"
               whileHover={{ y: -1.5, scale: 1.01 }}
               whileTap={{ scale: 0.985 }}
@@ -1067,7 +1308,13 @@ function MotionSettings({
           icon={<SparklesIcon size={15} />}
           title={t.settings.particleFeedbackTitle}
           description={t.settings.particleFeedbackBody}
-          action={<ToggleButton enabled={enableParticles} onClick={() => setEnableParticles(!enableParticles)} />}
+          action={
+            <ToggleButton
+              enabled={enableParticles}
+              tooltip={t.settings.particleFeedbackTitle}
+              onClick={() => setEnableParticles(!enableParticles)}
+            />
+          }
         />
       </SettingSection>
     </>
@@ -1100,23 +1347,14 @@ function NotificationSettings({
           icon={<Clock3Icon size={15} />}
           title={t.settings.reminderSoundTitle}
           description={t.settings.reminderSoundBody}
-          action={<ToggleButton enabled={enableReminderSound} onClick={() => setEnableReminderSound(!enableReminderSound)} />}
+          action={
+            <ToggleButton
+              enabled={enableReminderSound}
+              tooltip={t.settings.reminderSoundTitle}
+              onClick={() => setEnableReminderSound(!enableReminderSound)}
+            />
+          }
         />
-      </SettingSection>
-
-      <SettingSection title={t.settings.reminderTestTitle} description={t.settings.reminderTestBody}>
-        <div className="flex flex-wrap items-center justify-between gap-3 rounded-[20px] border border-[rgba(213,198,180,0.88)] bg-white/84 px-4 py-3">
-          <p className="text-[12px] leading-6 text-[var(--muted)]">{t.settings.reminderTestBody}</p>
-          <motion.button
-            type="button"
-            className="paper-button inline-flex shrink-0 items-center justify-center rounded-[14px] px-3 py-2 text-[12px] font-semibold text-[var(--dark-text)]"
-            whileHover={{ y: -2, scale: 1.02 }}
-            whileTap={{ scale: 0.985 }}
-            onClick={handleTestReminderNotification}
-          >
-            {isTestingNotification ? `${t.settings.reminderTestButton}...` : t.settings.reminderTestButton}
-          </motion.button>
-        </div>
       </SettingSection>
 
       <SettingSection title={t.settings.notificationPermissionTitle} description={t.settings.notificationPermissionBody}>
@@ -1125,6 +1363,7 @@ function NotificationSettings({
             <p className="min-w-0 text-[12px] leading-6 text-[var(--muted)]">{t.settings.notificationPermissionBody}</p>
             <motion.button
               type="button"
+              data-tooltip={t.settings.notificationOpenSettingsButton}
               className="paper-button inline-flex shrink-0 items-center justify-center rounded-[14px] px-3 py-2 text-[12px] font-semibold text-[var(--dark-text)]"
               whileHover={{ y: -2, scale: 1.02 }}
               whileTap={{ scale: 0.985 }}
@@ -1147,28 +1386,40 @@ function NotificationSettings({
           </p>
         ) : null}
       </SettingSection>
+
+      <SettingSection title={t.settings.reminderTestTitle} description={t.settings.reminderTestBody}>
+        <div className="flex flex-wrap items-center justify-between gap-3 rounded-[20px] border border-[rgba(213,198,180,0.88)] bg-white/84 px-4 py-3">
+          <p className="text-[12px] leading-6 text-[var(--muted)]">{t.settings.reminderTestBody}</p>
+          <motion.button
+            type="button"
+            data-tooltip={t.settings.reminderTestButton}
+            className="paper-button inline-flex shrink-0 items-center justify-center rounded-[14px] px-3 py-2 text-[12px] font-semibold text-[var(--dark-text)]"
+            whileHover={{ y: -2, scale: 1.02 }}
+            whileTap={{ scale: 0.985 }}
+            onClick={handleTestReminderNotification}
+          >
+            {isTestingNotification ? `${t.settings.reminderTestButton}...` : t.settings.reminderTestButton}
+          </motion.button>
+        </div>
+      </SettingSection>
     </>
   );
 }
 
-function SystemSettings({
-  panelPosition,
-}: {
-  panelPosition: { x: number; y: number } | null;
-}) {
+function AboutQuickNoteSettings() {
   const { t } = useI18n();
 
   return (
     <>
-      <SettingSection title={t.settings.panelStatusTitle} description={t.settings.panelStatusSubtitle}>
-        <SettingRow
-          icon={<MapPinIcon size={15} />}
-          title={t.settings.lastSavedPosition}
-          description={panelPosition ? `x ${panelPosition.x}  y ${panelPosition.y}` : t.settings.unset}
-        />
+      <SettingSection title={t.settings.aboutOverviewTitle} description={t.settings.aboutSubtitle}>
+        <div className="grid gap-3">
+          <SettingRow icon={<NotebookPenIcon size={15} />} title={t.settings.aboutNotesTitle} description={t.settings.aboutNotesBody} />
+          <SettingRow icon={<CircleCheckBigIcon size={15} />} title={t.settings.aboutTodosTitle} description={t.settings.aboutTodosBody} />
+          <SettingRow icon={<SlidersHorizontalIcon size={15} />} title={t.settings.aboutTrayFlowTitle} description={t.settings.aboutTrayFlowBody} />
+        </div>
       </SettingSection>
 
-      <SettingSection title={t.settings.dataScopeTitle}>
+      <SettingSection title={t.settings.dataScopeTitle} description={t.settings.dataScopeSubtitle}>
         <SettingRow
           icon={<NotebookPenIcon size={15} />}
           title={t.settings.dataScopeTitle}

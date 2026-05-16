@@ -59,6 +59,10 @@
     z-index: 30;
   }
 
+  button[data-tooltip] {
+    position: relative;
+  }
+
   input,
   textarea {
     transition:
@@ -98,6 +102,16 @@
     border-radius: 999px;
     background: rgba(156, 126, 94, 0.35);
     background-clip: content-box;
+  }
+
+  .todo-card-scroll {
+    scrollbar-width: none;
+    scrollbar-gutter: auto;
+  }
+
+  .todo-card-scroll::-webkit-scrollbar {
+    width: 0;
+    height: 0;
   }
 
   .paper-panel {
@@ -175,6 +189,28 @@
   .quicknote-modal-backdrop {
     isolation: isolate;
     transform: translateZ(0);
+  }
+
+  .quicknote-tooltip-bubble {
+    pointer-events: none;
+    position: fixed;
+    z-index: 999;
+    max-width: min(220px, calc(100vw - 32px));
+    border-radius: 7px;
+    background: rgba(30, 25, 21, 0.94);
+    box-shadow: 0 10px 20px rgba(30, 25, 21, 0.18);
+    color: white;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 5px 8px;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.01em;
+    line-height: 1;
+    opacity: 0;
+    text-align: center;
+    white-space: nowrap;
   }
 
   .settings-scroll-region {
@@ -301,6 +337,30 @@
     color: #5d44d4;
   }
 
+  .todo-date-status-chip {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    max-width: 100%;
+    padding: 3px 7px;
+    border-radius: 999px;
+    font-size: 9.5px;
+    font-weight: 800;
+    line-height: 1;
+    letter-spacing: 0.02em;
+    white-space: nowrap;
+  }
+
+  .todo-date-status-chip[data-tone="coral"] {
+    background: var(--accent-coral-soft);
+    color: #b64b2e;
+  }
+
+  .todo-date-status-chip[data-tone="jade"] {
+    background: rgba(226, 244, 237, 0.72);
+    color: rgba(28, 125, 93, 0.76);
+  }
+
   .panel-header-grid {
     display: grid;
     gap: 12px;
@@ -420,7 +480,7 @@
     display: grid;
     grid-template-columns: auto minmax(0, 1fr) auto;
     grid-template-areas: "toggle text actions";
-    gap: 6px;
+    gap: 5px;
     align-items: center;
   }
 
@@ -428,8 +488,8 @@
     grid-area: toggle;
     display: flex;
     align-items: center;
-    height: 28px;
-    min-width: 28px;
+    height: 26px;
+    min-width: 26px;
   }
 
   .todo-row-text {
@@ -443,6 +503,11 @@
     flex-shrink: 0;
     align-items: center;
     gap: 4px;
+  }
+
+  .todo-card-action-button {
+    min-width: 40px;
+    min-height: 26px;
   }
 
   .todo-done-strike-line {
@@ -499,8 +564,7 @@
       display: none;
     }
 
-    .module-primary-action,
-    .quick-add-submit {
+    .module-primary-action {
       width: 100%;
     }
   }

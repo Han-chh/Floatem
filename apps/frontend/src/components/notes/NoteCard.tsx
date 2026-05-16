@@ -130,6 +130,7 @@ function NoteCardBody({
                   type="button"
                   className="note-card-action-button paper-icon-button relative rounded-[9px]"
                   aria-label={t.notes.changeGroup}
+                  data-tooltip={t.notes.group}
                   whileHover={isInteractive ? { y: -1.5, scale: 1.03 } : undefined}
                   whileTap={isInteractive ? { scale: 0.97 } : undefined}
                   onPointerDown={isInteractive ? (event) => event.stopPropagation() : undefined}
@@ -146,13 +147,11 @@ function NoteCardBody({
                   />
                   <span className="sr-only">{t.notes.changeGroup}</span>
                 </motion.button>
-                <span className="pointer-events-none absolute -top-8 left-1/2 z-10 -translate-x-1/2 rounded-full bg-[rgba(30,25,21,0.94)] px-2 py-1 text-[10px] font-semibold leading-none whitespace-nowrap text-white opacity-0 shadow-[0_10px_20px_rgba(30,25,21,0.18)] transition-all duration-75 ease-out group-hover:-translate-y-1 group-hover:opacity-100">
-                  {t.notes.group}
-                </span>
               </div>
               <motion.button
                 type="button"
                 aria-label={t.notes.collapse}
+                data-tooltip={note.collapsed ? t.notes.open : t.notes.fold}
                 className="note-card-action-button paper-icon-button group relative rounded-[9px]"
                 whileHover={isInteractive ? { y: -1.5, scale: 1.03 } : undefined}
                 whileTap={isInteractive ? { scale: 0.97 } : undefined}
@@ -160,14 +159,13 @@ function NoteCardBody({
                 onClick={onToggleCollapsed}
               >
                 <ChevronsUpDownIcon size={13} />
-                <span className="pointer-events-none absolute -top-8 left-1/2 z-10 -translate-x-1/2 rounded-full bg-[rgba(30,25,21,0.94)] px-2 py-1 text-[10px] font-semibold leading-none whitespace-nowrap text-white opacity-0 shadow-[0_10px_20px_rgba(30,25,21,0.18)] transition-all duration-75 ease-out group-hover:-translate-y-1 group-hover:opacity-100">
-                  {note.collapsed ? t.notes.open : t.notes.fold}
-                </span>
               </motion.button>
               <motion.button
                 type="button"
                 data-action="delete"
                 aria-label={t.notes.delete}
+                data-tooltip={t.notes.delete}
+                data-tooltip-shift="left"
                 className="note-card-action-button paper-icon-button paper-button-danger group relative rounded-[9px]"
                 whileHover={isInteractive ? { y: -1.5, scale: 1.03 } : undefined}
                 whileTap={isInteractive ? { scale: 0.97 } : undefined}
@@ -179,9 +177,6 @@ function NoteCardBody({
                 }
               >
                 <Trash2Icon size={13} />
-                <span className="pointer-events-none absolute -top-8 left-1/2 z-10 -translate-x-1/2 rounded-full bg-[rgba(30,25,21,0.94)] px-2 py-1 text-[10px] font-semibold leading-none whitespace-nowrap text-white opacity-0 shadow-[0_10px_20px_rgba(30,25,21,0.18)] transition-all duration-75 ease-out group-hover:-translate-y-1 group-hover:opacity-100">
-                  {t.notes.delete}
-                </span>
               </motion.button>
             </div>
           </div>
@@ -262,6 +257,15 @@ export function NoteCard({ note, onDelete, dropPreview = false }: NoteCardProps)
         initial={{ opacity: 0, y: 12, scale: 0.98 }}
         animate={{ opacity: 1, y: 0, scale: 1 }}
         exit={{ opacity: 0, y: -14, scale: 0.94 }}
+        whileHover={
+          !isDragging
+            ? {
+                y: -2,
+                scale: 1.004,
+                boxShadow: "0 24px 46px rgba(61,49,34,0.14)",
+              }
+            : undefined
+        }
         transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
         style={{
           transform: CSS.Transform.toString(transform),
@@ -273,7 +277,7 @@ export function NoteCard({ note, onDelete, dropPreview = false }: NoteCardProps)
         aria-label={t.notes.reorder}
         data-testid="note-card"
         data-note-card-id={note.id}
-        className={`paper-card cq-card relative overflow-hidden rounded-[28px] border border-[rgba(213,198,180,0.92)] bg-[linear-gradient(180deg,rgba(255,252,248,0.98),rgba(255,247,239,0.95))] shadow-[0_18px_36px_rgba(61,49,34,0.10)] cursor-grab active:cursor-grabbing ${
+        className={`paper-card cq-card mx-1 relative overflow-hidden rounded-[28px] border border-[rgba(213,198,180,0.92)] bg-[linear-gradient(180deg,rgba(255,252,248,0.98),rgba(255,247,239,0.95))] shadow-[0_18px_36px_rgba(61,49,34,0.10)] cursor-grab active:cursor-grabbing ${
           isDragging ? "border-transparent bg-[rgba(255,255,255,0.08)] shadow-none" : ""
         }`}
       >

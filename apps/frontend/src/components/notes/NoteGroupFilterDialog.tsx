@@ -133,6 +133,7 @@ export function NoteGroupFilterDialog({
               <motion.button
                 type="button"
                 aria-label={t.common.close}
+                data-tooltip={t.common.close}
                 data-no-window-drag="true"
                 className="paper-button inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-[14px]"
                 whileHover={{ y: -1.5, scale: 1.02 }}

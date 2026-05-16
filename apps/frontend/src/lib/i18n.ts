@@ -5,6 +5,8 @@ import type { AppLanguage } from "./models";
 type MessageCatalog = {
   app: {
     appName: string;
+    collapseNavigation: string;
+    expandNavigation: string;
     hideWindow: string;
     loading: string;
     localOnly: string;
@@ -83,6 +85,7 @@ type MessageCatalog = {
   settings: {
     aboutNotesBody: string;
     aboutNotesTitle: string;
+    aboutOverviewTitle: string;
     aboutSubtitle: string;
     aboutTitle: string;
     aboutTodosBody: string;
@@ -91,6 +94,8 @@ type MessageCatalog = {
     aboutTrayFlowTitle: string;
     appIntro: string;
     backToSettings: string;
+    categoryAboutDescription: string;
+    categoryAboutTitle: string;
     categoryGeneralDescription: string;
     categoryGeneralTitle: string;
     categoryMotionDescription: string;
@@ -99,11 +104,10 @@ type MessageCatalog = {
     categoryNotificationsTitle: string;
     categoryShortcutsDescription: string;
     categoryShortcutsTitle: string;
-    categorySystemDescription: string;
-    categorySystemTitle: string;
     changeShortcut: string;
     currentShortcut: string;
     dataScopeBody: string;
+    dataScopeSubtitle: string;
     dataScopeTitle: string;
     defaultLaunchShortcut: (shortcut: string) => string;
     defaultSection: string;
@@ -177,6 +181,17 @@ type MessageCatalog = {
     switchSpeedMediate: string;
     switchSpeedSlow: string;
     tabTransitionStyle: string;
+    timeFormat12Body: string;
+    timeFormat24Body: string;
+    timeFormatTitle: string;
+    timeZoneCurrentLabel: string;
+    timeZoneCurrentTime: (time: string) => string;
+    timeZoneOptionLabel: (timeZone: string, time: string) => string;
+    timeZoneSelectLabel: string;
+    timeZoneSubtitle: string;
+    timeZoneSystemLabel: (timeZone: string) => string;
+    timeZoneTitle: string;
+    timeZoneUseSystem: string;
     transitionLift: string;
     transitionPage: string;
     transitionSlide: string;
@@ -209,6 +224,7 @@ type MessageCatalog = {
     month: string;
     nextMonth: string;
     notScheduled: string;
+    openCalendar: string;
     pickDateTime: string;
     precise: string;
     previousMonth: string;
@@ -244,6 +260,8 @@ const messages: Record<AppLanguage, MessageCatalog> = {
   en: {
     app: {
       appName: quickNoteBranding.displayName,
+      collapseNavigation: "Collapse navigation",
+      expandNavigation: "Expand navigation",
       hideWindow: "Hide QuickNote",
       loading: "Loading QuickNote...",
       localOnly: "local only",
@@ -322,6 +340,7 @@ const messages: Record<AppLanguage, MessageCatalog> = {
     settings: {
       aboutNotesBody: "Card-based notes with drag sorting, color tags, and a compact editor surface.",
       aboutNotesTitle: "Notes",
+      aboutOverviewTitle: "Overview",
       aboutSubtitle: "A tray-first capture surface for fast notes and timed todos on macOS.",
       aboutTitle: "About QuickNote",
       aboutTodosBody: "Status-colored tasks with reminders, fast entry, and quicker scanning in narrow windows.",
@@ -330,7 +349,9 @@ const messages: Record<AppLanguage, MessageCatalog> = {
       aboutTrayFlowTitle: "Tray flow",
       appIntro: "Configure how the tray panel opens, switches between Notes and Todos, and how much motion feedback you want while working.",
       backToSettings: "All settings",
-      categoryGeneralDescription: "Language, app overview, and the core QuickNote workspace model.",
+      categoryAboutDescription: "App overview and local-only data details.",
+      categoryAboutTitle: "About QuickNote",
+      categoryGeneralDescription: "Language and timezone preferences for the app.",
       categoryGeneralTitle: "General",
       categoryMotionDescription: "Tab transitions, switching speed, and small completion effects.",
       categoryMotionTitle: "Motion and feedback",
@@ -338,11 +359,10 @@ const messages: Record<AppLanguage, MessageCatalog> = {
       categoryNotificationsTitle: "Notifications",
       categoryShortcutsDescription: "Global shortcut and which section appears when QuickNote opens.",
       categoryShortcutsTitle: "Shortcuts and launch",
-      categorySystemDescription: "Saved panel position and local data storage details.",
-      categorySystemTitle: "System",
       changeShortcut: "Change",
       currentShortcut: "Current shortcut",
       dataScopeBody: "Notes, todos, and settings are stored locally in the app data directory and auto-saved after edits.",
+      dataScopeSubtitle: "QuickNote keeps your working data on this device.",
       dataScopeTitle: "Data scope",
       defaultLaunchShortcut: (shortcut) => `Default launch shortcut: ${shortcut}`,
       defaultSection: "Default section",
@@ -387,12 +407,12 @@ const messages: Record<AppLanguage, MessageCatalog> = {
       notificationOpenSettingsFailed: "QuickNote couldn't open System Settings.",
       notificationOpenSettingsUnsupported: "This preview cannot open macOS System Settings.",
       reminderTestButton: "Send test notification",
-      reminderTestBody: "Trigger a local macOS notification in about two seconds so you can verify alerts and sound.",
+      reminderTestBody: "Trigger a local system notification in about two seconds so you can verify alerts and sound.",
       reminderTestFailed: "QuickNote could not schedule the test notification.",
       reminderTestMutedSuccess: "Test notification scheduled. It will arrive silently in about two seconds.",
       reminderTestSoundSuccess: "Test notification scheduled. It should arrive with sound in about two seconds.",
       reminderTestTitle: "Test notification",
-      reminderTestUnsupported: "This preview cannot send native macOS notifications.",
+      reminderTestUnsupported: "This preview cannot send native desktop notifications.",
       reminderSoundBody: "Play the default notification sound when a todo reminder is delivered.",
       reminderSoundTitle: "Reminder sound",
       reminderMutedMeta: "Reminder sound off",
@@ -401,7 +421,7 @@ const messages: Record<AppLanguage, MessageCatalog> = {
       quitApplicationButton: "Quit QuickNote",
       quitApplicationFailed: "QuickNote could not quit from the current environment.",
       restoreDefaults: "Restore defaults",
-      restoreDefaultsBody: "Reset language, shortcut, default section, transition style, switch speed, particle feedback, reminder sound, and saved panel position.",
+      restoreDefaultsBody: "Reset language, timezone, time format, shortcut, default section, transition style, switch speed, particle feedback, reminder sound, and saved panel position.",
       restoreDefaultsFailed: (shortcut) => `Defaults were not restored. Keeping ${shortcut}.`,
       restoreDefaultsSuccess: "Default settings restored.",
       shortcutApply: "Apply shortcut",
@@ -418,6 +438,17 @@ const messages: Record<AppLanguage, MessageCatalog> = {
       switchSpeedMediate: "Mediate",
       switchSpeedSlow: "Slow",
       tabTransitionStyle: "Tab transition style",
+      timeFormat12Body: "Show app times with AM and PM.",
+      timeFormat24Body: "Show app times in 24-hour format.",
+      timeFormatTitle: "24-hour time",
+      timeZoneCurrentLabel: "Current timezone",
+      timeZoneCurrentTime: (time) => `Current time: ${time}`,
+      timeZoneOptionLabel: (timeZone, time) => `${timeZone} - ${time}`,
+      timeZoneSelectLabel: "Choose timezone",
+      timeZoneSubtitle: "QuickNote detects your system timezone automatically, and you can switch to another timezone from the list.",
+      timeZoneSystemLabel: (timeZone) => `System timezone: ${timeZone}`,
+      timeZoneTitle: "Timezone",
+      timeZoneUseSystem: "Use system timezone",
       transitionLift: "Lift",
       transitionPage: "Page turn",
       transitionSlide: "Slide",
@@ -451,11 +482,12 @@ const messages: Record<AppLanguage, MessageCatalog> = {
       month: "Month",
       nextMonth: "Next month",
       notScheduled: "Not scheduled",
+      openCalendar: "Open todo calendar",
       pickDateTime: "Pick date and time",
       precise: "precise",
       previousMonth: "Previous month",
       quickAdd: "Quick add",
-      quickAddPlaceholder: "Add a task",
+      quickAddPlaceholder: "Add a task - Enter to add; Shift+Enter for new line",
       quickShortcutsTitle: "Quick shortcuts",
       reminder: "Reminder",
       reminderPastError: "Reminder time must be later than the current time.",
@@ -467,7 +499,7 @@ const messages: Record<AppLanguage, MessageCatalog> = {
       specificTimeTitle: "Specific time",
       statusDone: "done",
       statusUndone: "undone",
-      submitHint: "Cmd+Enter for newline",
+      submitHint: "Enter to add. Shift+Enter for new line",
       today: "Today",
       tomorrow: "Tomorrow",
       tomorrowMorning: "Tomorrow 09:00",
@@ -488,6 +520,8 @@ const messages: Record<AppLanguage, MessageCatalog> = {
       localOnly: "仅本地",
       sectionsAria: "QuickNote 分区",
       settings: "设置",
+      collapseNavigation: "\u6536\u8d77\u5bfc\u822a",
+      expandNavigation: "\u5c55\u5f00\u5bfc\u822a",
     },
     common: {
       cancel: "取消",
@@ -561,6 +595,7 @@ const messages: Record<AppLanguage, MessageCatalog> = {
     settings: {
       aboutNotesBody: "卡片式笔记支持拖拽排序、颜色标记和紧凑编辑区域。",
       aboutNotesTitle: "笔记",
+      aboutOverviewTitle: "概览",
       aboutSubtitle: "一个面向托盘的快速记录界面，适合在 macOS 上迅速记下笔记和定时待办。",
       aboutTitle: "关于 QuickNote",
       aboutTodosBody: "待办事项带有状态颜色和提醒，输入更快，在窄窗口里也更好浏览。",
@@ -569,7 +604,9 @@ const messages: Record<AppLanguage, MessageCatalog> = {
       aboutTrayFlowTitle: "托盘流程",
       appIntro: "配置托盘面板的打开方式、Notes 与 Todos 的切换方式，以及你希望保留多少动效反馈。",
       backToSettings: "全部设置",
-      categoryGeneralDescription: "语言、应用概览，以及 QuickNote 的核心工作方式。",
+      categoryAboutDescription: "应用概览和仅本地存储的数据说明。",
+      categoryAboutTitle: "关于 QuickNote",
+      categoryGeneralDescription: "应用语言和时区偏好设置。",
       categoryGeneralTitle: "通用",
       categoryMotionDescription: "标签切换、切换速度和完成反馈效果。",
       categoryMotionTitle: "动效与反馈",
@@ -577,11 +614,10 @@ const messages: Record<AppLanguage, MessageCatalog> = {
       categoryNotificationsTitle: "通知",
       categoryShortcutsDescription: "全局快捷键，以及 QuickNote 打开时优先显示的分区。",
       categoryShortcutsTitle: "快捷键与启动",
-      categorySystemDescription: "保存的面板位置和本地数据存储信息。",
-      categorySystemTitle: "系统",
       changeShortcut: "更改",
       currentShortcut: "当前快捷键",
       dataScopeBody: "笔记、待办和设置都会保存在本地应用数据目录中，并在编辑后自动保存。",
+      dataScopeSubtitle: "QuickNote 会将你的工作数据保存在这台设备上。",
       dataScopeTitle: "数据范围",
       defaultLaunchShortcut: (shortcut) => `默认启动快捷键：${shortcut}`,
       defaultSection: "默认分区",
@@ -640,7 +676,7 @@ const messages: Record<AppLanguage, MessageCatalog> = {
       quitApplicationButton: "完全退出 QuickNote",
       quitApplicationFailed: "当前环境下无法退出 QuickNote。",
       restoreDefaults: "恢复默认设置",
-      restoreDefaultsBody: "重置语言、快捷键、默认分区、切换样式、切换速度、粒子反馈、提醒声音，以及保存的窗口位置。",
+      restoreDefaultsBody: "重置语言、时区、时间格式、快捷键、默认分区、切换样式、切换速度、粒子反馈、提醒声音，以及保存的窗口位置。",
       restoreDefaultsFailed: (shortcut) => `默认设置未恢复，当前仍保留 ${shortcut}。`,
       restoreDefaultsSuccess: "默认设置已恢复。",
       shortcutApply: "应用快捷键",
@@ -657,6 +693,17 @@ const messages: Record<AppLanguage, MessageCatalog> = {
       switchSpeedMediate: "中速",
       switchSpeedSlow: "慢速",
       tabTransitionStyle: "标签切换样式",
+      timeFormat12Body: "使用 AM/PM 显示应用内时间。",
+      timeFormat24Body: "使用 24 小时制显示应用内时间。",
+      timeFormatTitle: "24 小时制",
+      timeZoneCurrentLabel: "当前时区",
+      timeZoneCurrentTime: (time) => `当前时间：${time}`,
+      timeZoneOptionLabel: (timeZone, time) => `${timeZone} - ${time}`,
+      timeZoneSelectLabel: "选择时区",
+      timeZoneSubtitle: "QuickNote 会自动识别系统时区，也可以从列表中切换到其他时区。",
+      timeZoneSystemLabel: (timeZone) => `系统时区：${timeZone}`,
+      timeZoneTitle: "时区",
+      timeZoneUseSystem: "使用系统时区",
       transitionLift: "抬升",
       transitionPage: "翻页",
       transitionSlide: "滑动",
@@ -690,11 +737,12 @@ const messages: Record<AppLanguage, MessageCatalog> = {
       month: "月份",
       nextMonth: "下个月",
       notScheduled: "未设置",
+      openCalendar: "\u6253\u5f00\u5f85\u529e\u65e5\u5386",
       pickDateTime: "选择日期和时间",
       precise: "精确",
       previousMonth: "上个月",
       quickAdd: "快速添加",
-      quickAddPlaceholder: "添加一项任务",
+      quickAddPlaceholder: "添加一项任务 - Enter 添加；Shift+Enter 换行",
       quickShortcutsTitle: "快捷选择",
       reminder: "提醒",
       reminderPastError: "提醒时间必须晚于当前时间。",
@@ -706,7 +754,7 @@ const messages: Record<AppLanguage, MessageCatalog> = {
       specificTimeTitle: "具体时间",
       statusDone: "已完成",
       statusUndone: "未完成",
-      submitHint: "Cmd+Enter 换行",
+      submitHint: "Enter 添加。Shift+Enter 换行",
       today: "\u4eca\u5929",
       tomorrow: "明天",
       tomorrowMorning: "明天 09:00",

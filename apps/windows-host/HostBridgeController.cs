@@ -80,94 +80,96 @@ internal sealed class HostBridgeController
         }
     }
 
-    private Task<JsonNode?> HandleAsync(string method, JsonObject parameters)
+    private async Task<JsonNode?> HandleAsync(string method, JsonObject parameters)
     {
         switch (method)
         {
             case "frontendReady":
                 _ = EmitHotkeyRegistrationStateAsync();
-                return Task.FromResult<JsonNode?>(null);
+                return null;
             case "setEditableInputActive":
             case "setTextCompositionActive":
-                return Task.FromResult<JsonNode?>(null);
+                return null;
             case "reportFrontendError":
                 Debug.WriteLine($"QuickNote frontend error ({parameters["source"]?.GetValue<string>() ?? "frontend"}): {parameters["message"]?.GetValue<string>() ?? ""}");
-                return Task.FromResult<JsonNode?>(null);
+                return null;
             case "getCapabilities":
-                return Task.FromResult<JsonNode?>(Capabilities());
+                return Capabilities();
             case "loadAllData":
-                return Task.FromResult<JsonNode?>(storage.LoadAllData());
+                return storage.LoadAllData();
             case "getHotkeyRegistrationState":
-                return Task.FromResult<JsonNode?>(ToHotkeyRegistrationState(hotKeys.GetRegistrationState()));
+                return ToHotkeyRegistrationState(hotKeys.GetRegistrationState());
             case "saveNotes":
                 storage.SaveNotes(parameters["cards"]?.DeepClone() ?? new JsonArray());
-                return Task.FromResult<JsonNode?>(null);
+                return null;
             case "saveTodos":
                 var todos = parameters["todos"]?.DeepClone() ?? new JsonArray();
                 storage.SaveTodos(todos);
                 notifications.SyncTodoReminders(storage.LoadTodos(), storage.LoadSettings());
-                return Task.FromResult<JsonNode?>(null);
+                return null;
             case "saveSettings":
                 storage.SaveSettings((parameters["settings"] as JsonObject)?.DeepClone().AsObject() ?? new JsonObject());
                 notifications.SyncTodoReminders(storage.LoadTodos(), storage.LoadSettings());
-                return Task.FromResult<JsonNode?>(null);
+                return null;
             case "showWindow":
                 window.ShowWindow();
-                return Task.FromResult<JsonNode?>(null);
+                return null;
             case "hideWindow":
             case "hidePanelWindow":
                 window.HideWindow();
-                return Task.FromResult<JsonNode?>(null);
+                return null;
             case "toggleWindow":
                 window.ToggleWindow();
-                return Task.FromResult<JsonNode?>(null);
+                return null;
             case "setAlwaysOnTop":
                 window.SetAlwaysOnTop(parameters["enabled"]?.GetValue<bool>() ?? true);
-                return Task.FromResult<JsonNode?>(null);
+                return null;
             case "registerHotkey":
             case "registerGlobalShortcut":
                 hotKeys.Register(parameters["shortcut"]?.GetValue<string>() ?? "Shift+Space");
-                return Task.FromResult<JsonNode?>(null);
+                return null;
             case "unregisterHotkey":
                 hotKeys.Unregister();
-                return Task.FromResult<JsonNode?>(null);
+                return null;
             case "readClipboardText":
-                return Task.FromResult<JsonNode?>(JsonValue.Create(System.Windows.Clipboard.ContainsText() ? System.Windows.Clipboard.GetText() : ""));
+                return JsonValue.Create(System.Windows.Clipboard.ContainsText() ? System.Windows.Clipboard.GetText() : "");
             case "writeClipboardText":
                 System.Windows.Clipboard.SetText(parameters["text"]?.GetValue<string>() ?? "");
-                return Task.FromResult<JsonNode?>(null);
+                return null;
             case "sendNotification":
             case "showNotification":
                 notifications.Show(
                     parameters["title"]?.GetValue<string>() ?? Branding.DisplayName,
                     parameters["body"]?.GetValue<string>() ?? "",
                     parameters["soundEnabled"]?.GetValue<bool>() ?? true);
-                return Task.FromResult<JsonNode?>(null);
+                return null;
             case "testReminderNotification":
-                notifications.Show(
+                await notifications.ScheduleAndConfirmAsync(
+                    $"quicknote.test.notification.{Guid.NewGuid():N}",
                     Branding.DisplayName,
                     parameters["language"]?.GetValue<string>() == "zh-CN"
                         ? "这是一条 QuickNote 测试提醒。"
                         : "This is a QuickNote test reminder.",
+                    DateTimeOffset.Now.AddSeconds(2),
                     parameters["soundEnabled"]?.GetValue<bool>() ?? true);
-                return Task.FromResult<JsonNode?>(null);
+                return null;
             case "scheduleNotification":
                 ScheduleNotification(parameters);
-                return Task.FromResult<JsonNode?>(null);
+                return null;
             case "openNotificationSettings":
                 System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo("ms-settings:notifications")
                 {
                     UseShellExecute = true,
                 });
-                return Task.FromResult<JsonNode?>(null);
+                return null;
             case "openDevTools":
                 webView.CoreWebView2.OpenDevToolsWindow();
-                return Task.FromResult<JsonNode?>(null);
+                return null;
             case "quitApplication":
                 window.QuitApplication();
-                return Task.FromResult<JsonNode?>(null);
+                return null;
             case "openTextColorPanel":
-                return Task.FromResult<JsonNode?>(null);
+                return null;
             default:
                 throw new InvalidOperationException($"Unsupported host bridge method '{method}'.");
         }
@@ -210,7 +212,7 @@ internal sealed class HostBridgeController
             ["limitations"] = new JsonArray
             {
                 "Topmost windows cannot reliably appear above every fullscreen-exclusive or secure desktop surface on Windows.",
-                "Reminder scheduling is app-managed and runs while QuickNote is running; packaged Windows App SDK notifications should replace this for durable background reminders.",
+                "Reminder scheduling is app-managed and runs while QuickNote is running; Windows App SDK app notifications are used when a reminder is delivered.",
             },
         };
     }

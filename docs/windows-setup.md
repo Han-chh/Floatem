@@ -7,7 +7,58 @@ For a full **Windows developer onboarding** guide (prerequisite versions, troubl
 - Windows 10 19041 or newer, or Windows 11
 - .NET 8 SDK
 - Microsoft Edge WebView2 Runtime
+- Microsoft Windows App Runtime `1.8.260209` for Windows App SDK app notifications
 - Node.js and pnpm for building the shared frontend
+
+### Windows App Runtime
+
+QuickNote uses Windows App SDK app notifications through `AppNotificationManager`. The Windows host project references Windows App SDK `1.8.260209005`, so the matching Windows App Runtime must be installed on development and test machines before system notification delivery can be validated.
+
+Download the official runtime installer from Microsoft:
+
+```powershell
+Invoke-WebRequest `
+  -Uri "https://aka.ms/windowsappsdk/1.8/1.8.260209005/windowsappruntimeinstall-x64.exe" `
+  -OutFile "D:\tmp\WindowsAppRuntimeInstall-x64.exe"
+```
+
+Install the runtime MSIX packages from an elevated PowerShell session:
+
+```powershell
+Start-Process `
+  -FilePath "D:\tmp\WindowsAppRuntimeInstall-x64.exe" `
+  -ArgumentList "--msix --force" `
+  -Verb RunAs `
+  -Wait
+```
+
+The installer help and dry-run checks are useful when diagnosing missing runtime registration:
+
+```powershell
+D:\tmp\WindowsAppRuntimeInstall-x64.exe --help
+D:\tmp\WindowsAppRuntimeInstall-x64.exe --dry-run
+```
+
+`--dry-run` may report `Provisioning of WindowsAppSDK packages will be skipped as it requires elevation` when it is not running with administrator rights. In that state, notification COM activation can still fail with `REGDB_E_CLASSNOTREG` even though the installer exits successfully.
+
+For manual inspection or fallback installation, download the matching redistributable ZIP:
+
+```powershell
+Invoke-WebRequest `
+  -Uri "https://aka.ms/windowsappsdk/1.8/1.8.260209005/Microsoft.WindowsAppRuntime.Redist.1.8.zip" `
+  -OutFile "D:\tmp\Microsoft.WindowsAppRuntime.Redist.1.8.260209005.zip"
+
+Expand-Archive `
+  -Path "D:\tmp\Microsoft.WindowsAppRuntime.Redist.1.8.260209005.zip" `
+  -DestinationPath "D:\tmp\Microsoft.WindowsAppRuntime.Redist.1.8.260209005" `
+  -Force
+```
+
+The x64 MSIX packages are under:
+
+```text
+D:\tmp\Microsoft.WindowsAppRuntime.Redist.1.8.260209005\MSIX\win10-x64
+```
 
 ## Dev Run
 
@@ -80,6 +131,7 @@ Validated on Windows with:
 - pnpm `10.33.0`
 - .NET SDK `8.0.420`
 - Microsoft Edge WebView2 Runtime `147.0.3912.72`
+- Microsoft Windows App Runtime installer `1.8.260209`
 
 The following automated checks passed:
 
@@ -97,8 +149,12 @@ pnpm windows:build
 
 Windows does not allow an ordinary desktop app to appear above every fullscreen-exclusive, secure desktop, UAC, lock screen, or shell-owned surface. QuickNote uses the strongest normal desktop topmost behavior, which works for regular windows and many borderless fullscreen apps but is not identical to macOS Spaces/fullscreen auxiliary behavior.
 
-Reminder scheduling is currently process-bound. If QuickNote is closed before a reminder fires, the reminder will not fire until durable packaged notifications are added. The intended production path is MSIX packaging with Windows App SDK toast identity and activation.
+Reminder scheduling is currently process-bound. If QuickNote is closed before a reminder fires, the reminder will not fire until durable scheduled notifications are added.
 
-The current notification implementation uses `NotifyIcon.ShowBalloonTip`, not Windows App SDK toast activation. This keeps the WPF/WebView2/Win32 host simple, but it does not provide durable background delivery, click activation routing, or full toast identity behavior. `enableReminderSound` is accepted by the bridge for contract compatibility, but balloon notification sound behavior is ultimately controlled by Windows.
+The current notification implementation uses Windows App SDK app notifications through `AppNotificationManager`, so test reminders and delivered reminders use the Windows system notification surface instead of legacy tray balloon tips. Test reminders and scheduled todo reminders use the Windows App SDK reminder scenario with a Dismiss button so Windows treats them as user-visible reminders instead of ordinary toasts; `enableReminderSound` maps to muted app notification audio when disabled. The settings-page test notification uses a unique notification tag and confirms that Windows reports it in Notification Center before returning success; if Windows accepts the `Show` call but drops the notification, the bridge reports a diagnostic error instead of a false success state.
+
+Windows App SDK app notifications are not supported when QuickNote is running elevated as administrator. In that state Windows can accept the `Show` call without displaying a toast, so the app blocks notification delivery and reports a restart-without-admin error before showing a false success state.
+
+The development build is framework-dependent for Windows App SDK, so the target machine must have the Windows App Runtime installed. A portable/self-contained distribution should publish with an explicit Windows runtime identifier such as `win-x64` and enable self-contained Windows App SDK deployment.
 
 Some global shortcuts may be reserved by Windows or another app. Registration fails cleanly in that case and the user should choose another shortcut.

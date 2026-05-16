@@ -254,6 +254,7 @@ export function ColorPickerPopover({
                   type="button"
                   aria-label={t.notes.useColor(color)}
                   aria-pressed={isSelected}
+                  data-tooltip={t.notes.useColor(color)}
                   className={`group relative inline-flex h-6 w-6 items-center justify-center rounded-full border transition-transform ${
                     isSelected
                       ? "scale-[1.08] border-[rgba(30,25,21,0.42)] shadow-[0_8px_16px_rgba(61,49,34,0.16)]"
@@ -273,8 +274,8 @@ export function ColorPickerPopover({
             <button
               type="button"
               aria-label={t.notes.moreColors}
+              data-tooltip={t.notes.moreColors}
               className="relative inline-flex h-6 w-6 items-center justify-center overflow-hidden rounded-[9px] border border-[rgba(213,198,180,0.92)] bg-[linear-gradient(145deg,rgba(255,255,255,0.98),rgba(248,240,229,0.94))] shadow-[0_8px_16px_rgba(61,49,34,0.08)]"
-              title={t.notes.moreColors}
               onPointerDown={(event) => {
                 event.preventDefault();
                 event.stopPropagation();
@@ -300,6 +301,7 @@ export function ColorPickerPopover({
                     type="button"
                     aria-label={t.notes.useColor(color)}
                     aria-pressed={isSelected}
+                    data-tooltip={t.notes.useColor(color)}
                     className={`group relative inline-flex h-4 w-4 items-center justify-center rounded-[3px] border transition-transform ${
                       isSelected
                         ? "scale-[1.06] border-[rgba(30,25,21,0.62)] shadow-[0_6px_12px_rgba(61,49,34,0.14)]"
@@ -320,8 +322,8 @@ export function ColorPickerPopover({
             <button
               type="button"
               aria-label={t.notes.showColors}
+              data-tooltip={t.notes.showColors}
               className="inline-flex h-8 w-full items-center justify-center gap-1.5 rounded-[11px] border border-[rgba(213,198,180,0.92)] bg-[linear-gradient(145deg,rgba(255,255,255,0.98),rgba(248,240,229,0.96))] px-3 text-[11px] font-semibold text-[rgba(42,32,23,0.88)] shadow-[0_8px_16px_rgba(61,49,34,0.08)]"
-              title={t.notes.showColors}
               onPointerDown={(event) => {
                 event.preventDefault();
                 event.stopPropagation();

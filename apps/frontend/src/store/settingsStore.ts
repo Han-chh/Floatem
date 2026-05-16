@@ -9,8 +9,12 @@ import {
   type DefaultOpenSection,
   type PanelPosition,
   type TabId,
+  type TimeFormat,
   type TransitionStyle,
+  createDefaultSettings,
   normalizeAppSettings,
+  normalizeTimeFormat,
+  normalizeTimeZone,
   resolvePreferredOpenTab,
 } from "../lib/models";
 
@@ -25,6 +29,8 @@ type SettingsState = AppSettings & {
   setDefaultOpenSection: (defaultOpenSection: DefaultOpenSection) => void;
   setHotkey: (hotkey: string) => void;
   setLanguage: (language: AppLanguage) => void;
+  setTimeZone: (timeZone: string) => void;
+  setTimeFormat: (timeFormat: TimeFormat) => void;
   setPanelPosition: (position: PanelPosition | null) => void;
   setTransitionStyle: (transitionStyle: TransitionStyle) => void;
   setAnimationSpeed: (animationSpeed: AnimationSpeed) => void;
@@ -34,7 +40,7 @@ type SettingsState = AppSettings & {
 };
 
 const initialState = () => ({
-  ...DEFAULT_SETTINGS,
+  ...createDefaultSettings(),
   hotkeyRegistrationState: null,
   isLoaded: false,
 });
@@ -57,7 +63,7 @@ export const useSettingsStore = create<SettingsState>()(
     },
     restoreDefaults: () => {
       set({
-        ...DEFAULT_SETTINGS,
+        ...createDefaultSettings(),
         hotkeyRegistrationState: null,
         isLoaded: true,
       });
@@ -81,6 +87,12 @@ export const useSettingsStore = create<SettingsState>()(
     },
     setLanguage: (language) => {
       set({ language });
+    },
+    setTimeZone: (timeZone) => {
+      set({ timeZone: normalizeTimeZone(timeZone) });
+    },
+    setTimeFormat: (timeFormat) => {
+      set({ timeFormat: normalizeTimeFormat(timeFormat) });
     },
     setPanelPosition: (panelPosition) => {
       set({ panelPosition });

@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, it } from "vitest";
+import { getSystemTimeZone } from "../../src/lib/models";
 import { useSettingsStore } from "../../src/store/settingsStore";
 
 describe("settingsStore", () => {
@@ -12,6 +13,8 @@ describe("settingsStore", () => {
       defaultOpenSection: "notes",
       hotkey: "CommandOrControl+Shift+N",
       language: "zh-CN",
+      timeZone: "Asia/Tokyo",
+      timeFormat: "12h",
       lastActiveTab: "todos",
       panelPosition: { x: 120, y: 320 },
       transitionStyle: "slide",
@@ -25,6 +28,8 @@ describe("settingsStore", () => {
     expect(state.defaultOpenSection).toBe("notes");
     expect(state.hotkey).toBe("CommandOrControl+Shift+N");
     expect(state.language).toBe("zh-CN");
+    expect(state.timeZone).toBe("Asia/Tokyo");
+    expect(state.timeFormat).toBe("12h");
     expect(state.lastActiveTab).toBe("todos");
     expect(state.panelPosition).toEqual({ x: 120, y: 320 });
     expect(state.transitionStyle).toBe("slide");
@@ -38,6 +43,8 @@ describe("settingsStore", () => {
     useSettingsStore.getState().setDefaultOpenSection("notes");
     useSettingsStore.getState().setHotkey("Shift+Space");
     useSettingsStore.getState().setLanguage("zh-CN");
+    useSettingsStore.getState().setTimeZone("Europe/London");
+    useSettingsStore.getState().setTimeFormat("12h");
     useSettingsStore.getState().setPanelPosition({ x: 12, y: 16 });
     useSettingsStore.getState().setTransitionStyle("page");
     useSettingsStore.getState().setAnimationSpeed("rapid");
@@ -49,6 +56,8 @@ describe("settingsStore", () => {
     expect(state.defaultOpenSection).toBe("notes");
     expect(state.hotkey).toBe("Shift+Space");
     expect(state.language).toBe("zh-CN");
+    expect(state.timeZone).toBe("Europe/London");
+    expect(state.timeFormat).toBe("12h");
     expect(state.lastActiveTab).toBe("todos");
     expect(state.panelPosition).toEqual({ x: 12, y: 16 });
     expect(state.transitionStyle).toBe("page");
@@ -119,6 +128,8 @@ describe("settingsStore", () => {
       defaultOpenSection: "todos",
       hotkey: "Cmd+Option+K",
       language: "zh-CN",
+      timeZone: "America/New_York",
+      timeFormat: "12h",
       lastActiveTab: "todos",
       panelPosition: { x: 88, y: 144 },
       transitionStyle: "slide",
@@ -133,6 +144,8 @@ describe("settingsStore", () => {
     expect(state.isLoaded).toBe(true);
     expect(state.hotkey).toBe("Shift+Space");
     expect(state.language).toBe("en");
+    expect(state.timeZone).toBe(getSystemTimeZone());
+    expect(state.timeFormat).toBe("24h");
     expect(state.defaultOpenSection).toBe("last");
     expect(state.transitionStyle).toBe("page");
     expect(state.animationSpeed).toBe("mediate");
@@ -141,5 +154,21 @@ describe("settingsStore", () => {
     expect(state.panelPosition).toBeNull();
     expect(state.activeTab).toBe("notes");
     expect(state.lastActiveTab).toBe("notes");
+  });
+
+  it("falls back to the system timezone for unknown timezone values", () => {
+    useSettingsStore.getState().hydrateSettings({
+      timeZone: "Not/AZone",
+    });
+
+    expect(useSettingsStore.getState().timeZone).toBe(getSystemTimeZone());
+  });
+
+  it("falls back to 24h for unknown time format values", () => {
+    useSettingsStore.getState().hydrateSettings({
+      timeFormat: "military-ish" as never,
+    });
+
+    expect(useSettingsStore.getState().timeFormat).toBe("24h");
   });
 });

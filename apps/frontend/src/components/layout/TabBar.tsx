@@ -32,6 +32,8 @@ export function TabBar({ activeTab, onTabChange }: TabBarProps) {
             type="button"
             role="tab"
             aria-selected={activeTab === tab.id}
+            data-tooltip={tab.label}
+            data-tooltip-placement="bottom"
             className={clsx(
               "relative min-w-0 rounded-[12px] px-2 py-1.5 text-[11px] font-semibold tracking-normal text-[var(--muted)]",
               activeTab === tab.id &&

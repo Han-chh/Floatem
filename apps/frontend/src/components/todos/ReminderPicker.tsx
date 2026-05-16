@@ -1,9 +1,20 @@
-import { addDays, addHours, format, setHours, setMinutes } from "date-fns";
 import { AnimatePresence, motion } from "framer-motion";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { useI18n } from "../../lib/i18n";
+import { getSystemTimeZone, type TimeFormat } from "../../lib/models";
 import { buildReminderTimestamp, isFutureReminderTimestamp } from "../../lib/reminders";
+import {
+  addDaysToDateKey,
+  buildDateKey,
+  formatDateKeyInTimeZone,
+  formatHourOption,
+  formatTimestampInTimeZone,
+  getDateTimePartsInTimeZone,
+  getDaysInMonth,
+  parseDateKey,
+  type DateParts,
+} from "../../lib/timeZoneDate";
 import { Clock3Icon, XIcon } from "../icons/AppIcons";
 
 type ReminderPickerProps = {
@@ -13,79 +24,32 @@ type ReminderPickerProps = {
   displayValue?: string;
   className?: string;
   disabled?: boolean;
-};
-
-type DateParts = {
-  year: number;
-  monthIndex: number;
-  day: number;
+  timeZone?: string;
+  timeFormat?: TimeFormat;
 };
 
 function pad(value: number) {
   return `${value}`.padStart(2, "0");
 }
 
-function roundToNextQuarter(date: Date) {
-  const next = new Date(date);
-  next.setSeconds(0, 0);
-  const minutes = next.getMinutes();
-  const rounded = Math.ceil((minutes + 1) / 15) * 15;
-  next.setMinutes(rounded, 0, 0);
-  return next;
+function roundToNextQuarterTimestamp(now = Date.now()) {
+  return Math.ceil((now + 60_000) / 900_000) * 900_000;
 }
 
-function buildDateValue(parts: DateParts) {
-  return `${parts.year}-${pad(parts.monthIndex + 1)}-${pad(parts.day)}`;
-}
-
-function parseDateParts(dateValue: string): DateParts | null {
-  const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(dateValue);
-  if (!match) {
-    return null;
-  }
-
-  const year = Number(match[1]);
-  const monthIndex = Number(match[2]) - 1;
-  const day = Number(match[3]);
-
-  if (
-    !Number.isInteger(year) ||
-    !Number.isInteger(monthIndex) ||
-    !Number.isInteger(day) ||
-    monthIndex < 0 ||
-    monthIndex > 11
-  ) {
-    return null;
-  }
-
-  const daysInMonth = getDaysInMonth(year, monthIndex);
-  if (day < 1 || day > daysInMonth) {
-    return null;
-  }
-
-  return { year, monthIndex, day };
-}
-
-function getDaysInMonth(year: number, monthIndex: number) {
-  return new Date(year, monthIndex + 1, 0).getDate();
-}
-
-function getStartOfToday() {
-  const now = new Date();
-  return new Date(now.getFullYear(), now.getMonth(), now.getDate());
-}
-
-function getDefaultDraft(reminderAt: number | null) {
-  const baseDate = reminderAt ? new Date(reminderAt) : roundToNextQuarter(new Date());
+function getDefaultDraft(reminderAt: number | null, timeZone: string) {
+  const baseParts = getDateTimePartsInTimeZone(
+    reminderAt ? new Date(reminderAt) : new Date(roundToNextQuarterTimestamp()),
+    timeZone,
+  );
 
   return {
-    dateValue: buildDateValue({
-      year: baseDate.getFullYear(),
-      monthIndex: baseDate.getMonth(),
-      day: baseDate.getDate(),
+    dateValue: buildDateKey({
+      year: baseParts.year,
+      monthIndex: baseParts.monthIndex,
+      day: baseParts.day,
     }),
-    hourValue: pad(baseDate.getHours()),
-    minuteValue: pad(baseDate.getMinutes()),
+    hourValue: pad(baseParts.hour),
+    minuteValue: pad(baseParts.minute),
   };
 }
 
@@ -115,6 +79,8 @@ export function ReminderPicker({
   displayValue,
   className = "",
   disabled = false,
+  timeZone = getSystemTimeZone(),
+  timeFormat = "24h",
 }: ReminderPickerProps) {
   const { t, language } = useI18n();
   const monthSelectRef = useRef<HTMLSelectElement | null>(null);
@@ -124,8 +90,8 @@ export function ReminderPicker({
   const [draftHour, setDraftHour] = useState("09");
   const [draftMinute, setDraftMinute] = useState("00");
   const [calendarMonth, setCalendarMonth] = useState(() => {
-    const today = new Date();
-    return new Date(today.getFullYear(), today.getMonth(), 1);
+    const today = getDateTimePartsInTimeZone(new Date(), timeZone);
+    return new Date(today.year, today.monthIndex, 1);
   });
   const [validationMessage, setValidationMessage] = useState<string | null>(null);
   const [helperMessage, setHelperMessage] = useState<string | null>(null);
@@ -133,6 +99,7 @@ export function ReminderPicker({
   const monthFormatter = useMemo(
     () =>
       new Intl.DateTimeFormat(language, {
+        timeZone: "UTC",
         month: "long",
       }),
     [language],
@@ -140,42 +107,43 @@ export function ReminderPicker({
   const weekdayFormatter = useMemo(
     () =>
       new Intl.DateTimeFormat(language, {
+        timeZone: "UTC",
         weekday: "short",
       }),
     [language],
   );
 
   const quickOptions = useMemo(() => {
-    const now = new Date();
-    const inOneHour = addHours(roundToNextQuarter(now), 1);
-    const tonightBase =
-      now.getHours() < 20
-        ? setMinutes(setHours(now, 20), 0)
-        : roundToNextQuarter(addHours(now, 2));
-    const tomorrow = addDays(now, 1);
+    const nowParts = getDateTimePartsInTimeZone(new Date(), timeZone);
+    const todayDateKey = buildDateKey(nowParts);
+    const roundedTimestamp = roundToNextQuarterTimestamp();
+    const tonightTimestamp =
+      nowParts.hour < 20
+        ? buildReminderTimestamp(todayDateKey, "20", "00", timeZone)
+        : roundToNextQuarterTimestamp(Date.now() + 2 * 60 * 60 * 1000);
 
     return [
-      { label: t.todos.inOneHour, mode: "timestamp" as const, value: inOneHour },
-      { label: t.todos.tonight, mode: "timestamp" as const, value: tonightBase },
-      { label: t.todos.tomorrow, mode: "date" as const, value: tomorrow },
+      { label: t.todos.inOneHour, mode: "timestamp" as const, value: roundedTimestamp + 60 * 60 * 1000 },
+      { label: t.todos.tonight, mode: "timestamp" as const, value: tonightTimestamp ?? roundedTimestamp + 2 * 60 * 60 * 1000 },
+      { label: t.todos.tomorrow, mode: "date" as const, value: addDaysToDateKey(todayDateKey, 1) },
     ];
-  }, [t.todos.inOneHour, t.todos.tonight, t.todos.tomorrow]);
+  }, [t.todos.inOneHour, t.todos.tonight, t.todos.tomorrow, timeZone]);
 
   const weekdayLabels = useMemo(() => {
-    const monday = new Date(2024, 0, 1);
-    return Array.from({ length: 7 }, (_, index) => weekdayFormatter.format(addDays(monday, index)));
+    return Array.from({ length: 7 }, (_, index) => weekdayFormatter.format(new Date(Date.UTC(2024, 0, 1 + index))));
   }, [weekdayFormatter]);
 
   const selectedDateParts = useMemo(() => {
-    return parseDateParts(draftDate) ?? parseDateParts(getDefaultDraft(reminderAt).dateValue)!;
-  }, [draftDate, reminderAt]);
-  const currentMonthLabel = monthFormatter.format(new Date(calendarMonth.getFullYear(), calendarMonth.getMonth(), 1));
-  const todayStart = getStartOfToday();
-  const currentYear = todayStart.getFullYear();
+    return parseDateKey(draftDate) ?? parseDateKey(getDefaultDraft(reminderAt, timeZone).dateValue)!;
+  }, [draftDate, reminderAt, timeZone]);
+  const currentMonthLabel = monthFormatter.format(new Date(Date.UTC(calendarMonth.getFullYear(), calendarMonth.getMonth(), 1)));
+  const todayDateKey = formatDateKeyInTimeZone(new Date(), timeZone);
+  const todayParts = parseDateKey(todayDateKey)!;
+  const currentYear = todayParts.year;
   const monthOptions = useMemo(
     () =>
       Array.from({ length: 12 }, (_, monthIndex) => ({
-        label: monthFormatter.format(new Date(2024, monthIndex, 1)),
+        label: monthFormatter.format(new Date(Date.UTC(2024, monthIndex, 1))),
         value: monthIndex,
       })),
     [monthFormatter],
@@ -196,8 +164,8 @@ export function ReminderPicker({
       return;
     }
 
-    const nextDraft = getDefaultDraft(reminderAt);
-    const nextParts = parseDateParts(nextDraft.dateValue);
+    const nextDraft = getDefaultDraft(reminderAt, timeZone);
+    const nextParts = parseDateKey(nextDraft.dateValue);
 
     setDraftDate(nextDraft.dateValue);
     setDraftHour(nextDraft.hourValue);
@@ -225,7 +193,7 @@ export function ReminderPicker({
       window.cancelAnimationFrame(animationFrame);
       window.removeEventListener("keydown", handleKeyDown, true);
     };
-  }, [isOpen, reminderAt]);
+  }, [isOpen, reminderAt, timeZone]);
 
   const updateDraftDate = (parts: Partial<DateParts>) => {
     const nextYear = parts.year ?? selectedDateParts.year;
@@ -233,7 +201,7 @@ export function ReminderPicker({
     const nextDay = Math.min(parts.day ?? selectedDateParts.day, getDaysInMonth(nextYear, nextMonthIndex));
 
     setDraftDate(
-      buildDateValue({
+      buildDateKey({
         year: nextYear,
         monthIndex: nextMonthIndex,
         day: nextDay,
@@ -259,7 +227,7 @@ export function ReminderPicker({
   };
 
   const handleSave = () => {
-    const nextValue = buildReminderTimestamp(draftDate, draftHour, draftMinute);
+    const nextValue = buildReminderTimestamp(draftDate, draftHour, draftMinute, timeZone);
 
     if (nextValue === null) {
       return;
@@ -277,11 +245,11 @@ export function ReminderPicker({
   };
 
   const currentReminderLabel = reminderAt
-    ? format(new Date(reminderAt), "yyyy/MM/dd HH:mm")
+    ? formatTimestampInTimeZone(reminderAt, timeZone, "dateTime", timeFormat)
     : t.todos.notScheduled;
-  const draftReminderAt = buildReminderTimestamp(draftDate, draftHour, draftMinute);
+  const draftReminderAt = buildReminderTimestamp(draftDate, draftHour, draftMinute, timeZone);
   const draftReminderLabel =
-    draftReminderAt === null ? t.todos.notScheduled : format(new Date(draftReminderAt), "yyyy/MM/dd HH:mm");
+    draftReminderAt === null ? t.todos.notScheduled : formatTimestampInTimeZone(draftReminderAt, timeZone, "dateTime", timeFormat);
 
   return (
     <>
@@ -289,9 +257,9 @@ export function ReminderPicker({
         <motion.button
           type="button"
           aria-label={reminderAt ? t.todos.changeReminder : t.todos.setReminder}
-          title={displayValue ?? t.todos.setReminder}
+          data-tooltip={displayValue ?? (reminderAt ? t.todos.changeReminder : t.todos.setReminder)}
           data-no-window-drag="true"
-          className={`inline-flex max-w-full min-w-0 shrink items-center gap-1.5 rounded-full border px-2.5 py-1.5 text-[10.5px] font-semibold shadow-[0_8px_18px_rgba(61,49,34,0.08)] ${className}`}
+          className={`inline-flex max-w-full min-w-0 shrink items-center gap-1.5 rounded-full border px-2.5 py-1.25 text-[10.5px] font-semibold shadow-[0_7px_14px_rgba(61,49,34,0.08)] ${className}`}
           whileHover={disabled ? undefined : { y: -1.5, scale: 1.02 }}
           whileTap={disabled ? undefined : { scale: 0.97 }}
           onPointerDown={(event) => event.stopPropagation()}
@@ -344,6 +312,7 @@ export function ReminderPicker({
                       <motion.button
                         type="button"
                         aria-label={t.common.close}
+                        data-tooltip={t.common.close}
                         data-no-window-drag="true"
                         className="paper-button inline-flex shrink-0 items-center justify-center gap-1.5 rounded-[14px] px-3 py-2 text-[12px] font-semibold text-[var(--dark-text)]"
                         whileHover={{ y: -2, scale: 1.02 }}
@@ -408,6 +377,7 @@ export function ReminderPicker({
                               <motion.button
                                 type="button"
                                 aria-label={t.todos.previousMonth}
+                                data-tooltip={t.todos.previousMonth}
                                 data-no-window-drag="true"
                                 className="paper-icon-button inline-flex h-8 w-8 items-center justify-center rounded-full text-[14px]"
                                 whileHover={{ y: -1.5, scale: 1.02 }}
@@ -423,6 +393,7 @@ export function ReminderPicker({
                               <motion.button
                                 type="button"
                                 aria-label={t.todos.nextMonth}
+                                data-tooltip={t.todos.nextMonth}
                                 data-no-window-drag="true"
                                 className="paper-icon-button inline-flex h-8 w-8 items-center justify-center rounded-full text-[14px]"
                                 whileHover={{ y: -1.5, scale: 1.02 }}
@@ -507,8 +478,13 @@ export function ReminderPicker({
                                   cell.getFullYear() === selectedDateParts.year &&
                                   cell.getMonth() === selectedDateParts.monthIndex &&
                                   cell.getDate() === selectedDateParts.day;
-                                const isPastDay = cell.getTime() < todayStart.getTime();
-                                const isToday = cell.getTime() === todayStart.getTime();
+                                const cellDateKey = buildDateKey({
+                                  year: cell.getFullYear(),
+                                  monthIndex: cell.getMonth(),
+                                  day: cell.getDate(),
+                                });
+                                const isPastDay = cellDateKey < todayDateKey;
+                                const isToday = cellDateKey === todayDateKey;
 
                                 return (
                                   <motion.button
@@ -516,6 +492,7 @@ export function ReminderPicker({
                                     type="button"
                                     disabled={isPastDay}
                                     data-no-window-drag="true"
+                                    data-tooltip={`${t.todos.date}: ${cellDateKey}`}
                                     className={`h-9 rounded-[12px] text-[12px] font-semibold transition-colors ${
                                       isSelected
                                         ? "bg-[var(--accent-cobalt)] text-white shadow-[0_10px_20px_rgba(47,107,255,0.22)]"
@@ -565,7 +542,7 @@ export function ReminderPicker({
                             >
                               {hourOptions.map((hour) => (
                                 <option key={hour} value={hour}>
-                                  {hour}
+                                  {formatHourOption(Number(hour), timeFormat)}
                                 </option>
                               ))}
                             </select>
@@ -602,31 +579,30 @@ export function ReminderPicker({
                               <motion.button
                                 key={option.label}
                                 type="button"
+                                data-tooltip={option.label}
                                 className="rounded-[12px] border border-[rgba(213,198,180,0.9)] bg-white/84 px-2 py-2 text-[10.5px] font-semibold text-[var(--brown-strong)]"
                                 whileHover={{ y: -1.5, scale: 1.01 }}
                                 whileTap={{ scale: 0.98 }}
                                 onClick={() => {
                                   if (option.mode === "timestamp") {
+                                    const optionParts = getDateTimePartsInTimeZone(new Date(option.value), timeZone);
                                     setDraftDate(
-                                      buildDateValue({
-                                        year: option.value.getFullYear(),
-                                        monthIndex: option.value.getMonth(),
-                                        day: option.value.getDate(),
+                                      buildDateKey({
+                                        year: optionParts.year,
+                                        monthIndex: optionParts.monthIndex,
+                                        day: optionParts.day,
                                       }),
                                     );
-                                    setCalendarMonth(new Date(option.value.getFullYear(), option.value.getMonth(), 1));
-                                    setDraftHour(pad(option.value.getHours()));
-                                    setDraftMinute(pad(option.value.getMinutes()));
+                                    setCalendarMonth(new Date(optionParts.year, optionParts.monthIndex, 1));
+                                    setDraftHour(pad(optionParts.hour));
+                                    setDraftMinute(pad(optionParts.minute));
                                     setHelperMessage(null);
                                   } else {
-                                    setDraftDate(
-                                      buildDateValue({
-                                        year: option.value.getFullYear(),
-                                        monthIndex: option.value.getMonth(),
-                                        day: option.value.getDate(),
-                                      }),
-                                    );
-                                    setCalendarMonth(new Date(option.value.getFullYear(), option.value.getMonth(), 1));
+                                    const optionParts = parseDateKey(option.value);
+                                    setDraftDate(option.value);
+                                    if (optionParts) {
+                                      setCalendarMonth(new Date(optionParts.year, optionParts.monthIndex, 1));
+                                    }
                                     setHelperMessage(t.todos.tomorrowTimePrompt);
                                     window.requestAnimationFrame(() => {
                                       hourSelectRef.current?.focus();
@@ -652,6 +628,7 @@ export function ReminderPicker({
                           <motion.button
                             type="button"
                             data-no-window-drag="true"
+                            data-tooltip={t.common.clear}
                             className="rounded-full px-2.5 py-1.5 text-[10.5px] font-semibold text-[var(--muted)]"
                             whileHover={{ y: -1 }}
                             whileTap={{ scale: 0.97 }}
@@ -669,6 +646,7 @@ export function ReminderPicker({
                             <motion.button
                               type="button"
                               data-no-window-drag="true"
+                              data-tooltip={t.common.close}
                               className="paper-button inline-flex items-center justify-center rounded-[14px] px-3.5 py-2.5 text-[12px] font-semibold text-[var(--dark-text)]"
                               whileHover={{ y: -1.5, scale: 1.01 }}
                               whileTap={{ scale: 0.985 }}
@@ -679,6 +657,7 @@ export function ReminderPicker({
                             <motion.button
                               type="submit"
                               data-no-window-drag="true"
+                              data-tooltip={t.common.save}
                               disabled={!draftDate}
                               className={`paper-button paper-button-primary inline-flex items-center justify-center rounded-[14px] px-3.5 py-2.5 text-[12px] font-semibold ${
                                 draftDate ? "" : "cursor-not-allowed opacity-60"

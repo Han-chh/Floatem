@@ -101,6 +101,8 @@ internal sealed class AppStorage
         {
             ["hotkey"] = "Shift+Space",
             ["language"] = "en",
+            ["timeZone"] = GetSystemTimeZoneId(),
+            ["timeFormat"] = "24h",
             ["panelPosition"] = null,
             ["activeTab"] = "notes",
             ["lastActiveTab"] = "notes",
@@ -110,5 +112,10 @@ internal sealed class AppStorage
             ["enableParticles"] = true,
             ["enableReminderSound"] = true,
         };
+    }
+
+    private static string GetSystemTimeZoneId()
+    {
+        return TimeZoneInfo.TryConvertWindowsIdToIanaId(TimeZoneInfo.Local.Id, out var ianaId) ? ianaId : TimeZoneInfo.Local.Id;
     }
 }

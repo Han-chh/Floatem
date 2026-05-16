@@ -57,6 +57,45 @@ describe("ReminderPicker", () => {
     expect(onChange).toHaveBeenCalledWith(new Date("2026-04-06T09:30:00").getTime());
   });
 
+  it("interprets selected reminder time in the configured timezone", async () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date("2026-04-05T12:00:00Z"));
+    const onChange = vi.fn();
+
+    render(
+      <ReminderPicker
+        todoTitle="Ship timezone"
+        reminderAt={null}
+        onChange={onChange}
+        timeZone="America/New_York"
+      />,
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: "Set reminder" }));
+    fireEvent.click(screen.getByRole("button", { name: "6" }));
+    fireEvent.change(screen.getByLabelText("Hour"), {
+      target: { value: "09" },
+    });
+    fireEvent.change(screen.getByLabelText("Minute"), {
+      target: { value: "30" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "Save" }));
+
+    expect(onChange).toHaveBeenCalledWith(Date.UTC(2026, 3, 6, 13, 30));
+  });
+
+  it("uses 12-hour labels when configured", () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date("2026-04-05T12:00:00"));
+
+    render(<ReminderPicker todoTitle="Ship clock" reminderAt={null} onChange={vi.fn()} timeFormat="12h" />);
+
+    fireEvent.click(screen.getByRole("button", { name: "Set reminder" }));
+
+    expect(screen.getByRole("option", { name: "9 AM" })).toBeInTheDocument();
+    expect(screen.getByText(/12:15 PM/)).toBeInTheDocument();
+  });
+
   it("uses tomorrow as a date-only shortcut and prompts for time selection", async () => {
     vi.useFakeTimers();
     vi.setSystemTime(new Date("2026-04-05T12:00:00"));

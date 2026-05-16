@@ -1,5 +1,6 @@
 import { AnimatePresence, motion } from "framer-motion";
 import { startTransition, useEffect, useRef, useState } from "react";
+import { TooltipLayer } from "./components/feedback/TooltipLayer";
 import { PanelShell } from "./components/layout/PanelShell";
 import { NotesList } from "./components/notes/NotesList";
 import { FigmaNotesHomePreview } from "./components/preview/FigmaNotesHomePreview";
@@ -264,7 +265,8 @@ function QuickNoteApp() {
   const showHotkeyConflictBanner = hotkeyRegistrationState?.registration === "conflict";
 
   return (
-    <PanelShell
+    <>
+      <PanelShell
       activeTab={activeTab}
       animationSpeed={animationSpeed}
       banner={
@@ -322,13 +324,20 @@ function QuickNoteApp() {
           </AnimatePresence>
         </div>
       )}
-    </PanelShell>
+      </PanelShell>
+      <TooltipLayer />
+    </>
   );
 }
 
 function App() {
   if (isDesignPreviewMode()) {
-    return <FigmaNotesHomePreview />;
+    return (
+      <>
+        <FigmaNotesHomePreview />
+        <TooltipLayer />
+      </>
+    );
   }
 
   return <QuickNoteApp />;

@@ -1,7 +1,8 @@
 import { AnimatePresence, motion } from "framer-motion";
 import type { ReactNode } from "react";
+import { useState } from "react";
 import { useI18n } from "../../lib/i18n";
-import { SlidersHorizontalIcon } from "../icons/AppIcons";
+import { ChevronDownIcon, ChevronUpIcon, SlidersHorizontalIcon } from "../icons/AppIcons";
 import type { AnimationSpeed, TabId, TransitionStyle } from "../../lib/models";
 import { getSurfaceMotionConfig } from "../../lib/transitionMotion";
 import { TabBar } from "./TabBar";
@@ -30,6 +31,7 @@ export function PanelShell({
   transitionStyle,
 }: PanelShellProps) {
   const { t } = useI18n();
+  const [isHeaderCollapsed, setIsHeaderCollapsed] = useState(false);
   const pageDirection = showSettings ? 1 : -1;
   const surfaceMotion = getSurfaceMotionConfig(transitionStyle, animationSpeed);
   const panelChromeDuration =
@@ -103,34 +105,77 @@ export function PanelShell({
                   className="absolute inset-0 flex min-h-0 flex-col will-change-transform"
                 >
                   <motion.header
+                    layout
                     initial={{ opacity: 0, y: -12 }}
-                    animate={{ opacity: 1, y: 0 }}
+                    animate={{
+                      opacity: 1,
+                      y: 0,
+                      marginBottom: isHeaderCollapsed ? 4 : 8,
+                      marginLeft: isHeaderCollapsed ? 8 : 4,
+                      marginRight: isHeaderCollapsed ? 8 : 4,
+                      marginTop: isHeaderCollapsed ? 8 : 4,
+                      paddingBottom: isHeaderCollapsed ? 3 : 8,
+                      paddingTop: isHeaderCollapsed ? 3 : 8,
+                    }}
                     transition={{
                       duration: panelChromeDuration,
                       delay: getPanelChromeDelay(0.03),
                       ease: [0.22, 1, 0.36, 1],
                     }}
-                    className="paper-panel mb-2 rounded-[24px] px-3 py-2"
+                    className="paper-panel overflow-hidden rounded-[24px] px-3"
                   >
                     <div className="space-y-1.5">
-                      <div className="flex min-w-0 items-center justify-between gap-2.5">
-                        <p className="font-display text-[clamp(16px,4.5vw,19px)] font-semibold tracking-normal text-[var(--brown-strong)]">
-                          QuickNote
-                        </p>
+                      <AnimatePresence initial={false}>
+                        {!isHeaderCollapsed ? (
+                          <motion.div
+                            key="expanded-panel-header"
+                            initial={{ height: 0, opacity: 0, y: -8 }}
+                            animate={{ height: "auto", opacity: 1, y: 0 }}
+                            exit={{ height: 0, opacity: 0, y: -8 }}
+                            transition={{ duration: 0.2, ease: [0.22, 1, 0.36, 1] }}
+                            className="overflow-hidden"
+                          >
+                            <div className="space-y-1.5">
+                              <div className="flex min-w-0 items-center justify-between gap-2.5">
+                                <p className="font-display text-[clamp(16px,4.5vw,19px)] font-semibold tracking-normal text-[var(--brown-strong)]">
+                                  QuickNote
+                                </p>
+                                <motion.button
+                                  type="button"
+                                  aria-label={t.app.settings}
+                                  data-tooltip={t.app.settings}
+                                  data-tooltip-placement="bottom"
+                                  className="paper-icon-button mt-1.5 h-[30px] w-[30px] min-h-0 min-w-0 shrink-0 rounded-[11px]"
+                                  whileHover={{ y: -1.5, scale: 1.02 }}
+                                  whileTap={{ scale: 0.985 }}
+                                  onClick={onToggleSettings}
+                                >
+                                  <SlidersHorizontalIcon size={14} />
+                                </motion.button>
+                              </div>
+
+                              <TabBar activeTab={activeTab} onTabChange={onTabChange} />
+                              {banner ? <div>{banner}</div> : null}
+                            </div>
+                          </motion.div>
+                        ) : null}
+                      </AnimatePresence>
+
+                      <div className="flex">
                         <motion.button
                           type="button"
-                          aria-label={t.app.settings}
-                          className="paper-icon-button h-[30px] w-[30px] min-h-0 min-w-0 shrink-0 rounded-[11px]"
-                          whileHover={{ y: -1.5, scale: 1.02 }}
+                          aria-expanded={!isHeaderCollapsed}
+                          aria-label={isHeaderCollapsed ? t.app.expandNavigation : t.app.collapseNavigation}
+                          data-tooltip={isHeaderCollapsed ? t.app.expandNavigation : t.app.collapseNavigation}
+                          data-tooltip-placement="bottom"
+                          className="paper-icon-button !h-[20px] w-full !min-h-[20px] !min-w-0 rounded-[9px] border text-[var(--muted)]"
+                          whileHover={{ y: -1.5 }}
                           whileTap={{ scale: 0.985 }}
-                          onClick={onToggleSettings}
+                          onClick={() => setIsHeaderCollapsed((current) => !current)}
                         >
-                          <SlidersHorizontalIcon size={14} />
+                          {isHeaderCollapsed ? <ChevronDownIcon size={14} /> : <ChevronUpIcon size={14} />}
                         </motion.button>
                       </div>
-
-                      <TabBar activeTab={activeTab} onTabChange={onTabChange} />
-                      {banner ? <div>{banner}</div> : null}
                     </div>
                   </motion.header>
 

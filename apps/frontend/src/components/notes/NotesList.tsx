@@ -233,8 +233,8 @@ export function NotesList() {
             }}
           >
             <SortableContext items={visibleCards.map((card) => card.id)} strategy={verticalListSortingStrategy}>
-              <div className="paper-scroll h-full overflow-y-auto pr-1">
-                <div className="flex flex-col gap-3">
+              <div data-testid="note-card-scroll-region" className="paper-scroll h-full overflow-y-auto pr-1">
+                <div className="flex flex-col gap-3 pb-1 pt-2">
                   <AnimatePresence>
                     {visibleCards.map((card) => (
                       <NoteCard
@@ -266,7 +266,7 @@ export function NotesList() {
       <motion.div
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
-        className="paper-card flex items-center gap-3 rounded-[22px] px-3 py-3"
+        className="paper-card mb-1.5 flex items-center gap-3 rounded-[22px] px-3 py-3"
       >
         <span className="status-chip shrink-0" data-tone="coral">
           {t.notes.cards(visibleCards.length)}
@@ -278,7 +278,8 @@ export function NotesList() {
           type="button"
           aria-label={t.notes.filterGroups}
           aria-pressed={isFilterActive}
-          title={t.notes.filterGroups}
+          data-tooltip={t.notes.filterGroups}
+          data-tooltip-align="left"
           className={`paper-button relative inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-full ${
             isFilterActive
               ? "border-[rgba(156,126,94,0.5)] bg-[linear-gradient(180deg,rgba(255,251,246,0.98),rgba(255,240,224,0.95))] text-[var(--brown-strong)] shadow-[0_14px_28px_rgba(156,126,94,0.16)]"
@@ -298,6 +299,8 @@ export function NotesList() {
         <motion.button
           type="button"
           aria-label={t.notes.add}
+          data-tooltip={t.notes.add}
+          data-tooltip-align="left"
           className="paper-button paper-button-primary inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-full"
           whileHover={{ y: -2, scale: 1.03 }}
           whileTap={{ scale: 0.97 }}

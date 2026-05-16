@@ -133,6 +133,8 @@ final class AppStorage {
         [
             "hotkey": GlobalHotKeyManager.defaultShortcut,
             "language": "en",
+            "timeZone": TimeZone.current.identifier,
+            "timeFormat": "24h",
             "panelPosition": NSNull(),
             "activeTab": "notes",
             "lastActiveTab": "notes",

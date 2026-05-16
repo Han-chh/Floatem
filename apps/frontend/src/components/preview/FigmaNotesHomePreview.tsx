@@ -116,6 +116,7 @@ function IconAction({
   return (
     <motion.button
       type="button"
+      data-tooltip={label}
       whileHover={{ y: -2, scale: 1.02 }}
       whileTap={{ scale: 0.98 }}
       className={`inline-flex min-w-0 items-center justify-center gap-2 rounded-[14px] border border-[rgba(213,198,180,0.92)] px-3 py-2 text-[12px] font-semibold ${styles}`}
@@ -241,6 +242,7 @@ function NoteCardPreview({
                 <motion.button
                   key={label}
                   type="button"
+                  data-tooltip={label}
                   whileHover={{ y: -2, scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
                   className="flex min-h-10 items-center justify-center gap-1 rounded-[14px] border border-[rgba(213,198,180,0.86)] bg-white/82 px-2 py-2 text-[11px] font-semibold text-[#41352D] shadow-[0_10px_18px_rgba(61,49,34,0.06)]"
@@ -278,7 +280,11 @@ function SettingsSheet({ compact }: { compact: boolean }) {
           </div>
           <h3 className="text-[18px] font-semibold tracking-[-0.03em] text-[#1E1915]">Panel preferences</h3>
         </div>
-        <button className="rounded-full border border-[rgba(30,25,21,0.08)] bg-white/84 px-2.5 py-1 text-[11px] font-semibold text-[#5E554D]">
+        <button
+          type="button"
+          data-tooltip="Close settings"
+          className="rounded-full border border-[rgba(30,25,21,0.08)] bg-white/84 px-2.5 py-1 text-[11px] font-semibold text-[#5E554D]"
+        >
           Esc
         </button>
       </div>
@@ -408,6 +414,8 @@ function NotesHomeFrame({
             </div>
 
             <motion.button
+              type="button"
+              data-tooltip="Settings"
               whileHover={{ y: -2, scale: 1.03 }}
               whileTap={{ scale: 0.98 }}
               className="inline-flex h-11 w-11 items-center justify-center rounded-[16px] border border-[rgba(213,198,180,0.92)] bg-white/90 text-[#1E1915] shadow-[0_12px_24px_rgba(61,49,34,0.08)]"
@@ -721,6 +729,7 @@ export function FigmaNotesHomePreview() {
                     <div className="grid gap-2">
                       <button
                         type="button"
+                        data-tooltip="Toggle tab"
                         onClick={() => setActiveTab((current) => (current === "notes" ? "todos" : "notes"))}
                         className="flex items-center justify-between rounded-[18px] border border-[rgba(213,198,180,0.9)] bg-white/88 px-4 py-3 text-left text-[13px] font-semibold text-[#1E1915]"
                       >
@@ -729,6 +738,7 @@ export function FigmaNotesHomePreview() {
                       </button>
                       <button
                         type="button"
+                        data-tooltip={showSettings ? "Hide settings" : "Show settings"}
                         onClick={() => setShowSettings((current) => !current)}
                         className="flex items-center justify-between rounded-[18px] border border-[rgba(213,198,180,0.9)] bg-white/88 px-4 py-3 text-left text-[13px] font-semibold text-[#1E1915]"
                       >
@@ -737,6 +747,7 @@ export function FigmaNotesHomePreview() {
                       </button>
                       <button
                         type="button"
+                        data-tooltip={expandedPrimary ? "Collapse main card" : "Expand main card"}
                         onClick={() => setExpandedPrimary((current) => !current)}
                         className="flex items-center justify-between rounded-[18px] border border-[rgba(213,198,180,0.9)] bg-white/88 px-4 py-3 text-left text-[13px] font-semibold text-[#1E1915]"
                       >
@@ -745,6 +756,7 @@ export function FigmaNotesHomePreview() {
                       </button>
                       <button
                         type="button"
+                        data-tooltip={extraNote ? "Remove extra note" : "Add note state"}
                         onClick={() => setExtraNote((current) => !current)}
                         className="flex items-center justify-between rounded-[18px] border border-[rgba(213,198,180,0.9)] bg-white/88 px-4 py-3 text-left text-[13px] font-semibold text-[#1E1915]"
                       >

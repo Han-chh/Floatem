@@ -93,6 +93,113 @@ async function expectNoSelfOverflow(locator: Locator) {
   expect(hasOverflow).toBeFalsy();
 }
 
+async function expectFirstTodoCardHoverWithinScrollRegion(page: Page) {
+  const scrollRegion = page.getByTestId("todo-card-scroll-region");
+  const todoCard = scrollRegion.getByTestId("todo-item").first();
+  await scrollRegion.evaluate((element) => {
+    element.scrollTop = 0;
+  });
+  await todoCard.hover();
+  const bounds = await scrollRegion.evaluate((element) => {
+    const card = element.querySelector<HTMLElement>("[data-testid='todo-item']");
+    if (!card) {
+      return null;
+    }
+
+    const list = element.firstElementChild instanceof HTMLElement ? element.firstElementChild : card.parentElement;
+    const cardBox = card.getBoundingClientRect();
+    const listBox = list?.getBoundingClientRect();
+    const scrollBox = element.getBoundingClientRect();
+
+    return {
+      cardLeft: cardBox.left,
+      cardRight: cardBox.right,
+      cardTop: cardBox.top,
+      listPaddingTop: list ? parseFloat(window.getComputedStyle(list).paddingTop) : 0,
+      listTop: listBox?.top ?? cardBox.top,
+      scrollLeft: scrollBox.left,
+      scrollRight: scrollBox.right,
+    };
+  });
+
+  expect(bounds).not.toBeNull();
+  expect(bounds!.cardLeft).toBeGreaterThanOrEqual(bounds!.scrollLeft + 1);
+  expect(bounds!.cardRight).toBeLessThanOrEqual(bounds!.scrollRight - 1);
+  expect(bounds!.listPaddingTop).toBeGreaterThanOrEqual(7);
+  expect(bounds!.cardTop).toBeGreaterThanOrEqual(bounds!.listTop + bounds!.listPaddingTop - 3);
+}
+
+async function expectFirstNoteCardHoverWithinScrollRegion(page: Page) {
+  const scrollRegion = page.getByTestId("note-card-scroll-region");
+  const noteCard = scrollRegion.getByTestId("note-card").first();
+  await scrollRegion.evaluate((element) => {
+    element.scrollTop = 0;
+  });
+  await noteCard.hover();
+  const bounds = await scrollRegion.evaluate((element) => {
+    const card = element.querySelector<HTMLElement>("[data-testid='note-card']");
+    if (!card) {
+      return null;
+    }
+
+    const list = card.parentElement;
+    const cardBox = card.getBoundingClientRect();
+    const listBox = list?.getBoundingClientRect();
+    const scrollBox = element.getBoundingClientRect();
+
+    return {
+      cardLeft: cardBox.left,
+      cardRight: cardBox.right,
+      cardTop: cardBox.top,
+      listPaddingTop: list ? parseFloat(window.getComputedStyle(list).paddingTop) : 0,
+      listTop: listBox?.top ?? cardBox.top,
+      scrollLeft: scrollBox.left,
+      scrollRight: scrollBox.right,
+    };
+  });
+
+  expect(bounds).not.toBeNull();
+  expect(bounds!.cardLeft).toBeGreaterThanOrEqual(bounds!.scrollLeft + 1);
+  expect(bounds!.cardRight).toBeLessThanOrEqual(bounds!.scrollRight - 1);
+  expect(bounds!.listPaddingTop).toBeGreaterThanOrEqual(7);
+  expect(bounds!.cardTop).toBeGreaterThanOrEqual(bounds!.listTop + bounds!.listPaddingTop - 3);
+}
+
+async function expectSettingsSecondaryHeaderLayout(panel: Locator) {
+  const layout = await panel.evaluate((element) => {
+    const scrollRegion = element.querySelector<HTMLElement>("[data-testid='settings-scroll-region']");
+    const icon = element.querySelector<HTMLElement>("[data-testid='settings-category-toolbar-icon']");
+    const titleFrame = element.querySelector<HTMLElement>("[data-testid='settings-category-title-frame']");
+    const allSettingsButton = Array.from(element.querySelectorAll<HTMLButtonElement>("button")).find(
+      (button) => button.textContent?.trim() === "All settings",
+    );
+
+    if (!scrollRegion || !icon || !titleFrame || !allSettingsButton) {
+      return null;
+    }
+
+    const scrollStyles = window.getComputedStyle(scrollRegion);
+    const scrollContentWidth =
+      scrollRegion.clientWidth - parseFloat(scrollStyles.paddingLeft) - parseFloat(scrollStyles.paddingRight);
+    const iconBox = icon.getBoundingClientRect();
+    const buttonBox = allSettingsButton.getBoundingClientRect();
+    const titleFrameBox = titleFrame.getBoundingClientRect();
+
+    return {
+      buttonLeft: buttonBox.left,
+      buttonRight: buttonBox.right,
+      iconLeft: iconBox.left,
+      scrollContentWidth,
+      titleFrameWidth: titleFrameBox.width,
+    };
+  });
+
+  expect(layout).not.toBeNull();
+  expect(layout!.buttonLeft).toBeLessThan(layout!.iconLeft);
+  expect(layout!.iconLeft).toBeGreaterThanOrEqual(layout!.buttonRight + 6);
+  expect(layout!.titleFrameWidth).toBeGreaterThanOrEqual(layout!.scrollContentWidth - 2);
+}
+
 for (const viewport of VIEWPORTS) {
   test.describe(`responsive layout @ ${viewport.label}`, () => {
     test.use({ viewport: { width: viewport.width, height: viewport.height } });
@@ -106,7 +213,9 @@ for (const viewport of VIEWPORTS) {
       await title.fill(LONG_NOTE);
 
       await expectWithinViewport(page, title);
-      await expectWithinViewport(page, page.getByTestId("note-card").first());
+      const noteCard = page.getByTestId("note-card").first();
+      await expectWithinViewport(page, noteCard);
+      await expectFirstNoteCardHoverWithinScrollRegion(page);
       await expectWithinViewport(page, page.getByRole("button", { name: "Collapse note" }));
       await expectWithinViewport(page, page.getByRole("button", { name: "Delete note" }));
       await page.getByRole("button", { name: "Filter groups" }).click();
@@ -191,6 +300,7 @@ for (const viewport of VIEWPORTS) {
 
       const todoCard = page.getByTestId("todo-item").first();
       await expect(todoCard).toBeVisible();
+      await expectFirstTodoCardHoverWithinScrollRegion(page);
 
       await expectWithinViewport(page, page.getByRole("button", { name: "Complete task" }));
       await expectWithinViewport(page, page.getByRole("button", { name: "Delete todo" }));
@@ -225,9 +335,11 @@ for (const viewport of VIEWPORTS) {
 
       await expectWithinViewport(page, closeButton);
       await expectWithinViewport(page, panel.getByRole("button", { name: "Shortcuts and launch" }));
-      await expectWithinViewport(page, panel.getByRole("button", { name: /^System\b/ }));
+      await expectWithinViewport(page, panel.getByRole("button", { name: /^About QuickNote\b/ }));
       await panel.getByRole("button", { name: "Shortcuts and launch" }).click();
       await expectWithinViewport(page, panel.getByRole("heading", { name: "Shortcuts and launch" }));
+      await expectWithinViewport(page, panel.getByTestId("settings-category-title-frame"));
+      await expectSettingsSecondaryHeaderLayout(panel);
       await expectWithinViewport(page, panel.getByRole("button", { name: "Change" }));
       await panel.getByRole("button", { name: "Change" }).click();
       const dialog = panel.getByRole("dialog", { name: "Change global shortcut" });
@@ -236,9 +348,9 @@ for (const viewport of VIEWPORTS) {
       await panel.getByRole("button", { name: "Cancel" }).click();
       await expect(dialog).toBeHidden();
       await panel.getByRole("button", { name: "All settings" }).click();
-      await panel.getByRole("button", { name: /^System\b/ }).click();
-      await expectWithinViewport(page, panel.getByRole("heading", { name: "System" }));
-      await expectWithinViewport(page, panel.getByText(/Unset|x \d+\s+y \d+/));
+      await panel.getByRole("button", { name: /^About QuickNote\b/ }).click();
+      await expectWithinViewport(page, panel.getByRole("heading", { name: "About QuickNote" }));
+      await expectWithinViewport(page, panel.getByRole("heading", { name: "Data scope" }));
       await panel.getByRole("button", { name: "All settings" }).click();
       await expectWithinViewport(page, panel.getByRole("button", { name: "Restore defaults" }));
       await scrollRegion.evaluate((element) => {

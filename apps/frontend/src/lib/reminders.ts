@@ -1,10 +1,17 @@
-export function buildReminderTimestamp(dateValue: string, hourValue: string, minuteValue: string) {
+import { getSystemTimeZone } from "./models";
+import { buildTimestampInTimeZone } from "./timeZoneDate";
+
+export function buildReminderTimestamp(
+  dateValue: string,
+  hourValue: string,
+  minuteValue: string,
+  timeZone = getSystemTimeZone(),
+) {
   if (!dateValue || !hourValue || !minuteValue) {
     return null;
   }
 
-  const nextValue = new Date(`${dateValue}T${hourValue}:${minuteValue}:00`);
-  return Number.isNaN(nextValue.getTime()) ? null : nextValue.getTime();
+  return buildTimestampInTimeZone(dateValue, hourValue, minuteValue, timeZone);
 }
 
 export function isFutureReminderTimestamp(timestamp: number | null, now = Date.now()) {

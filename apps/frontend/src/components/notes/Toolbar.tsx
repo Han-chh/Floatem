@@ -24,7 +24,7 @@ type ToolbarItem = {
   label: string;
   shortcut?: string;
   tone: string;
-  tooltipClassName?: string;
+  tooltipAlign?: "left" | "right";
 };
 
 type ToolbarProps = {
@@ -73,7 +73,7 @@ export function Toolbar({
         "border-[rgba(30,25,21,0.58)] bg-[#1E1915] text-white shadow-[0_12px_24px_rgba(30,25,21,0.22)]",
       format: "bold",
       shortcut: TEXT_FORMAT_SHORTCUTS.bold,
-      tooltipClassName: "left-[calc(50%+10px)] -translate-x-1/2",
+      tooltipAlign: "right",
     },
     {
       label: t.notes.italic,
@@ -134,7 +134,7 @@ export function Toolbar({
       icon: RedoIcon,
       shortcut: TEXT_HISTORY_SHORTCUTS.redo,
       tone: "text-[#3B6D8A] bg-[rgba(63,156,168,0.12)]",
-      tooltipClassName: "right-0 translate-x-0",
+      tooltipAlign: "left",
     },
   ];
 
@@ -177,7 +177,7 @@ export function Toolbar({
     <div
       className="paper-card note-toolbar-grid relative rounded-[14px] bg-[rgba(255,250,244,0.66)] px-1 py-1"
     >
-      {toolItems.map(({ action, activeTone, disabled, format, label, icon: Icon, shortcut, tone, tooltipClassName }, index) => {
+      {toolItems.map(({ action, activeTone, disabled, format, label, icon: Icon, shortcut, tone, tooltipAlign }, index) => {
         const isActive =
           format ? activeFormats[format] : action === "color" ? Boolean(activeColor) || isColorPaletteOpen : false;
 
@@ -189,6 +189,8 @@ export function Toolbar({
             aria-label={label}
             aria-disabled={disabled ? "true" : "false"}
             aria-pressed={format ? isActive : undefined}
+            data-tooltip={shortcut ? `${label} ${shortcut}` : label}
+            data-tooltip-align={tooltipAlign}
             onPointerDown={
               format
                 ? (event) => {
@@ -250,14 +252,6 @@ export function Toolbar({
                 style={{ backgroundColor: activeColor ?? TEXT_COLOR_PRESETS[0] }}
               />
             ) : null}
-            <span
-              className={`pointer-events-none absolute -top-8 z-10 inline-flex items-center gap-1.5 rounded-full bg-[rgba(30,25,21,0.94)] px-2 py-1 text-[10px] font-semibold leading-none tracking-[0.01em] whitespace-nowrap text-white opacity-0 shadow-[0_10px_20px_rgba(30,25,21,0.18)] transition-all duration-75 ease-out group-hover:-translate-y-1 group-hover:opacity-100 group-focus-visible:-translate-y-1 group-focus-visible:opacity-100 ${
-                tooltipClassName ?? "left-1/2 -translate-x-1/2"
-              }`}
-            >
-              <span>{label}</span>
-              {shortcut ? <span className="text-white/72">{shortcut}</span> : null}
-            </span>
           </motion.button>
         );
       })}

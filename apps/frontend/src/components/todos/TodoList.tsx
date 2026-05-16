@@ -14,10 +14,6 @@ import {
   addDays,
   endOfMonth,
   endOfWeek,
-  format,
-  isSameDay,
-  isTomorrow,
-  isYesterday,
   startOfMonth,
   startOfWeek,
 } from "date-fns";
@@ -37,6 +33,13 @@ import { useI18n } from "../../lib/i18n";
 import { formatLocalDateKey, parseLocalDateKey, type TodoItem as TodoItemModel } from "../../lib/models";
 import { isNativeQuickNoteHost } from "../../lib/nativeBridge";
 import { readPlainTextFromClipboard, writePlainTextToClipboard } from "../../lib/plainTextClipboard";
+import {
+  addDaysToDateKey,
+  formatDateKeyInTimeZone,
+  formatDateKeyLong,
+  formatDateKeyMonthYear,
+  formatTimeInTimeZone,
+} from "../../lib/timeZoneDate";
 import { ParticleField } from "../feedback/ParticleField";
 import {
   ChevronLeftIcon,
@@ -62,24 +65,26 @@ type TodoDayStats = {
   undone: number;
 };
 
-function getRelativeDateLabel(date: Date) {
-  if (isSameDay(date, new Date())) {
+function getRelativeDateLabel(dateKey: string, timeZone: string) {
+  const todayDateKey = formatDateKeyInTimeZone(new Date(), timeZone);
+
+  if (dateKey === todayDateKey) {
     return "today";
   }
 
-  if (isYesterday(date)) {
+  if (dateKey === addDaysToDateKey(todayDateKey, -1)) {
     return "yesterday";
   }
 
-  if (isTomorrow(date)) {
+  if (dateKey === addDaysToDateKey(todayDateKey, 1)) {
     return "tomorrow";
   }
 
   return null;
 }
 
-function getRelativeDateMarker(date: Date, language: "en" | "zh-CN") {
-  const label = getRelativeDateLabel(date);
+function getRelativeDateMarker(dateKey: string, language: "en" | "zh-CN", timeZone: string) {
+  const label = getRelativeDateLabel(dateKey, timeZone);
 
   if (label === "today") {
     return language === "zh-CN" ? "\u4eca" : "tdy";
@@ -157,6 +162,14 @@ function TodoDayStatusIcon({ stats, isSelected }: { stats: TodoDayStats; isSelec
   );
 }
 
+function isEditableTarget(target: EventTarget | null) {
+  if (!(target instanceof HTMLElement)) {
+    return false;
+  }
+
+  return target.isContentEditable || target instanceof HTMLInputElement || target instanceof HTMLTextAreaElement;
+}
+
 export function TodoList() {
   const { t, language } = useI18n();
   const todos = useTodosStore((state) => state.todos);
@@ -168,6 +181,8 @@ export function TodoList() {
   const toggleTodo = useTodosStore((state) => state.toggleTodo);
   const removeTodo = useTodosStore((state) => state.removeTodo);
   const enableParticles = useSettingsStore((state) => state.enableParticles);
+  const timeZone = useSettingsStore((state) => state.timeZone);
+  const timeFormat = useSettingsStore((state) => state.timeFormat);
   const [draft, setDraft] = useState("");
   const [editingTodoId, setEditingTodoId] = useState<string | null>(null);
   const [editDraft, setEditDraft] = useState("");
@@ -181,6 +196,7 @@ export function TodoList() {
   const formRef = useRef<HTMLFormElement>(null);
   const draftRef = useRef<HTMLTextAreaElement | null>(null);
   const editInputRef = useRef<HTMLInputElement | null>(null);
+  const previousTimeZoneRef = useRef(timeZone);
   const { bursts, fieldRef, spawnBurst } = useParticleField();
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -188,7 +204,8 @@ export function TodoList() {
     }),
   );
   const selectedDate = useMemo(() => parseLocalDateKey(selectedDateKey), [selectedDateKey]);
-  const selectedDateLabel = getRelativeDateLabel(selectedDate);
+  const selectedDateLabel = getRelativeDateLabel(selectedDateKey, timeZone);
+  const locale = language === "zh-CN" ? "zh-CN" : "en-US";
   const todoStatsByDate = useMemo(() => buildTodoStats(todos), [todos]);
 
   const visibleTodos = useMemo(
@@ -197,17 +214,20 @@ export function TodoList() {
   );
   const openTodos = visibleTodos.filter((todo) => !todo.done);
   const doneTodos = visibleTodos.filter((todo) => todo.done);
+  const hasOpenTodos = openTodos.length > 0;
+  const hasDoneTodos = doneTodos.length > 0;
+  const hasMixedTodoStatus = hasOpenTodos && hasDoneTodos;
   const activeDragTodo = openTodos.find((todo) => todo.id === activeDragId) ?? null;
   const activeDragIndex = activeDragId ? openTodos.findIndex((todo) => todo.id === activeDragId) : -1;
   const activeDragOrder = activeDragIndex >= 0 ? activeDragIndex + 1 : undefined;
   const editingTodo = editingTodoId ? (todos.find((todo) => todo.id === editingTodoId) ?? null) : null;
   const calendarQuickDates = useMemo(
     () => [
-      { id: "today", label: t.todos.today, date: clock },
-      { id: "tomorrow", label: t.todos.tomorrow, date: addDays(clock, 1) },
-      { id: "yesterday", label: t.todos.yesterday, date: addDays(clock, -1) },
+      { id: "today", label: t.todos.today, dateKey: formatDateKeyInTimeZone(clock, timeZone) },
+      { id: "tomorrow", label: t.todos.tomorrow, dateKey: addDaysToDateKey(formatDateKeyInTimeZone(clock, timeZone), 1) },
+      { id: "yesterday", label: t.todos.yesterday, dateKey: addDaysToDateKey(formatDateKeyInTimeZone(clock, timeZone), -1) },
     ],
-    [clock, t.todos.today, t.todos.tomorrow, t.todos.yesterday],
+    [clock, t.todos.today, t.todos.tomorrow, t.todos.yesterday, timeZone],
   );
   const normalizedEditDraft = editDraft.trim();
   const isEditSaveDisabled =
@@ -229,10 +249,54 @@ export function TodoList() {
   }, [selectedDate]);
 
   useEffect(() => {
+    const previousTimeZone = previousTimeZoneRef.current;
+    if (previousTimeZone === timeZone) {
+      return;
+    }
+
+    const previousTodayDateKey = formatDateKeyInTimeZone(new Date(), previousTimeZone);
+    const nextTodayDateKey = formatDateKeyInTimeZone(new Date(), timeZone);
+    previousTimeZoneRef.current = timeZone;
+
+    if (selectedDateKey === previousTodayDateKey && selectedDateKey !== nextTodayDateKey) {
+      selectDate(nextTodayDateKey);
+    }
+  }, [selectDate, selectedDateKey, timeZone]);
+
+  useEffect(() => {
     if (isCalendarOpen) {
       setCalendarMonth(startOfMonth(selectedDate));
     }
   }, [isCalendarOpen, selectedDate]);
+
+  useEffect(() => {
+    if (typeof window === "undefined" || isCalendarOpen || editingTodoId) {
+      return;
+    }
+
+    const handleKeyDown = (event: globalThis.KeyboardEvent) => {
+      if (
+        event.defaultPrevented ||
+        event.key !== "Enter" ||
+        event.metaKey ||
+        event.ctrlKey ||
+        event.altKey ||
+        event.shiftKey ||
+        event.isComposing ||
+        isEditableTarget(event.target)
+      ) {
+        return;
+      }
+
+      event.preventDefault();
+      draftRef.current?.focus();
+    };
+
+    window.addEventListener("keydown", handleKeyDown, true);
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown, true);
+    };
+  }, [editingTodoId, isCalendarOpen]);
 
   useEffect(() => {
     if (!activeDragId || !dragPointerCoordinates || typeof document === "undefined") {
@@ -312,6 +376,11 @@ export function TodoList() {
     setIsCalendarOpen(false);
   };
 
+  const handleSelectDateKey = (dateKey: string) => {
+    selectDate(dateKey);
+    setIsCalendarOpen(false);
+  };
+
   const handleDragStart = (event: DragStartEvent) => {
     setActiveDragId(String(event.active.id));
     setActiveDragOverId(null);
@@ -362,13 +431,11 @@ export function TodoList() {
       return;
     }
 
-    if (
-      event.key === "Enter" &&
-      !event.metaKey &&
-      !event.shiftKey &&
-      !event.ctrlKey &&
-      !event.altKey
-    ) {
+    if (event.key === "Enter") {
+      if (event.shiftKey && !event.metaKey && !event.ctrlKey && !event.altKey) {
+        return;
+      }
+
       event.preventDefault();
       formRef.current?.requestSubmit();
     }
@@ -458,8 +525,10 @@ export function TodoList() {
       <motion.button
         type="button"
         data-no-window-drag="true"
-        aria-label="Open todo calendar"
-        className="paper-button flex w-full items-center justify-between gap-3 rounded-[20px] px-3.5 py-2.5 text-left"
+        aria-label={t.todos.openCalendar}
+        data-tooltip={t.todos.openCalendar}
+        data-tooltip-placement="bottom"
+        className="paper-button mx-1 mt-1 grid w-[calc(100%-0.5rem)] grid-cols-[minmax(0,1fr)_auto_auto] items-center gap-2 rounded-[20px] px-3.5 py-2.5 text-left"
         initial={{ opacity: 0, y: 6 }}
         animate={{ opacity: 1, y: 0 }}
         whileHover={{ y: -1.5, scale: 1.005 }}
@@ -468,12 +537,26 @@ export function TodoList() {
       >
         <span className="min-w-0">
           <span className="block font-display text-[19px] font-semibold leading-none tracking-normal text-[var(--brown-strong)]">
-            {format(selectedDate, "yyyy.MM.dd")}
+            {selectedDateKey.replace(/-/g, ".")}
           </span>
           <span className="mt-1 block truncate text-[11px] font-semibold leading-4 text-[var(--muted)]">
-            {format(clock, "HH:mm")} · {format(selectedDate, "EEEE")}
+            {formatTimeInTimeZone(clock, timeZone, timeFormat)} · {formatDateKeyLong(selectedDateKey, locale)}
           </span>
         </span>
+        {hasOpenTodos || hasDoneTodos ? (
+          <span className={`flex min-h-[34px] shrink-0 flex-col ${hasMixedTodoStatus ? "justify-center gap-1" : "justify-center"}`}>
+            {hasOpenTodos ? (
+              <span className="todo-date-status-chip" data-tone="coral">
+                {t.todos.undoneCount(openTodos.length)}
+              </span>
+            ) : null}
+            {hasDoneTodos ? (
+              <span className="todo-date-status-chip" data-tone="jade">
+                {t.todos.doneCount(doneTodos.length)}
+              </span>
+            ) : null}
+          </span>
+        ) : null}
         {selectedDateLabel ? (
           <span className="shrink-0 rounded-[12px] border border-[rgba(81,127,145,0.14)] bg-[rgba(239,248,249,0.86)] px-2.5 py-1 text-[10.5px] font-bold leading-none text-[var(--status-upcoming)]">
             {selectedDateLabel}
@@ -489,7 +572,7 @@ export function TodoList() {
       >
         <ParticleField bursts={enableParticles ? bursts : []} />
 
-        <div className="paper-scroll h-full overflow-y-auto pr-1">
+        <div data-testid="todo-card-scroll-region" className="paper-scroll todo-card-scroll h-full overflow-y-auto">
           {visibleTodos.length === 0 ? (
             <motion.div
               initial={{ opacity: 0, y: 10 }}
@@ -499,7 +582,7 @@ export function TodoList() {
               {t.todos.empty}
             </motion.div>
           ) : (
-            <div className="flex flex-col gap-2.5 pb-1">
+            <div className="flex flex-col gap-2 pb-1 pt-2">
               <DndContext
                 sensors={sensors}
                 collisionDetection={closestCenter}
@@ -512,7 +595,7 @@ export function TodoList() {
                 }}
               >
                 <SortableContext items={openTodos.map((todo) => todo.id)} strategy={verticalListSortingStrategy}>
-                  <div className="flex flex-col gap-2">
+                  <div className="flex flex-col gap-1.5">
                     <AnimatePresence>
                       {openTodos.map((todo, index) => (
                         <TodoItem
@@ -543,25 +626,18 @@ export function TodoList() {
               </DndContext>
 
               {doneTodos.length > 0 ? (
-                <div className="flex flex-col gap-2 pt-1">
-                  <div className="flex items-center gap-2 px-1">
-                    <span className="status-chip shrink-0" data-tone="jade">
-                      {t.todos.doneCount(doneTodos.length)}
-                    </span>
-                  </div>
-                  <div className="flex flex-col gap-2">
-                    <AnimatePresence>
-                      {doneTodos.map((todo) => (
-                        <CompletedTodoItem
-                          key={todo.id}
-                          todo={todo}
-                          onDelete={handleDeleteTodo}
-                          onEdit={openEditDialog}
-                          onToggle={handleToggleTodo}
-                        />
-                      ))}
-                    </AnimatePresence>
-                  </div>
+                <div className="flex flex-col gap-1.5 pt-0.5">
+                  <AnimatePresence>
+                    {doneTodos.map((todo) => (
+                      <CompletedTodoItem
+                        key={todo.id}
+                        todo={todo}
+                        onDelete={handleDeleteTodo}
+                        onEdit={openEditDialog}
+                        onToggle={handleToggleTodo}
+                      />
+                    ))}
+                  </AnimatePresence>
                 </div>
               ) : null}
             </div>
@@ -569,34 +645,19 @@ export function TodoList() {
         </div>
       </motion.div>
 
-      <div className="px-1 pb-1">
+      <div className="pb-1.5">
         <form
           ref={formRef}
-          className="paper-card relative overflow-visible rounded-[22px] px-3 py-3"
+          className="paper-card relative overflow-visible rounded-[18px] px-2.5 py-2"
           onSubmit={handleSubmit}
         >
           <label htmlFor="todo-input" className="sr-only">
             {t.todos.quickAdd}
           </label>
-          <div className="grid min-w-0 grid-cols-[minmax(0,1fr)_60px] gap-x-2.5 gap-y-2.5">
-            <div className="flex min-w-0 flex-wrap items-center gap-2">
-              <span className="status-chip shrink-0" data-tone="coral">
-                {t.todos.undoneCount(openTodos.length)}
-              </span>
-              {doneTodos.length > 0 ? (
-                <span className="status-chip shrink-0" data-tone="jade">
-                  {t.todos.doneCount(doneTodos.length)}
-                </span>
-              ) : null}
-            </div>
-            <div className="flex items-center justify-center">
-              <span
-                id="todo-submit-shortcut"
-                className="max-w-full text-center text-[9px] font-medium leading-[1.25] tracking-[-0.01em] text-[var(--muted)] opacity-90"
-              >
-                {t.todos.submitHint}
-              </span>
-            </div>
+          <span id="todo-submit-shortcut" className="sr-only">
+            {t.todos.submitHint}
+          </span>
+          <div className="grid min-w-0 grid-cols-[minmax(0,1fr)_68px] items-center gap-2">
             <textarea
               ref={draftRef}
               id="todo-input"
@@ -636,15 +697,17 @@ export function TodoList() {
               }}
               onKeyDown={handleDraftKeyDown}
               placeholder={t.todos.quickAddPlaceholder}
-              className="textarea-reset surface-field wrap-anywhere min-h-[40px] min-w-0 rounded-[16px] px-3.5 py-2 text-[12.5px] font-medium leading-5 text-[var(--dark-text)] outline-none placeholder:text-[var(--muted)]"
+              className="textarea-reset surface-field wrap-anywhere min-h-[34px] min-w-0 rounded-[14px] px-3 py-2 text-[12px] font-medium leading-[1.35] text-[var(--dark-text)] outline-none placeholder:text-[10px] placeholder:leading-[1.2] placeholder:text-[var(--muted)]"
             />
-            <div className="flex items-center justify-center">
+            <div className="flex items-center justify-end">
               <motion.button
                 type="submit"
                 aria-label={t.todos.add}
                 aria-describedby="todo-submit-shortcut"
+                data-tooltip={t.todos.add}
+                data-tooltip-align="left"
                 disabled={!draft.trim()}
-                className={`quick-add-submit inline-flex h-10 w-[28px] items-center justify-center rounded-full border transition-colors ${
+                className={`quick-add-submit inline-flex h-10 w-16 items-center justify-center rounded-full border transition-colors ${
                   draft.trim()
                     ? "paper-button paper-button-primary border-transparent"
                     : "border-[rgba(213,198,180,0.94)] bg-[rgba(227,221,213,0.72)] text-[rgba(160,152,143,0.96)] shadow-none"
@@ -674,7 +737,7 @@ export function TodoList() {
                   <motion.div
                     role="dialog"
                     aria-modal="true"
-                    aria-label="Todo calendar"
+                    aria-label={t.todos.openCalendar}
                     className="paper-panel flex max-h-[calc(100dvh-3rem)] w-full max-w-[430px] flex-col overflow-hidden rounded-[24px] p-4 shadow-[0_26px_48px_rgba(30,25,21,0.24)]"
                     initial={{ opacity: 0, scale: 0.95, y: 12 }}
                     animate={{ opacity: 1, scale: 1, y: 0 }}
@@ -685,7 +748,8 @@ export function TodoList() {
                     <div className="mb-3 flex items-center justify-between gap-3">
                       <motion.button
                         type="button"
-                        aria-label="Previous month"
+                        aria-label={t.todos.previousMonth}
+                        data-tooltip={t.todos.previousMonth}
                         data-no-window-drag="true"
                         className="paper-icon-button inline-flex h-9 w-9 min-h-0 min-w-0 rounded-[12px]"
                         whileHover={{ y: -1.5, scale: 1.03 }}
@@ -696,12 +760,13 @@ export function TodoList() {
                       </motion.button>
                       <div className="min-w-0 text-center">
                         <p className="font-display text-[21px] font-semibold leading-none tracking-normal text-[var(--brown-strong)]">
-                          {format(calendarMonth, "MMMM yyyy")}
+                          {formatDateKeyMonthYear(formatLocalDateKey(calendarMonth), locale)}
                         </p>
                       </div>
                       <motion.button
                         type="button"
-                        aria-label="Next month"
+                        aria-label={t.todos.nextMonth}
+                        data-tooltip={t.todos.nextMonth}
                         data-no-window-drag="true"
                         className="paper-icon-button inline-flex h-9 w-9 min-h-0 min-w-0 rounded-[12px]"
                         whileHover={{ y: -1.5, scale: 1.03 }}
@@ -727,15 +792,16 @@ export function TodoList() {
                           const stats = todoStatsByDate.get(dateKey) ?? { total: 0, done: 0, undone: 0 };
                           const isCurrentMonth = day.getMonth() === calendarMonth.getMonth();
                           const isSelected = dateKey === selectedDateKey;
-                          const relativeLabel = getRelativeDateLabel(day);
-                          const relativeMarker = getRelativeDateMarker(day, language);
+                          const relativeLabel = getRelativeDateLabel(dateKey, timeZone);
+                          const relativeMarker = getRelativeDateMarker(dateKey, language, timeZone);
 
                           return (
                             <motion.button
                               key={dateKey}
                               type="button"
                               data-no-window-drag="true"
-                              aria-label={`${relativeLabel ? `${relativeLabel}, ` : ""}${format(day, "yyyy-MM-dd")}: ${stats.total} todos, ${stats.done} done, ${stats.undone} undone`}
+                              aria-label={`${relativeLabel ? `${relativeLabel}, ` : ""}${dateKey}: ${t.todos.doneCount(stats.done)}, ${t.todos.undoneCount(stats.undone)}`}
+                              data-tooltip={`${dateKey}: ${t.todos.doneCount(stats.done)}, ${t.todos.undoneCount(stats.undone)}`}
                               className={`min-h-[58px] rounded-[14px] border px-1.5 py-1.5 text-left transition-colors ${
                                 isSelected
                                   ? "border-[rgba(30,25,21,0.68)] bg-[rgba(30,25,21,0.9)] text-white shadow-[0_12px_22px_rgba(30,25,21,0.16)]"
@@ -746,7 +812,7 @@ export function TodoList() {
                               onClick={() => handleSelectDate(day)}
                             >
                               <span className="flex h-4 items-center justify-center gap-1">
-                                <span className="text-[12px] font-bold leading-none">{format(day, "d")}</span>
+                                <span className="text-[12px] font-bold leading-none">{day.getDate()}</span>
                                 {relativeMarker ? (
                                   <span
                                     aria-hidden="true"
@@ -776,10 +842,11 @@ export function TodoList() {
                             key={quickDate.id}
                             type="button"
                             data-no-window-drag="true"
+                            data-tooltip={quickDate.label}
                             className="inline-flex items-center justify-center rounded-[12px] border border-[rgba(47,107,255,0.45)] bg-[rgba(239,248,249,0.72)] px-2.5 py-2 text-[11px] font-semibold text-[var(--status-upcoming)] shadow-[0_8px_16px_rgba(47,107,255,0.08)] transition-colors hover:border-[rgba(47,107,255,0.68)] hover:bg-[rgba(239,248,249,0.94)]"
                             whileHover={{ y: -1.5, scale: 1.01 }}
                             whileTap={{ scale: 0.985 }}
-                            onClick={() => handleSelectDate(quickDate.date)}
+                            onClick={() => handleSelectDateKey(quickDate.dateKey)}
                           >
                             {quickDate.label}
                           </motion.button>
@@ -788,6 +855,7 @@ export function TodoList() {
                       <motion.button
                         type="button"
                         data-no-window-drag="true"
+                        data-tooltip={t.common.close}
                         className="paper-button inline-flex items-center justify-center rounded-[14px] px-3.5 py-2.5 text-[12px] font-semibold text-[var(--dark-text)]"
                         whileHover={{ y: -1.5, scale: 1.01 }}
                         whileTap={{ scale: 0.985 }}
@@ -836,6 +904,7 @@ export function TodoList() {
                       <motion.button
                         type="button"
                         aria-label={t.common.close}
+                        data-tooltip={t.common.close}
                         data-no-window-drag="true"
                         className="paper-icon-button inline-flex h-9 w-9 min-h-0 min-w-0 rounded-[12px]"
                         whileHover={{ y: -1.5, scale: 1.03 }}
@@ -872,6 +941,7 @@ export function TodoList() {
                         <motion.button
                           type="button"
                           data-no-window-drag="true"
+                          data-tooltip={t.common.cancel}
                           className="paper-button inline-flex items-center justify-center rounded-[14px] px-3.5 py-2.5 text-[12px] font-semibold text-[var(--dark-text)]"
                           whileHover={{ y: -1.5, scale: 1.01 }}
                           whileTap={{ scale: 0.985 }}
@@ -882,6 +952,7 @@ export function TodoList() {
                         <motion.button
                           type="submit"
                           data-no-window-drag="true"
+                          data-tooltip={t.common.save}
                           disabled={isEditSaveDisabled}
                           className={`paper-button paper-button-primary inline-flex items-center justify-center rounded-[14px] px-3.5 py-2.5 text-[12px] font-semibold ${
                             isEditSaveDisabled ? "cursor-not-allowed opacity-60" : ""

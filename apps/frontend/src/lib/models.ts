@@ -5,6 +5,7 @@ export type AppLanguage = "en" | "zh-CN";
 export type DefaultOpenSection = "last" | TabId;
 export type TransitionStyle = "page" | "slide" | "lift";
 export type AnimationSpeed = "rapid" | "mediate" | "slow";
+export type TimeFormat = "24h" | "12h";
 
 export type PanelPosition = {
   x: number;
@@ -49,6 +50,8 @@ export type TodoItem = {
 export type AppSettings = {
   hotkey: string;
   language: AppLanguage;
+  timeZone: string;
+  timeFormat: TimeFormat;
   panelPosition: PanelPosition | null;
   activeTab: TabId;
   lastActiveTab: TabId;
@@ -82,6 +85,20 @@ export const NOTE_DOT_COLORS = [
 
 export const DEFAULT_NOTE_GROUP_COLOR = NOTE_DOT_COLORS[0];
 export const DEFAULT_UNGROUPED_NOTE_COLOR = "#C8C0B5";
+export const FALLBACK_TIME_ZONE = "UTC";
+
+const FALLBACK_TIME_ZONES = [
+  "UTC",
+  "America/Los_Angeles",
+  "America/Denver",
+  "America/Chicago",
+  "America/New_York",
+  "Europe/London",
+  "Europe/Paris",
+  "Asia/Shanghai",
+  "Asia/Tokyo",
+  "Australia/Sydney",
+] as const;
 
 export const DEFAULT_NOTE_CONTENT: Descendant[] = [
   {
@@ -90,18 +107,56 @@ export const DEFAULT_NOTE_CONTENT: Descendant[] = [
   },
 ];
 
-export const DEFAULT_SETTINGS: AppSettings = {
-  hotkey: "Shift+Space",
-  language: "en",
-  panelPosition: null,
-  activeTab: "notes",
-  lastActiveTab: "notes",
-  defaultOpenSection: "last",
-  transitionStyle: "page",
-  animationSpeed: "mediate",
-  enableParticles: true,
-  enableReminderSound: true,
-};
+export function isValidTimeZone(value: unknown): value is string {
+  if (!isNonEmptyString(value)) {
+    return false;
+  }
+
+  try {
+    new Intl.DateTimeFormat("en-US", { timeZone: value.trim() }).format(new Date());
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+export function getSystemTimeZone() {
+  const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+  return isValidTimeZone(timeZone) ? timeZone : FALLBACK_TIME_ZONE;
+}
+
+export function normalizeTimeZone(value: unknown, fallback = getSystemTimeZone()) {
+  return isValidTimeZone(value) ? value.trim() : fallback;
+}
+
+export function getSelectableTimeZones(systemTimeZone = getSystemTimeZone()) {
+  const intlWithSupportedValues = Intl as typeof Intl & {
+    supportedValuesOf?: (key: "timeZone") => string[];
+  };
+  const supportedTimeZones = intlWithSupportedValues.supportedValuesOf?.("timeZone") ?? [];
+  const uniqueTimeZones = new Set([...FALLBACK_TIME_ZONES, ...supportedTimeZones, systemTimeZone].filter(isValidTimeZone));
+
+  return Array.from(uniqueTimeZones).sort((first, second) => first.localeCompare(second));
+}
+
+export function createDefaultSettings(): AppSettings {
+  return {
+    hotkey: "Shift+Space",
+    language: "en",
+    timeZone: getSystemTimeZone(),
+    timeFormat: "24h",
+    panelPosition: null,
+    activeTab: "notes",
+    lastActiveTab: "notes",
+    defaultOpenSection: "last",
+    transitionStyle: "page",
+    animationSpeed: "mediate",
+    enableParticles: true,
+    enableReminderSound: true,
+  };
+}
+
+export const DEFAULT_SETTINGS: AppSettings = createDefaultSettings();
 
 function isNonEmptyString(value: unknown): value is string {
   return typeof value === "string" && value.trim().length > 0;
@@ -151,6 +206,10 @@ export function normalizeAnimationSpeed(value: unknown): AnimationSpeed {
   return DEFAULT_SETTINGS.animationSpeed;
 }
 
+export function normalizeTimeFormat(value: unknown): TimeFormat {
+  return value === "12h" ? "12h" : "24h";
+}
+
 export function normalizePanelPosition(value: unknown): PanelPosition | null {
   if (!value || typeof value !== "object") {
     return null;
@@ -169,21 +228,24 @@ export function normalizePanelPosition(value: unknown): PanelPosition | null {
 
 export function normalizeAppSettings(settings: Partial<AppSettings> = {}): AppSettings {
   const activeTab = normalizeTabId(settings.activeTab);
+  const defaultSettings = createDefaultSettings();
 
   return {
-    hotkey: typeof settings.hotkey === "string" && settings.hotkey.trim() ? settings.hotkey.trim() : DEFAULT_SETTINGS.hotkey,
+    hotkey: typeof settings.hotkey === "string" && settings.hotkey.trim() ? settings.hotkey.trim() : defaultSettings.hotkey,
     language: normalizeLanguage(settings.language),
+    timeZone: normalizeTimeZone(settings.timeZone, defaultSettings.timeZone),
+    timeFormat: normalizeTimeFormat(settings.timeFormat),
     panelPosition: normalizePanelPosition(settings.panelPosition),
     activeTab,
     lastActiveTab: normalizeTabId(settings.lastActiveTab ?? activeTab),
     defaultOpenSection: normalizeDefaultOpenSection(settings.defaultOpenSection),
     transitionStyle: normalizeTransitionStyle(settings.transitionStyle),
     animationSpeed: normalizeAnimationSpeed(settings.animationSpeed),
-    enableParticles: typeof settings.enableParticles === "boolean" ? settings.enableParticles : DEFAULT_SETTINGS.enableParticles,
+    enableParticles: typeof settings.enableParticles === "boolean" ? settings.enableParticles : defaultSettings.enableParticles,
     enableReminderSound:
       typeof settings.enableReminderSound === "boolean"
         ? settings.enableReminderSound
-        : DEFAULT_SETTINGS.enableReminderSound,
+        : defaultSettings.enableReminderSound,
   };
 }
 
