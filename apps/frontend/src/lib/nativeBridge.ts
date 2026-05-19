@@ -6,8 +6,17 @@ import type {
   ShortcutConfig,
 } from "@quicknote/native-bridge";
 import { hostEventNames } from "@quicknote/native-bridge";
-import type { AppLanguage, AppSettings, NoteCard, NotesDocument, PanelPosition, RawLoadAllResult, TodoItem } from "./models";
-import { DEFAULT_SETTINGS, normalizeAppSettings, normalizeNotesDocument } from "./models";
+import type {
+  AppLanguage,
+  AppSettings,
+  NoteCard,
+  NotesDocument,
+  PanelPosition,
+  RawLoadAllResult,
+  StoredTodosData,
+  TodosDocument,
+} from "./models";
+import { DEFAULT_SETTINGS, normalizeAppSettings, normalizeNotesDocument, normalizeTodosDocument } from "./models";
 
 const NOTES_STORAGE_KEY = "quicknote.notes";
 const TODOS_STORAGE_KEY = "quicknote.todos";
@@ -30,7 +39,7 @@ export type TextColorPanelCloseDetail = {
   requestId: string;
 };
 
-export type QuickNoteNativeBridge = HostBridge<RawLoadAllResult, NotesDocument, TodoItem[], AppSettings> & {
+export type QuickNoteNativeBridge = HostBridge<RawLoadAllResult, NotesDocument, TodosDocument, AppSettings> & {
   testReminderNotification: (options?: {
     soundEnabled?: boolean;
     language?: AppLanguage;
@@ -105,7 +114,7 @@ const browserBridge: QuickNoteNativeBridge = {
 
     return {
       notes: normalizeNotesDocument(readStoredValue<NoteCard[] | NotesDocument>(NOTES_STORAGE_KEY, [])),
-      todos: readStoredValue<TodoItem[]>(TODOS_STORAGE_KEY, []),
+      todos: normalizeTodosDocument(readStoredValue<StoredTodosData>(TODOS_STORAGE_KEY, [])),
       settings: normalizeAppSettings({
         ...DEFAULT_SETTINGS,
         ...settings,
@@ -359,14 +368,14 @@ export function subscribeToTextColorPanelClose(listener: (detail: TextColorPanel
   };
 }
 
-export function subscribeToTodosUpdated(listener: (todos: TodoItem[]) => void) {
+export function subscribeToTodosUpdated(listener: (todos: StoredTodosData) => void) {
   if (typeof window === "undefined") {
     return () => {};
   }
 
   const handler = (event: Event) => {
-    const detail = (event as CustomEvent<TodoItem[]>).detail;
-    if (!Array.isArray(detail)) {
+    const detail = (event as CustomEvent<StoredTodosData>).detail;
+    if (!Array.isArray(detail) && (!detail || typeof detail !== "object")) {
       return;
     }
 

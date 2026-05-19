@@ -45,7 +45,18 @@ internal sealed class AppStorage
 
     public JsonArray LoadTodos()
     {
-        return ReadJson("todos.json") as JsonArray ?? new JsonArray();
+        var todos = ReadJson("todos.json");
+        if (todos is JsonArray todoArray)
+        {
+            return todoArray;
+        }
+
+        if (todos is JsonObject todoDocument && todoDocument["items"] is JsonArray todoItems)
+        {
+            return todoItems;
+        }
+
+        return new JsonArray();
     }
 
     public void SaveTodos(JsonNode todos)

@@ -6,7 +6,7 @@ import { formatCompactEditedLabel, useI18n } from "../../lib/i18n";
 import { resolveNoteAccentColor, resolveNoteGroup, type NoteCard as NoteCardModel } from "../../lib/models";
 import { syncTextareaHeight } from "../../lib/resizeTextarea";
 import { useNotesStore } from "../../store/notesStore";
-import { ChevronsUpDownIcon, PaletteIcon, Trash2Icon } from "../icons/AppIcons";
+import { ChevronsUpDownIcon, Trash2Icon } from "../icons/AppIcons";
 import { Editor } from "./Editor";
 import { NoteGroupDialog } from "./NoteGroupDialog";
 
@@ -31,6 +31,21 @@ type NoteCardBodyProps = {
   isDropTargetPreview?: boolean;
   preview?: boolean;
 };
+
+function GroupColorGlyph({ color, size = "md" }: { color: string; size?: "sm" | "md" }) {
+  const outerSizeClass = size === "sm" ? "h-3.5 w-3.5" : "h-4 w-4";
+  const innerSizeClass = size === "sm" ? "h-2 w-2" : "h-2.5 w-2.5";
+
+  return (
+    <span
+      aria-hidden="true"
+      className={`inline-flex ${outerSizeClass} items-center justify-center rounded-full border border-white/80 shadow-[0_3px_7px_rgba(0,0,0,0.08)]`}
+      style={{ backgroundColor: `${color}24`, boxShadow: `0 0 0 2px ${color}14` }}
+    >
+      <span className={`${innerSizeClass} rounded-full border border-white/80`} style={{ backgroundColor: color }} />
+    </span>
+  );
+}
 
 function NoteCardBody({
   note,
@@ -104,7 +119,7 @@ function NoteCardBody({
                   onInput={(event) => syncTextareaHeight(event.currentTarget)}
                   onPointerDown={(event) => event.stopPropagation()}
                   placeholder={t.notes.untitled}
-                  className="textarea-reset surface-field wrap-anywhere min-h-[40px] w-full rounded-[17px] px-3 py-2 text-[13px] font-semibold leading-[1.35] tracking-[-0.02em] text-[var(--dark-text)] outline-none placeholder:text-[var(--muted)]"
+                  className="note-title-input textarea-reset surface-field wrap-anywhere min-h-[40px] w-full rounded-[17px] px-3 py-2 text-[13px] font-semibold leading-[1.35] tracking-[-0.02em] text-[var(--dark-text)] outline-none placeholder:text-[var(--muted)]"
                 />
               )}
             </div>
@@ -116,7 +131,7 @@ function NoteCardBody({
                 className="status-chip"
                 style={{ color: accentColor, backgroundColor: `${accentColor}1f` }}
               >
-                <PaletteIcon size={12} />
+                <GroupColorGlyph color={accentColor} size="sm" />
                 {groupLabel}
               </span>
               <span className="note-secondary-chip status-chip" data-tone="neutral">
@@ -141,10 +156,7 @@ function NoteCardBody({
                     boxShadow: `0 0 0 3px ${accentColor}14, 0 10px 18px rgba(61,49,34,0.08), inset 0 1px 0 rgba(255,255,255,0.88)`,
                   }}
                 >
-                  <span
-                    className="inline-flex h-3 w-3 rounded-full border border-white/70 shadow-[0_4px_8px_rgba(0,0,0,0.08)]"
-                    style={{ backgroundColor: accentColor }}
-                  />
+                  <GroupColorGlyph color={accentColor} size="sm" />
                   <span className="sr-only">{t.notes.changeGroup}</span>
                 </motion.button>
               </div>

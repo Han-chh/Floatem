@@ -761,9 +761,7 @@ final class MainWindowController: NSObject, NSWindowDelegate, QuickNoteNativeBri
         from todos: Any,
         language: QuickNoteLanguage
     ) -> [TodoReminderDescriptor] {
-        guard let rawTodos = todos as? [[String: Any]] else {
-            return []
-        }
+        let rawTodos = todoItems(from: todos)
 
         let now = Date()
 
@@ -803,9 +801,7 @@ final class MainWindowController: NSObject, NSWindowDelegate, QuickNoteNativeBri
         from todos: Any,
         deliveredTodoIDs: Set<String>
     ) -> Any {
-        guard let rawTodos = todos as? [[String: Any]] else {
-            return todos
-        }
+        let rawTodos = todoItems(from: todos)
 
         let now = Date().timeIntervalSince1970 * 1000
         var didChange = false
@@ -833,11 +829,12 @@ final class MainWindowController: NSObject, NSWindowDelegate, QuickNoteNativeBri
         }
 
         guard didChange else {
-            return rawTodos
+            return todos
         }
 
-        persistTodosAfterNativeUpdate(updatedTodos)
-        return updatedTodos
+        let updatedPayload = replacingTodoItems(in: todos, with: updatedTodos)
+        persistTodosAfterNativeUpdate(updatedTodos, originalPayload: todos)
+        return updatedPayload
     }
 
     private func clearReminder(forTodoIDs todoIDs: [String], todosOverride: [[String: Any]]?) {
@@ -848,8 +845,9 @@ final class MainWindowController: NSObject, NSWindowDelegate, QuickNoteNativeBri
         let targetIDs = Set(todoIDs)
 
         do {
-            let storedTodos = try storage.loadTodos() as? [[String: Any]]
-            let rawTodos = todosOverride ?? storedTodos ?? []
+            let storedPayload = try storage.loadAllData()["todos"] ?? []
+            let storedTodos = todoItems(from: storedPayload)
+            let rawTodos = todosOverride ?? storedTodos
             var didChange = false
 
             let updatedTodos = rawTodos.map { todo -> [String: Any] in
@@ -873,7 +871,7 @@ final class MainWindowController: NSObject, NSWindowDelegate, QuickNoteNativeBri
                 return
             }
 
-            persistTodosAfterNativeUpdate(updatedTodos)
+            persistTodosAfterNativeUpdate(updatedTodos, originalPayload: storedPayload)
 
             if let settings = try? storage.loadSettings() {
                 for todoID in todoIDs {
@@ -894,12 +892,39 @@ final class MainWindowController: NSObject, NSWindowDelegate, QuickNoteNativeBri
     }
 
     private func persistTodosAfterNativeUpdate(_ todos: [[String: Any]]) {
+        persistTodosAfterNativeUpdate(todos, originalPayload: todos)
+    }
+
+    private func persistTodosAfterNativeUpdate(_ todos: [[String: Any]], originalPayload: Any) {
+        let payload = replacingTodoItems(in: originalPayload, with: todos)
+
         do {
-            try storage.saveTodos(todos)
-            webViewController.emitTodosUpdated(todos)
+            try storage.saveTodos(payload)
+            webViewController.emitTodosUpdated(payload)
         } catch {
             logger.error("Failed to persist native todo reminder updates. error=\(error.localizedDescription, privacy: .public)")
         }
+    }
+
+    private func todoItems(from todos: Any) -> [[String: Any]] {
+        if let rawTodos = todos as? [[String: Any]] {
+            return rawTodos
+        }
+
+        if let document = todos as? [String: Any], let rawTodos = document["items"] as? [[String: Any]] {
+            return rawTodos
+        }
+
+        return []
+    }
+
+    private func replacingTodoItems(in payload: Any, with todos: [[String: Any]]) -> Any {
+        guard var document = payload as? [String: Any], document["items"] != nil else {
+            return todos
+        }
+
+        document["items"] = todos
+        return document
     }
 
     private func installOverlayObservers() {

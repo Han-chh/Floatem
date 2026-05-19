@@ -39,10 +39,10 @@ macOS uses AppKit window levels and collection behaviors such as `canJoinAllSpac
 
 The Windows host is C# WPF + WebView2. This keeps the shared frontend intact while giving the host direct access to native Win32 APIs.
 
-- `MainWindow.xaml` uses WPF `WindowChrome` with `WindowStyle=None` to remove the default system frame while keeping native resize hit testing and caption drag behavior in the host layer.
-- The WPF host draws the titlebar and caption buttons outside the WebView content surface; those shell controls are not exposed through the shared frontend bridge.
+- `MainWindow.xaml` uses the native Windows frame with `WindowStyle=SingleBorderWindow`, preserving the system titlebar, caption buttons, resize behavior, and standard close-button hover treatment.
+- The WPF host keeps window shell actions outside the shared frontend bridge; minimize, maximize, close, resize, and titlebar drag are owned by the native Windows frame.
 - `Win32HotKeyManager` uses `RegisterHotKey`.
-- `WindowInterop` uses `SetWindowPos(HWND_TOPMOST)`, foreground activation, and DWM window-corner attributes.
+- `WindowInterop` uses `SetWindowPos(HWND_TOPMOST)`, foreground activation, DWM window-corner attributes, and IME-window promotion.
 - `NotificationScheduler` uses an app-managed timer scheduler and Windows desktop notification surface while QuickNote is running.
 - `AppStorage` stores the same logical JSON data under `%APPDATA%\QuickNote`.
 

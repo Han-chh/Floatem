@@ -17,3 +17,14 @@ export function buildReminderTimestamp(
 export function isFutureReminderTimestamp(timestamp: number | null, now = Date.now()) {
   return timestamp === null || timestamp > now;
 }
+
+export function isReminderTimeFuture(
+  dateValue: string,
+  hourValue: string,
+  minuteValue: string,
+  timeZone = getSystemTimeZone(),
+  now = Date.now(),
+) {
+  const timestamp = buildReminderTimestamp(dateValue, hourValue, minuteValue, timeZone);
+  return timestamp !== null && timestamp > now;
+}

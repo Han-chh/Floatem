@@ -1,6 +1,27 @@
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { ReminderPicker } from "../../src/components/todos/ReminderPicker";
+
+function openDialog() {
+  fireEvent.click(screen.getByRole("button", { name: "Set reminder" }));
+}
+
+function selectListboxOption(listboxName: string, label: string) {
+  fireEvent.click(screen.getByRole("button", { name: listboxName }));
+  const listbox = screen.getByRole("listbox", { name: listboxName });
+  const options = within(listbox).getAllByRole("option", { name: label });
+  const target = options.find((option) => option.getAttribute("aria-disabled") !== "true") ?? options[0];
+
+  fireEvent.click(target!);
+}
+
+function selectHour(label: string) {
+  selectListboxOption("Hour", label);
+}
+
+function selectMinute(label: string) {
+  selectListboxOption("Minute", label);
+}
 
 describe("ReminderPicker", () => {
   afterEach(() => {
@@ -8,26 +29,19 @@ describe("ReminderPicker", () => {
     vi.restoreAllMocks();
   });
 
-  it("rejects reminder times earlier than now", () => {
+  it("rejects reminder times earlier than now after the dialog clock advances", () => {
     vi.useFakeTimers();
-    vi.setSystemTime(new Date("2026-04-05T12:00:00"));
+    vi.setSystemTime(new Date("2026-04-05T11:59:00"));
     const onChange = vi.fn();
 
     render(<ReminderPicker todoTitle="Ship alpha" reminderAt={null} onChange={onChange} />);
 
-    fireEvent.click(screen.getByRole("button", { name: "Set reminder" }));
-    expect(screen.getByRole("dialog", { name: "Set todo reminder" })).toBeInTheDocument();
-    expect(screen.getByText("Ship alpha")).toBeInTheDocument();
+    openDialog();
+    selectHour("12");
+    selectMinute("00");
 
-    fireEvent.change(screen.getByLabelText("Month"), {
-      target: { value: "2" },
-    });
-    fireEvent.change(screen.getByLabelText("Hour"), {
-      target: { value: "11" },
-    });
-    fireEvent.change(screen.getByLabelText("Minute"), {
-      target: { value: "55" },
-    });
+    vi.setSystemTime(new Date("2026-04-05T12:01:00"));
+    vi.advanceTimersByTime(31_000);
 
     fireEvent.click(screen.getByRole("button", { name: "Save" }));
 
@@ -40,17 +54,12 @@ describe("ReminderPicker", () => {
     vi.setSystemTime(new Date("2026-04-05T12:00:00"));
     const onChange = vi.fn();
 
-    render(<ReminderPicker todoTitle="Ship beta" reminderAt={null} onChange={onChange} />);
+    render(<ReminderPicker todoTitle="Ship beta" todoDateKey="2026-04-06" reminderAt={null} onChange={onChange} />);
 
-    fireEvent.click(screen.getByRole("button", { name: "Set reminder" }));
+    openDialog();
 
-    fireEvent.click(screen.getByRole("button", { name: "6" }));
-    fireEvent.change(screen.getByLabelText("Hour"), {
-      target: { value: "09" },
-    });
-    fireEvent.change(screen.getByLabelText("Minute"), {
-      target: { value: "30" },
-    });
+    selectHour("09");
+    selectMinute("30");
 
     fireEvent.click(screen.getByRole("button", { name: "Save" }));
 
@@ -65,20 +74,16 @@ describe("ReminderPicker", () => {
     render(
       <ReminderPicker
         todoTitle="Ship timezone"
+        todoDateKey="2026-04-06"
         reminderAt={null}
         onChange={onChange}
         timeZone="America/New_York"
       />,
     );
 
-    fireEvent.click(screen.getByRole("button", { name: "Set reminder" }));
-    fireEvent.click(screen.getByRole("button", { name: "6" }));
-    fireEvent.change(screen.getByLabelText("Hour"), {
-      target: { value: "09" },
-    });
-    fireEvent.change(screen.getByLabelText("Minute"), {
-      target: { value: "30" },
-    });
+    openDialog();
+    selectHour("09");
+    selectMinute("30");
     fireEvent.click(screen.getByRole("button", { name: "Save" }));
 
     expect(onChange).toHaveBeenCalledWith(Date.UTC(2026, 3, 6, 13, 30));
@@ -90,40 +95,68 @@ describe("ReminderPicker", () => {
 
     render(<ReminderPicker todoTitle="Ship clock" reminderAt={null} onChange={vi.fn()} timeFormat="12h" />);
 
-    fireEvent.click(screen.getByRole("button", { name: "Set reminder" }));
+    openDialog();
 
+    fireEvent.click(screen.getByRole("button", { name: "Hour" }));
     expect(screen.getByRole("option", { name: "9 AM" })).toBeInTheDocument();
     expect(screen.getByText(/12:15 PM/)).toBeInTheDocument();
   });
 
-  it("uses tomorrow as a date-only shortcut and prompts for time selection", async () => {
+  it("uses quick shortcuts to fill valid reminder times on the todo date", async () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date("2026-04-05T12:00:00"));
+    const onChange = vi.fn();
+
+    render(<ReminderPicker todoTitle="Ship gamma" reminderAt={null} onChange={onChange} />);
+
+    openDialog();
+
+    fireEvent.click(screen.getByRole("button", { name: "In 30m" }));
+    fireEvent.click(screen.getByRole("button", { name: "Save" }));
+
+    expect(onChange).toHaveBeenCalledWith(new Date("2026-04-05T12:30:00").getTime());
+  });
+
+  it("disables past hour options in the dropdown", () => {
     vi.useFakeTimers();
     vi.setSystemTime(new Date("2026-04-05T12:00:00"));
 
-    render(<ReminderPicker todoTitle="Ship gamma" reminderAt={null} onChange={vi.fn()} />);
+    render(<ReminderPicker todoTitle="Ship past hour" reminderAt={null} onChange={vi.fn()} />);
 
-    fireEvent.click(screen.getByRole("button", { name: "Set reminder" }));
+    openDialog();
+    selectMinute("30");
+    fireEvent.click(screen.getByRole("button", { name: "Hour" }));
 
-    expect(screen.getByRole("button", { name: "Tomorrow" })).toBeInTheDocument();
-    expect(screen.queryByText("Tomorrow 09:00")).not.toBeInTheDocument();
+    const hourListbox = screen.getByRole("listbox", { name: "Hour" });
 
-    fireEvent.click(screen.getByRole("button", { name: "Tomorrow" }));
-
-    expect(screen.getByText("Tomorrow selected. Choose the hour and minute below.")).toBeInTheDocument();
+    expect(within(hourListbox).getByRole("option", { name: "11" })).toHaveAttribute("aria-disabled", "true");
+    expect(within(hourListbox).getByRole("option", { name: "13" })).toHaveAttribute("aria-disabled", "false");
   });
 
-  it("shows a close button, specific time controls, and quick shortcut buttons", async () => {
+  it("does not expose calendar controls in the reminder dialog", () => {
+    render(<ReminderPicker todoTitle="Ship calendar-free" reminderAt={null} onChange={vi.fn()} />);
+
+    openDialog();
+
+    expect(screen.queryByLabelText("Month")).not.toBeInTheDocument();
+    expect(screen.queryByLabelText("Year")).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Tomorrow" })).not.toBeInTheDocument();
+  });
+
+  it("shows close button, time controls, and quick shortcut buttons", async () => {
     render(<ReminderPicker todoTitle="Ship delta" reminderAt={null} onChange={vi.fn()} />);
 
-    fireEvent.click(screen.getByRole("button", { name: "Set reminder" }));
+    openDialog();
 
     const closeButtons = screen.getAllByRole("button", { name: "Close" });
     expect(closeButtons.length).toBeGreaterThan(0);
-    expect(screen.getByText("Specific time")).toBeInTheDocument();
-    expect(screen.getByText("Quick shortcuts")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Hour" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Minute" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "In 30m" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "In 1h" })).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "In 2h" })).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Afternoon" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Tonight" })).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Tomorrow" })).toBeInTheDocument();
 
     fireEvent.click(closeButtons[0]!);
 

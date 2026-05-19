@@ -69,6 +69,7 @@ describe("NotesList", () => {
 
     return {
       clipboard,
+      openTextColorPanel: window.quickNoteHost.openTextColorPanel,
       readClipboardText,
       restore() {
         window.quickNoteHost = originalBridge;
@@ -328,6 +329,10 @@ describe("NotesList", () => {
     expect(within(dialog).getByRole("checkbox", { name: /^All/ })).not.toBeChecked();
     expect(within(dialog).getByRole("checkbox", { name: /^No group/ })).not.toBeChecked();
     expect(within(dialog).getByRole("checkbox", { name: /^Work/ })).not.toBeChecked();
+    expect(screen.getByText("Loose card")).toBeInTheDocument();
+    expect(screen.getByText("Ideas card")).toBeInTheDocument();
+    expect(screen.getByText("Work card")).toBeInTheDocument();
+    await user.click(within(dialog).getByRole("button", { name: "Save" }));
     await waitFor(() => {
       expect(screen.queryByText("Loose card")).not.toBeInTheDocument();
       expect(screen.queryByText("Ideas card")).not.toBeInTheDocument();
@@ -335,24 +340,31 @@ describe("NotesList", () => {
     });
     expect(screen.getByText("No notes match the selected groups.")).toBeInTheDocument();
 
-    await user.click(within(dialog).getByRole("checkbox", { name: /^Work/ }));
+    await user.click(screen.getByRole("button", { name: "Filter groups" }));
+    const workDialog = screen.getByRole("dialog", { name: "Filter groups" });
+    await user.click(within(workDialog).getByRole("checkbox", { name: /^Work/ }));
 
-    expect(within(dialog).getByRole("checkbox", { name: /^All/ })).not.toBeChecked();
-    expect(within(dialog).getByRole("checkbox", { name: /^No group/ })).not.toBeChecked();
-    expect(within(dialog).getByRole("checkbox", { name: /^Work/ })).toBeChecked();
-    expect(within(dialog).getByRole("checkbox", { name: /^Ideas/ })).not.toBeChecked();
+    expect(within(workDialog).getByRole("checkbox", { name: /^All/ })).not.toBeChecked();
+    expect(within(workDialog).getByRole("checkbox", { name: /^No group/ })).not.toBeChecked();
+    expect(within(workDialog).getByRole("checkbox", { name: /^Work/ })).toBeChecked();
+    expect(within(workDialog).getByRole("checkbox", { name: /^Ideas/ })).not.toBeChecked();
+    expect(screen.queryByText("Work card")).not.toBeInTheDocument();
+    await user.click(within(workDialog).getByRole("button", { name: "Save" }));
     await waitFor(() => {
       expect(screen.getByText("Work card")).toBeInTheDocument();
     });
     expect(screen.queryByText("Ideas card")).not.toBeInTheDocument();
     expect(screen.queryByText("Loose card")).not.toBeInTheDocument();
 
-    await user.click(within(dialog).getByRole("checkbox", { name: /^All/ }));
+    await user.click(screen.getByRole("button", { name: "Filter groups" }));
+    const allDialog = screen.getByRole("dialog", { name: "Filter groups" });
+    await user.click(within(allDialog).getByRole("checkbox", { name: /^All/ }));
 
-    expect(within(dialog).getByRole("checkbox", { name: /^All/ })).toBeChecked();
-    expect(within(dialog).getByRole("checkbox", { name: /^No group/ })).toBeChecked();
-    expect(within(dialog).getByRole("checkbox", { name: /^Work/ })).toBeChecked();
-    expect(within(dialog).getByRole("checkbox", { name: /^Ideas/ })).toBeChecked();
+    expect(within(allDialog).getByRole("checkbox", { name: /^All/ })).toBeChecked();
+    expect(within(allDialog).getByRole("checkbox", { name: /^No group/ })).toBeChecked();
+    expect(within(allDialog).getByRole("checkbox", { name: /^Work/ })).toBeChecked();
+    expect(within(allDialog).getByRole("checkbox", { name: /^Ideas/ })).toBeChecked();
+    await user.click(within(allDialog).getByRole("button", { name: "Save" }));
     await waitFor(() => {
       expect(screen.getByText("Work card")).toBeInTheDocument();
     });
@@ -378,5 +390,107 @@ describe("NotesList", () => {
 
     await user.click(screen.getByRole("button", { name: "More Colors" }));
     expect(screen.getByRole("button", { name: "Show Colors" })).toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: "Show Colors" }));
+    expect(screen.getByTestId("note-text-color-palette-advanced")).toBeInTheDocument();
+    expect(screen.getByRole("slider", { name: "Saturation and brightness" })).toBeInTheDocument();
+    expect(screen.getByRole("slider", { name: "Hue" })).toBeInTheDocument();
+    expect(screen.getByRole("textbox", { name: "Hex color" })).toHaveValue("#1E1915");
+    expect(screen.getByRole("button", { name: "Return" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Pick screen color" })).toBeDisabled();
+  });
+
+  it("previews colors picked from the screen eyedropper", async () => {
+    const originalEyeDropper = window.EyeDropper;
+    const open = vi.fn(async () => ({ sRGBHex: "#445566" }));
+    window.EyeDropper = vi.fn(function EyeDropperMock() {
+      return { open };
+    }) as unknown as typeof window.EyeDropper;
+
+    const user = userEvent.setup();
+    useNotesStore.getState().initialize([
+      createNoteCard({
+        id: "note-eyedropper-color",
+        title: "Eyedropper",
+        content: DEFAULT_NOTE_CONTENT,
+      }),
+    ]);
+
+    render(<NotesList />);
+
+    try {
+      await user.click(screen.getByRole("button", { name: "Color" }));
+      await user.click(screen.getByRole("button", { name: "More Colors" }));
+      await user.click(screen.getByRole("button", { name: "Show Colors" }));
+
+      const pickScreenColorButton = screen.getByRole("button", { name: "Pick screen color" });
+      expect(pickScreenColorButton).toBeEnabled();
+
+      await user.click(pickScreenColorButton);
+
+      await waitFor(() => {
+        expect(screen.getByRole("textbox", { name: "Hex color" })).toHaveValue("#445566");
+      });
+      expect(open).toHaveBeenCalledTimes(1);
+    } finally {
+      window.EyeDropper = originalEyeDropper;
+    }
+  });
+
+  it("uses the in-app advanced color picker instead of the native color panel", async () => {
+    const bridge = installNativeBridge();
+    const user = userEvent.setup();
+    useNotesStore.getState().initialize([
+      createNoteCard({
+        id: "note-native-color-panel",
+        title: "Native color panel",
+        content: DEFAULT_NOTE_CONTENT,
+      }),
+    ]);
+
+    render(<NotesList />);
+
+    try {
+      await user.click(screen.getByRole("button", { name: "Color" }));
+      await user.click(screen.getByRole("button", { name: "More Colors" }));
+      await user.click(screen.getByRole("button", { name: "Show Colors" }));
+
+      expect(screen.getByTestId("note-text-color-palette-advanced")).toBeInTheDocument();
+      expect(bridge.openTextColorPanel).not.toHaveBeenCalled();
+    } finally {
+      bridge.restore();
+    }
+  });
+
+  it("applies advanced colors to note groups without the native color panel", async () => {
+    const bridge = installNativeBridge();
+    const user = userEvent.setup();
+    render(<NotesList />);
+
+    try {
+      await user.click(screen.getByRole("button", { name: "Add note" }));
+
+      const note = screen.getByTestId("note-card");
+      await user.click(within(note).getByRole("button", { name: "Change note group" }));
+      await user.click(screen.getByRole("button", { name: "Add group" }));
+
+      const createDialog = screen.getByRole("dialog", { name: "Create group" });
+      await user.click(within(createDialog).getByRole("button", { name: "Change group color" }));
+      await user.click(screen.getByRole("button", { name: "More Colors" }));
+      await user.click(screen.getByRole("button", { name: "Show Colors" }));
+
+      const hexInput = screen.getByRole("textbox", { name: "Hex color" });
+      await user.clear(hexInput);
+      await user.type(hexInput, "336699");
+      await user.click(screen.getByRole("button", { name: "Save" }));
+
+      await user.type(within(createDialog).getByRole("textbox", { name: "Group name" }), "Research");
+      await user.click(within(createDialog).getByRole("button", { name: "Create group" }));
+
+      expect(useNotesStore.getState().groups[0]?.color).toBe("#336699");
+      expect(bridge.openTextColorPanel).not.toHaveBeenCalled();
+    } finally {
+      bridge.restore();
+    }
   });
 });

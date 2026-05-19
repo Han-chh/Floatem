@@ -1,6 +1,6 @@
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
-export type BurstTone = "amber" | "green" | "rose" | "paper";
+export type BurstTone = "amber" | "green" | "rose" | "paper" | "confetti";
 
 export type ParticleBurst = {
   id: string;
@@ -16,6 +16,7 @@ export type ParticleBurst = {
     rotation: number;
     stretchX: number;
     stretchY: number;
+    lift?: number;
   }>;
 };
 
@@ -38,7 +39,9 @@ function random(min: number, max: number) {
 
 function createBurst(x: number, y: number, tone: BurstTone): ParticleBurst {
   const config =
-    tone === "rose"
+    tone === "confetti"
+      ? { count: 16, distanceMin: 32, distanceMax: 94, sizeMin: 3, sizeMax: 7 }
+      : tone === "rose"
       ? { count: 40, distanceMin: 42, distanceMax: 128, sizeMin: 3, sizeMax: 12 }
       : tone === "paper"
         ? { count: 18, distanceMin: 22, distanceMax: 62, sizeMin: 4, sizeMax: 10 }
@@ -50,6 +53,24 @@ function createBurst(x: number, y: number, tone: BurstTone): ParticleBurst {
     x,
     y,
     particles: Array.from({ length: config.count }, (_, index) => {
+      if (tone === "confetti") {
+        const distance = random(config.distanceMin, config.distanceMax);
+        const sideBias = index % 2 === 0 ? -1 : 1;
+        const dx = sideBias * random(distance * 0.12, distance * 0.86) + random(-10, 10);
+
+        return {
+          id: createId(),
+          dx,
+          dy: random(30, 82),
+          size: random(config.sizeMin, config.sizeMax),
+          delay: random(0, 0.1),
+          rotation: random(-360, 360),
+          stretchX: random(1.6, 3),
+          stretchY: random(0.22, 0.46),
+          lift: -random(28, 78),
+        };
+      }
+
       const angle = (Math.PI * 2 * index) / config.count + random(-0.16, 0.16);
       const distance = random(config.distanceMin, config.distanceMax);
       const isShard = tone === "rose" ? Math.random() > 0.08 : Math.random() > 0.62;
@@ -73,6 +94,23 @@ function createBurstCluster(target: BurstTarget, bounds: DOMRect, tone: BurstTon
   const height = target.height ?? 0;
   const centerX = target.x + ((target.width ?? 0) / 2);
   const centerY = target.y + ((target.height ?? 0) / 2);
+
+  if (tone === "confetti") {
+    const anchorPoints = width >= 140
+      ? [
+          [0.32, 0.5],
+          [0.68, 0.5],
+        ]
+      : [[0.5, 0.5]];
+
+    return anchorPoints.map(([xRatio, yRatio]) =>
+      createBurst(
+        target.x + width * xRatio - bounds.left + random(-6, 6),
+        target.y + height * yRatio - bounds.top + random(-6, 6),
+        tone,
+      ),
+    );
+  }
 
   if (tone !== "rose" || width < 72 || height < 72) {
     return [createBurst(centerX - bounds.left, centerY - bounds.top, tone)];
@@ -110,7 +148,7 @@ export function useParticleField() {
     };
   }, []);
 
-  const spawnBurst = (target: BurstTarget, tone: BurstTone = "amber") => {
+  const spawnBurst = useCallback((target: BurstTarget, tone: BurstTone = "amber") => {
     const bounds = fieldRef.current?.getBoundingClientRect();
     if (!bounds) {
       return;
@@ -123,11 +161,11 @@ export function useParticleField() {
       const timer = window.setTimeout(() => {
         setBursts((current) => current.filter((item) => item.id !== burst.id));
         timersRef.current = timersRef.current.filter((value) => value !== timer);
-      }, tone === "rose" ? 1320 : 900);
+      }, tone === "confetti" ? 1040 : tone === "rose" ? 1320 : 900);
 
       timersRef.current.push(timer);
     });
-  };
+  }, []);
 
   return {
     bursts,

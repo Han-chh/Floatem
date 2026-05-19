@@ -88,7 +88,10 @@ internal sealed class HostBridgeController
                 _ = EmitHotkeyRegistrationStateAsync();
                 return null;
             case "setEditableInputActive":
+                window.SetEditableInputActive(parameters["active"]?.GetValue<bool>() ?? false);
+                return null;
             case "setTextCompositionActive":
+                window.SetTextCompositionActive(parameters["active"]?.GetValue<bool>() ?? false);
                 return null;
             case "reportFrontendError":
                 Debug.WriteLine($"QuickNote frontend error ({parameters["source"]?.GetValue<string>() ?? "frontend"}): {parameters["message"]?.GetValue<string>() ?? ""}");

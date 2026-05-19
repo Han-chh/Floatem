@@ -8,11 +8,11 @@
         MinWidth="320"
         MinHeight="480"
         WindowStartupLocation="CenterScreen"
-        ShowInTaskbar="True"
+        ShowInTaskbar="False"
+        WindowStyle="SingleBorderWindow"
+        ResizeMode="CanResize"
         Topmost="True"
         Background="#F7F2E8"
         SourceInitialized="OnSourceInitialized">
-  <Border Background="#F7F2E8">
-    <wv2:WebView2 x:Name="WebView" />
-  </Border>
+  <wv2:WebView2 x:Name="WebView" />
 </Window>

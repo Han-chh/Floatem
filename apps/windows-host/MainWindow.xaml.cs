@@ -17,10 +17,16 @@ public partial class MainWindow : Window
     private readonly NotificationScheduler notifications;
     private readonly Win32HotKeyManager hotKeys;
     private readonly DispatcherTimer topmostReinforcementTimer;
+    private readonly DispatcherTimer imeReinforcementTimer;
+    private readonly DispatcherTimer deferredTaskbarRestoreTimer;
+    private readonly FullscreenTaskbarGuard taskbarGuard = new();
     private HostBridgeController? bridge;
     private HwndSource? source;
+    private IntPtr previousForegroundWindow;
     private bool allowApplicationShutdown;
     private bool alwaysOnTopEnabled = true;
+    private bool isEditableInputActive;
+    private bool isTextCompositionActive;
 
     public MainWindow()
     {
@@ -43,12 +49,22 @@ public partial class MainWindow : Window
             Interval = TimeSpan.FromMilliseconds(350),
         };
         topmostReinforcementTimer.Tick += (_, _) => ReinforceAlwaysOnTop();
+        imeReinforcementTimer = new DispatcherTimer(DispatcherPriority.Background)
+        {
+            Interval = TimeSpan.FromMilliseconds(90),
+        };
+        imeReinforcementTimer.Tick += (_, _) => ReinforceImeWindows();
+        deferredTaskbarRestoreTimer = new DispatcherTimer(DispatcherPriority.Background)
+        {
+            Interval = TimeSpan.FromMilliseconds(500),
+        };
+        deferredTaskbarRestoreTimer.Tick += (_, _) => RestoreTaskbarWhenFullscreenPeerEnds();
 
         Loaded += OnLoaded;
-        Activated += (_, _) => ReinforceAlwaysOnTop();
-        Deactivated += (_, _) => ReinforceAlwaysOnTop();
-        StateChanged += (_, _) => ReinforceAlwaysOnTop();
-        IsVisibleChanged += (_, _) => ReinforceAlwaysOnTop();
+        Activated += (_, _) => UpdateWindowPresentationForCurrentInteraction();
+        Deactivated += (_, _) => UpdateWindowPresentationForCurrentInteraction();
+        StateChanged += (_, _) => UpdateWindowPresentationForCurrentInteraction();
+        IsVisibleChanged += (_, _) => UpdateWindowPresentationForCurrentInteraction();
         Closing += (_, e) =>
         {
             if (allowApplicationShutdown)
@@ -69,25 +85,52 @@ public partial class MainWindow : Window
             hotKeys.Dispose();
             notifications.Dispose();
             topmostReinforcementTimer.Stop();
+            imeReinforcementTimer.Stop();
+            deferredTaskbarRestoreTimer.Stop();
+            taskbarGuard.Restore();
         };
     }
 
     public void ShowWindow()
     {
+        var foregroundWindow = WindowInterop.GetForegroundWindowExcluding(this);
+        if (foregroundWindow != IntPtr.Zero)
+        {
+            previousForegroundWindow = foregroundWindow;
+        }
+
+        deferredTaskbarRestoreTimer.Stop();
         Show();
         WindowState = WindowState.Normal;
         alwaysOnTopEnabled = true;
-        Topmost = alwaysOnTopEnabled;
+        isEditableInputActive = false;
+        isTextCompositionActive = false;
+        UpdateWindowPresentationForCurrentInteraction();
         Activate();
-        WindowInterop.BringTopmostToFront(this);
-        topmostReinforcementTimer.Start();
+        WebView.Focus();
+        WindowInterop.BringToFront(this, activate: false);
+        UpdateWindowPresentationForCurrentInteraction();
         _ = bridge?.EmitPanelWillOpenAsync();
     }
 
     public void HideWindow()
     {
+        var restoreTarget = WindowInterop.GetNextForegroundWindowBelow(this);
+        if (restoreTarget == IntPtr.Zero)
+        {
+            restoreTarget = previousForegroundWindow;
+        }
+
+        isEditableInputActive = false;
+        isTextCompositionActive = false;
         Hide();
         topmostReinforcementTimer.Stop();
+        imeReinforcementTimer.Stop();
+        WindowInterop.RestoreForegroundWindow(restoreTarget);
+        if (!taskbarGuard.RestoreUnlessFullscreenPeerExists(this))
+        {
+            deferredTaskbarRestoreTimer.Start();
+        }
     }
 
     public void ToggleWindow()
@@ -106,27 +149,123 @@ public partial class MainWindow : Window
     public void SetAlwaysOnTop(bool enabled)
     {
         alwaysOnTopEnabled = enabled;
-        Topmost = enabled;
-        WindowInterop.SetTopmost(this, enabled, activate: enabled);
-        if (enabled && IsVisible)
+        UpdateWindowPresentationForCurrentInteraction();
+    }
+
+    public void SetEditableInputActive(bool active)
+    {
+        isEditableInputActive = active;
+        if (!active)
         {
-            topmostReinforcementTimer.Start();
+            isTextCompositionActive = false;
         }
-        else
+
+        UpdateWindowPresentationForCurrentInteraction();
+    }
+
+    public void SetTextCompositionActive(bool active)
+    {
+        isTextCompositionActive = active;
+        if (active)
         {
-            topmostReinforcementTimer.Stop();
+            isEditableInputActive = true;
         }
+
+        UpdateWindowPresentationForCurrentInteraction();
     }
 
     private void ReinforceAlwaysOnTop()
     {
-        if (!alwaysOnTopEnabled || !IsVisible || WindowState == WindowState.Minimized)
+        if (!ShouldUseTopmostOverlay() || IsTextInputInteractionActive())
         {
+            topmostReinforcementTimer.Stop();
             return;
         }
 
         Topmost = true;
         WindowInterop.SetTopmost(this, enabled: true, activate: false);
+    }
+
+    private void UpdateWindowPresentationForCurrentInteraction()
+    {
+        if (!IsVisible || WindowState == WindowState.Minimized)
+        {
+            topmostReinforcementTimer.Stop();
+            imeReinforcementTimer.Stop();
+            taskbarGuard.RestoreUnlessFullscreenPeerExists(this);
+            return;
+        }
+
+        var shouldUseTopmostOverlay = ShouldUseTopmostOverlay();
+        var shouldSoftenTopmostForTextComposition = shouldUseTopmostOverlay && isTextCompositionActive;
+
+        if (shouldSoftenTopmostForTextComposition)
+        {
+            Topmost = false;
+            Activate();
+            WebView.Focus();
+            WindowInterop.SetTopmost(this, enabled: false, activate: true);
+            topmostReinforcementTimer.Stop();
+            taskbarGuard.RestoreUnlessFullscreenPeerExists(this);
+        }
+        else
+        {
+            Topmost = shouldUseTopmostOverlay;
+            WindowInterop.SetTopmost(this, enabled: shouldUseTopmostOverlay, activate: false);
+            taskbarGuard.Update(this);
+
+            if (shouldUseTopmostOverlay && !IsTextInputInteractionActive())
+            {
+                topmostReinforcementTimer.Stop();
+                topmostReinforcementTimer.Start();
+            }
+            else
+            {
+                topmostReinforcementTimer.Stop();
+            }
+        }
+
+        if (IsTextInputInteractionActive())
+        {
+            imeReinforcementTimer.Start();
+            ReinforceImeWindows();
+        }
+        else
+        {
+            imeReinforcementTimer.Stop();
+        }
+    }
+
+    private bool ShouldUseTopmostOverlay()
+    {
+        return alwaysOnTopEnabled
+            && IsVisible
+            && WindowState != WindowState.Minimized;
+    }
+
+    private bool IsTextInputInteractionActive()
+    {
+        return isEditableInputActive || isTextCompositionActive;
+    }
+
+    private void RestoreTaskbarWhenFullscreenPeerEnds()
+    {
+        if (IsVisible || !taskbarGuard.RestoreUnlessFullscreenPeerExists(this))
+        {
+            return;
+        }
+
+        deferredTaskbarRestoreTimer.Stop();
+    }
+
+    private void ReinforceImeWindows()
+    {
+        if (!IsVisible || WindowState == WindowState.Minimized || (!isEditableInputActive && !isTextCompositionActive))
+        {
+            return;
+        }
+
+        WindowInterop.PromoteImeWindowsAbove(this);
     }
 
     public void MinimizeWindow()

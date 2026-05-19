@@ -189,6 +189,8 @@
   .quicknote-modal-backdrop {
     isolation: isolate;
     transform: translateZ(0);
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
   }
 
   .quicknote-tooltip-bubble {
@@ -268,6 +270,57 @@
       inset 0 1px 0 rgba(255, 255, 255, 0.86);
   }
 
+  .todo-toolbar-art-button {
+    position: relative;
+    width: 30px;
+    height: 30px;
+    min-width: 30px;
+    min-height: 30px;
+    padding: 0;
+    gap: 0;
+    border-width: 1px;
+    border-radius: 10px;
+    flex: 0 0 30px;
+    overflow: hidden;
+    color: rgba(30, 25, 21, 0.94);
+    border-color: rgba(30, 25, 21, 0.22);
+    background: transparent;
+    box-shadow:
+      0 4px 10px rgba(30, 25, 21, 0.08),
+      inset 0 1px 0 rgba(255, 255, 255, 0.18);
+  }
+
+  .todo-toolbar-art-button::before {
+    content: "";
+    position: absolute;
+    inset: 1px;
+    border-radius: 9px;
+    opacity: 0;
+    background: none;
+    pointer-events: none;
+  }
+
+  .todo-toolbar-art-button-select {
+  }
+
+  .todo-toolbar-art-button-group {
+  }
+
+  .todo-toolbar-art-button-filter {
+  }
+
+  .todo-toolbar-art-button-complete {
+  }
+
+  .todo-toolbar-art-button-delete {
+  }
+
+  .todo-toolbar-art-button-date {
+  }
+
+  .todo-toolbar-art-button-cancel {
+  }
+
   .paper-button-primary {
     background: linear-gradient(180deg, rgba(30, 25, 21, 0.98), rgba(43, 36, 31, 0.96));
     border-color: rgba(30, 25, 21, 0.95);
@@ -342,9 +395,9 @@
     align-items: center;
     justify-content: center;
     max-width: 100%;
-    padding: 3px 7px;
+    padding: 4px 9px;
     border-radius: 999px;
-    font-size: 9.5px;
+    font-size: 11.5px;
     font-weight: 800;
     line-height: 1;
     letter-spacing: 0.02em;
@@ -359,6 +412,84 @@
   .todo-date-status-chip[data-tone="jade"] {
     background: rgba(226, 244, 237, 0.72);
     color: rgba(28, 125, 93, 0.76);
+  }
+
+  .todo-date-celebration-chip {
+    position: relative;
+    overflow: visible;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    max-width: 100%;
+    padding: 5px 10px;
+    border-radius: 999px;
+    font-size: 11.5px;
+    font-weight: 800;
+    line-height: 1;
+    letter-spacing: 0.02em;
+    white-space: nowrap;
+    background: rgba(226, 244, 237, 0.82);
+    color: rgba(22, 120, 87, 0.92);
+    border: 1px solid rgba(31, 168, 122, 0.18);
+    box-shadow: 0 7px 14px rgba(31, 168, 122, 0.08);
+  }
+
+  .todo-date-celebration-chip[data-celebrating="true"] {
+    animation: todo-celebration-chip-pop 1180ms cubic-bezier(0.16, 1, 0.3, 1) both;
+    background:
+      radial-gradient(circle at 28% 18%, rgba(255, 255, 255, 0.92), transparent 34%),
+      linear-gradient(135deg, rgba(244, 185, 66, 0.95), rgba(31, 168, 122, 0.92) 48%, rgba(47, 107, 255, 0.92));
+    color: #fff;
+    border-color: rgba(255, 255, 255, 0.58);
+    box-shadow:
+      0 0 0 5px rgba(244, 185, 66, 0.12),
+      0 14px 28px rgba(31, 168, 122, 0.2),
+      0 8px 20px rgba(47, 107, 255, 0.16);
+  }
+
+  .todo-all-done-cheer {
+    animation: todo-all-done-cheer 980ms cubic-bezier(0.16, 1, 0.3, 1) both;
+  }
+
+  @keyframes todo-all-done-cheer {
+    0% {
+      transform: translateY(0) scale(1);
+      filter: saturate(1);
+    }
+    18% {
+      transform: translateY(-3px) scale(1.018);
+      filter: saturate(1.18);
+    }
+    38% {
+      transform: translateY(1px) scale(0.995);
+    }
+    58% {
+      transform: translateY(-1.5px) scale(1.008);
+    }
+    100% {
+      transform: translateY(0) scale(1);
+      filter: saturate(1);
+    }
+  }
+
+  @keyframes todo-celebration-chip-pop {
+    0% {
+      transform: scale(0.78);
+      opacity: 0.35;
+    }
+    20% {
+      transform: scale(1.18) rotate(-1.5deg);
+      opacity: 1;
+    }
+    42% {
+      transform: scale(0.98) rotate(1deg);
+    }
+    68% {
+      transform: scale(1.045) rotate(0deg);
+    }
+    100% {
+      transform: scale(1);
+    }
   }
 
   .panel-header-grid {
@@ -420,6 +551,13 @@
     min-width: 0;
   }
 
+  .note-title-input::selection,
+  .note-editor-input::selection,
+  .note-editor-input ::selection {
+    background: rgba(47, 107, 255, 0.42);
+    color: #121826;
+  }
+
   .note-card-meta {
     display: grid;
     grid-template-columns: minmax(0, 1fr) auto;
@@ -458,6 +596,29 @@
     transform-origin: top right;
     overflow-y: auto;
     overscroll-behavior: contain;
+  }
+
+  .color-hue-slider::-webkit-slider-thumb {
+    appearance: none;
+    width: 18px;
+    height: 18px;
+    border: 2px solid white;
+    border-radius: 999px;
+    background: currentColor;
+    box-shadow:
+      0 0 0 1px rgba(30, 25, 21, 0.42),
+      0 4px 8px rgba(30, 25, 21, 0.18);
+  }
+
+  .color-hue-slider::-moz-range-thumb {
+    width: 18px;
+    height: 18px;
+    border: 2px solid white;
+    border-radius: 999px;
+    background: currentColor;
+    box-shadow:
+      0 0 0 1px rgba(30, 25, 21, 0.42),
+      0 4px 8px rgba(30, 25, 21, 0.18);
   }
 
   .note-card-chip-group {
@@ -508,6 +669,14 @@
   .todo-card-action-button {
     min-width: 40px;
     min-height: 26px;
+  }
+
+  .todo-card-group-button {
+    width: 30px;
+    min-width: 30px;
+    height: 30px;
+    min-height: 30px;
+    border-radius: 999px;
   }
 
   .todo-done-strike-line {

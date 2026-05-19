@@ -41,7 +41,7 @@ export function useAutoSave() {
     );
 
     const unsubscribeTodos = useTodosStore.subscribe(
-      (state) => ({ todos: state.todos, isLoaded: state.isLoaded }),
+      (state) => ({ groups: state.groups, todos: state.todos, isLoaded: state.isLoaded }),
       (nextState) => {
         if (!nextState.isLoaded) {
           return;
@@ -57,7 +57,10 @@ export function useAutoSave() {
         }
 
         todosTimer.current = window.setTimeout(() => {
-          void saveTodos(nextState.todos);
+          void saveTodos({
+            groups: nextState.groups,
+            items: nextState.todos,
+          });
         }, SAVE_DELAY);
       },
     );

@@ -13,7 +13,7 @@ final class AppStorage {
     func loadAllData() throws -> [String: Any] {
         [
             "notes": try loadNotes(),
-            "todos": try readJSONArray(at: todosURL),
+            "todos": try readJSONObject(at: todosURL) ?? [],
             "settings": try loadSettings(),
         ]
     }
@@ -69,7 +69,16 @@ final class AppStorage {
     }
 
     func loadTodos() throws -> [Any] {
-        try readJSONArray(at: todosURL)
+        let savedTodos = try readJSONObject(at: todosURL)
+        if let todoArray = savedTodos as? [Any] {
+            return todoArray
+        }
+
+        if let todoDocument = savedTodos as? [String: Any], let todoItems = todoDocument["items"] as? [Any] {
+            return todoItems
+        }
+
+        return []
     }
 
     func saveTodos(_ todos: Any) throws {

@@ -7,6 +7,13 @@ type MessageCatalog = {
     appName: string;
     collapseNavigation: string;
     expandNavigation: string;
+    help: string;
+    helpBasics: string[];
+    helpBasicsTitle: string;
+    helpDialogSubtitle: string;
+    helpDialogTitle: string;
+    helpShortcuts: string[];
+    helpShortcutsTitle: string;
     hideWindow: string;
     loading: string;
     localOnly: string;
@@ -69,8 +76,11 @@ type MessageCatalog = {
     moreColors: string;
     noGroup: string;
     open: string;
+    pickScreenColor: string;
     reorder: string;
     redo: string;
+    returnToColors: string;
+    screenColorPickerUnavailable: string;
     showColors: string;
     toggleGroupFilter: (name: string) => string;
     titleAria: string;
@@ -204,8 +214,25 @@ type MessageCatalog = {
   };
   todos: {
     add: string;
+    addGroup: string;
+    afternoon: string;
+    allDone: string;
+    allGroups: string;
+    bulkComplete: string;
+    bulkCompleteConfirm: string;
+    bulkCompleteDialogBody: (count: number) => string;
+    bulkCompleteDialogTitle: string;
+    bulkDateConfirm: string;
+    bulkDateDialogBody: (count: number) => string;
+    bulkDateDialogTitle: string;
+    bulkDelete: string;
+    bulkDeleteConfirm: string;
+    bulkDeleteDialogBody: (count: number) => string;
+    bulkDeleteDialogTitle: string;
+    bulkSetDate: string;
     calendarHint: string;
     changeReminder: string;
+    changeTodoDate: string;
     clear: string;
     completeTask: string;
     currentReminder: string;
@@ -219,10 +246,35 @@ type MessageCatalog = {
     editDialogSubtitle: string;
     editDialogTitle: string;
     empty: string;
+    exitSelection: string;
+    filteredEmpty: string;
+    filterGroups: string;
+    filterDialogSubtitle: string;
+    filterDialogTitle: string;
+    changeGroup: string;
+    changeGroupColor: string;
+    createGroup: string;
+    createGroupTitle: string;
+    deleteGroupAction: string;
+    deleteGroup: (name: string) => string;
+    editGroup: (name: string) => string;
+    editGroupTitle: string;
+    group: string;
+    groupColor: string;
+    groupFeatureComingSoon: string;
+    groupManagerTitle: string;
+    groupName: string;
+    groupNameDuplicate: string;
+    groupNamePlaceholder: string;
+    groupTotal: (count: number) => string;
+    groupsEmpty: string;
     hour: string;
+    items: (count: number) => string;
     minute: string;
     month: string;
+    multiSelect: string;
     nextMonth: string;
+    noGroup: string;
     notScheduled: string;
     openCalendar: string;
     pickDateTime: string;
@@ -230,18 +282,22 @@ type MessageCatalog = {
     previousMonth: string;
     quickAdd: string;
     quickAddPlaceholder: string;
+    quickAddSubmitTooltip: string;
     quickShortcutsTitle: string;
     reminder: string;
     reminderPastError: string;
+    reminderPastTooltip: string;
     reorder: string;
     restoreTask: string;
     save: string;
     scheduledFor: string;
+    selectAllTodos: string;
+    selectTodo: (title: string) => string;
+    selectedCount: (count: number) => string;
     setReminder: string;
     specificTimeTitle: string;
     statusDone: string;
     statusUndone: string;
-    submitHint: string;
     today: string;
     tomorrow: string;
     tomorrowMorning: string;
@@ -249,8 +305,10 @@ type MessageCatalog = {
     tonight: string;
     titleLabel: string;
     titlePlaceholder: string;
+    toolbarLabel: string;
     undoneCount: (count: number) => string;
     inOneHour: string;
+    inThirtyMinutes: string;
     year: string;
     yesterday: string;
   };
@@ -262,6 +320,22 @@ const messages: Record<AppLanguage, MessageCatalog> = {
       appName: quickNoteBranding.displayName,
       collapseNavigation: "Collapse navigation",
       expandNavigation: "Expand navigation",
+      help: "QuickNote help",
+      helpBasics: [
+        "Use Notes for rich cards, colors, groups, and quick editing.",
+        "Use Todos for dated tasks, reminders, bulk selection, and calendar planning.",
+        "Open Settings to adjust language, timezone, shortcuts, motion, and notifications.",
+        "QuickNote stores notes, todos, and settings locally on this device.",
+      ],
+      helpBasicsTitle: "Quick tips",
+      helpDialogSubtitle: "A compact guide for the main QuickNote workflows and shortcuts.",
+      helpDialogTitle: "QuickNote guide",
+      helpShortcuts: [
+        "Use the global shortcut to summon or hide the panel.",
+        "Enter adds the todo you are typing; Shift+Enter inserts a new line.",
+        "Cmd/Ctrl+A, C, and V work inside quick input fields.",
+      ],
+      helpShortcutsTitle: "Shortcuts",
       hideWindow: "Hide QuickNote",
       loading: "Loading QuickNote...",
       localOnly: "local only",
@@ -326,8 +400,11 @@ const messages: Record<AppLanguage, MessageCatalog> = {
       noGroup: "No group",
       open: "Open",
       paste: "Paste",
+      pickScreenColor: "Pick screen color",
       reorder: "Reorder note",
       redo: "Redo",
+      returnToColors: "Return",
+      screenColorPickerUnavailable: "Screen color picker unavailable",
       showColors: "Show Colors",
       toggleGroupFilter: (name) => `Toggle ${name} filter`,
       titleAria: "Note title",
@@ -461,14 +538,31 @@ const messages: Record<AppLanguage, MessageCatalog> = {
     },
     todos: {
       add: "Add task",
+      addGroup: "Add todo group",
+      allDone: "All done",
+      allGroups: "All",
+      bulkComplete: "Complete selected",
+      bulkCompleteConfirm: "Complete",
+      bulkCompleteDialogBody: (count) => `Complete ${count} selected todo${count === 1 ? "" : "s"}?`,
+      bulkCompleteDialogTitle: "Complete selected todos",
+      bulkDateConfirm: "Change date",
+      bulkDateDialogBody: (count) => `Move ${count} selected todo${count === 1 ? "" : "s"} to this date?`,
+      bulkDateDialogTitle: "Change selected date",
+      bulkDelete: "Delete selected",
+      bulkDeleteConfirm: "Delete",
+      bulkDeleteDialogBody: (count) => `Delete ${count} selected todo${count === 1 ? "" : "s"}? This cannot be undone.`,
+      bulkDeleteDialogTitle: "Delete selected todos",
+      bulkSetDate: "Set date",
+      afternoon: "Afternoon",
       calendarHint: "Use the calendar to choose the day, then fine-tune the time below.",
+      changeTodoDate: "Change todo date",
       changeReminder: "Change reminder",
       clear: "Clear",
       completeTask: "Complete task",
       currentReminder: "Current reminder",
       date: "Date",
       delete: "Delete todo",
-      dialogSubtitle: "Choose a date and time for this todo reminder.",
+      dialogSubtitle: "Choose a reminder time for this todo's date.",
       dialogTitle: "Set todo reminder",
       done: "done",
       doneCount: (count) => `${count} done`,
@@ -476,30 +570,60 @@ const messages: Record<AppLanguage, MessageCatalog> = {
       editDialogSubtitle: "Update the todo title while keeping its status and reminder.",
       editDialogTitle: "Edit todo",
       empty: "No tasks yet. Add a compact todo below.",
+      exitSelection: "Exit selection",
+      filteredEmpty: "No todos match the selected groups.",
+      filterGroups: "Filter todo groups",
+      filterDialogSubtitle: "Choose which groups stay visible in Todos.",
+      filterDialogTitle: "Filter todo groups",
+      changeGroup: "Change todo group",
+      changeGroupColor: "Change group color",
+      createGroup: "Create group",
+      createGroupTitle: "Create group",
+      deleteGroupAction: "Delete group",
+      deleteGroup: (name) => `Delete ${name} group`,
+      editGroup: (name) => `Edit ${name} group`,
+      editGroupTitle: "Edit group",
+      group: "Group",
+      groupColor: "Group color",
+      groupFeatureComingSoon: "Manage todo groups",
+      groupManagerTitle: "Manage todo groups",
+      groupName: "Group name",
+      groupNameDuplicate: "Group names must be unique.",
+      groupNamePlaceholder: "Enter a group name",
+      groupTotal: (count) => `${count} groups total`,
+      groupsEmpty: "No custom todo groups yet. Create one here, then assign it from a todo card.",
       hour: "Hour",
       inOneHour: "In 1h",
+      inThirtyMinutes: "In 30m",
+      items: (count) => `${count} todos`,
       minute: "Minute",
       month: "Month",
+      multiSelect: "Select todos",
       nextMonth: "Next month",
+      noGroup: "No group",
       notScheduled: "Not scheduled",
       openCalendar: "Open todo calendar",
-      pickDateTime: "Pick date and time",
+      pickDateTime: "Pick a time",
       precise: "precise",
       previousMonth: "Previous month",
       quickAdd: "Quick add",
-      quickAddPlaceholder: "Add a task - Enter to add; Shift+Enter for new line",
+      quickAddPlaceholder: "Enter to add a todo\nClick a todo to edit it",
+      quickAddSubmitTooltip: "Enter to add · Shift+Enter for new line",
       quickShortcutsTitle: "Quick shortcuts",
       reminder: "Reminder",
       reminderPastError: "Reminder time must be later than the current time.",
+      reminderPastTooltip: "Already passed",
       reorder: "Reorder todo",
       restoreTask: "Restore task",
       save: "Save",
       scheduledFor: "Scheduled for",
+      selectAllTodos: "Select all todos",
+      selectTodo: (title) => `Select ${title}`,
+      selectedCount: (count) => `${count} selected`,
       setReminder: "Set reminder",
       specificTimeTitle: "Specific time",
       statusDone: "done",
       statusUndone: "undone",
-      submitHint: "Enter to add. Shift+Enter for new line",
       today: "Today",
       tomorrow: "Tomorrow",
       tomorrowMorning: "Tomorrow 09:00",
@@ -507,6 +631,7 @@ const messages: Record<AppLanguage, MessageCatalog> = {
       tonight: "Tonight",
       titleLabel: "Todo title",
       titlePlaceholder: "Update task title",
+      toolbarLabel: "Todo actions",
       undoneCount: (count) => `${count} undone`,
       year: "Year",
       yesterday: "Yesterday",
@@ -522,6 +647,22 @@ const messages: Record<AppLanguage, MessageCatalog> = {
       settings: "设置",
       collapseNavigation: "\u6536\u8d77\u5bfc\u822a",
       expandNavigation: "\u5c55\u5f00\u5bfc\u822a",
+      help: "QuickNote \u5e2e\u52a9",
+      helpBasics: [
+        "\u5728 Notes \u4e2d\u7ba1\u7406\u5bcc\u6587\u672c\u5361\u7247\u3001\u989c\u8272\u3001\u5206\u7ec4\u548c\u5feb\u901f\u7f16\u8f91\u3002",
+        "\u5728 Todos \u4e2d\u7ba1\u7406\u6309\u65e5\u671f\u5f52\u6863\u7684\u4efb\u52a1\u3001\u63d0\u9192\u3001\u590d\u9009\u548c\u65e5\u5386\u8ba1\u5212\u3002",
+        "\u6253\u5f00\u8bbe\u7f6e\u53ef\u8c03\u6574\u8bed\u8a00\u3001\u65f6\u533a\u3001\u5feb\u6377\u952e\u3001\u52a8\u6548\u548c\u901a\u77e5\u3002",
+        "QuickNote \u4f1a\u5c06\u7b14\u8bb0\u3001\u5f85\u529e\u548c\u8bbe\u7f6e\u4fdd\u5b58\u5728\u672c\u673a\u3002",
+      ],
+      helpBasicsTitle: "\u5feb\u901f\u6280\u5de7",
+      helpDialogSubtitle: "QuickNote \u4e3b\u8981\u5de5\u4f5c\u6d41\u548c\u5feb\u6377\u952e\u7684\u7b80\u8981\u8bf4\u660e\u3002",
+      helpDialogTitle: "QuickNote \u4f7f\u7528\u6307\u5357",
+      helpShortcuts: [
+        "\u4f7f\u7528\u5168\u5c40\u5feb\u6377\u952e\u53ef\u5524\u51fa\u6216\u9690\u85cf\u9762\u677f\u3002",
+        "Enter \u6dfb\u52a0\u6b63\u5728\u8f93\u5165\u7684\u5f85\u529e\uff1bShift+Enter \u6362\u884c\u3002",
+        "Cmd/Ctrl+A\u3001C\u3001V \u53ef\u5728\u5feb\u901f\u8f93\u5165\u6846\u4e2d\u4f7f\u7528\u3002",
+      ],
+      helpShortcutsTitle: "\u5feb\u6377\u952e",
     },
     common: {
       cancel: "取消",
@@ -581,8 +722,11 @@ const messages: Record<AppLanguage, MessageCatalog> = {
       noGroup: "未分组",
       open: "展开",
       paste: "粘贴",
+      pickScreenColor: "吸取屏幕颜色",
       reorder: "重新排序笔记",
       redo: "重做",
+      returnToColors: "返回",
+      screenColorPickerUnavailable: "屏幕取色器不可用",
       showColors: "显示颜色面板",
       toggleGroupFilter: (name) => `切换 ${name} 的筛选`,
       titleAria: "笔记标题",
@@ -716,6 +860,7 @@ const messages: Record<AppLanguage, MessageCatalog> = {
     },
     todos: {
       add: "添加任务",
+      afternoon: "\u4e0b\u5348",
       calendarHint: "先在日历里选日期，再在下方微调时间。",
       changeReminder: "修改提醒",
       clear: "清除",
@@ -723,7 +868,7 @@ const messages: Record<AppLanguage, MessageCatalog> = {
       currentReminder: "当前提醒",
       date: "日期",
       delete: "删除待办",
-      dialogSubtitle: "为这条待办选择提醒日期和时间。",
+      dialogSubtitle: "\u4e3a\u8fd9\u6761\u5f85\u529e\u6240\u5728\u65e5\u671f\u9009\u62e9\u63d0\u9192\u65f6\u95f4\u3002",
       dialogTitle: "设置待办提醒",
       done: "已完成",
       doneCount: (count) => `${count} 项已完成`,
@@ -733,28 +878,75 @@ const messages: Record<AppLanguage, MessageCatalog> = {
       empty: "还没有任务。在下方添加一条简洁待办吧。",
       hour: "小时",
       inOneHour: "1小时后",
+      inThirtyMinutes: "30分钟后",
       minute: "分钟",
       month: "月份",
       nextMonth: "下个月",
       notScheduled: "未设置",
       openCalendar: "\u6253\u5f00\u5f85\u529e\u65e5\u5386",
-      pickDateTime: "选择日期和时间",
+      addGroup: "\u6dfb\u52a0\u5f85\u529e\u5206\u7ec4",
+      allDone: "\u5168\u90e8\u5b8c\u6210",
+      allGroups: "\u5168\u90e8",
+      bulkComplete: "\u5b8c\u6210\u6240\u9009",
+      bulkCompleteConfirm: "\u5b8c\u6210",
+      bulkCompleteDialogBody: (count) => `\u786e\u8ba4\u5b8c\u6210 ${count} \u4e2a\u6240\u9009\u5f85\u529e\uff1f`,
+      bulkCompleteDialogTitle: "\u5b8c\u6210\u6240\u9009\u5f85\u529e",
+      bulkDateConfirm: "\u66f4\u6539\u65e5\u671f",
+      bulkDateDialogBody: (count) => `\u5c06 ${count} \u4e2a\u6240\u9009\u5f85\u529e\u79fb\u5230\u8fd9\u4e2a\u65e5\u671f\uff1f`,
+      bulkDateDialogTitle: "\u66f4\u6539\u6240\u9009\u65e5\u671f",
+      bulkDelete: "\u5220\u9664\u6240\u9009",
+      bulkDeleteConfirm: "\u5220\u9664",
+      bulkDeleteDialogBody: (count) => `\u786e\u8ba4\u5220\u9664 ${count} \u4e2a\u6240\u9009\u5f85\u529e\uff1f\u6b64\u64cd\u4f5c\u65e0\u6cd5\u64a4\u9500\u3002`,
+      bulkDeleteDialogTitle: "\u5220\u9664\u6240\u9009\u5f85\u529e",
+      bulkSetDate: "\u8bbe\u5b9a\u65e5\u671f",
+      changeTodoDate: "\u66f4\u6539\u5f85\u529e\u65e5\u671f",
+      exitSelection: "\u9000\u51fa\u590d\u9009",
+      filteredEmpty: "\u5f53\u524d\u5206\u7ec4\u7b5b\u9009\u4e0b\u6ca1\u6709\u5339\u914d\u7684\u5f85\u529e\u3002",
+      filterGroups: "\u7b5b\u9009\u5f85\u529e\u5206\u7ec4",
+      filterDialogSubtitle: "\u9009\u62e9\u5728 Todos \u4e2d\u9700\u8981\u663e\u793a\u7684\u5206\u7ec4\u3002",
+      filterDialogTitle: "\u7b5b\u9009\u5f85\u529e\u5206\u7ec4",
+      changeGroup: "\u66f4\u6539\u5f85\u529e\u5206\u7ec4",
+      changeGroupColor: "\u66f4\u6539\u5206\u7ec4\u989c\u8272",
+      createGroup: "\u521b\u5efa\u5206\u7ec4",
+      createGroupTitle: "\u521b\u5efa\u5206\u7ec4",
+      deleteGroupAction: "\u5220\u9664\u5206\u7ec4",
+      deleteGroup: (name) => `\u5220\u9664\u5206\u7ec4 ${name}`,
+      editGroup: (name) => `\u7f16\u8f91\u5206\u7ec4 ${name}`,
+      editGroupTitle: "\u7f16\u8f91\u5206\u7ec4",
+      group: "\u5206\u7ec4",
+      groupColor: "\u5206\u7ec4\u989c\u8272",
+      groupFeatureComingSoon: "\u7ba1\u7406\u5f85\u529e\u5206\u7ec4",
+      groupManagerTitle: "\u7ba1\u7406\u5f85\u529e\u5206\u7ec4",
+      groupName: "\u5206\u7ec4\u540d\u79f0",
+      groupNameDuplicate: "\u5206\u7ec4\u540d\u79f0\u5fc5\u987b\u552f\u4e00\u3002",
+      groupNamePlaceholder: "\u8f93\u5165\u5206\u7ec4\u540d\u79f0",
+      groupTotal: (count) => `\u5f53\u524d\u5171 ${count} \u4e2a\u5206\u7ec4`,
+      groupsEmpty: "\u8fd8\u6ca1\u6709\u81ea\u5b9a\u4e49\u5f85\u529e\u5206\u7ec4\u3002\u5728\u8fd9\u91cc\u521b\u5efa\u540e\uff0c\u53ef\u4ece\u5f85\u529e\u5361\u7247\u5206\u914d\u3002",
+      items: (count) => `${count} \u4e2a\u5f85\u529e`,
+      multiSelect: "\u590d\u9009\u5f85\u529e",
+      selectTodo: (title) => `\u9009\u4e2d ${title}`,
+      noGroup: "\u672a\u5206\u7ec4",
+      selectedCount: (count) => `\u5df2\u9009 ${count} \u4e2a`,
+      toolbarLabel: "\u5f85\u529e\u64cd\u4f5c",
+      pickDateTime: "\u9009\u62e9\u65f6\u95f4",
       precise: "精确",
       previousMonth: "上个月",
       quickAdd: "快速添加",
-      quickAddPlaceholder: "添加一项任务 - Enter 添加；Shift+Enter 换行",
+      quickAddPlaceholder: "Enter \u6dfb\u52a0\u5f85\u529e\n\u70b9\u51fb\u5f85\u529e\u53ef\u7f16\u8f91",
+      quickAddSubmitTooltip: "Enter \u6dfb\u52a0 \u00b7 Shift+Enter \u6362\u884c",
       quickShortcutsTitle: "快捷选择",
       reminder: "提醒",
       reminderPastError: "提醒时间必须晚于当前时间。",
+      reminderPastTooltip: "已过时",
       reorder: "重新排序待办",
       restoreTask: "恢复任务",
       save: "保存",
       scheduledFor: "计划提醒时间",
+      selectAllTodos: "全选待办",
       setReminder: "设置提醒",
       specificTimeTitle: "具体时间",
       statusDone: "已完成",
       statusUndone: "未完成",
-      submitHint: "Enter 添加。Shift+Enter 换行",
       today: "\u4eca\u5929",
       tomorrow: "明天",
       tomorrowMorning: "明天 09:00",

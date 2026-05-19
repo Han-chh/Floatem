@@ -173,33 +173,14 @@ export function NotesList() {
     moveCard(activeId, overId);
   };
 
-  const handleSelectAllGroups = () => {
-    setGroupFilterState((current) => {
-      const currentKeys =
-        current.mode === "all" ? availableFilterKeys : availableFilterKeys.filter((key) => current.keys.includes(key));
+  const handleApplyGroupFilters = (keys: string[]) => {
+    const normalizedKeys = availableFilterKeys.filter((item) => keys.includes(item));
 
-      if (currentKeys.length === availableFilterKeys.length) {
-        return { mode: "custom", keys: [] };
-      }
-
-      return { mode: "all" };
-    });
-  };
-
-  const handleToggleFilterKey = (key: string) => {
-    setGroupFilterState((current) => {
-      const baseKeys =
-        current.mode === "all" ? availableFilterKeys : availableFilterKeys.filter((item) => current.keys.includes(item));
-      const hasKey = baseKeys.includes(key);
-      const nextKeys = hasKey ? baseKeys.filter((item) => item !== key) : [...baseKeys, key];
-      const normalizedKeys = availableFilterKeys.filter((item) => nextKeys.includes(item));
-
-      if (normalizedKeys.length === availableFilterKeys.length) {
-        return { mode: "all" };
-      }
-
-      return { mode: "custom", keys: normalizedKeys };
-    });
+    setGroupFilterState(
+      normalizedKeys.length === availableFilterKeys.length
+        ? { mode: "all" }
+        : { mode: "custom", keys: normalizedKeys },
+    );
   };
 
   return (
@@ -312,11 +293,9 @@ export function NotesList() {
 
       <NoteGroupFilterDialog
         isOpen={isFilterDialogOpen}
-        allSelected={allGroupsSelected}
         selectedKeys={selectedFilterKeySet}
         onClose={() => setIsFilterDialogOpen(false)}
-        onSelectAll={handleSelectAllGroups}
-        onToggleFilter={handleToggleFilterKey}
+        onApplySelection={handleApplyGroupFilters}
       />
     </section>
   );

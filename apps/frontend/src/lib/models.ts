@@ -20,6 +20,14 @@ export type NoteGroup = {
   updatedAt: number;
 };
 
+export type TodoGroup = {
+  id: string;
+  name: string;
+  color: string;
+  createdAt: number;
+  updatedAt: number;
+};
+
 export type NoteCard = {
   id: string;
   title: string;
@@ -42,10 +50,18 @@ export type TodoItem = {
   id: string;
   text: string;
   done: boolean;
+  groupId: string | null;
   reminderAt: number | null;
   createdAt: number;
   dateKey: string;
 };
+
+export type TodosDocument = {
+  items: TodoItem[];
+  groups: TodoGroup[];
+};
+
+export type StoredTodosData = TodoItem[] | TodosDocument;
 
 export type AppSettings = {
   hotkey: string;
@@ -64,13 +80,13 @@ export type AppSettings = {
 
 export type RawLoadAllResult = {
   notes: StoredNotesData;
-  todos: TodoItem[];
+  todos: StoredTodosData;
   settings: AppSettings;
 };
 
 export type LoadAllResult = {
   notes: NotesDocument;
-  todos: TodoItem[];
+  todos: TodosDocument;
   settings: AppSettings;
 };
 
@@ -85,6 +101,8 @@ export const NOTE_DOT_COLORS = [
 
 export const DEFAULT_NOTE_GROUP_COLOR = NOTE_DOT_COLORS[0];
 export const DEFAULT_UNGROUPED_NOTE_COLOR = "#C8C0B5";
+export const DEFAULT_TODO_GROUP_COLOR = NOTE_DOT_COLORS[1];
+export const DEFAULT_UNGROUPED_TODO_COLOR = "#C8C0B5";
 export const FALLBACK_TIME_ZONE = "UTC";
 
 const FALLBACK_TIME_ZONES = [
@@ -265,6 +283,13 @@ export function createEmptyNotesDocument(): NotesDocument {
   };
 }
 
+export function createEmptyTodosDocument(): TodosDocument {
+  return {
+    items: [],
+    groups: [],
+  };
+}
+
 export function createNoteGroup(overrides: Partial<NoteGroup> = {}): NoteGroup {
   const now = Date.now();
   const createdAt = typeof overrides.createdAt === "number" ? overrides.createdAt : now;
@@ -273,6 +298,19 @@ export function createNoteGroup(overrides: Partial<NoteGroup> = {}): NoteGroup {
     id: isNonEmptyString(overrides.id) ? overrides.id.trim() : createId("group"),
     name: isNonEmptyString(overrides.name) ? overrides.name.trim() : "New group",
     color: normalizeColor(overrides.color, DEFAULT_NOTE_GROUP_COLOR),
+    createdAt,
+    updatedAt: typeof overrides.updatedAt === "number" ? overrides.updatedAt : createdAt,
+  };
+}
+
+export function createTodoGroup(overrides: Partial<TodoGroup> = {}): TodoGroup {
+  const now = Date.now();
+  const createdAt = typeof overrides.createdAt === "number" ? overrides.createdAt : now;
+
+  return {
+    id: isNonEmptyString(overrides.id) ? overrides.id.trim() : createId("todo-group"),
+    name: isNonEmptyString(overrides.name) ? overrides.name.trim() : "New group",
+    color: normalizeColor(overrides.color, DEFAULT_TODO_GROUP_COLOR),
     createdAt,
     updatedAt: typeof overrides.updatedAt === "number" ? overrides.updatedAt : createdAt,
   };
@@ -301,6 +339,7 @@ export function createTodoItem(text: string, overrides: Partial<TodoItem> = {}):
     id: createId("todo"),
     text,
     done: false,
+    groupId: null,
     reminderAt: null,
     createdAt,
     dateKey: formatLocalDateKey(new Date(createdAt)),
@@ -338,6 +377,7 @@ export function normalizeTodoItem(value: unknown, fallbackDateKey = formatLocalD
     ...idOverride,
     text: typeof candidate.text === "string" ? candidate.text : "",
     done: Boolean(candidate.done),
+    groupId: isNonEmptyString(candidate.groupId) ? candidate.groupId.trim() : null,
     reminderAt: typeof candidate.reminderAt === "number" ? candidate.reminderAt : null,
     createdAt,
     dateKey,
@@ -359,6 +399,21 @@ export function normalizeNoteGroup(value: unknown, index: number): NoteGroup {
   };
 }
 
+export function normalizeTodoGroup(value: unknown, index: number): TodoGroup {
+  const candidate = value && typeof value === "object" ? (value as Partial<TodoGroup>) : {};
+  const fallbackColor = NOTE_DOT_COLORS[index % NOTE_DOT_COLORS.length] ?? DEFAULT_TODO_GROUP_COLOR;
+  const now = Date.now();
+  const createdAt = typeof candidate.createdAt === "number" ? candidate.createdAt : now;
+
+  return {
+    id: isNonEmptyString(candidate.id) ? candidate.id.trim() : createId("todo-group"),
+    name: isNonEmptyString(candidate.name) ? candidate.name.trim() : `Group ${index + 1}`,
+    color: normalizeColor(candidate.color, fallbackColor),
+    createdAt,
+    updatedAt: typeof candidate.updatedAt === "number" ? candidate.updatedAt : createdAt,
+  };
+}
+
 export function normalizeNoteCard(value: unknown): NoteCard {
   const candidate = value && typeof value === "object" ? (value as Partial<NoteCard>) : {};
   const now = Date.now();
@@ -373,6 +428,27 @@ export function normalizeNoteCard(value: unknown): NoteCard {
     content: Array.isArray(candidate.content) ? candidate.content : DEFAULT_NOTE_CONTENT,
     createdAt,
     updatedAt: typeof candidate.updatedAt === "number" ? candidate.updatedAt : createdAt,
+  };
+}
+
+export function normalizeTodosDocument(value: unknown): TodosDocument {
+  const candidate =
+    value && typeof value === "object" && !Array.isArray(value) ? (value as Partial<TodosDocument>) : null;
+  const groups = Array.isArray(candidate?.groups) ? candidate.groups.map((group, index) => normalizeTodoGroup(group, index)) : [];
+  const groupsById = new Map(groups.map((group) => [group.id, group] as const));
+  const rawItems = Array.isArray(value) ? value : Array.isArray(candidate?.items) ? candidate.items : [];
+
+  return {
+    items: rawItems.map((item) => {
+      const normalizedItem = normalizeTodoItem(item);
+      const matchedGroup = normalizedItem.groupId ? groupsById.get(normalizedItem.groupId) ?? null : null;
+
+      return {
+        ...normalizedItem,
+        groupId: matchedGroup ? matchedGroup.id : null,
+      };
+    }),
+    groups,
   };
 }
 
@@ -411,4 +487,12 @@ export function resolveNoteGroup(note: Pick<NoteCard, "groupId">, groups: NoteGr
 
 export function resolveNoteAccentColor(note: Pick<NoteCard, "dotColor" | "groupId">, groups: NoteGroup[]) {
   return resolveNoteGroup(note, groups)?.color ?? note.dotColor ?? DEFAULT_UNGROUPED_NOTE_COLOR;
+}
+
+export function resolveTodoGroup(todo: Pick<TodoItem, "groupId">, groups: TodoGroup[]) {
+  return todo.groupId ? groups.find((group) => group.id === todo.groupId) ?? null : null;
+}
+
+export function resolveTodoAccentColor(todo: Pick<TodoItem, "groupId">, groups: TodoGroup[]) {
+  return resolveTodoGroup(todo, groups)?.color ?? DEFAULT_UNGROUPED_TODO_COLOR;
 }

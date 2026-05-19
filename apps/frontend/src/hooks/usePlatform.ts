@@ -1,5 +1,5 @@
-import type { AppSettings, LoadAllResult, NotesDocument, TodoItem } from "../lib/models";
-import { normalizeNotesDocument } from "../lib/models";
+import type { AppSettings, LoadAllResult, NotesDocument, TodosDocument } from "../lib/models";
+import { normalizeNotesDocument, normalizeTodosDocument } from "../lib/models";
 import { getQuickNoteBridge, isNativeQuickNoteHost } from "../lib/nativeBridge";
 
 export function usePlatform() {
@@ -17,6 +17,7 @@ export async function loadAllData(): Promise<LoadAllResult> {
   return {
     ...result,
     notes: normalizeNotesDocument(result.notes),
+    todos: normalizeTodosDocument(result.todos),
   };
 }
 
@@ -24,7 +25,7 @@ export async function saveNotes(notes: NotesDocument) {
   await getQuickNoteBridge().saveNotes(notes);
 }
 
-export async function saveTodos(todos: TodoItem[]) {
+export async function saveTodos(todos: TodosDocument) {
   await getQuickNoteBridge().saveTodos(todos);
 }
 

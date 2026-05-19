@@ -1,24 +1,24 @@
-import { AnimatePresence, motion } from "framer-motion";
-import { useEffect, useMemo, useRef, useState } from "react";
+﻿import { AnimatePresence, motion } from "framer-motion";
+import { useEffect, useId, useMemo, useRef, useState, type Ref } from "react";
 import { createPortal } from "react-dom";
 import { useI18n } from "../../lib/i18n";
 import { getSystemTimeZone, type TimeFormat } from "../../lib/models";
-import { buildReminderTimestamp, isFutureReminderTimestamp } from "../../lib/reminders";
 import {
-  addDaysToDateKey,
-  buildDateKey,
-  formatDateKeyInTimeZone,
+  buildReminderTimestamp,
+  isFutureReminderTimestamp,
+  isReminderTimeFuture,
+} from "../../lib/reminders";
+import {
   formatHourOption,
   formatTimestampInTimeZone,
   getDateTimePartsInTimeZone,
-  getDaysInMonth,
-  parseDateKey,
-  type DateParts,
+  formatDateKeyInTimeZone,
 } from "../../lib/timeZoneDate";
-import { Clock3Icon, XIcon } from "../icons/AppIcons";
+import { ChevronDownIcon, Clock3Icon, XIcon } from "../icons/AppIcons";
 
 type ReminderPickerProps = {
   todoTitle: string;
+  todoDateKey?: string;
   reminderAt: number | null;
   onChange: (nextValue: number | null) => void;
   displayValue?: string;
@@ -27,6 +27,27 @@ type ReminderPickerProps = {
   timeZone?: string;
   timeFormat?: TimeFormat;
 };
+
+type TimeMenu = "hour" | "minute" | null;
+
+type TimeOptionState = {
+  disabled: boolean;
+  tooltip?: string;
+};
+
+type ReminderTimeSelectProps = {
+  label: string;
+  value: string;
+  options: string[];
+  formatOption: (value: string) => string;
+  getOptionState: (option: string) => TimeOptionState;
+  isOpen: boolean;
+  onOpenChange: (open: boolean) => void;
+  onChange: (value: string) => void;
+  triggerRef?: Ref<HTMLButtonElement>;
+};
+
+const REMINDER_DIALOG_CLOCK_MS = 30_000;
 
 function pad(value: number) {
   return `${value}`.padStart(2, "0");
@@ -43,37 +64,122 @@ function getDefaultDraft(reminderAt: number | null, timeZone: string) {
   );
 
   return {
-    dateValue: buildDateKey({
-      year: baseParts.year,
-      monthIndex: baseParts.monthIndex,
-      day: baseParts.day,
-    }),
     hourValue: pad(baseParts.hour),
     minuteValue: pad(baseParts.minute),
   };
 }
 
-function getCalendarCells(year: number, monthIndex: number) {
-  const firstDayOffset = (new Date(year, monthIndex, 1).getDay() + 6) % 7;
-  const daysInMonth = getDaysInMonth(year, monthIndex);
-  const cells: Array<Date | null> = Array.from({ length: firstDayOffset }, () => null);
-
-  for (let day = 1; day <= daysInMonth; day += 1) {
-    cells.push(new Date(year, monthIndex, day));
-  }
-
-  while (cells.length % 7 !== 0) {
-    cells.push(null);
-  }
-
-  return cells;
-}
-
 const hourOptions = Array.from({ length: 24 }, (_, index) => pad(index));
 const minuteOptions = Array.from({ length: 60 }, (_, index) => pad(index));
 
+function ReminderTimeSelect({
+  label,
+  value,
+  options,
+  formatOption,
+  getOptionState,
+  isOpen,
+  onOpenChange,
+  onChange,
+  triggerRef,
+}: ReminderTimeSelectProps) {
+  const listboxId = useId();
+  const containerRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    if (!isOpen) {
+      return;
+    }
+
+    const handlePointerDown = (event: PointerEvent) => {
+      if (!containerRef.current?.contains(event.target as Node)) {
+        onOpenChange(false);
+      }
+    };
+
+    document.addEventListener("pointerdown", handlePointerDown, true);
+    return () => document.removeEventListener("pointerdown", handlePointerDown, true);
+  }, [isOpen, onOpenChange]);
+
+  return (
+    <div ref={containerRef} className="relative min-w-0">
+      <span className="mb-1 block text-[10px] font-semibold uppercase tracking-[0.1em] text-[var(--muted)]">
+        {label}
+      </span>
+      <button
+        ref={triggerRef}
+        type="button"
+        aria-label={label}
+        aria-expanded={isOpen}
+        aria-haspopup="listbox"
+        aria-controls={isOpen ? listboxId : undefined}
+        data-no-window-drag="true"
+        className="flex w-full items-center justify-between gap-2 rounded-[12px] border border-[rgba(213,198,180,0.88)] bg-white/92 px-2.5 py-2 text-left text-[11.5px] font-semibold text-[var(--brown-strong)] outline-none focus:border-[rgba(47,107,255,0.45)]"
+        onClick={() => onOpenChange(!isOpen)}
+      >
+        <span className="min-w-0 truncate">{formatOption(value)}</span>
+        <ChevronDownIcon className={isOpen ? "rotate-180" : ""} size={13} />
+      </button>
+      <AnimatePresence>
+        {isOpen ? (
+          <motion.div
+            id={listboxId}
+            role="listbox"
+            aria-label={label}
+            initial={{ opacity: 0, y: -4 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -4 }}
+            transition={{ duration: 0.14, ease: [0.22, 1, 0.36, 1] }}
+            className="absolute left-0 right-0 top-[calc(100%+4px)] z-50 max-h-36 overflow-y-auto rounded-[14px] border border-[rgba(213,198,180,0.92)] bg-white p-1 shadow-[0_14px_28px_rgba(30,25,21,0.14)]"
+          >
+            {options.map((option) => {
+              const selected = option === value;
+              const { disabled, tooltip } = getOptionState(option);
+
+              return (
+                <button
+                  key={option}
+                  type="button"
+                  role="option"
+                  aria-selected={selected}
+                  aria-disabled={disabled}
+                  data-tooltip={disabled ? tooltip : undefined}
+                  data-no-window-drag="true"
+                  className={`flex w-full items-center justify-between rounded-[10px] px-2.5 py-1.75 text-left text-[11.5px] font-semibold ${
+                    disabled
+                      ? "cursor-not-allowed text-[rgba(30,25,21,0.32)]"
+                      : selected
+                        ? "bg-[rgba(47,107,255,0.10)] text-[#2853C7]"
+                        : "text-[var(--brown-strong)] hover:bg-[rgba(30,25,21,0.05)]"
+                  }`}
+                  onClick={() => {
+                    if (disabled) {
+                      return;
+                    }
+
+                    onChange(option);
+                    onOpenChange(false);
+                  }}
+                >
+                  <span>{formatOption(option)}</span>
+                  <span
+                    className={`h-2 w-2 shrink-0 rounded-full ${
+                      disabled ? "bg-transparent" : selected ? "bg-[var(--accent-cobalt)]" : "bg-transparent"
+                    }`}
+                  />
+                </button>
+              );
+            })}
+          </motion.div>
+        ) : null}
+      </AnimatePresence>
+    </div>
+  );
+}
+
 export function ReminderPicker({
   todoTitle,
+  todoDateKey,
   reminderAt,
   onChange,
   displayValue,
@@ -82,108 +188,127 @@ export function ReminderPicker({
   timeZone = getSystemTimeZone(),
   timeFormat = "24h",
 }: ReminderPickerProps) {
-  const { t, language } = useI18n();
-  const monthSelectRef = useRef<HTMLSelectElement | null>(null);
-  const hourSelectRef = useRef<HTMLSelectElement | null>(null);
+  const { t } = useI18n();
+  const hourButtonRef = useRef<HTMLButtonElement | null>(null);
   const [isOpen, setIsOpen] = useState(false);
-  const [draftDate, setDraftDate] = useState("");
   const [draftHour, setDraftHour] = useState("09");
   const [draftMinute, setDraftMinute] = useState("00");
-  const [calendarMonth, setCalendarMonth] = useState(() => {
-    const today = getDateTimePartsInTimeZone(new Date(), timeZone);
-    return new Date(today.year, today.monthIndex, 1);
-  });
+  const [openMenu, setOpenMenu] = useState<TimeMenu>(null);
   const [validationMessage, setValidationMessage] = useState<string | null>(null);
-  const [helperMessage, setHelperMessage] = useState<string | null>(null);
-
-  const monthFormatter = useMemo(
-    () =>
-      new Intl.DateTimeFormat(language, {
-        timeZone: "UTC",
-        month: "long",
-      }),
-    [language],
-  );
-  const weekdayFormatter = useMemo(
-    () =>
-      new Intl.DateTimeFormat(language, {
-        timeZone: "UTC",
-        weekday: "short",
-      }),
-    [language],
-  );
+  const [nowMs, setNowMs] = useState(() => Date.now());
+  const reminderDateKey = todoDateKey ?? formatDateKeyInTimeZone(new Date(), timeZone);
+  const pastTooltip = t.todos.reminderPastTooltip;
 
   const quickOptions = useMemo(() => {
-    const nowParts = getDateTimePartsInTimeZone(new Date(), timeZone);
-    const todayDateKey = buildDateKey(nowParts);
-    const roundedTimestamp = roundToNextQuarterTimestamp();
-    const tonightTimestamp =
-      nowParts.hour < 20
-        ? buildReminderTimestamp(todayDateKey, "20", "00", timeZone)
-        : roundToNextQuarterTimestamp(Date.now() + 2 * 60 * 60 * 1000);
+    const relativeShortcut = (label: string, offsetMs: number) => {
+      const shortcutDate = new Date(nowMs + offsetMs);
+      const shortcutDateKey = formatDateKeyInTimeZone(shortcutDate, timeZone);
+      const parts = getDateTimePartsInTimeZone(shortcutDate, timeZone);
+      const hourValue = pad(parts.hour);
+      const minuteValue = pad(parts.minute);
+      const timestamp = buildReminderTimestamp(reminderDateKey, hourValue, minuteValue, timeZone);
+
+      return {
+        disabled: shortcutDateKey !== reminderDateKey || timestamp === null || !isFutureReminderTimestamp(timestamp, nowMs),
+        hourValue,
+        label,
+        minuteValue,
+      };
+    };
+    const timeOfDayShortcut = (label: string, hourValue: string, minuteValue: string) => {
+      const timestamp = buildReminderTimestamp(reminderDateKey, hourValue, minuteValue, timeZone);
+
+      return {
+        disabled: timestamp === null || !isFutureReminderTimestamp(timestamp, nowMs),
+        hourValue,
+        label,
+        minuteValue,
+      };
+    };
 
     return [
-      { label: t.todos.inOneHour, mode: "timestamp" as const, value: roundedTimestamp + 60 * 60 * 1000 },
-      { label: t.todos.tonight, mode: "timestamp" as const, value: tonightTimestamp ?? roundedTimestamp + 2 * 60 * 60 * 1000 },
-      { label: t.todos.tomorrow, mode: "date" as const, value: addDaysToDateKey(todayDateKey, 1) },
+      relativeShortcut(t.todos.inThirtyMinutes, 30 * 60 * 1000),
+      relativeShortcut(t.todos.inOneHour, 60 * 60 * 1000),
+      timeOfDayShortcut(t.todos.afternoon, "15", "00"),
+      timeOfDayShortcut(t.todos.tonight, "20", "00"),
     ];
-  }, [t.todos.inOneHour, t.todos.tonight, t.todos.tomorrow, timeZone]);
+  }, [
+    nowMs,
+    reminderDateKey,
+    t.todos.afternoon,
+    t.todos.inOneHour,
+    t.todos.inThirtyMinutes,
+    t.todos.tonight,
+    timeZone,
+  ]);
 
-  const weekdayLabels = useMemo(() => {
-    return Array.from({ length: 7 }, (_, index) => weekdayFormatter.format(new Date(Date.UTC(2024, 0, 1 + index))));
-  }, [weekdayFormatter]);
+  const getHourOptionState = useMemo(() => {
+    return (hour: string): TimeOptionState => {
+      const enabled = isReminderTimeFuture(reminderDateKey, hour, draftMinute, timeZone, nowMs);
 
-  const selectedDateParts = useMemo(() => {
-    return parseDateKey(draftDate) ?? parseDateKey(getDefaultDraft(reminderAt, timeZone).dateValue)!;
-  }, [draftDate, reminderAt, timeZone]);
-  const currentMonthLabel = monthFormatter.format(new Date(Date.UTC(calendarMonth.getFullYear(), calendarMonth.getMonth(), 1)));
-  const todayDateKey = formatDateKeyInTimeZone(new Date(), timeZone);
-  const todayParts = parseDateKey(todayDateKey)!;
-  const currentYear = todayParts.year;
-  const monthOptions = useMemo(
-    () =>
-      Array.from({ length: 12 }, (_, monthIndex) => ({
-        label: monthFormatter.format(new Date(Date.UTC(2024, monthIndex, 1))),
-        value: monthIndex,
-      })),
-    [monthFormatter],
-  );
-  const yearOptions = useMemo(() => {
-    const minimumYear = Math.min(currentYear, selectedDateParts.year);
-    const maximumYear = Math.max(currentYear + 5, selectedDateParts.year);
+      return {
+        disabled: !enabled,
+        tooltip: enabled ? undefined : pastTooltip,
+      };
+    };
+  }, [draftMinute, nowMs, pastTooltip, reminderDateKey, timeZone]);
 
-    return Array.from({ length: maximumYear - minimumYear + 1 }, (_, index) => minimumYear + index);
-  }, [currentYear, selectedDateParts.year]);
-  const calendarCells = useMemo(
-    () => getCalendarCells(calendarMonth.getFullYear(), calendarMonth.getMonth()),
-    [calendarMonth],
-  );
+  const getMinuteOptionState = useMemo(() => {
+    return (minute: string): TimeOptionState => {
+      const enabled = isReminderTimeFuture(reminderDateKey, draftHour, minute, timeZone, nowMs);
+
+      return {
+        disabled: !enabled,
+        tooltip: enabled ? undefined : pastTooltip,
+      };
+    };
+  }, [draftHour, nowMs, pastTooltip, reminderDateKey, timeZone]);
+
+  useEffect(() => {
+    if (!isOpen) {
+      return;
+    }
+
+    const nextDraft = getDefaultDraft(reminderAt, timeZone);
+
+    setDraftHour(nextDraft.hourValue);
+    setDraftMinute(nextDraft.minuteValue);
+    setOpenMenu(null);
+    setValidationMessage(null);
+    setNowMs(Date.now());
+  }, [isOpen, reminderAt, timeZone]);
 
   useEffect(() => {
     if (!isOpen || typeof window === "undefined") {
       return;
     }
 
-    const nextDraft = getDefaultDraft(reminderAt, timeZone);
-    const nextParts = parseDateKey(nextDraft.dateValue);
+    const timer = window.setInterval(() => {
+      setNowMs(Date.now());
+    }, REMINDER_DIALOG_CLOCK_MS);
 
-    setDraftDate(nextDraft.dateValue);
-    setDraftHour(nextDraft.hourValue);
-    setDraftMinute(nextDraft.minuteValue);
-    setValidationMessage(null);
-    setHelperMessage(null);
-    if (nextParts) {
-      setCalendarMonth(new Date(nextParts.year, nextParts.monthIndex, 1));
+    return () => {
+      window.clearInterval(timer);
+    };
+  }, [isOpen]);
+
+  useEffect(() => {
+    if (!isOpen || typeof window === "undefined") {
+      return;
     }
 
     const animationFrame = window.requestAnimationFrame(() => {
-      monthSelectRef.current?.focus();
+      hourButtonRef.current?.focus();
     });
 
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === "Escape") {
+        if (openMenu) {
+          setOpenMenu(null);
+          return;
+        }
+
         setValidationMessage(null);
-        setHelperMessage(null);
         setIsOpen(false);
       }
     };
@@ -193,24 +318,7 @@ export function ReminderPicker({
       window.cancelAnimationFrame(animationFrame);
       window.removeEventListener("keydown", handleKeyDown, true);
     };
-  }, [isOpen, reminderAt, timeZone]);
-
-  const updateDraftDate = (parts: Partial<DateParts>) => {
-    const nextYear = parts.year ?? selectedDateParts.year;
-    const nextMonthIndex = parts.monthIndex ?? selectedDateParts.monthIndex;
-    const nextDay = Math.min(parts.day ?? selectedDateParts.day, getDaysInMonth(nextYear, nextMonthIndex));
-
-    setDraftDate(
-      buildDateKey({
-        year: nextYear,
-        monthIndex: nextMonthIndex,
-        day: nextDay,
-      }),
-    );
-    setCalendarMonth(new Date(nextYear, nextMonthIndex, 1));
-    setValidationMessage(null);
-    setHelperMessage(null);
-  };
+  }, [isOpen, openMenu]);
 
   const handleToggleOpen = () => {
     if (disabled) {
@@ -221,15 +329,16 @@ export function ReminderPicker({
   };
 
   const closeDialog = () => {
+    setOpenMenu(null);
     setValidationMessage(null);
-    setHelperMessage(null);
     setIsOpen(false);
   };
 
   const handleSave = () => {
-    const nextValue = buildReminderTimestamp(draftDate, draftHour, draftMinute, timeZone);
+    const nextValue = buildReminderTimestamp(reminderDateKey, draftHour, draftMinute, timeZone);
 
     if (nextValue === null) {
+      setValidationMessage(t.todos.reminderPastError);
       return;
     }
 
@@ -239,7 +348,6 @@ export function ReminderPicker({
     }
 
     setValidationMessage(null);
-    setHelperMessage(null);
     onChange(nextValue);
     setIsOpen(false);
   };
@@ -247,31 +355,31 @@ export function ReminderPicker({
   const currentReminderLabel = reminderAt
     ? formatTimestampInTimeZone(reminderAt, timeZone, "dateTime", timeFormat)
     : t.todos.notScheduled;
-  const draftReminderAt = buildReminderTimestamp(draftDate, draftHour, draftMinute, timeZone);
+  const draftReminderAt = buildReminderTimestamp(reminderDateKey, draftHour, draftMinute, timeZone);
   const draftReminderLabel =
-    draftReminderAt === null ? t.todos.notScheduled : formatTimestampInTimeZone(draftReminderAt, timeZone, "dateTime", timeFormat);
+    draftReminderAt === null
+      ? t.todos.notScheduled
+      : formatTimestampInTimeZone(draftReminderAt, timeZone, "dateTime", timeFormat);
 
   return (
     <>
-      <div className="relative">
-        <motion.button
-          type="button"
-          aria-label={reminderAt ? t.todos.changeReminder : t.todos.setReminder}
-          data-tooltip={displayValue ?? (reminderAt ? t.todos.changeReminder : t.todos.setReminder)}
-          data-no-window-drag="true"
-          className={`inline-flex max-w-full min-w-0 shrink items-center gap-1.5 rounded-full border px-2.5 py-1.25 text-[10.5px] font-semibold shadow-[0_7px_14px_rgba(61,49,34,0.08)] ${className}`}
-          whileHover={disabled ? undefined : { y: -1.5, scale: 1.02 }}
-          whileTap={disabled ? undefined : { scale: 0.97 }}
-          onPointerDown={(event) => event.stopPropagation()}
-          onClick={(event) => {
-            event.stopPropagation();
-            handleToggleOpen();
-          }}
-        >
-          <Clock3Icon size={12} />
-          {displayValue ? <span className="min-w-0 whitespace-nowrap">{displayValue}</span> : null}
-        </motion.button>
-      </div>
+      <motion.button
+        type="button"
+        aria-label={reminderAt ? t.todos.changeReminder : t.todos.setReminder}
+        data-tooltip={displayValue ?? (reminderAt ? t.todos.changeReminder : t.todos.setReminder)}
+        data-no-window-drag="true"
+        className={`inline-flex max-w-full min-w-0 shrink items-center gap-1.5 rounded-full border px-2.5 py-1.25 text-[10.5px] font-semibold shadow-[0_7px_14px_rgba(61,49,34,0.08)] ${className}`}
+        whileHover={disabled ? undefined : { y: -1.5, scale: 1.02 }}
+        whileTap={disabled ? undefined : { scale: 0.97 }}
+        onPointerDown={(event) => event.stopPropagation()}
+        onClick={(event) => {
+          event.stopPropagation();
+          handleToggleOpen();
+        }}
+      >
+        <Clock3Icon size={12} />
+        {displayValue ? <span className="min-w-0 whitespace-nowrap">{displayValue}</span> : null}
+      </motion.button>
 
       {typeof document !== "undefined"
         ? createPortal(
@@ -279,7 +387,7 @@ export function ReminderPicker({
               {isOpen ? (
                 <motion.div
                   data-no-window-drag="true"
-                  className="quicknote-modal-backdrop fixed inset-0 z-[90] flex items-start justify-center overflow-hidden bg-[rgba(30,25,21,0.24)] px-5 py-4 backdrop-blur-[10px]"
+                  className="quicknote-modal-backdrop fixed inset-0 z-[90] flex items-center justify-center bg-[rgba(30,25,21,0.24)] px-4 py-3"
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   exit={{ opacity: 0 }}
@@ -289,388 +397,168 @@ export function ReminderPicker({
                     role="dialog"
                     aria-modal="true"
                     aria-label={t.todos.dialogTitle}
-                    className="paper-panel grid h-full max-h-[calc(100dvh-32px)] min-h-0 w-full max-w-[468px] grid-rows-[auto_minmax(140px,1fr)] overflow-hidden rounded-[28px] p-5 shadow-[0_30px_60px_rgba(30,25,21,0.2)]"
-                    initial={{ opacity: 0, scale: 0.96, y: 16 }}
+                    className="paper-panel w-full max-w-[336px] rounded-[20px] p-3 shadow-[0_26px_48px_rgba(30,25,21,0.22)]"
+                    initial={{ opacity: 0, scale: 0.96, y: 12 }}
                     animate={{ opacity: 1, scale: 1, y: 0 }}
-                    exit={{ opacity: 0, scale: 0.98, y: 10 }}
-                    transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
+                    exit={{ opacity: 0, scale: 0.98, y: 8 }}
+                    transition={{ duration: 0.2, ease: [0.22, 1, 0.36, 1] }}
                     onClick={(event) => event.stopPropagation()}
                   >
-                    <div className="mb-4 flex items-start justify-between gap-3">
+                    <div className="mb-2.5 flex items-center justify-between gap-2">
                       <div className="min-w-0">
                         <span className="status-chip" data-tone="blue">
                           <Clock3Icon size={11} />
                           {t.todos.reminder}
                         </span>
-                        <p className="mt-2 font-display text-[22px] font-semibold tracking-[-0.05em] text-[var(--brown-strong)]">
-                          {todoTitle}
-                        </p>
-                        <p className="mt-1 text-[12px] leading-6 text-[var(--muted)]">
-                          {t.todos.dialogSubtitle}
-                        </p>
+                        <span className="sr-only">{todoTitle}</span>
                       </div>
                       <motion.button
                         type="button"
                         aria-label={t.common.close}
                         data-tooltip={t.common.close}
                         data-no-window-drag="true"
-                        className="paper-button inline-flex shrink-0 items-center justify-center gap-1.5 rounded-[14px] px-3 py-2 text-[12px] font-semibold text-[var(--dark-text)]"
-                        whileHover={{ y: -2, scale: 1.02 }}
-                        whileTap={{ scale: 0.985 }}
+                        className="paper-icon-button inline-flex h-8 w-8 min-h-0 min-w-0 rounded-[11px]"
+                        whileHover={{ y: -1.5, scale: 1.03 }}
+                        whileTap={{ scale: 0.97 }}
                         onClick={closeDialog}
                       >
                         <XIcon size={14} />
-                        {t.common.close}
                       </motion.button>
                     </div>
 
-                    <div data-testid="todo-reminder-scroll-region" className="paper-scroll min-h-0 overflow-y-auto pr-1">
-                      <form
-                        className="flex min-h-full flex-col gap-4"
-                        onSubmit={(event) => {
-                          event.preventDefault();
-                          handleSave();
-                        }}
+                    <form
+                      className="flex flex-col gap-2.5"
+                      onSubmit={(event) => {
+                        event.preventDefault();
+                        handleSave();
+                      }}
+                    >
+                      <motion.div
+                        className="rounded-[14px] border border-[rgba(47,107,255,0.14)] bg-[rgba(47,107,255,0.05)] px-2.5 py-2"
+                        layout
                       >
-                        <div className="rounded-[20px] border border-[rgba(213,198,180,0.88)] bg-white/84 p-4">
-                          <p className="text-[11px] font-semibold uppercase tracking-[0.08em] text-[var(--muted)]">
-                            {t.todos.currentReminder}
-                          </p>
-                          <p className="mt-2 text-[14px] font-semibold text-[var(--brown-strong)]">
+                        <div className="flex items-baseline justify-between gap-2 text-[10px] font-semibold uppercase tracking-[0.08em] text-[var(--muted)]">
+                          <span>{t.todos.currentReminder}</span>
+                          <span>{t.todos.scheduledFor}</span>
+                        </div>
+                        <motion.div className="mt-1 grid grid-cols-2 gap-2">
+                          <p className="truncate text-[11px] font-semibold text-[var(--brown-strong)]">
                             {currentReminderLabel}
                           </p>
-                        </div>
-
-                        <div className="rounded-[20px] border border-[rgba(47,107,255,0.16)] bg-[rgba(47,107,255,0.06)] p-4">
-                          <div className="mb-2 flex items-center justify-between gap-2">
-                            <p className="inline-flex items-center gap-2 text-[12px] font-semibold text-[#2853C7]">
-                              <Clock3Icon size={15} />
-                              {t.todos.scheduledFor}
-                            </p>
-                            <span className="status-chip" data-tone="blue">
-                              <Clock3Icon size={11} />
-                              {t.todos.precise}
-                            </span>
-                          </div>
-                          <p className="font-display text-[24px] font-semibold tracking-[-0.04em] text-[var(--brown-strong)]">
+                          <p className="truncate text-right font-display text-[15px] font-semibold tracking-[-0.03em] text-[var(--brown-strong)]">
                             {draftReminderLabel}
                           </p>
-                          <p className="mt-2 text-[12px] leading-6 text-[var(--muted)]">
-                            {t.todos.pickDateTime}
-                          </p>
-                        </div>
+                        </motion.div>
+                      </motion.div>
 
-                        <div className="rounded-[24px] border border-[rgba(213,198,180,0.88)] bg-[linear-gradient(180deg,rgba(255,252,248,0.98),rgba(255,247,239,0.94))] p-4 shadow-[0_12px_24px_rgba(61,49,34,0.06)]">
-                          <div className="mb-3 flex items-center justify-between gap-2">
-                            <div>
-                              <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-[var(--muted)]">
-                                {t.todos.date}
-                              </p>
-                              <p className="mt-1 text-[12px] leading-6 text-[var(--muted)]">
-                                {t.todos.calendarHint}
-                              </p>
-                              <p className="mt-2 font-display text-[18px] font-semibold tracking-[-0.04em] text-[var(--brown-strong)]">
-                                {currentMonthLabel} {calendarMonth.getFullYear()}
-                              </p>
-                            </div>
-                            <div className="flex items-center gap-1">
-                              <motion.button
-                                type="button"
-                                aria-label={t.todos.previousMonth}
-                                data-tooltip={t.todos.previousMonth}
-                                data-no-window-drag="true"
-                                className="paper-icon-button inline-flex h-8 w-8 items-center justify-center rounded-full text-[14px]"
-                                whileHover={{ y: -1.5, scale: 1.02 }}
-                                whileTap={{ scale: 0.98 }}
-                                onClick={() =>
-                                  setCalendarMonth(
-                                    (current) => new Date(current.getFullYear(), current.getMonth() - 1, 1),
-                                  )
-                                }
-                              >
-                                {"<"}
-                              </motion.button>
-                              <motion.button
-                                type="button"
-                                aria-label={t.todos.nextMonth}
-                                data-tooltip={t.todos.nextMonth}
-                                data-no-window-drag="true"
-                                className="paper-icon-button inline-flex h-8 w-8 items-center justify-center rounded-full text-[14px]"
-                                whileHover={{ y: -1.5, scale: 1.02 }}
-                                whileTap={{ scale: 0.98 }}
-                                onClick={() =>
-                                  setCalendarMonth(
-                                    (current) => new Date(current.getFullYear(), current.getMonth() + 1, 1),
-                                  )
-                                }
-                              >
-                                {">"}
-                              </motion.button>
-                            </div>
-                          </div>
+                      <motion.div className="grid grid-cols-2 gap-2" layout>
+                        <ReminderTimeSelect
+                          label={t.todos.hour}
+                          value={draftHour}
+                          options={hourOptions}
+                          formatOption={(hour) => formatHourOption(Number(hour), timeFormat)}
+                          getOptionState={getHourOptionState}
+                          isOpen={openMenu === "hour"}
+                          triggerRef={hourButtonRef}
+                          onOpenChange={(nextOpen) => setOpenMenu(nextOpen ? "hour" : null)}
+                          onChange={(hour) => {
+                            setDraftHour(hour);
+                            setValidationMessage(null);
+                          }}
+                        />
+                        <ReminderTimeSelect
+                          label={t.todos.minute}
+                          value={draftMinute}
+                          options={minuteOptions}
+                          formatOption={(minute) => minute}
+                          getOptionState={getMinuteOptionState}
+                          isOpen={openMenu === "minute"}
+                          onOpenChange={(nextOpen) => setOpenMenu(nextOpen ? "minute" : null)}
+                          onChange={(minute) => {
+                            setDraftMinute(minute);
+                            setValidationMessage(null);
+                          }}
+                        />
+                      </motion.div>
 
-                          <div className="grid gap-3 md:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
-                            <label className="grid gap-1.5">
-                              <span className="text-[10.5px] font-semibold uppercase tracking-[0.12em] text-[var(--muted)]">
-                                {t.todos.month}
-                              </span>
-                              <select
-                                ref={monthSelectRef}
-                                value={calendarMonth.getMonth()}
-                                className="surface-field w-full min-w-0 rounded-[14px] px-3 py-2.5 text-[12px] font-semibold text-[var(--dark-text)] outline-none"
-                                onChange={(event) => {
-                                  const monthIndex = Number(event.currentTarget.value);
-                                  setCalendarMonth(new Date(calendarMonth.getFullYear(), monthIndex, 1));
-                                  updateDraftDate({ monthIndex });
-                                }}
-                              >
-                                {monthOptions.map((option) => (
-                                  <option key={option.value} value={option.value}>
-                                    {option.label}
-                                  </option>
-                                ))}
-                              </select>
-                            </label>
+                      <motion.div className="grid grid-cols-2 gap-1.5" layout>
+                        {quickOptions.map((option) => (
+                          <motion.button
+                            key={option.label}
+                            type="button"
+                            aria-disabled={option.disabled}
+                            data-tooltip={option.disabled ? pastTooltip : option.label}
+                            data-no-window-drag="true"
+                            className={`rounded-[11px] border px-2 py-1.75 text-[10.5px] font-semibold ${
+                              option.disabled
+                                ? "cursor-not-allowed border-[rgba(213,198,180,0.52)] bg-[rgba(30,25,21,0.04)] text-[rgba(30,25,21,0.32)]"
+                                : "border-[rgba(213,198,180,0.9)] bg-white/84 text-[var(--brown-strong)]"
+                            }`}
+                            whileHover={!option.disabled ? { y: -1, scale: 1.01 } : undefined}
+                            whileTap={!option.disabled ? { scale: 0.98 } : undefined}
+                            onClick={() => {
+                              if (option.disabled) {
+                                return;
+                              }
 
-                            <label className="grid gap-1.5">
-                              <span className="text-[10.5px] font-semibold uppercase tracking-[0.12em] text-[var(--muted)]">
-                                {t.todos.year}
-                              </span>
-                              <select
-                                value={calendarMonth.getFullYear()}
-                                className="surface-field w-full min-w-0 rounded-[14px] px-3 py-2.5 text-[12px] font-semibold text-[var(--dark-text)] outline-none"
-                                onChange={(event) => {
-                                  const year = Number(event.currentTarget.value);
-                                  setCalendarMonth(new Date(year, calendarMonth.getMonth(), 1));
-                                  updateDraftDate({ year });
-                                }}
-                              >
-                                {yearOptions.map((year) => (
-                                  <option key={year} value={year}>
-                                    {year}
-                                  </option>
-                                ))}
-                              </select>
-                            </label>
-                          </div>
+                              setDraftHour(option.hourValue);
+                              setDraftMinute(option.minuteValue);
+                              setValidationMessage(null);
+                            }}
+                          >
+                            {option.label}
+                          </motion.button>
+                        ))}
+                      </motion.div>
 
-                          <div className="mt-3 rounded-[18px] border border-[rgba(213,198,180,0.78)] bg-white/84 p-3">
-                            <div className="mb-2 grid grid-cols-7 gap-1">
-                              {weekdayLabels.map((weekday) => (
-                                <span
-                                  key={weekday}
-                                  className="text-center text-[10px] font-semibold uppercase tracking-[0.08em] text-[var(--muted)]"
-                                >
-                                  {weekday}
-                                </span>
-                              ))}
-                            </div>
+                      {validationMessage ? (
+                        <p className="text-[10.5px] font-medium leading-5 text-[#b64b2e]" role="alert">
+                          {validationMessage}
+                        </p>
+                      ) : null}
 
-                            <div className="grid grid-cols-7 gap-1">
-                              {calendarCells.map((cell, index) => {
-                                if (!cell) {
-                                  return (
-                                    <span key={`empty-${index}`} className="block h-9 rounded-[12px]" aria-hidden="true" />
-                                  );
-                                }
+                      <div className="flex items-center justify-between gap-2 pt-0.5">
+                        <motion.button
+                          type="button"
+                          data-no-window-drag="true"
+                          data-tooltip={t.common.clear}
+                          className="paper-button inline-flex items-center justify-center rounded-[14px] px-3.5 py-2.5 text-[12px] font-semibold text-[var(--dark-text)]"
+                          whileHover={{ y: -1.5, scale: 1.01 }}
+                          whileTap={{ scale: 0.985 }}
+                          onClick={() => {
+                            setValidationMessage(null);
+                            onChange(null);
+                            setIsOpen(false);
+                          }}
+                        >
+                          {t.common.clear}
+                        </motion.button>
 
-                                const isSelected =
-                                  cell.getFullYear() === selectedDateParts.year &&
-                                  cell.getMonth() === selectedDateParts.monthIndex &&
-                                  cell.getDate() === selectedDateParts.day;
-                                const cellDateKey = buildDateKey({
-                                  year: cell.getFullYear(),
-                                  monthIndex: cell.getMonth(),
-                                  day: cell.getDate(),
-                                });
-                                const isPastDay = cellDateKey < todayDateKey;
-                                const isToday = cellDateKey === todayDateKey;
-
-                                return (
-                                  <motion.button
-                                    key={cell.toISOString()}
-                                    type="button"
-                                    disabled={isPastDay}
-                                    data-no-window-drag="true"
-                                    data-tooltip={`${t.todos.date}: ${cellDateKey}`}
-                                    className={`h-9 rounded-[12px] text-[12px] font-semibold transition-colors ${
-                                      isSelected
-                                        ? "bg-[var(--accent-cobalt)] text-white shadow-[0_10px_20px_rgba(47,107,255,0.22)]"
-                                        : isPastDay
-                                          ? "cursor-not-allowed bg-[rgba(30,25,21,0.04)] text-[rgba(30,25,21,0.26)]"
-                                          : isToday
-                                            ? "border border-[rgba(47,107,255,0.2)] bg-[rgba(47,107,255,0.08)] text-[#2853C7]"
-                                            : "bg-[rgba(255,255,255,0.9)] text-[var(--dark-text)] hover:bg-[rgba(255,244,232,0.98)]"
-                                    }`}
-                                    whileHover={!isPastDay ? { y: -1.5, scale: 1.02 } : undefined}
-                                    whileTap={!isPastDay ? { scale: 0.98 } : undefined}
-                                    onClick={() =>
-                                      updateDraftDate({
-                                        year: cell.getFullYear(),
-                                        monthIndex: cell.getMonth(),
-                                        day: cell.getDate(),
-                                      })
-                                    }
-                                  >
-                                    {cell.getDate()}
-                                  </motion.button>
-                                );
-                              })}
-                            </div>
-                          </div>
-                        </div>
-
-                        <div className="grid gap-3 md:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
-                          <div className="md:col-span-2">
-                            <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-[var(--muted)]">
-                              {t.todos.specificTimeTitle}
-                            </p>
-                          </div>
-                          <label className="grid gap-1.5">
-                            <span className="text-[10.5px] font-semibold uppercase tracking-[0.12em] text-[var(--muted)]">
-                              {t.todos.hour}
-                            </span>
-                            <select
-                              ref={hourSelectRef}
-                              value={draftHour}
-                              className="surface-field w-full min-w-0 rounded-[14px] px-3 py-2.5 text-[12px] font-semibold text-[var(--dark-text)] outline-none"
-                              onChange={(event) => {
-                                setDraftHour(event.currentTarget.value);
-                                setValidationMessage(null);
-                                setHelperMessage(null);
-                              }}
-                            >
-                              {hourOptions.map((hour) => (
-                                <option key={hour} value={hour}>
-                                  {formatHourOption(Number(hour), timeFormat)}
-                                </option>
-                              ))}
-                            </select>
-                          </label>
-
-                          <label className="grid gap-1.5">
-                            <span className="text-[10.5px] font-semibold uppercase tracking-[0.12em] text-[var(--muted)]">
-                              {t.todos.minute}
-                            </span>
-                            <select
-                              value={draftMinute}
-                              className="surface-field w-full min-w-0 rounded-[14px] px-3 py-2.5 text-[12px] font-semibold text-[var(--dark-text)] outline-none"
-                              onChange={(event) => {
-                                setDraftMinute(event.currentTarget.value);
-                                setValidationMessage(null);
-                                setHelperMessage(null);
-                              }}
-                            >
-                              {minuteOptions.map((minute) => (
-                                <option key={minute} value={minute}>
-                                  {minute}
-                                </option>
-                              ))}
-                            </select>
-                          </label>
-                        </div>
-
-                        <div className="grid gap-2">
-                          <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-[var(--muted)]">
-                            {t.todos.quickShortcutsTitle}
-                          </p>
-                          <div className="grid grid-cols-3 gap-1.5">
-                            {quickOptions.map((option) => (
-                              <motion.button
-                                key={option.label}
-                                type="button"
-                                data-tooltip={option.label}
-                                className="rounded-[12px] border border-[rgba(213,198,180,0.9)] bg-white/84 px-2 py-2 text-[10.5px] font-semibold text-[var(--brown-strong)]"
-                                whileHover={{ y: -1.5, scale: 1.01 }}
-                                whileTap={{ scale: 0.98 }}
-                                onClick={() => {
-                                  if (option.mode === "timestamp") {
-                                    const optionParts = getDateTimePartsInTimeZone(new Date(option.value), timeZone);
-                                    setDraftDate(
-                                      buildDateKey({
-                                        year: optionParts.year,
-                                        monthIndex: optionParts.monthIndex,
-                                        day: optionParts.day,
-                                      }),
-                                    );
-                                    setCalendarMonth(new Date(optionParts.year, optionParts.monthIndex, 1));
-                                    setDraftHour(pad(optionParts.hour));
-                                    setDraftMinute(pad(optionParts.minute));
-                                    setHelperMessage(null);
-                                  } else {
-                                    const optionParts = parseDateKey(option.value);
-                                    setDraftDate(option.value);
-                                    if (optionParts) {
-                                      setCalendarMonth(new Date(optionParts.year, optionParts.monthIndex, 1));
-                                    }
-                                    setHelperMessage(t.todos.tomorrowTimePrompt);
-                                    window.requestAnimationFrame(() => {
-                                      hourSelectRef.current?.focus();
-                                    });
-                                  }
-
-                                  setValidationMessage(null);
-                                }}
-                              >
-                                {option.label}
-                              </motion.button>
-                            ))}
-                          </div>
-                        </div>
-
-                        {validationMessage ? (
-                          <p className="text-[11px] font-medium leading-5 text-[#b64b2e]">{validationMessage}</p>
-                        ) : helperMessage ? (
-                          <p className="text-[11px] font-medium leading-5 text-[#2853C7]">{helperMessage}</p>
-                        ) : null}
-
-                        <div className="mt-auto flex items-center justify-between gap-2 pt-1">
+                        <motion.div className="flex items-center gap-2">
                           <motion.button
                             type="button"
                             data-no-window-drag="true"
-                            data-tooltip={t.common.clear}
-                            className="rounded-full px-2.5 py-1.5 text-[10.5px] font-semibold text-[var(--muted)]"
-                            whileHover={{ y: -1 }}
-                            whileTap={{ scale: 0.97 }}
-                            onClick={() => {
-                              setValidationMessage(null);
-                              setHelperMessage(null);
-                              onChange(null);
-                              setIsOpen(false);
-                            }}
+                            data-tooltip={t.common.close}
+                            className="paper-button inline-flex items-center justify-center rounded-[14px] px-3.5 py-2.5 text-[12px] font-semibold text-[var(--dark-text)]"
+                            whileHover={{ y: -1.5, scale: 1.01 }}
+                            whileTap={{ scale: 0.985 }}
+                            onClick={closeDialog}
                           >
-                            {t.common.clear}
+                            {t.common.close}
                           </motion.button>
-
-                          <div className="flex items-center gap-2">
-                            <motion.button
-                              type="button"
-                              data-no-window-drag="true"
-                              data-tooltip={t.common.close}
-                              className="paper-button inline-flex items-center justify-center rounded-[14px] px-3.5 py-2.5 text-[12px] font-semibold text-[var(--dark-text)]"
-                              whileHover={{ y: -1.5, scale: 1.01 }}
-                              whileTap={{ scale: 0.985 }}
-                              onClick={closeDialog}
-                            >
-                              {t.common.close}
-                            </motion.button>
-                            <motion.button
-                              type="submit"
-                              data-no-window-drag="true"
-                              data-tooltip={t.common.save}
-                              disabled={!draftDate}
-                              className={`paper-button paper-button-primary inline-flex items-center justify-center rounded-[14px] px-3.5 py-2.5 text-[12px] font-semibold ${
-                                draftDate ? "" : "cursor-not-allowed opacity-60"
-                              }`}
-                              whileHover={draftDate ? { y: -1.5, scale: 1.01 } : undefined}
-                              whileTap={draftDate ? { scale: 0.985 } : undefined}
-                            >
-                              {t.common.save}
-                            </motion.button>
-                          </div>
-                        </div>
-                      </form>
-                    </div>
+                          <motion.button
+                            type="submit"
+                            data-no-window-drag="true"
+                            data-tooltip={t.common.save}
+                            className="paper-button paper-button-primary inline-flex items-center justify-center rounded-[14px] px-3.5 py-2.5 text-[12px] font-semibold"
+                            whileHover={{ y: -1.5, scale: 1.01 }}
+                            whileTap={{ scale: 0.985 }}
+                          >
+                            {t.common.save}
+                          </motion.button>
+                        </motion.div>
+                      </div>
+                    </form>
                   </motion.div>
                 </motion.div>
               ) : null}

@@ -2,7 +2,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import type { ReactNode } from "react";
 import { useState } from "react";
 import { useI18n } from "../../lib/i18n";
-import { ChevronDownIcon, ChevronUpIcon, SlidersHorizontalIcon } from "../icons/AppIcons";
+import { ChevronDownIcon, ChevronUpIcon, CircleHelpIcon, SlidersHorizontalIcon, XIcon } from "../icons/AppIcons";
 import type { AnimationSpeed, TabId, TransitionStyle } from "../../lib/models";
 import { getSurfaceMotionConfig } from "../../lib/transitionMotion";
 import { TabBar } from "./TabBar";
@@ -32,6 +32,7 @@ export function PanelShell({
 }: PanelShellProps) {
   const { t } = useI18n();
   const [isHeaderCollapsed, setIsHeaderCollapsed] = useState(false);
+  const [isHelpOpen, setIsHelpOpen] = useState(false);
   const pageDirection = showSettings ? 1 : -1;
   const surfaceMotion = getSurfaceMotionConfig(transitionStyle, animationSpeed);
   const panelChromeDuration =
@@ -140,18 +141,32 @@ export function PanelShell({
                                 <p className="font-display text-[clamp(16px,4.5vw,19px)] font-semibold tracking-normal text-[var(--brown-strong)]">
                                   QuickNote
                                 </p>
-                                <motion.button
-                                  type="button"
-                                  aria-label={t.app.settings}
-                                  data-tooltip={t.app.settings}
-                                  data-tooltip-placement="bottom"
-                                  className="paper-icon-button mt-1.5 h-[30px] w-[30px] min-h-0 min-w-0 shrink-0 rounded-[11px]"
-                                  whileHover={{ y: -1.5, scale: 1.02 }}
-                                  whileTap={{ scale: 0.985 }}
-                                  onClick={onToggleSettings}
-                                >
-                                  <SlidersHorizontalIcon size={14} />
-                                </motion.button>
+                                <div className="flex shrink-0 items-center gap-1.5">
+                                  <motion.button
+                                    type="button"
+                                    aria-label={t.app.help}
+                                    data-tooltip={t.app.help}
+                                    data-tooltip-placement="bottom"
+                                    className="paper-icon-button mt-1.5 h-[30px] w-[30px] min-h-0 min-w-0 shrink-0 rounded-[11px] text-[#7A5E39]"
+                                    whileHover={{ y: -1.5, scale: 1.02 }}
+                                    whileTap={{ scale: 0.985 }}
+                                    onClick={() => setIsHelpOpen(true)}
+                                  >
+                                    <CircleHelpIcon size={15} />
+                                  </motion.button>
+                                  <motion.button
+                                    type="button"
+                                    aria-label={t.app.settings}
+                                    data-tooltip={t.app.settings}
+                                    data-tooltip-placement="bottom"
+                                    className="paper-icon-button mt-1.5 h-[30px] w-[30px] min-h-0 min-w-0 shrink-0 rounded-[11px]"
+                                    whileHover={{ y: -1.5, scale: 1.02 }}
+                                    whileTap={{ scale: 0.985 }}
+                                    onClick={onToggleSettings}
+                                  >
+                                    <SlidersHorizontalIcon size={14} />
+                                  </motion.button>
+                                </div>
                               </div>
 
                               <TabBar activeTab={activeTab} onTabChange={onTabChange} />
@@ -208,6 +223,86 @@ export function PanelShell({
           </div>
         </div>
       </motion.div>
+
+      <AnimatePresence>
+        {isHelpOpen ? (
+          <motion.div
+            data-no-window-drag="true"
+            className="quicknote-modal-backdrop fixed inset-0 z-[95] flex items-center justify-center bg-[rgba(30,25,21,0.24)] px-5 py-6"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={() => setIsHelpOpen(false)}
+          >
+            <motion.div
+              role="dialog"
+              aria-modal="true"
+              aria-label={t.app.helpDialogTitle}
+              className="paper-panel flex w-full max-w-[430px] flex-col rounded-[24px] p-5 shadow-[0_26px_48px_rgba(30,25,21,0.24)]"
+              initial={{ opacity: 0, scale: 0.95, y: 12 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.98, y: 8 }}
+              transition={{ duration: 0.18, ease: [0.22, 1, 0.36, 1] }}
+              onClick={(event) => event.stopPropagation()}
+            >
+              <div className="mb-4 flex items-start justify-between gap-3">
+                <div className="min-w-0">
+                  <span className="status-chip" data-tone="neutral">
+                    <CircleHelpIcon size={11} />
+                    {t.app.help}
+                  </span>
+                  <p className="mt-2 font-display text-[22px] font-semibold tracking-normal text-[var(--brown-strong)]">
+                    {t.app.helpDialogTitle}
+                  </p>
+                  <p className="mt-1 text-[12px] leading-6 text-[var(--muted)]">
+                    {t.app.helpDialogSubtitle}
+                  </p>
+                </div>
+                <motion.button
+                  type="button"
+                  aria-label={t.common.close}
+                  data-tooltip={t.common.close}
+                  data-no-window-drag="true"
+                  className="paper-icon-button inline-flex h-9 w-9 min-h-0 min-w-0 rounded-[12px]"
+                  whileHover={{ y: -1.5, scale: 1.03 }}
+                  whileTap={{ scale: 0.97 }}
+                  onClick={() => setIsHelpOpen(false)}
+                >
+                  <XIcon size={14} />
+                </motion.button>
+              </div>
+
+              <div className="space-y-3">
+                <section className="rounded-[18px] border border-[rgba(213,198,180,0.82)] bg-[rgba(255,255,255,0.42)] p-3">
+                  <p className="mb-2 text-[11px] font-bold uppercase tracking-[0.08em] text-[var(--muted)]">
+                    {t.app.helpBasicsTitle}
+                  </p>
+                  <ul className="space-y-1.5">
+                    {t.app.helpBasics.map((tip) => (
+                      <li key={tip} className="wrap-anywhere text-[12px] font-medium leading-5 text-[var(--dark-text)]">
+                        {tip}
+                      </li>
+                    ))}
+                  </ul>
+                </section>
+
+                <section className="rounded-[18px] border border-[rgba(213,198,180,0.82)] bg-[rgba(255,255,255,0.42)] p-3">
+                  <p className="mb-2 text-[11px] font-bold uppercase tracking-[0.08em] text-[var(--muted)]">
+                    {t.app.helpShortcutsTitle}
+                  </p>
+                  <ul className="space-y-1.5">
+                    {t.app.helpShortcuts.map((shortcut) => (
+                      <li key={shortcut} className="wrap-anywhere text-[12px] font-medium leading-5 text-[var(--dark-text)]">
+                        {shortcut}
+                      </li>
+                    ))}
+                  </ul>
+                </section>
+              </div>
+            </motion.div>
+          </motion.div>
+        ) : null}
+      </AnimatePresence>
     </main>
   );
 }

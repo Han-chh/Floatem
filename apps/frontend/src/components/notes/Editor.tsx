@@ -360,7 +360,7 @@ export function Editor({ content, onChange }: EditorProps) {
               void handlePaste();
             }
           }}
-          className="surface-field wrap-anywhere min-h-[76px] rounded-[20px] px-3 py-3 text-[12.25px] leading-[1.6] outline-none"
+          className="note-editor-input surface-field wrap-anywhere min-h-[76px] rounded-[20px] px-3 py-3 text-[12.25px] leading-[1.6] outline-none"
           placeholder={t.notes.editorPlaceholder}
           renderElement={renderElement}
           renderLeaf={renderLeaf}

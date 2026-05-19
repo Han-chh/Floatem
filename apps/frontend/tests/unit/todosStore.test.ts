@@ -1,8 +1,11 @@
 import { beforeEach, describe, expect, it } from "vitest";
+import { createNoteGroup } from "../../src/lib/models";
+import { useNotesStore } from "../../src/store/notesStore";
 import { useTodosStore } from "../../src/store/todosStore";
 
 describe("todosStore", () => {
   beforeEach(() => {
+    useNotesStore.getState().reset();
     useTodosStore.getState().reset();
   });
 
@@ -16,6 +19,30 @@ describe("todosStore", () => {
 
     useTodosStore.getState().removeTodo(created!.id);
     expect(useTodosStore.getState().todos).toHaveLength(0);
+  });
+
+  it("completes, deletes, and moves selected todos in batches", () => {
+    useTodosStore.getState().initialize([]);
+    useTodosStore.getState().selectDate("2026-05-12");
+    const first = useTodosStore.getState().addTodo("First");
+    const second = useTodosStore.getState().addTodo("Second");
+    const third = useTodosStore.getState().addTodo("Third");
+
+    useTodosStore.getState().completeTodos([first!.id, third!.id]);
+    expect(useTodosStore.getState().todos.map((todo) => `${todo.text}:${todo.done}`)).toEqual([
+      "Second:false",
+      "First:true",
+      "Third:true",
+    ]);
+
+    useTodosStore.getState().moveTodosToDate([first!.id, second!.id], "2026-05-13");
+    expect(useTodosStore.getState().todos.filter((todo) => todo.dateKey === "2026-05-13").map((todo) => todo.text)).toEqual([
+      "Second",
+      "First",
+    ]);
+
+    useTodosStore.getState().removeTodos([second!.id, third!.id]);
+    expect(useTodosStore.getState().todos.map((todo) => todo.text)).toEqual(["First"]);
   });
 
   it("stores reminder timestamps", () => {
@@ -100,5 +127,31 @@ describe("todosStore", () => {
     ]);
     expect(today?.dateKey).toBe("2026-05-12");
     expect(tomorrow?.dateKey).toBe("2026-05-13");
+  });
+
+  it("manages todo groups independently from note groups", () => {
+    useNotesStore.getState().initialize({
+      cards: [],
+      groups: [createNoteGroup({ id: "Work", name: "Work", color: "#FF7A59" })],
+    });
+    useTodosStore.getState().initialize([]);
+    const todo = useTodosStore.getState().addTodo("Grouped task");
+
+    const group = useTodosStore.getState().createGroup({ name: "Work", color: "#2F6BFF" });
+
+    expect(group).not.toBeNull();
+    expect(useNotesStore.getState().groups[0]?.color).toBe("#FF7A59");
+    expect(useTodosStore.getState().groups[0]?.color).toBe("#2F6BFF");
+
+    useTodosStore.getState().assignGroupToTodo(todo!.id, group!.id);
+    expect(useTodosStore.getState().todos[0]?.groupId).toBe("Work");
+
+    expect(useTodosStore.getState().updateGroup("Work", { name: "Errands", color: "#1FA87A" })).toBe(true);
+    expect(useTodosStore.getState().todos[0]?.groupId).toBe("Errands");
+    expect(useNotesStore.getState().groups[0]?.id).toBe("Work");
+
+    useTodosStore.getState().deleteGroup("Errands");
+    expect(useTodosStore.getState().todos[0]?.groupId).toBeNull();
+    expect(useNotesStore.getState().groups).toHaveLength(1);
   });
 });

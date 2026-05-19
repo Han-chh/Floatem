@@ -1,26 +1,32 @@
-import { act, render, screen, waitFor } from "@testing-library/react";
+import { act, render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { DEFAULT_SETTINGS } from "../../src/lib/models";
 import { TodoList } from "../../src/components/todos/TodoList";
 import { formatLocalDateKey } from "../../src/lib/models";
 import { useSettingsStore } from "../../src/store/settingsStore";
+import { useTodosStore } from "../../src/store/todosStore";
 
 describe("TodoList", () => {
   afterEach(() => {
     vi.useRealTimers();
   });
 
-  it("adds, completes, and deletes a todo with Enter submission while keeping Cmd+Enter for new lines", async () => {
+  it("adds, completes, and deletes a todo with Enter submission while keeping Shift+Enter for new lines", async () => {
     const user = userEvent.setup();
     render(<TodoList />);
 
     const input = screen.getByLabelText("Quick add");
 
     await user.type(input, "Ship docs");
-    expect(screen.getByText("Cmd+Enter for newline")).toBeInTheDocument();
+    expect(screen.queryByText("Enter to add. Shift+Enter for new line")).not.toBeInTheDocument();
+    expect(input).toHaveAttribute("placeholder", "Enter to add a todo\nClick a todo to edit it");
+    expect(screen.getByRole("button", { name: "Add task" })).toHaveAttribute(
+      "data-tooltip",
+      "Enter to add · Shift+Enter for new line",
+    );
 
-    await user.keyboard("{Meta>}{Enter}{/Meta}");
+    await user.keyboard("{Shift>}{Enter}{/Shift}");
     expect(screen.queryByRole("button", { name: "Complete task" })).not.toBeInTheDocument();
     expect(input).toHaveValue("Ship docs\n");
 
@@ -47,6 +53,131 @@ describe("TodoList", () => {
     const deleteButtons = screen.getAllByRole("button", { name: "Delete todo" });
     await user.click(deleteButtons[deleteButtons.length - 1]!);
     expect(screen.queryByText("Ship docs")).not.toBeInTheDocument();
+  });
+
+  it("supports selecting todos for bulk complete, date change, and delete", async () => {
+    const user = userEvent.setup();
+    const today = new Date();
+    const tomorrow = new Date(today);
+    tomorrow.setDate(today.getDate() + 1);
+    const tomorrowKey = formatLocalDateKey(tomorrow);
+
+    render(<TodoList />);
+
+    await user.type(screen.getByLabelText("Quick add"), "Alpha");
+    await user.keyboard("{Enter}");
+    await user.type(screen.getByLabelText("Quick add"), "Beta");
+    await user.keyboard("{Enter}");
+
+    await user.click(screen.getByRole("button", { name: "Select todos" }));
+    expect(screen.queryByRole("button", { name: "Delete todo" })).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole("checkbox", { name: "Select Alpha" }));
+    await user.click(screen.getByRole("button", { name: "Set date" }));
+    expect(screen.getByRole("dialog", { name: "Change selected date" })).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: `tomorrow, ${tomorrowKey}: 0 done, 0 undone` }));
+    await user.click(screen.getByRole("button", { name: "Change date" }));
+
+    await waitFor(() => {
+      expect(screen.queryByText("Alpha")).not.toBeInTheDocument();
+    });
+    expect(screen.getByText("Beta")).toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: "Select todos" }));
+    await user.click(screen.getByRole("checkbox", { name: "Select Beta" }));
+    await user.click(screen.getByRole("button", { name: "Complete selected" }));
+    expect(screen.getByText("Complete 1 selected todo?")).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "Complete" }));
+    expect(screen.getByRole("button", { name: "Restore task" })).toBeInTheDocument();
+
+    await waitFor(() => {
+      expect(screen.queryByRole("button", { name: "Complete selected" })).not.toBeInTheDocument();
+    });
+
+    await user.type(screen.getByLabelText("Quick add"), "Gamma");
+    await user.keyboard("{Enter}");
+    await user.click(screen.getByRole("button", { name: "Select todos" }));
+    await user.click(screen.getByRole("checkbox", { name: "Select Gamma" }));
+    await user.click(screen.getByRole("button", { name: "Delete selected" }));
+    expect(screen.getByText("Delete 1 selected todo? This cannot be undone.")).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "Delete" }));
+    await waitFor(() => {
+      expect(screen.queryByText("Gamma")).not.toBeInTheDocument();
+    });
+  });
+
+  it("keeps completed todos out of checkbox selection and select-all", async () => {
+    const user = userEvent.setup();
+    render(<TodoList />);
+
+    await user.type(screen.getByLabelText("Quick add"), "Alpha");
+    await user.keyboard("{Enter}");
+    await user.type(screen.getByLabelText("Quick add"), "Beta");
+    await user.keyboard("{Enter}");
+    await user.click(screen.getAllByRole("button", { name: "Complete task" })[1]!);
+
+    await user.click(screen.getByRole("button", { name: "Select todos" }));
+
+    expect(screen.getByRole("checkbox", { name: "Select Alpha" })).toBeInTheDocument();
+    expect(screen.queryByRole("checkbox", { name: "Select Beta" })).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: "Select all todos" }));
+    expect(screen.getByText("1 selected")).toBeInTheDocument();
+  });
+
+  it("creates, assigns, and filters todo groups from the todo toolbar", async () => {
+    const user = userEvent.setup();
+    render(<TodoList />);
+
+    await user.type(screen.getByLabelText("Quick add"), "Alpha");
+    await user.keyboard("{Enter}");
+    await user.type(screen.getByLabelText("Quick add"), "Beta");
+    await user.keyboard("{Enter}");
+
+    await user.click(screen.getByRole("button", { name: "Add todo group" }));
+    const manageDialog = screen.getByRole("dialog", { name: "Manage todo groups" });
+    expect(manageDialog).toBeInTheDocument();
+    expect(within(manageDialog).getByRole("button", { name: "No group" })).toBeDisabled();
+    expect(within(manageDialog).queryByRole("button", { name: "Edit No group group" })).not.toBeInTheDocument();
+    expect(within(manageDialog).queryByRole("button", { name: "Delete No group group" })).not.toBeInTheDocument();
+    expect(within(manageDialog).getByText("No custom todo groups yet. Create one here, then assign it from a todo card.")).toBeInTheDocument();
+    await user.click(within(manageDialog).getByRole("button", { name: "Add todo group" }));
+    const createDialog = screen.getByRole("dialog", { name: "Create group" });
+    await user.type(within(createDialog).getByRole("textbox", { name: "Group name" }), "Work");
+    await user.click(within(createDialog).getByRole("button", { name: "Create group" }));
+    await waitFor(() => {
+      expect(screen.queryByRole("dialog", { name: "Create group" })).not.toBeInTheDocument();
+    });
+    await user.click(within(screen.getByRole("dialog", { name: "Manage todo groups" })).getByRole("button", { name: "Close" }));
+    await waitFor(() => {
+      expect(screen.queryByRole("dialog", { name: "Manage todo groups" })).not.toBeInTheDocument();
+    });
+
+    const alphaCard = screen.getAllByTestId("todo-item").find((item) => within(item).queryByText("Alpha"));
+    expect(alphaCard).toBeTruthy();
+    await user.click(within(alphaCard!).getByRole("button", { name: "Change todo group" }));
+    await user.click(within(screen.getByRole("dialog", { name: "Manage todo groups" })).getByRole("button", { name: "Work" }));
+
+    await user.click(screen.getByRole("button", { name: "Filter todo groups" }));
+    const filterDialog = screen.getByRole("dialog", { name: "Filter todo groups" });
+    await user.click(within(filterDialog).getByRole("checkbox", { name: /^All/ }));
+    expect(screen.getAllByText("Alpha").length).toBeGreaterThan(0);
+    expect(screen.getByText("Beta")).toBeInTheDocument();
+    await user.click(within(filterDialog).getByRole("button", { name: "Save" }));
+    await waitFor(() => {
+      expect(screen.queryByText("Alpha")).not.toBeInTheDocument();
+      expect(screen.queryByText("Beta")).not.toBeInTheDocument();
+    });
+
+    await user.click(screen.getByRole("button", { name: "Filter todo groups" }));
+    const workFilterDialog = screen.getByRole("dialog", { name: "Filter todo groups" });
+    await user.click(within(workFilterDialog).getByRole("checkbox", { name: /^Work/ }));
+    expect(screen.queryByText("Alpha")).not.toBeInTheDocument();
+    await user.click(within(workFilterDialog).getByRole("button", { name: "Save" }));
+    await waitFor(() => {
+      expect(screen.getByText("Alpha")).toBeInTheDocument();
+    });
+    expect(screen.queryByText("Beta")).not.toBeInTheDocument();
   });
 
   it("uses the native clipboard bridge for Cmd+C and Cmd+V in the macOS host", async () => {
@@ -170,7 +301,7 @@ describe("TodoList", () => {
     await user.keyboard("{Enter}");
 
     expect(input).toHaveFocus();
-    expect(screen.queryByRole("dialog", { name: "Todo calendar" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("dialog", { name: "Open todo calendar" })).not.toBeInTheDocument();
 
     await user.keyboard("Ship docs");
     await user.keyboard(" ");
@@ -192,14 +323,10 @@ describe("TodoList", () => {
     await user.keyboard("{Enter}");
 
     await user.click(screen.getByRole("button", { name: "Open todo calendar" }));
-    expect(screen.getByRole("dialog", { name: "Todo calendar" })).toBeInTheDocument();
-    expect(
-      screen.getByRole("button", { name: `today, ${todayKey}: 1 todos, 0 done, 1 undone` }),
-    ).toBeInTheDocument();
+    expect(screen.getByRole("dialog", { name: "Open todo calendar" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: `today, ${todayKey}: 0 done, 1 undone` })).toBeInTheDocument();
 
-    await user.click(
-      screen.getByRole("button", { name: `tomorrow, ${tomorrowKey}: 0 todos, 0 done, 0 undone` }),
-    );
+    await user.click(screen.getByRole("button", { name: `tomorrow, ${tomorrowKey}: 0 done, 0 undone` }));
     expect(screen.queryByText("Today task")).not.toBeInTheDocument();
 
     await user.type(screen.getByLabelText("Quick add"), "Tomorrow task");
@@ -207,11 +334,9 @@ describe("TodoList", () => {
     expect(screen.getByText("Tomorrow task")).toBeInTheDocument();
 
     await user.click(screen.getByRole("button", { name: "Open todo calendar" }));
-    expect(
-      screen.getByRole("button", { name: `tomorrow, ${tomorrowKey}: 1 todos, 0 done, 1 undone` }),
-    ).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: `tomorrow, ${tomorrowKey}: 0 done, 1 undone` })).toBeInTheDocument();
 
-    await user.click(screen.getByRole("button", { name: `today, ${todayKey}: 1 todos, 0 done, 1 undone` }));
+    await user.click(screen.getByRole("button", { name: `today, ${todayKey}: 0 done, 1 undone` }));
     expect(screen.getByText("Today task")).toBeInTheDocument();
     await waitFor(() => {
       expect(screen.queryByText("Tomorrow task")).not.toBeInTheDocument();
@@ -221,6 +346,9 @@ describe("TodoList", () => {
   it("moves the current todo date when timezone changes across a date boundary", async () => {
     vi.useFakeTimers();
     vi.setSystemTime(new Date(Date.UTC(2026, 4, 13, 1, 0)));
+    act(() => {
+      useTodosStore.getState().reset();
+    });
     act(() => {
       useSettingsStore.getState().setTimeZone("Asia/Shanghai");
     });
