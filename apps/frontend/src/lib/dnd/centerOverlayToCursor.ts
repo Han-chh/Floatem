@@ -1,12 +1,5 @@
 import type { Modifier } from "@dnd-kit/core";
 
-type DragPointerCoordinates = {
-  x: number;
-  y: number;
-};
-
-let latestDragPointerCoordinates: DragPointerCoordinates | null = null;
-
 function getEventCoordinates(event: Event | null) {
   if (!event) {
     return null;
@@ -40,45 +33,18 @@ function getEventCoordinates(event: Event | null) {
   return null;
 }
 
-export function setLatestDragPointerCoordinates(coordinates: DragPointerCoordinates | null) {
-  latestDragPointerCoordinates = coordinates;
-}
-
 export function syncLatestDragPointerCoordinates(event: Event | null) {
-  const coordinates = getEventCoordinates(event);
-
-  if (coordinates) {
-    latestDragPointerCoordinates = coordinates;
-  }
-
-  return coordinates;
-}
-
-export function clearLatestDragPointerCoordinates() {
-  latestDragPointerCoordinates = null;
+  return getEventCoordinates(event);
 }
 
 export const centerOverlayToCursor: Modifier = ({
   activatorEvent,
   activeNodeRect,
-  containerNodeRect,
   overlayNodeRect,
   transform,
 }) => {
   if (!activeNodeRect || !overlayNodeRect) {
     return transform;
-  }
-
-  const liveCoordinates = latestDragPointerCoordinates;
-  if (liveCoordinates) {
-    const containerOffsetX = containerNodeRect?.left ?? 0;
-    const containerOffsetY = containerNodeRect?.top ?? 0;
-
-    return {
-      ...transform,
-      x: liveCoordinates.x - activeNodeRect.left - overlayNodeRect.width / 2 - containerOffsetX,
-      y: liveCoordinates.y - activeNodeRect.top - overlayNodeRect.height / 2 - containerOffsetY,
-    };
   }
 
   const coordinates = getEventCoordinates(activatorEvent);
@@ -89,12 +55,10 @@ export const centerOverlayToCursor: Modifier = ({
 
   const offsetX = coordinates.x - activeNodeRect.left;
   const offsetY = coordinates.y - activeNodeRect.top;
-  const containerOffsetX = containerNodeRect?.left ?? 0;
-  const containerOffsetY = containerNodeRect?.top ?? 0;
 
   return {
     ...transform,
-    x: transform.x + offsetX - overlayNodeRect.width / 2 - containerOffsetX,
-    y: transform.y + offsetY - overlayNodeRect.height / 2 - containerOffsetY,
+    x: transform.x + offsetX - overlayNodeRect.width / 2,
+    y: transform.y + offsetY - overlayNodeRect.height / 2,
   };
 };

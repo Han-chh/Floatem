@@ -1,8 +1,6 @@
-import { afterEach, describe, expect, it } from "vitest";
+import { describe, expect, it } from "vitest";
 import {
   centerOverlayToCursor,
-  clearLatestDragPointerCoordinates,
-  setLatestDragPointerCoordinates,
 } from "../../src/lib/dnd/centerOverlayToCursor";
 
 type ModifierArgs = Parameters<typeof centerOverlayToCursor>[0];
@@ -32,10 +30,6 @@ function createModifierArgs(
 }
 
 describe("centerOverlayToCursor", () => {
-  afterEach(() => {
-    clearLatestDragPointerCoordinates();
-  });
-
   it("centers the drag overlay using pointer-like event coordinates", () => {
     const transformed = centerOverlayToCursor(createModifierArgs({
       activatorEvent: { clientX: 50, clientY: 70 } as unknown as Event,
@@ -92,7 +86,7 @@ describe("centerOverlayToCursor", () => {
     });
   });
 
-  it("subtracts the drag container offset when the overlay is positioned inside a nested shell", () => {
+  it("keeps the overlay centered on the pointer even when rendered inside a nested shell", () => {
     const transformed = centerOverlayToCursor(createModifierArgs({
       activatorEvent: { clientX: 210, clientY: 240 } as unknown as Event,
       activeNodeRect: {
@@ -116,8 +110,8 @@ describe("centerOverlayToCursor", () => {
     }));
 
     expect(transformed).toMatchObject({
-      x: -140,
-      y: -160,
+      x: 20,
+      y: 50,
     });
   });
 
@@ -147,9 +141,7 @@ describe("centerOverlayToCursor", () => {
     expect(transformed).toBe(transform);
   });
 
-  it("prefers the latest tracked drag pointer coordinates when available", () => {
-    setLatestDragPointerCoordinates({ x: 180, y: 160 });
-
+  it("keeps using the drag transform even when pointer tracking has newer coordinates", () => {
     const transformed = centerOverlayToCursor(createModifierArgs({
       activatorEvent: { clientX: 50, clientY: 70 } as unknown as Event,
       activeNodeRect: {
@@ -173,8 +165,8 @@ describe("centerOverlayToCursor", () => {
     }));
 
     expect(transformed).toMatchObject({
-      x: 30,
-      y: 80,
+      x: 919,
+      y: 999,
     });
   });
 });

@@ -8,12 +8,6 @@ type MessageCatalog = {
     collapseNavigation: string;
     expandNavigation: string;
     help: string;
-    helpBasics: string[];
-    helpBasicsTitle: string;
-    helpDialogSubtitle: string;
-    helpDialogTitle: string;
-    helpShortcuts: string[];
-    helpShortcutsTitle: string;
     hideWindow: string;
     loading: string;
     localOnly: string;
@@ -321,21 +315,6 @@ const messages: Record<AppLanguage, MessageCatalog> = {
       collapseNavigation: "Collapse navigation",
       expandNavigation: "Expand navigation",
       help: "QuickNote help",
-      helpBasics: [
-        "Use Notes for rich cards, colors, groups, and quick editing.",
-        "Use Todos for dated tasks, reminders, bulk selection, and calendar planning.",
-        "Open Settings to adjust language, timezone, shortcuts, motion, and notifications.",
-        "QuickNote stores notes, todos, and settings locally on this device.",
-      ],
-      helpBasicsTitle: "Quick tips",
-      helpDialogSubtitle: "A compact guide for the main QuickNote workflows and shortcuts.",
-      helpDialogTitle: "QuickNote guide",
-      helpShortcuts: [
-        "Use the global shortcut to summon or hide the panel.",
-        "Enter adds the todo you are typing; Shift+Enter inserts a new line.",
-        "Cmd/Ctrl+A, C, and V work inside quick input fields.",
-      ],
-      helpShortcutsTitle: "Shortcuts",
       hideWindow: "Hide QuickNote",
       loading: "Loading QuickNote...",
       localOnly: "local only",
@@ -648,21 +627,6 @@ const messages: Record<AppLanguage, MessageCatalog> = {
       collapseNavigation: "\u6536\u8d77\u5bfc\u822a",
       expandNavigation: "\u5c55\u5f00\u5bfc\u822a",
       help: "QuickNote \u5e2e\u52a9",
-      helpBasics: [
-        "\u5728 Notes \u4e2d\u7ba1\u7406\u5bcc\u6587\u672c\u5361\u7247\u3001\u989c\u8272\u3001\u5206\u7ec4\u548c\u5feb\u901f\u7f16\u8f91\u3002",
-        "\u5728 Todos \u4e2d\u7ba1\u7406\u6309\u65e5\u671f\u5f52\u6863\u7684\u4efb\u52a1\u3001\u63d0\u9192\u3001\u590d\u9009\u548c\u65e5\u5386\u8ba1\u5212\u3002",
-        "\u6253\u5f00\u8bbe\u7f6e\u53ef\u8c03\u6574\u8bed\u8a00\u3001\u65f6\u533a\u3001\u5feb\u6377\u952e\u3001\u52a8\u6548\u548c\u901a\u77e5\u3002",
-        "QuickNote \u4f1a\u5c06\u7b14\u8bb0\u3001\u5f85\u529e\u548c\u8bbe\u7f6e\u4fdd\u5b58\u5728\u672c\u673a\u3002",
-      ],
-      helpBasicsTitle: "\u5feb\u901f\u6280\u5de7",
-      helpDialogSubtitle: "QuickNote \u4e3b\u8981\u5de5\u4f5c\u6d41\u548c\u5feb\u6377\u952e\u7684\u7b80\u8981\u8bf4\u660e\u3002",
-      helpDialogTitle: "QuickNote \u4f7f\u7528\u6307\u5357",
-      helpShortcuts: [
-        "\u4f7f\u7528\u5168\u5c40\u5feb\u6377\u952e\u53ef\u5524\u51fa\u6216\u9690\u85cf\u9762\u677f\u3002",
-        "Enter \u6dfb\u52a0\u6b63\u5728\u8f93\u5165\u7684\u5f85\u529e\uff1bShift+Enter \u6362\u884c\u3002",
-        "Cmd/Ctrl+A\u3001C\u3001V \u53ef\u5728\u5feb\u901f\u8f93\u5165\u6846\u4e2d\u4f7f\u7528\u3002",
-      ],
-      helpShortcutsTitle: "\u5feb\u6377\u952e",
     },
     common: {
       cancel: "取消",

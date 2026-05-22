@@ -1,8 +1,4 @@
 import { useEffect, useState } from "react";
-import {
-  clearLatestDragPointerCoordinates,
-  setLatestDragPointerCoordinates,
-} from "../lib/dnd/centerOverlayToCursor";
 
 type DragPointerCoordinates = {
   x: number;
@@ -14,7 +10,6 @@ export function useDragPointerTracking(active: boolean) {
 
   useEffect(() => {
     if (!active) {
-      clearLatestDragPointerCoordinates();
       setCoordinates(null);
       return;
     }
@@ -25,7 +20,6 @@ export function useDragPointerTracking(active: boolean) {
         y: event.clientY,
       };
 
-      setLatestDragPointerCoordinates(nextCoordinates);
       setCoordinates(nextCoordinates);
     };
 
@@ -40,7 +34,6 @@ export function useDragPointerTracking(active: boolean) {
         y: touch.clientY,
       };
 
-      setLatestDragPointerCoordinates(nextCoordinates);
       setCoordinates(nextCoordinates);
     };
 
@@ -50,7 +43,6 @@ export function useDragPointerTracking(active: boolean) {
     return () => {
       window.removeEventListener("pointermove", handlePointerMove);
       window.removeEventListener("touchmove", handleTouchMove);
-      clearLatestDragPointerCoordinates();
       setCoordinates(null);
     };
   }, [active]);

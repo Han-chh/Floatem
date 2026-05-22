@@ -131,7 +131,6 @@ function NoteCardBody({
                 className="status-chip"
                 style={{ color: accentColor, backgroundColor: `${accentColor}1f` }}
               >
-                <GroupColorGlyph color={accentColor} size="sm" />
                 {groupLabel}
               </span>
               <span className="note-secondary-chip status-chip" data-tone="neutral">

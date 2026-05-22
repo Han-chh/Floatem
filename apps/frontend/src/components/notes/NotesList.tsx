@@ -11,6 +11,7 @@ import {
 import { SortableContext, verticalListSortingStrategy } from "@dnd-kit/sortable";
 import { AnimatePresence, motion } from "framer-motion";
 import { useEffect, useMemo, useState } from "react";
+import { createPortal } from "react-dom";
 import { useDragPointerTracking } from "../../hooks/useDragPointerTracking";
 import { useI18n } from "../../lib/i18n";
 import { centerOverlayToCursor, syncLatestDragPointerCoordinates } from "../../lib/dnd/centerOverlayToCursor";
@@ -229,17 +230,22 @@ export function NotesList() {
                 </div>
               </div>
             </SortableContext>
-            <DragOverlay
-              modifiers={[centerOverlayToCursor]}
-              dropAnimation={{
-                duration: 180,
-                easing: "cubic-bezier(0.22, 1, 0.36, 1)",
-              }}
-            >
-              {activeDragCard ? (
-                <NoteCardPreview note={activeDragCard} width={activeDragWidth ?? undefined} />
-              ) : null}
-            </DragOverlay>
+            {typeof document !== "undefined"
+              ? createPortal(
+                  <DragOverlay
+                    modifiers={[centerOverlayToCursor]}
+                    dropAnimation={{
+                      duration: 180,
+                      easing: "cubic-bezier(0.22, 1, 0.36, 1)",
+                    }}
+                  >
+                    {activeDragCard ? (
+                      <NoteCardPreview note={activeDragCard} width={activeDragWidth ?? undefined} />
+                    ) : null}
+                  </DragOverlay>,
+                  document.body,
+                )
+              : null}
           </DndContext>
         )}
       </motion.div>

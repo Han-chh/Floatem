@@ -1273,17 +1273,26 @@ export function TodoList() {
                   </div>
                 </SortableContext>
 
-                <DragOverlay
-                  modifiers={[centerOverlayToCursor]}
-                  dropAnimation={{
-                    duration: 180,
-                    easing: "cubic-bezier(0.22, 1, 0.36, 1)",
-                  }}
-                >
-                  {activeDragTodo ? (
-                    <TodoItemPreview todo={activeDragTodo} width={activeDragWidth ?? undefined} order={activeDragOrder} />
-                  ) : null}
-                </DragOverlay>
+                {typeof document !== "undefined"
+                  ? createPortal(
+                      <DragOverlay
+                        modifiers={[centerOverlayToCursor]}
+                        dropAnimation={{
+                          duration: 180,
+                          easing: "cubic-bezier(0.22, 1, 0.36, 1)",
+                        }}
+                      >
+                        {activeDragTodo ? (
+                          <TodoItemPreview
+                            todo={activeDragTodo}
+                            width={activeDragWidth ?? undefined}
+                            order={activeDragOrder}
+                          />
+                        ) : null}
+                      </DragOverlay>,
+                      document.body,
+                    )
+                  : null}
               </DndContext>
 
               {doneTodos.length > 0 ? (

@@ -23,8 +23,15 @@ describe("PanelShell", () => {
 
     await user.click(screen.getByRole("button", { name: "QuickNote help" }));
 
-    expect(screen.getByRole("dialog", { name: "QuickNote guide" })).toBeInTheDocument();
-    expect(screen.getByText("Use Notes for rich cards, colors, groups, and quick editing.")).toBeInTheDocument();
-    expect(screen.getByText("Use the global shortcut to summon or hide the panel.")).toBeInTheDocument();
+    const dialog = screen.getByRole("dialog", { name: "QuickNote guide" });
+
+    expect(dialog).toBeInTheDocument();
+    expect(screen.getByText("Overview")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /Notes/i })).toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: "Notes" }));
+
+    expect(screen.getByRole("dialog", { name: "Write and organize note cards" })).toBeInTheDocument();
+    expect(screen.getByText("Cards")).toBeInTheDocument();
   });
 });

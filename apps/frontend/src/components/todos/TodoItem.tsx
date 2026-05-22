@@ -418,12 +418,12 @@ export function TodoItemPreview({ todo, width, order }: { todo: TodoItemModel; w
   const groupAccentColor = resolveTodoAccentColor(todo, groups);
   return (
     <div
-      className={`paper-card cq-card relative overflow-hidden rounded-[18px] px-2 py-1.25 shadow-[0_24px_48px_rgba(61,49,34,0.2)] ${getStatusMeta(todo, t.todos.doneFallback, timeZone, timeFormat).cardClass}`}
+      className={`paper-card cq-card relative h-full w-full overflow-hidden rounded-[18px] px-2 py-1.25 shadow-[0_24px_48px_rgba(61,49,34,0.2)] ${getStatusMeta(todo, t.todos.doneFallback, timeZone, timeFormat).cardClass}`}
       style={{
         background: getTodoCardSurface(todo, groupAccentColor),
         borderColor: `${groupAccentColor}86`,
-        width: width ?? undefined,
-        maxWidth: "calc(100vw - 48px)",
+        width: width ? `min(${width}px, calc(100vw - 48px))` : "min(100%, calc(100vw - 48px))",
+        maxWidth: "100%",
       }}
     >
       <TodoRowBody todo={todo} order={order} preview />
