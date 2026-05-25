@@ -2,6 +2,17 @@
 
 All notable repository changes are recorded here.
 
+## v0.5.0 - 2026-05-25
+
+Purpose:
+- Release macOS floating notes and todos from the mixed floating-card development work while keeping Windows on stable v0.4.5 floating-related behavior.
+
+Contents:
+- Added macOS native floating cards for notes and todos, including drag previews, always-on-top card windows, dock-zone feedback, and dock-back lifecycle handling.
+- Added shared frontend floating-card views, bridge payloads, state synchronization, and platform feature flags required by the macOS implementation.
+- Disabled floating notes and floating todos on Windows in v0.5.0 because the mixed-branch Windows implementation remains unstable.
+- Documented the v0.5.0 platform support status and the requirement that future Windows floating support be developed from a clean architecture branch.
+
 ## v0.3.0 - 2026-04-06
 
 Purpose:
