@@ -62,6 +62,7 @@ type MessageCatalog = {
     groupMenuEmpty: string;
     groupName: string;
     groupNameDuplicate: string;
+    groupNameRequired: string;
     groupNamePlaceholder: string;
     groupTotal: (count: number) => string;
     groups: (count: number) => string;
@@ -261,6 +262,7 @@ type MessageCatalog = {
     groupManagerTitle: string;
     groupName: string;
     groupNameDuplicate: string;
+    groupNameRequired: string;
     groupNamePlaceholder: string;
     groupTotal: (count: number) => string;
     groupsEmpty: string;
@@ -372,6 +374,7 @@ const messages: Record<AppLanguage, MessageCatalog> = {
       groupMenuEmpty: "Choose a group below, or create a new one here first.",
       groupName: "Group name",
       groupNameDuplicate: "Group names must be unique.",
+      groupNameRequired: "New group name cannot be empty.",
       groupNamePlaceholder: "Enter a group name",
       groupTotal: (count) => `${count} groups total`,
       groups: (count) => `${count} groups`,
@@ -568,10 +571,11 @@ const messages: Record<AppLanguage, MessageCatalog> = {
       editGroupTitle: "Edit group",
       group: "Group",
       groupColor: "Group color",
-      groupFeatureComingSoon: "Manage todo groups",
+      groupFeatureComingSoon: "Manage groups",
       groupManagerTitle: "Manage todo groups",
       groupName: "Group name",
       groupNameDuplicate: "Group names must be unique.",
+      groupNameRequired: "New group name cannot be empty.",
       groupNamePlaceholder: "Enter a group name",
       groupTotal: (count) => `${count} groups total`,
       groupsEmpty: "No custom todo groups yet. Create one here, then assign it from a todo card.",
@@ -681,6 +685,7 @@ const messages: Record<AppLanguage, MessageCatalog> = {
       groupMenuEmpty: "可以直接选择下方分组，或者先在这里创建一个新分组。",
       groupName: "分组名称",
       groupNameDuplicate: "分组名称必须唯一，不能重复。",
+      groupNameRequired: "新组名不能为空。",
       groupNamePlaceholder: "输入分组名称",
       groupTotal: (count) => `当前共 ${count} 个分组`,
       groups: (count) => `${count} 个分组`,
@@ -885,10 +890,11 @@ const messages: Record<AppLanguage, MessageCatalog> = {
       editGroupTitle: "\u7f16\u8f91\u5206\u7ec4",
       group: "\u5206\u7ec4",
       groupColor: "\u5206\u7ec4\u989c\u8272",
-      groupFeatureComingSoon: "\u7ba1\u7406\u5f85\u529e\u5206\u7ec4",
+      groupFeatureComingSoon: "\u7ba1\u7406\u5206\u7ec4",
       groupManagerTitle: "\u7ba1\u7406\u5f85\u529e\u5206\u7ec4",
       groupName: "\u5206\u7ec4\u540d\u79f0",
       groupNameDuplicate: "\u5206\u7ec4\u540d\u79f0\u5fc5\u987b\u552f\u4e00\u3002",
+      groupNameRequired: "\u65b0\u7ec4\u540d\u4e0d\u80fd\u4e3a\u7a7a\u3002",
       groupNamePlaceholder: "\u8f93\u5165\u5206\u7ec4\u540d\u79f0",
       groupTotal: (count) => `\u5f53\u524d\u5171 ${count} \u4e2a\u5206\u7ec4`,
       groupsEmpty: "\u8fd8\u6ca1\u6709\u81ea\u5b9a\u4e49\u5f85\u529e\u5206\u7ec4\u3002\u5728\u8fd9\u91cc\u521b\u5efa\u540e\uff0c\u53ef\u4ece\u5f85\u529e\u5361\u7247\u5206\u914d\u3002",

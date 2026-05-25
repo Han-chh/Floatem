@@ -482,33 +482,41 @@ export function ReminderPicker({
                       </motion.div>
 
                       <motion.div className="grid grid-cols-2 gap-1.5" layout>
-                        {quickOptions.map((option) => (
-                          <motion.button
-                            key={option.label}
-                            type="button"
-                            aria-disabled={option.disabled}
-                            data-tooltip={option.disabled ? pastTooltip : option.label}
-                            data-no-window-drag="true"
-                            className={`rounded-[11px] border px-2 py-1.75 text-[10.5px] font-semibold ${
-                              option.disabled
-                                ? "cursor-not-allowed border-[rgba(213,198,180,0.52)] bg-[rgba(30,25,21,0.04)] text-[rgba(30,25,21,0.32)]"
-                                : "border-[rgba(213,198,180,0.9)] bg-white/84 text-[var(--brown-strong)]"
-                            }`}
-                            whileHover={!option.disabled ? { y: -1, scale: 1.01 } : undefined}
-                            whileTap={!option.disabled ? { scale: 0.98 } : undefined}
-                            onClick={() => {
-                              if (option.disabled) {
-                                return;
-                              }
+                        {quickOptions.map((option) => {
+                          const isSelected =
+                            !option.disabled && option.hourValue === draftHour && option.minuteValue === draftMinute;
 
-                              setDraftHour(option.hourValue);
-                              setDraftMinute(option.minuteValue);
-                              setValidationMessage(null);
-                            }}
-                          >
-                            {option.label}
-                          </motion.button>
-                        ))}
+                          return (
+                            <motion.button
+                              key={option.label}
+                              type="button"
+                              aria-disabled={option.disabled}
+                              aria-pressed={isSelected}
+                              data-tooltip={option.disabled ? pastTooltip : option.label}
+                              data-no-window-drag="true"
+                              className={`rounded-[11px] border px-2 py-1.75 text-[10.5px] font-semibold ${
+                                option.disabled
+                                  ? "cursor-not-allowed border-[rgba(213,198,180,0.52)] bg-[rgba(30,25,21,0.04)] text-[rgba(30,25,21,0.32)]"
+                                  : isSelected
+                                    ? "border-[#E2A928] bg-[rgba(255,246,214,0.96)] text-[#76510B] shadow-[0_0_0_2px_rgba(226,169,40,0.32),0_8px_18px_rgba(226,169,40,0.16)]"
+                                    : "border-[rgba(213,198,180,0.9)] bg-white/84 text-[var(--brown-strong)]"
+                              }`}
+                              whileHover={!option.disabled ? { y: -1, scale: 1.01 } : undefined}
+                              whileTap={!option.disabled ? { scale: 0.98 } : undefined}
+                              onClick={() => {
+                                if (option.disabled) {
+                                  return;
+                                }
+
+                                setDraftHour(option.hourValue);
+                                setDraftMinute(option.minuteValue);
+                                setValidationMessage(null);
+                              }}
+                            >
+                              {option.label}
+                            </motion.button>
+                          );
+                        })}
                       </motion.div>
 
                       {validationMessage ? (

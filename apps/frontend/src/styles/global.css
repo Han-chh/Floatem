@@ -104,16 +104,6 @@
     background-clip: content-box;
   }
 
-  .todo-card-scroll {
-    scrollbar-width: none;
-    scrollbar-gutter: auto;
-  }
-
-  .todo-card-scroll::-webkit-scrollbar {
-    width: 0;
-    height: 0;
-  }
-
   .paper-panel {
     background:
       linear-gradient(180deg, rgba(255, 252, 247, 0.97), rgba(255, 247, 238, 0.92)),
@@ -634,6 +624,19 @@
     width: 28px;
     min-width: 28px;
     min-height: 28px;
+  }
+
+  .note-group-chip {
+    min-width: 104px;
+    min-height: 32px;
+    justify-content: center;
+    padding-inline: 12px;
+    padding-block: 8px;
+    font-family: "Segoe UI", "Microsoft YaHei UI", var(--font-body);
+    font-size: 10px;
+    line-height: 1.05;
+    letter-spacing: 0;
+    white-space: nowrap;
   }
 
   .note-color-popover {

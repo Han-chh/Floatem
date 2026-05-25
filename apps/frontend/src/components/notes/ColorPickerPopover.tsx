@@ -8,6 +8,7 @@ import {
 } from "react";
 import { createPortal } from "react-dom";
 import { useI18n } from "../../lib/i18n";
+import { canPickScreenColor, pickScreenColor } from "../../lib/screenColorPicker";
 import { FilledPaletteIcon, PaintbrushIcon } from "../icons/AppIcons";
 import { TEXT_COLOR_MORE_PRESETS, TEXT_COLOR_PRESETS } from "./textFormatting";
 
@@ -33,24 +34,6 @@ type RgbColor = {
   green: number;
   red: number;
 };
-
-type ScreenColorPickerResult = {
-  sRGBHex: string;
-};
-
-type ScreenColorPicker = {
-  open: () => Promise<ScreenColorPickerResult>;
-};
-
-type ScreenColorPickerConstructor = {
-  new (): ScreenColorPicker;
-};
-
-declare global {
-  interface Window {
-    EyeDropper?: ScreenColorPickerConstructor;
-  }
-}
 
 type ColorPickerPopoverProps = {
   activeColor: string | null;
@@ -248,7 +231,7 @@ export function ColorPickerPopover({
   const colorPaletteMetrics = getColorPaletteMetrics(colorPaletteMode);
   const advancedHexColor = rgbToHex(hsvToRgb(advancedHsvColor));
   const hueColor = rgbToHex(hsvToRgb({ hue: advancedHsvColor.hue, saturation: 100, value: 100 }));
-  const isScreenColorPickerAvailable = typeof window !== "undefined" && typeof window.EyeDropper === "function";
+  const isScreenColorPickerAvailable = canPickScreenColor();
 
   const syncColorPalettePosition = () => {
     if (!anchorRef.current || typeof window === "undefined") {
@@ -377,14 +360,18 @@ export function ColorPickerPopover({
   };
 
   const handlePickScreenColor = async () => {
-    if (!isScreenColorPickerAvailable || isPickingScreenColor || !window.EyeDropper) {
+    if (!isScreenColorPickerAvailable || isPickingScreenColor) {
       return;
     }
 
     setIsPickingScreenColor(true);
 
     try {
-      const result = await new window.EyeDropper().open();
+      const result = await pickScreenColor();
+      if (!result) {
+        return;
+      }
+
       const normalizedHexColor = normalizeHexColor(result.sRGBHex);
       setAdvancedHsvColor(getHsvFromColor(normalizedHexColor));
       setHexDraft(normalizedHexColor);

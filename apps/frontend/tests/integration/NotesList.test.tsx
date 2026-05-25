@@ -14,6 +14,7 @@ describe("NotesList", () => {
       clipboard.value = text;
     });
     const readClipboardText = vi.fn(async () => clipboard.value);
+    const pickScreenColor = vi.fn(async (): Promise<{ sRGBHex: string } | null> => null);
 
     window.quickNoteHost = {
       platform: "macos",
@@ -58,6 +59,7 @@ describe("NotesList", () => {
       showNotification: vi.fn(async () => {}),
       scheduleNotification: vi.fn(async () => {}),
       openTextColorPanel: vi.fn(async () => {}),
+      pickScreenColor,
       testReminderNotification: vi.fn(async () => {}),
       getHotkeyRegistrationState: vi.fn(async () => ({
         shortcut: DEFAULT_SETTINGS.hotkey,
@@ -80,6 +82,7 @@ describe("NotesList", () => {
     return {
       clipboard,
       openTextColorPanel: window.quickNoteHost.openTextColorPanel,
+      pickScreenColor,
       readClipboardText,
       restore() {
         window.quickNoteHost = originalBridge;
@@ -514,6 +517,39 @@ describe("NotesList", () => {
       await user.click(within(createDialog).getByRole("button", { name: "Create group" }));
 
       expect(useNotesStore.getState().groups[0]?.color).toBe("#336699");
+      expect(bridge.openTextColorPanel).not.toHaveBeenCalled();
+    } finally {
+      bridge.restore();
+    }
+  });
+
+  it("previews note group colors picked through the native screen picker", async () => {
+    const bridge = installNativeBridge();
+    bridge.pickScreenColor.mockResolvedValue({ sRGBHex: "#778899" });
+    const user = userEvent.setup();
+    render(<NotesList />);
+
+    try {
+      await user.click(screen.getByRole("button", { name: "Add note" }));
+
+      const note = screen.getByTestId("note-card");
+      await user.click(within(note).getByRole("button", { name: "Change note group" }));
+      await user.click(screen.getByRole("button", { name: "Add group" }));
+
+      const createDialog = screen.getByRole("dialog", { name: "Create group" });
+      await user.click(within(createDialog).getByRole("button", { name: "Change group color" }));
+      await user.click(screen.getByRole("button", { name: "More Colors" }));
+      await user.click(screen.getByRole("button", { name: "Show Colors" }));
+
+      const pickScreenColorButton = screen.getByRole("button", { name: "Pick screen color" });
+      expect(pickScreenColorButton).toBeEnabled();
+
+      await user.click(pickScreenColorButton);
+
+      await waitFor(() => {
+        expect(screen.getByRole("textbox", { name: "Hex color" })).toHaveValue("#778899");
+      });
+      expect(bridge.pickScreenColor).toHaveBeenCalledTimes(1);
       expect(bridge.openTextColorPanel).not.toHaveBeenCalled();
     } finally {
       bridge.restore();

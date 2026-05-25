@@ -134,7 +134,9 @@ describe("TodoList", () => {
     await user.type(screen.getByLabelText("Quick add"), "Beta");
     await user.keyboard("{Enter}");
 
-    await user.click(screen.getByRole("button", { name: "Add todo group" }));
+    const toolbarGroupButton = screen.getByRole("button", { name: "Add todo group" });
+    expect(toolbarGroupButton).toHaveAttribute("data-tooltip", "Manage groups");
+    await user.click(toolbarGroupButton);
     const manageDialog = screen.getByRole("dialog", { name: "Manage todo groups" });
     expect(manageDialog).toBeInTheDocument();
     expect(within(manageDialog).getByRole("button", { name: "No group" })).toBeDisabled();

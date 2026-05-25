@@ -413,6 +413,26 @@ final class WebViewController: NSViewController, WKNavigationDelegate {
             return
         }
 
+        if method == "pickScreenColor" {
+            Task { @MainActor [weak self] in
+                guard let self else {
+                    return
+                }
+
+                do {
+                    if let colorHex = try await self.bridgeDelegate?.pickScreenColor() {
+                        self.sendResponse(id: id, ok: true, payload: ["sRGBHex": colorHex])
+                    } else {
+                        self.sendResponse(id: id, ok: true, payload: NSNull())
+                    }
+                } catch {
+                    let errorMessage = (error as? LocalizedError)?.errorDescription ?? error.localizedDescription
+                    self.sendResponse(id: id, ok: false, payload: errorMessage)
+                }
+            }
+            return
+        }
+
         do {
             let result: Any
 
@@ -873,6 +893,9 @@ final class WebViewController: NSViewController, WKNavigationDelegate {
         },
         openTextColorPanel(options = {}) {
           return send("openTextColorPanel", options);
+        },
+        pickScreenColor() {
+          return send("pickScreenColor");
         },
         testReminderNotification(options = {}) {
           return send("testReminderNotification", options);

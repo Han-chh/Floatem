@@ -32,6 +32,8 @@ import {
   subscribeToTextColorPanelOpen,
   subscribeToTodosUpdated,
 } from "./lib/nativeBridge";
+import { isFloatingDockZoneTarget, isSameDockZoneTarget } from "./lib/dnd/floatingDockZone";
+import type { DockZoneEventDetail } from "./lib/nativeBridge";
 import type { TabId } from "./lib/models";
 import { getPlatformFeatures } from "./lib/platformFeatures";
 import { getTabMotionConfig } from "./lib/transitionMotion";
@@ -124,10 +126,13 @@ function QuickNoteApp() {
   const transitionStyle = useSettingsStore((state) => state.transitionStyle);
   const animationSpeed = useSettingsStore((state) => state.animationSpeed);
   const setActiveTab = useSettingsStore((state) => state.setActiveTab);
+  const floatingCardIds = useNotesStore((state) => state.floatingCardIds);
+  const floatingTodoIds = useTodosStore((state) => state.floatingTodoIds);
   const [isBooting, setIsBooting] = useState(true);
   const [showSettings, setShowSettings] = useState(false);
-  const [isDockZoneActive, setIsDockZoneActive] = useState(false);
+  const [activeDockZoneTarget, setActiveDockZoneTarget] = useState<DockZoneEventDetail | null>(null);
   const isNativeTextColorPanelOpenRef = useRef(false);
+  const isDockZoneActive = activeDockZoneTarget !== null;
 
   useAutoSave();
   useHotkey(hotkey);
@@ -241,10 +246,17 @@ function QuickNoteApp() {
       return;
     }
 
-    return subscribeToFloatingDockZoneEnter((_detail) => {
+    return subscribeToFloatingDockZoneEnter((detail) => {
+      const noteIds = useNotesStore.getState().floatingCardIds;
+      const todoIds = useTodosStore.getState().floatingTodoIds;
+
+      if (!isFloatingDockZoneTarget(detail, { noteIds, todoIds })) {
+        return;
+      }
+
       // Instant visual feedback — startTransition would defer the green
       // dock-zone highlight, defeating the purpose of real-time feedback.
-      setIsDockZoneActive(true);
+      setActiveDockZoneTarget(detail);
     });
   }, []);
 
@@ -254,10 +266,22 @@ function QuickNoteApp() {
       return;
     }
 
-    return subscribeToFloatingDockZoneLeave(() => {
-      setIsDockZoneActive(false);
+    return subscribeToFloatingDockZoneLeave((detail) => {
+      setActiveDockZoneTarget((current) => (isSameDockZoneTarget(current, detail) ? null : current));
     });
   }, []);
+
+  useEffect(() => {
+    if (!activeDockZoneTarget) {
+      return;
+    }
+
+    if (isFloatingDockZoneTarget(activeDockZoneTarget, { noteIds: floatingCardIds, todoIds: floatingTodoIds })) {
+      return;
+    }
+
+    setActiveDockZoneTarget(null);
+  }, [activeDockZoneTarget, floatingCardIds, floatingTodoIds]);
 
   useEffect(() => {
     if (typeof document === "undefined") {

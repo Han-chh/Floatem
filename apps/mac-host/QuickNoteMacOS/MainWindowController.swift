@@ -49,6 +49,7 @@ final class MainWindowController: NSObject, NSWindowDelegate, QuickNoteNativeBri
     private var textColorPanelChangeObserver: NSObjectProtocol?
     private var textColorPanelCloseObserver: NSObjectProtocol?
     private var appDidBecomeActiveObserver: NSObjectProtocol?
+    private var activeScreenColorSampler: AnyObject?
     private var dragPreviewTimer: Timer?
     private var activeDragPreviewSession: DragPreviewSession?
     private var isDragPreviewDockZoneActive = false
@@ -309,6 +310,33 @@ final class MainWindowController: NSObject, NSWindowDelegate, QuickNoteNativeBri
         presentTextColorPanel(colorPanel, reposition: true)
     }
 
+    func pickScreenColor() async throws -> String? {
+        if #available(macOS 10.15, *) {
+            return await withCheckedContinuation { continuation in
+                let sampler = NSColorSampler()
+                activeScreenColorSampler = sampler
+                sampler.show { [weak self] color in
+                    Task { @MainActor [weak self] in
+                        guard let self else {
+                            continuation.resume(returning: nil)
+                            return
+                        }
+
+                        self.activeScreenColorSampler = nil
+                        guard let color else {
+                            continuation.resume(returning: nil)
+                            return
+                        }
+
+                        continuation.resume(returning: self.hexColor(from: color))
+                    }
+                }
+            }
+        }
+
+        return nil
+    }
+
     func testReminderNotification(soundEnabled: Bool, language: QuickNoteLanguage) async throws {
         try await notificationManager.scheduleTestNotification(
             soundEnabled: soundEnabled,
@@ -461,6 +489,13 @@ final class MainWindowController: NSObject, NSWindowDelegate, QuickNoteNativeBri
         }
         controller.onWriteClipboardText = { [weak self] text in
             self?.writeClipboardText(text)
+        }
+        controller.onPickScreenColor = { [weak self] in
+            guard let self else {
+                return nil
+            }
+
+            return try await self.pickScreenColor()
         }
         floatingCardWindowControllers[key] = controller
         if Self.debugLifecycle {

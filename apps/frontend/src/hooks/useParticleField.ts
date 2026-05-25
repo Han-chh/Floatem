@@ -5,6 +5,7 @@ export type BurstTone = "amber" | "green" | "rose" | "paper" | "confetti";
 export type ParticleBurst = {
   id: string;
   tone: BurstTone;
+  colorPalette?: string[];
   x: number;
   y: number;
   particles: Array<{
@@ -29,6 +30,10 @@ type BurstTarget =
       height?: number;
     };
 
+type BurstOptions = {
+  color?: string;
+};
+
 function createId() {
   return globalThis.crypto?.randomUUID?.() ?? `${Date.now()}-${Math.round(Math.random() * 1e6)}`;
 }
@@ -37,7 +42,61 @@ function random(min: number, max: number) {
   return Math.random() * (max - min) + min;
 }
 
-function createBurst(x: number, y: number, tone: BurstTone): ParticleBurst {
+function normalizeHexColor(color: string) {
+  const trimmed = color.trim();
+  if (/^#[\da-f]{6}$/i.test(trimmed)) {
+    return trimmed;
+  }
+
+  if (/^#[\da-f]{3}$/i.test(trimmed)) {
+    const [, red, green, blue] = trimmed;
+    return `#${red}${red}${green}${green}${blue}${blue}`;
+  }
+
+  return null;
+}
+
+function clampColorChannel(value: number) {
+  return Math.max(0, Math.min(255, Math.round(value)));
+}
+
+function mixHexColor(color: string, target: string, amount: number) {
+  const normalizedColor = normalizeHexColor(color);
+  const normalizedTarget = normalizeHexColor(target);
+  if (!normalizedColor || !normalizedTarget) {
+    return color;
+  }
+
+  const colorValue = Number.parseInt(normalizedColor.slice(1), 16);
+  const targetValue = Number.parseInt(normalizedTarget.slice(1), 16);
+  const colorRgb = [(colorValue >> 16) & 255, (colorValue >> 8) & 255, colorValue & 255];
+  const targetRgb = [(targetValue >> 16) & 255, (targetValue >> 8) & 255, targetValue & 255];
+  const mixed = colorRgb.map((channel, index) =>
+    clampColorChannel(channel + (targetRgb[index] - channel) * amount),
+  );
+
+  return `#${mixed.map((channel) => channel.toString(16).padStart(2, "0")).join("")}`;
+}
+
+function createColorPalette(color: string | undefined) {
+  if (!color) {
+    return undefined;
+  }
+
+  const normalizedColor = normalizeHexColor(color);
+  if (!normalizedColor) {
+    return [color];
+  }
+
+  return [
+    mixHexColor(normalizedColor, "#ffffff", 0.42),
+    normalizedColor,
+    mixHexColor(normalizedColor, "#000000", 0.16),
+    mixHexColor(normalizedColor, "#ffffff", 0.18),
+  ];
+}
+
+function createBurst(x: number, y: number, tone: BurstTone, options: BurstOptions = {}): ParticleBurst {
   const config =
     tone === "confetti"
       ? { count: 16, distanceMin: 32, distanceMax: 94, sizeMin: 3, sizeMax: 7 }
@@ -50,6 +109,7 @@ function createBurst(x: number, y: number, tone: BurstTone): ParticleBurst {
   return {
     id: createId(),
     tone,
+    colorPalette: createColorPalette(options.color),
     x,
     y,
     particles: Array.from({ length: config.count }, (_, index) => {
@@ -89,7 +149,7 @@ function createBurst(x: number, y: number, tone: BurstTone): ParticleBurst {
   };
 }
 
-function createBurstCluster(target: BurstTarget, bounds: DOMRect, tone: BurstTone) {
+function createBurstCluster(target: BurstTarget, bounds: DOMRect, tone: BurstTone, options: BurstOptions = {}) {
   const width = target.width ?? 0;
   const height = target.height ?? 0;
   const centerX = target.x + ((target.width ?? 0) / 2);
@@ -108,12 +168,13 @@ function createBurstCluster(target: BurstTarget, bounds: DOMRect, tone: BurstTon
         target.x + width * xRatio - bounds.left + random(-6, 6),
         target.y + height * yRatio - bounds.top + random(-6, 6),
         tone,
+        options,
       ),
     );
   }
 
   if (tone !== "rose" || width < 72 || height < 72) {
-    return [createBurst(centerX - bounds.left, centerY - bounds.top, tone)];
+    return [createBurst(centerX - bounds.left, centerY - bounds.top, tone, options)];
   }
 
   const anchorPoints = [
@@ -132,6 +193,7 @@ function createBurstCluster(target: BurstTarget, bounds: DOMRect, tone: BurstTon
       target.x + width * xRatio - bounds.left + random(-8, 8),
       target.y + height * yRatio - bounds.top + random(-8, 8),
       tone,
+      options,
     ),
   );
 }
@@ -148,13 +210,13 @@ export function useParticleField() {
     };
   }, []);
 
-  const spawnBurst = useCallback((target: BurstTarget, tone: BurstTone = "amber") => {
+  const spawnBurst = useCallback((target: BurstTarget, tone: BurstTone = "amber", options: BurstOptions = {}) => {
     const bounds = fieldRef.current?.getBoundingClientRect();
     if (!bounds) {
       return;
     }
 
-    const nextBursts = createBurstCluster(target, bounds, tone);
+    const nextBursts = createBurstCluster(target, bounds, tone, options);
     setBursts((current) => [...current, ...nextBursts]);
 
     nextBursts.forEach((burst) => {

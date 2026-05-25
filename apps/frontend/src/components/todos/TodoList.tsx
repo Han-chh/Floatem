@@ -33,7 +33,12 @@ import { buildTodoDragPreviewPayload } from "../../lib/dragPreview";
 import { isPrimaryShortcut } from "../../lib/isPrimaryShortcut";
 import { useI18n } from "../../lib/i18n";
 import { canUseFloatingTodos } from "../../lib/platformFeatures";
-import { formatLocalDateKey, parseLocalDateKey, type TodoItem as TodoItemModel } from "../../lib/models";
+import {
+  formatLocalDateKey,
+  parseLocalDateKey,
+  resolveTodoAccentColor,
+  type TodoItem as TodoItemModel,
+} from "../../lib/models";
 import { isNativeQuickNoteHost } from "../../lib/nativeBridge";
 import { readPlainTextFromClipboard, writePlainTextToClipboard } from "../../lib/plainTextClipboard";
 import {
@@ -669,8 +674,11 @@ export function TodoList() {
       return;
     }
 
+    const deletedTodo = todos.find((todo) => todo.id === id) ?? null;
+    const particleColor = deletedTodo ? resolveTodoAccentColor(deletedTodo, groups) : undefined;
+
     if (enableParticles) {
-      spawnBurst(target, "rose");
+      spawnBurst(target, "rose", { color: particleColor });
     }
     setRemovingIds((current) => [...current, id]);
     window.setTimeout(() => {
@@ -806,6 +814,17 @@ export function TodoList() {
     }
 
     if (pendingBulkConfirmation.action === "delete") {
+      if (enableParticles) {
+        ids.forEach((id) => {
+          const deletedTodo = todos.find((todo) => todo.id === id) ?? null;
+          const target = document.querySelector<HTMLElement>(`[data-todo-item-id="${id}"]`)?.getBoundingClientRect();
+
+          if (deletedTodo && target) {
+            spawnBurst(target, "rose", { color: resolveTodoAccentColor(deletedTodo, groups) });
+          }
+        });
+      }
+
       removeTodos(ids);
     }
 
@@ -1183,7 +1202,7 @@ export function TodoList() {
             <motion.button
               type="button"
               aria-label={t.todos.addGroup}
-              data-tooltip={t.todos.addGroup}
+              data-tooltip={t.todos.groupFeatureComingSoon}
               className={`${toolbarButtonClass} opacity-78`}
               whileHover={{ y: -1, scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
@@ -1296,7 +1315,7 @@ export function TodoList() {
       >
         <ParticleField bursts={enableParticles ? bursts : []} />
 
-        <div data-testid="todo-card-scroll-region" className="paper-scroll todo-card-scroll h-full overflow-y-auto">
+        <div data-testid="todo-card-scroll-region" className="paper-scroll h-full overflow-y-auto pr-1">
           {visibleTodos.length === 0 ? (
             <motion.div
               initial={{ opacity: 0, y: 10 }}

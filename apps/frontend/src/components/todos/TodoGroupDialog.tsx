@@ -48,11 +48,13 @@ export function TodoGroupDialog({ todoId = null, isOpen, onClose }: TodoGroupDia
   const [draftColor, setDraftColor] = useState<string>(DEFAULT_TODO_GROUP_COLOR);
   const [isColorPickerOpen, setIsColorPickerOpen] = useState(false);
   const [isDeleteMode, setIsDeleteMode] = useState(false);
+  const [isNameRequiredDialogOpen, setIsNameRequiredDialogOpen] = useState(false);
   const currentGroup = todo ? resolveTodoGroup(todo, groups) : null;
   const currentGroupColor = currentGroup?.color ?? DEFAULT_UNGROUPED_TODO_COLOR;
   const isEditorOpen = editorMode !== null;
   const isEditing = editorMode === "edit";
   const normalizedDraftName = draftName.trim();
+  const isDraftNameEmpty = normalizedDraftName.length === 0;
   const hasDuplicateDraftName =
     normalizedDraftName.length > 0 &&
     groups.some((group) => {
@@ -62,7 +64,7 @@ export function TodoGroupDialog({ todoId = null, isOpen, onClose }: TodoGroupDia
 
       return normalizeGroupNameKey(group.name) === normalizeGroupNameKey(normalizedDraftName);
     });
-  const isSaveDisabled = normalizedDraftName.length === 0 || hasDuplicateDraftName;
+  const isSaveDisabled = hasDuplicateDraftName;
   const groupTodoCount = useMemo(() => {
     const counts = new Map<string, number>();
 
@@ -82,6 +84,7 @@ export function TodoGroupDialog({ todoId = null, isOpen, onClose }: TodoGroupDia
     setDraftName("");
     setDraftColor(DEFAULT_TODO_GROUP_COLOR);
     setIsColorPickerOpen(false);
+    setIsNameRequiredDialogOpen(false);
   };
 
   const resetDialogState = () => {
@@ -109,6 +112,12 @@ export function TodoGroupDialog({ todoId = null, isOpen, onClose }: TodoGroupDia
         return;
       }
 
+      if (isNameRequiredDialogOpen) {
+        setIsNameRequiredDialogOpen(false);
+        draftInputRef.current?.focus();
+        return;
+      }
+
       if (isEditorOpen) {
         resetEditorState();
         return;
@@ -126,7 +135,7 @@ export function TodoGroupDialog({ todoId = null, isOpen, onClose }: TodoGroupDia
     return () => {
       window.removeEventListener("keydown", handleKeyDown, true);
     };
-  }, [isColorPickerOpen, isDeleteMode, isEditorOpen, isOpen, onClose]);
+  }, [isColorPickerOpen, isDeleteMode, isEditorOpen, isNameRequiredDialogOpen, isOpen, onClose]);
 
   useEffect(() => {
     if (!isEditorOpen || typeof window === "undefined") {
@@ -192,6 +201,11 @@ export function TodoGroupDialog({ todoId = null, isOpen, onClose }: TodoGroupDia
   };
 
   const handleSaveGroup = () => {
+    if (isDraftNameEmpty) {
+      setIsNameRequiredDialogOpen(true);
+      return;
+    }
+
     if (isSaveDisabled) {
       return;
     }
@@ -541,6 +555,58 @@ export function TodoGroupDialog({ todoId = null, isOpen, onClose }: TodoGroupDia
                       ) : null}
                     </div>
                   </form>
+                </motion.div>
+              </motion.div>
+            ) : null}
+          </AnimatePresence>
+
+          <AnimatePresence>
+            {isNameRequiredDialogOpen ? (
+              <motion.div
+                className="quicknote-modal-backdrop fixed inset-0 z-[130] flex items-center justify-center bg-[rgba(30,25,21,0.24)] px-5 py-6"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                onClick={() => {
+                  setIsNameRequiredDialogOpen(false);
+                  draftInputRef.current?.focus();
+                }}
+              >
+                <motion.div
+                  role="dialog"
+                  aria-modal="true"
+                  aria-label={t.todos.groupNameRequired}
+                  className="paper-panel flex w-full max-w-[360px] flex-col rounded-[24px] p-5 shadow-[0_26px_48px_rgba(30,25,21,0.24)]"
+                  initial={{ opacity: 0, scale: 0.95, y: 12 }}
+                  animate={{ opacity: 1, scale: 1, y: 0 }}
+                  exit={{ opacity: 0, scale: 0.98, y: 8 }}
+                  transition={{ duration: 0.18, ease: [0.22, 1, 0.36, 1] }}
+                  onClick={(event) => event.stopPropagation()}
+                >
+                  <div className="mb-4 min-w-0">
+                    <span className="status-chip" data-tone="coral">
+                      {t.todos.groupName}
+                    </span>
+                    <p className="mt-3 text-[13px] font-semibold leading-6 text-[var(--dark-text)]">
+                      {t.todos.groupNameRequired}
+                    </p>
+                  </div>
+
+                  <div className="flex justify-end">
+                    <motion.button
+                      type="button"
+                      data-no-window-drag="true"
+                      className="paper-button paper-button-primary inline-flex items-center justify-center rounded-[14px] px-3.5 py-2.5 text-[12px] font-semibold"
+                      whileHover={{ y: -1.5, scale: 1.01 }}
+                      whileTap={{ scale: 0.985 }}
+                      onClick={() => {
+                        setIsNameRequiredDialogOpen(false);
+                        draftInputRef.current?.focus();
+                      }}
+                    >
+                      {t.common.close}
+                    </motion.button>
+                  </div>
                 </motion.div>
               </motion.div>
             ) : null}

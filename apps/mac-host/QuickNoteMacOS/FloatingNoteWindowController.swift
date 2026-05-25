@@ -119,6 +119,7 @@ final class FloatingNoteWindowController: NSObject, WKNavigationDelegate, WKScri
         showNotification() { return Promise.resolve(); },
         scheduleNotification() { return Promise.resolve(); },
         openTextColorPanel() { return Promise.resolve(); },
+        pickScreenColor() { return send("pickScreenColor"); },
         testReminderNotification() { return Promise.resolve(); },
         getHotkeyRegistrationState() { return Promise.resolve({ shortcut: "", registration: "unsupported" }); },
         registerHotkey() { return Promise.resolve(); },
@@ -152,6 +153,7 @@ final class FloatingNoteWindowController: NSObject, WKNavigationDelegate, WKScri
     var onSaveSettings: ((Any) throws -> Void)?
     var onReadClipboardText: (() -> String)?
     var onWriteClipboardText: ((String) -> Void)?
+    var onPickScreenColor: (() async throws -> String?)?
 
     private var panel: FloatingPanel?
     private let webView: WKWebView
@@ -273,6 +275,7 @@ final class FloatingNoteWindowController: NSObject, WKNavigationDelegate, WKScri
         onSaveSettings = nil
         onReadClipboardText = nil
         onWriteClipboardText = nil
+        onPickScreenColor = nil
 
         guard let panel else {
             pendingPayload = nil
@@ -604,6 +607,22 @@ final class FloatingNoteWindowController: NSObject, WKNavigationDelegate, WKScri
         case "writeClipboardText":
             onWriteClipboardText?(params["text"] as? String ?? "")
             resolveBridgeRequest(id: requestID, ok: true, result: NSNull())
+        case "pickScreenColor":
+            Task { @MainActor [weak self] in
+                guard let self else {
+                    return
+                }
+
+                do {
+                    if let colorHex = try await self.onPickScreenColor?() {
+                        self.resolveBridgeRequest(id: requestID, ok: true, result: ["sRGBHex": colorHex])
+                    } else {
+                        self.resolveBridgeRequest(id: requestID, ok: true, result: NSNull())
+                    }
+                } catch {
+                    self.resolveBridgeRequest(id: requestID, ok: false, result: error.localizedDescription)
+                }
+            }
         case "resizeFloatingCard":
             let width = params["width"] as? Double ?? 0
             let height = params["height"] as? Double ?? 0

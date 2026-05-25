@@ -117,6 +117,37 @@ describe("ReminderPicker", () => {
     expect(onChange).toHaveBeenCalledWith(new Date("2026-04-05T12:30:00").getTime());
   });
 
+  it("highlights the quick shortcut that matches the custom time", () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date("2026-04-05T12:00:00"));
+
+    render(<ReminderPicker todoTitle="Ship highlight" reminderAt={null} onChange={vi.fn()} />);
+
+    openDialog();
+
+    const thirtyMinuteShortcut = screen.getByRole("button", { name: "In 30m" });
+    const oneHourShortcut = screen.getByRole("button", { name: "In 1h" });
+
+    expect(thirtyMinuteShortcut).toHaveAttribute("aria-pressed", "false");
+    expect(oneHourShortcut).toHaveAttribute("aria-pressed", "false");
+
+    fireEvent.click(thirtyMinuteShortcut);
+
+    expect(thirtyMinuteShortcut).toHaveAttribute("aria-pressed", "true");
+    expect(oneHourShortcut).toHaveAttribute("aria-pressed", "false");
+
+    selectHour("13");
+    selectMinute("00");
+
+    expect(thirtyMinuteShortcut).toHaveAttribute("aria-pressed", "false");
+    expect(oneHourShortcut).toHaveAttribute("aria-pressed", "true");
+
+    selectMinute("15");
+
+    expect(thirtyMinuteShortcut).toHaveAttribute("aria-pressed", "false");
+    expect(oneHourShortcut).toHaveAttribute("aria-pressed", "false");
+  });
+
   it("disables past hour options in the dropdown", () => {
     vi.useFakeTimers();
     vi.setSystemTime(new Date("2026-04-05T12:00:00"));

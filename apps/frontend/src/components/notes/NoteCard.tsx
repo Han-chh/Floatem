@@ -49,6 +49,18 @@ function GroupColorGlyph({ color, size = "md" }: { color: string; size?: "sm" | 
   );
 }
 
+function colorWithAlpha(color: string, alpha: string) {
+  return /^#[\da-f]{6}$/i.test(color) ? `${color}${alpha}` : color;
+}
+
+function getNoteCardSurface(accentColor: string) {
+  return [
+    `radial-gradient(circle at 8% 0%, ${colorWithAlpha(accentColor, "18")}, transparent 34%)`,
+    `linear-gradient(135deg, ${colorWithAlpha(accentColor, "12")}, rgba(255,255,255,0.7) 48%, ${colorWithAlpha(accentColor, "0d")})`,
+    "linear-gradient(180deg, rgba(255,252,248,0.98), rgba(255,247,239,0.95))",
+  ].join(", ");
+}
+
 const FLOATING_NOTE_EDIT_TARGET_SELECTOR =
   'button,input,textarea,select,[contenteditable="true"],[role="textbox"],[data-floating-note-edit-region="true"]';
 
@@ -83,25 +95,10 @@ function NoteCardBody({
         className="pointer-events-none absolute inset-0 opacity-38"
         style={{
           backgroundImage:
-            "radial-gradient(rgba(30,25,21,0.04) 0.8px, transparent 0.8px), radial-gradient(rgba(255,255,255,0.26) 0.6px, transparent 0.6px)",
-          backgroundPosition: "0 0, 14px 14px",
-          backgroundSize: "18px 18px, 28px 28px",
+            `radial-gradient(${colorWithAlpha(accentColor, "18")} 0.8px, transparent 0.9px), radial-gradient(rgba(30,25,21,0.035) 0.8px, transparent 0.8px), radial-gradient(rgba(255,255,255,0.26) 0.6px, transparent 0.6px)`,
+          backgroundPosition: "0 0, 12px 12px, 24px 24px",
+          backgroundSize: "20px 20px, 18px 18px, 28px 28px",
           maskImage: "linear-gradient(180deg, black, rgba(0,0,0,0.3))",
-        }}
-      />
-      <div
-        className="pointer-events-none absolute -right-6 top-4 h-20 w-20 rounded-full border-[8px] opacity-24"
-        style={{ borderColor: accentColor }}
-      />
-      <div className="pointer-events-none absolute left-5 top-2.5 h-3.5 w-12 -rotate-[10deg] rounded-[5px] border border-white/65 bg-[rgba(255,255,255,0.48)]" />
-      <div
-        className="pointer-events-none absolute right-12 top-2.5 h-3.5 w-10 rotate-[12deg] rounded-[5px] border border-white/60"
-        style={{ backgroundColor: `${accentColor}26` }}
-      />
-      <div
-        className="pointer-events-none absolute inset-x-6 top-0 h-1.5 rounded-b-full opacity-90"
-        style={{
-          background: `linear-gradient(90deg, ${accentColor}, rgba(255,255,255,0.88), ${accentColor})`,
         }}
       />
 
@@ -140,10 +137,16 @@ function NoteCardBody({
           <div className="note-card-meta">
             <div className="note-card-chip-group">
               <span
-                className="status-chip"
-                style={{ color: accentColor, backgroundColor: `${accentColor}1f` }}
+                className="note-group-chip status-chip inline-flex max-w-full items-center gap-1.5"
+                style={{
+                  borderColor: colorWithAlpha(accentColor, "44"),
+                  color: accentColor,
+                  backgroundColor: colorWithAlpha(accentColor, "1f"),
+                  boxShadow: `0 0 0 2px ${colorWithAlpha(accentColor, "10")}`,
+                }}
               >
-                {groupLabel}
+                <GroupColorGlyph color={accentColor} size="sm" />
+                <span className="min-w-0 truncate">{groupLabel}</span>
               </span>
               <span className="note-secondary-chip status-chip" data-tone="neutral">
                 {editedLabel}
@@ -240,7 +243,11 @@ export function NoteCardPreview({ note, width }: { note: NoteCardModel; width?: 
   return (
     <div
       className="paper-card cq-card relative overflow-hidden rounded-[28px] border border-[rgba(213,198,180,0.92)] bg-[linear-gradient(180deg,rgba(255,252,248,0.98),rgba(255,247,239,0.95))]"
-      style={{ width: width ?? undefined }}
+      style={{
+        background: getNoteCardSurface(accentColor),
+        borderColor: colorWithAlpha(accentColor, "48"),
+        width: width ?? undefined,
+      }}
     >
       <NoteCardBody
         note={note}
@@ -291,7 +298,12 @@ export function FloatingNoteCard({
         data-testid="note-card"
         data-note-card-id={note.id}
         className="paper-card cq-card relative overflow-hidden rounded-[28px] border border-[rgba(213,198,180,0.92)] bg-[linear-gradient(180deg,rgba(255,252,248,0.98),rgba(255,247,239,0.95))] shadow-[0_18px_36px_rgba(61,49,34,0.10)] cursor-grab active:cursor-grabbing"
-        style={{ width: width ?? undefined }}
+        style={{
+          background: getNoteCardSurface(accentColor),
+          borderColor: colorWithAlpha(accentColor, "4d"),
+          boxShadow: `0 0 0 2px ${colorWithAlpha(accentColor, "10")}, 0 18px 36px rgba(61,49,34,0.10)`,
+          width: width ?? undefined,
+        }}
         onPointerDownCapture={(event) => {
           if (event.button !== 0) {
             return;
@@ -379,6 +391,11 @@ export function NoteCard({ note, onDelete, dropPreview = false }: NoteCardProps)
         }
         transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
         style={{
+          background: isDragging ? undefined : getNoteCardSurface(accentColor),
+          borderColor: isDragging ? undefined : colorWithAlpha(accentColor, "4d"),
+          boxShadow: isDragging
+            ? undefined
+            : `0 0 0 2px ${colorWithAlpha(accentColor, "10")}, 0 18px 36px rgba(61,49,34,0.10)`,
           transform: CSS.Transform.toString(transform),
           transition,
         }}

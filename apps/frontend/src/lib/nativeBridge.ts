@@ -158,6 +158,9 @@ const browserBridge: QuickNoteNativeBridge = {
   async openTextColorPanel() {
     // Browser preview uses the HTML color input fallback.
   },
+  async pickScreenColor() {
+    return null;
+  },
   async testReminderNotification() {
     // Browser preview cannot send native notifications.
   },

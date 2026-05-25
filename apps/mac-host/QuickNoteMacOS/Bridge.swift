@@ -53,6 +53,7 @@ protocol QuickNoteNativeBridgeHandling: AnyObject {
     func sendNotification(id: String?, title: String, body: String, soundEnabled: Bool) async throws
     func scheduleNotification(id: String?, title: String, body: String, scheduledAt: Date?, soundEnabled: Bool) async throws
     func openTextColorPanel(requestID: String, colorHex: String?) throws
+    func pickScreenColor() async throws -> String?
     func testReminderNotification(soundEnabled: Bool, language: QuickNoteLanguage) async throws
     func currentHotKeyRegistrationState() -> [String: Any]
     func currentFloatingCardState() -> [String: [String]]

@@ -128,6 +128,10 @@ export type FloatingCardReference = {
   id: string;
 };
 
+export type ScreenColorPickResult = {
+  sRGBHex: string;
+};
+
 export type HostEventMap = {
   "panel-position": { x: number; y: number };
   "panel-will-open": undefined;
@@ -170,6 +174,7 @@ export type HostBridge<TLoadAllResult, TNotes, TTodos, TSettings> = {
   showNotification: (request: NotificationRequest) => Promise<void>;
   scheduleNotification: (request: NotificationRequest) => Promise<void>;
   openTextColorPanel: (options: { color?: string; requestId: string }) => Promise<void>;
+  pickScreenColor?: () => Promise<ScreenColorPickResult | null>;
   testReminderNotification: (options?: { soundEnabled?: boolean; language?: string }) => Promise<void>;
   getHotkeyRegistrationState: () => Promise<HotkeyRegistrationState>;
   readClipboardText: () => Promise<string>;
