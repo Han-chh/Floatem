@@ -3,12 +3,12 @@ import { HistoryEditor, withHistory } from "slate-history";
 import type { Descendant } from "slate";
 import { Editable, ReactEditor, Slate, withReact } from "slate-react";
 import type { RenderElementProps, RenderLeafProps } from "slate-react";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { isPrimaryShortcut } from "../../lib/isPrimaryShortcut";
 import { useI18n } from "../../lib/i18n";
 import { isNativeQuickNoteHost } from "../../lib/nativeBridge";
 import { readPlainTextFromClipboard, writePlainTextToClipboard } from "../../lib/plainTextClipboard";
-import { DEFAULT_NOTE_CONTENT } from "../../lib/models";
+import { cloneNoteContent } from "../../lib/models";
 import { withColorMark } from "../../lib/slate-plugins/withColorMark";
 import { Toolbar } from "./Toolbar";
 import {
@@ -29,7 +29,17 @@ import {
 type EditorProps = {
   content: Descendant[];
   onChange: (value: Descendant[]) => void;
+  instantToolbar?: boolean;
 };
+
+type ReadOnlyNoteContentProps = {
+  content: Descendant[];
+  className?: string;
+  placeholder?: string;
+};
+
+const NOTE_EDITOR_INPUT_CLASS =
+  "note-editor-input surface-field wrap-anywhere min-h-[76px] rounded-[20px] px-3 py-3 text-[12.25px] leading-[1.6] outline-none";
 
 function renderElement(props: RenderElementProps) {
   return <p {...props.attributes}>{props.children}</p>;
@@ -55,9 +65,11 @@ function renderLeaf(props: RenderLeafProps) {
   );
 }
 
-export function Editor({ content, onChange }: EditorProps) {
+export function Editor({ content, onChange, instantToolbar = false }: EditorProps) {
   const { t } = useI18n();
   const [editor] = useState(() => withColorMark(withHistory(withReact(createEditor()))));
+  const [initialValue] = useState(() => cloneNoteContent(content));
+  const rootRef = useRef<HTMLDivElement | null>(null);
   const [toolbarState, setToolbarState] = useState<{
     activeColor: string | null;
     activeFormats: Record<TextFormat, boolean>;
@@ -237,14 +249,36 @@ export function Editor({ content, onChange }: EditorProps) {
     onChange(value);
   };
 
+  useEffect(() => {
+    return () => {
+      if (typeof window === "undefined") {
+        return;
+      }
+
+      const activeElement = document.activeElement;
+      if (activeElement instanceof HTMLElement && rootRef.current?.contains(activeElement)) {
+        activeElement.blur();
+      }
+
+      const selection = window.getSelection();
+      if (selection?.rangeCount) {
+        const anchorNode = selection.anchorNode;
+        if (anchorNode && rootRef.current?.contains(anchorNode)) {
+          selection.removeAllRanges();
+        }
+      }
+    };
+  }, []);
+
   return (
-    <Slate editor={editor} initialValue={content.length > 0 ? content : DEFAULT_NOTE_CONTENT} onChange={handleChange}>
-      <div className="space-y-2">
+    <Slate editor={editor} initialValue={initialValue} onChange={handleChange}>
+      <div ref={rootRef} className="space-y-2">
         <Toolbar
           activeColor={toolbarState.activeColor ?? pendingTextColor}
           activeFormats={toolbarState.activeFormats}
           canRedo={toolbarState.canRedo}
           canUndo={toolbarState.canUndo}
+          instant={instantToolbar}
           isColorPaletteOpen={isColorPaletteOpen}
           onApplyColor={handleApplyColor}
           onClearFormatting={handleClearFormatting}
@@ -360,7 +394,7 @@ export function Editor({ content, onChange }: EditorProps) {
               void handlePaste();
             }
           }}
-          className="note-editor-input surface-field wrap-anywhere min-h-[76px] rounded-[20px] px-3 py-3 text-[12.25px] leading-[1.6] outline-none"
+          className={NOTE_EDITOR_INPUT_CLASS}
           placeholder={t.notes.editorPlaceholder}
           renderElement={renderElement}
           renderLeaf={renderLeaf}
@@ -368,5 +402,59 @@ export function Editor({ content, onChange }: EditorProps) {
         />
       </div>
     </Slate>
+  );
+}
+
+export function ReadOnlyNoteContent({ content, className, placeholder }: ReadOnlyNoteContentProps) {
+  const [editor] = useState(() => withReact(createEditor()));
+  const [initialValue] = useState(() => cloneNoteContent(content));
+
+  return (
+    <Slate editor={editor} initialValue={initialValue}>
+      <Editable
+        readOnly
+        renderElement={renderElement}
+        renderLeaf={renderLeaf}
+        className={className}
+        placeholder={placeholder}
+      />
+    </Slate>
+  );
+}
+
+export function ReadOnlyEditorPreview({ content }: { content: Descendant[] }) {
+  const { t } = useI18n();
+
+  return (
+    <div className="space-y-2">
+      <Toolbar
+        activeColor={null}
+        activeFormats={{
+          bold: false,
+          italic: false,
+          underline: false,
+        }}
+        canRedo={false}
+        canUndo={false}
+        instant
+        isColorPaletteOpen={false}
+        onApplyColor={() => {}}
+        onClearFormatting={() => {}}
+        onCloseColorPalette={() => {}}
+        onCopy={() => {}}
+        onPaste={() => {}}
+        onPreviewColor={() => {}}
+        onRedo={() => {}}
+        onToggleColorPalette={() => {}}
+        onToggleFormat={() => {}}
+        onUndo={() => {}}
+        visualOnly
+      />
+      <ReadOnlyNoteContent
+        content={content}
+        className={NOTE_EDITOR_INPUT_CLASS}
+        placeholder={t.notes.editorPlaceholder}
+      />
+    </div>
   );
 }

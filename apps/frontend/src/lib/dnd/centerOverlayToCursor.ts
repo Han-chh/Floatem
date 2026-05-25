@@ -1,6 +1,6 @@
 import type { Modifier } from "@dnd-kit/core";
 
-function getEventCoordinates(event: Event | null) {
+export function readEventCoordinates(event: Event | null) {
   if (!event) {
     return null;
   }
@@ -34,7 +34,7 @@ function getEventCoordinates(event: Event | null) {
 }
 
 export function syncLatestDragPointerCoordinates(event: Event | null) {
-  return getEventCoordinates(event);
+  return readEventCoordinates(event);
 }
 
 export const centerOverlayToCursor: Modifier = ({
@@ -47,7 +47,7 @@ export const centerOverlayToCursor: Modifier = ({
     return transform;
   }
 
-  const coordinates = getEventCoordinates(activatorEvent);
+  const coordinates = readEventCoordinates(activatorEvent);
 
   if (!coordinates) {
     return transform;

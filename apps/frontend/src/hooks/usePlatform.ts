@@ -1,3 +1,9 @@
+import type {
+  DragPreviewPayload,
+  FloatingCardReference,
+  FloatingCardResize,
+  FloatingCardScreenPlacement,
+} from "@quicknote/native-bridge";
 import type { AppSettings, LoadAllResult, NotesDocument, TodosDocument } from "../lib/models";
 import { normalizeNotesDocument, normalizeTodosDocument } from "../lib/models";
 import { getQuickNoteBridge, isNativeQuickNoteHost } from "../lib/nativeBridge";
@@ -29,7 +35,7 @@ export async function saveTodos(todos: TodosDocument) {
   await getQuickNoteBridge().saveTodos(todos);
 }
 
-export async function saveSettings(settings: AppSettings) {
+export async function saveSettings(settings: Partial<AppSettings>) {
   await getQuickNoteBridge().saveSettings(settings);
 }
 
@@ -59,4 +65,32 @@ export async function reportFrontendReady() {
 
 export async function reportFrontendError(message: string, source?: string) {
   await getQuickNoteBridge().reportFrontendError(message, source);
+}
+
+export async function showDragPreview(payload: DragPreviewPayload) {
+  await getQuickNoteBridge().showDragPreview(payload);
+}
+
+export async function hideDragPreview() {
+  await getQuickNoteBridge().hideDragPreview();
+}
+
+export async function showFloatingCard(payload: DragPreviewPayload) {
+  await getQuickNoteBridge().showFloatingCard(payload);
+}
+
+export async function closeFloatingCard(card: FloatingCardReference) {
+  await getQuickNoteBridge().closeFloatingCard(card);
+}
+
+export async function resizeFloatingCard(size: FloatingCardResize) {
+  await getQuickNoteBridge().resizeFloatingCard(size);
+}
+
+export async function getFloatingCardScreenPlacement(): Promise<FloatingCardScreenPlacement | null> {
+  return await getQuickNoteBridge().getFloatingCardScreenPlacement();
+}
+
+export async function startFloatingCardDrag(card: FloatingCardReference) {
+  await getQuickNoteBridge().startFloatingCardDrag(card);
 }

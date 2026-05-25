@@ -12,9 +12,15 @@ import { SortableContext, verticalListSortingStrategy } from "@dnd-kit/sortable"
 import { AnimatePresence, motion } from "framer-motion";
 import { useEffect, useMemo, useState } from "react";
 import { createPortal } from "react-dom";
+import { hideDragPreview, showDragPreview, showFloatingCard } from "../../hooks/usePlatform";
 import { useDragPointerTracking } from "../../hooks/useDragPointerTracking";
+import { buildNoteDragPreviewPayload } from "../../lib/dragPreview";
 import { useI18n } from "../../lib/i18n";
-import { centerOverlayToCursor, syncLatestDragPointerCoordinates } from "../../lib/dnd/centerOverlayToCursor";
+import {
+  centerOverlayToCursor,
+  readEventCoordinates,
+  syncLatestDragPointerCoordinates,
+} from "../../lib/dnd/centerOverlayToCursor";
 import { resolveDragReorderTarget } from "../../lib/dnd/resolveDragReorderTarget";
 import { useParticleField } from "../../hooks/useParticleField";
 import { useNotesStore } from "../../store/notesStore";
@@ -29,9 +35,10 @@ type NoteGroupFilterState =
   | { mode: "custom"; keys: string[] };
 
 export function NotesList() {
-  const { t } = useI18n();
+  const { t, language } = useI18n();
   const cards = useNotesStore((state) => state.cards);
   const groups = useNotesStore((state) => state.groups);
+  const floatingCardIds = useNotesStore((state) => state.floatingCardIds);
   const addCard = useNotesStore((state) => state.addCard);
   const moveCard = useNotesStore((state) => state.moveCard);
   const removeCard = useNotesStore((state) => state.removeCard);
@@ -49,8 +56,8 @@ export function NotesList() {
     }),
   );
   const baseVisibleCards = useMemo(
-    () => cards.filter((card) => !removingIds.includes(card.id)),
-    [cards, removingIds],
+    () => cards.filter((card) => !removingIds.includes(card.id) && !floatingCardIds.includes(card.id)),
+    [cards, floatingCardIds, removingIds],
   );
   const availableFilterKeys = useMemo(
     () => [NOTE_FILTER_UNGROUPED_KEY, ...groups.map((group) => group.id)],
@@ -80,6 +87,24 @@ export function NotesList() {
     null;
   const dragPointerCoordinates = useDragPointerTracking(Boolean(activeDragId));
   const isFilterActive = !allGroupsSelected;
+
+  const resetInteractiveSelectionBeforeFloatingCard = () => {
+    if (typeof window === "undefined") {
+      return;
+    }
+
+    const activeElement = document.activeElement;
+    if (
+      activeElement instanceof HTMLElement &&
+      (activeElement.isContentEditable ||
+        activeElement instanceof HTMLInputElement ||
+        activeElement instanceof HTMLTextAreaElement)
+    ) {
+      activeElement.blur();
+    }
+
+    window.getSelection()?.removeAllRanges();
+  };
 
   useEffect(() => {
     if (!activeDragId || !dragPointerCoordinates || typeof document === "undefined") {
@@ -149,14 +174,34 @@ export function NotesList() {
   };
 
   const handleDragStart = (event: DragStartEvent) => {
-    setActiveDragId(String(event.active.id));
+    const activeId = String(event.active.id);
+    setActiveDragId(activeId);
     setActiveDragOverId(null);
     setActiveDragWidth(event.active.rect.current.initial?.width ?? null);
     syncLatestDragPointerCoordinates(event.activatorEvent);
+
+    const rect = document.querySelector<HTMLElement>(`[data-note-card-id="${activeId}"]`)?.getBoundingClientRect();
+    const coordinates = readEventCoordinates(event.activatorEvent);
+    const activeCard = cards.find((card) => card.id === activeId);
+
+    if (!rect || !coordinates || !activeCard) {
+      return;
+    }
+
+    void showDragPreview(
+      buildNoteDragPreviewPayload({
+        note: activeCard,
+        groups,
+        language,
+        rect,
+        coordinates,
+      }),
+    );
   };
 
   const handleDragEnd = (event: DragEndEvent) => {
     const activeId = String(event.active.id);
+    const activeCard = cards.find((card) => card.id === activeId) ?? null;
     const overId = resolveDragReorderTarget({
       activeId,
       eventOverId: event.over ? String(event.over.id) : null,
@@ -168,9 +213,25 @@ export function NotesList() {
     setActiveDragWidth(null);
 
     if (!overId) {
+      const rect = document.querySelector<HTMLElement>(`[data-note-card-id="${activeId}"]`)?.getBoundingClientRect();
+      const coordinates = dragPointerCoordinates;
+
+      if (activeCard && rect && coordinates) {
+        resetInteractiveSelectionBeforeFloatingCard();
+        void showFloatingCard(
+          buildNoteDragPreviewPayload({
+            note: activeCard,
+            groups,
+            language,
+            rect,
+            coordinates,
+          }),
+        );
+      }
+      void hideDragPreview();
       return;
     }
-
+    void hideDragPreview();
     moveCard(activeId, overId);
   };
 
@@ -212,6 +273,7 @@ export function NotesList() {
               setActiveDragId(null);
               setActiveDragOverId(null);
               setActiveDragWidth(null);
+              void hideDragPreview();
             }}
           >
             <SortableContext items={visibleCards.map((card) => card.id)} strategy={verticalListSortingStrategy}>

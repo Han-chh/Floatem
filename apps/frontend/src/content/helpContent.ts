@@ -5,6 +5,7 @@ export type HelpContentContext = {
   isNativeHost: boolean;
   language: "en" | "zh-CN";
   motionLabel: string;
+  platform: "web" | "macos" | "windows";
   reminderSoundLabel: string;
   timeFormatLabel: string;
   timeZoneLabel: string;
@@ -26,7 +27,7 @@ export type HelpArticle = {
 };
 
 export type HelpSection = {
-  id: "overview" | "notes" | "todos" | "settings" | "shortcuts";
+  id: "overview" | "notes" | "todos" | "floating" | "settings" | "shortcuts";
   title: string;
   summary: string;
   articles: HelpArticle[];
@@ -153,6 +154,7 @@ function buildEnglishHelpContent(context: HelpContentContext): HelpDialogContent
           },
         ],
       },
+      buildEnglishFloatingCardsSection(context),
       {
         id: "settings",
         title: "Settings",
@@ -217,6 +219,108 @@ function buildEnglishHelpContent(context: HelpContentContext): HelpDialogContent
                   `Global shortcut: ${context.hotkey}.`,
                 ],
               },
+            ],
+          },
+        ],
+      },
+    ],
+  };
+}
+
+function buildEnglishFloatingCardsSection(context: HelpContentContext): HelpSection {
+  if (context.platform === "windows") {
+    return {
+      id: "floating",
+      title: "Floating cards",
+      summary: "Floating notes and todos are not supported on Windows yet.",
+      articles: [
+        {
+          id: "floating-windows",
+          eyebrow: "Platform",
+          title: "Windows support status",
+          summary: "Floating cards are planned for a future Windows release.",
+          highlights: ["Windows", "Not supported", "Planned"],
+          groups: [
+            {
+              id: "floating-windows-status",
+              title: "Current status",
+              items: [
+                "Floating note cards and floating todo cards are currently not supported on Windows.",
+                "This feature is planned for a future Windows release.",
+                "Use the regular Notes and Todos panel on Windows for now.",
+              ],
+            },
+          ],
+        },
+      ],
+    };
+  }
+
+  if (context.platform === "macos") {
+    return {
+      id: "floating",
+      title: "Floating cards",
+      summary: "Tear notes and todos out of the panel, keep them on screen, and dock them back later.",
+      articles: [
+        {
+          id: "floating-macos",
+          eyebrow: "macOS",
+          title: "Float notes and todos",
+          summary: "On macOS, notes and todos can live in their own always-on-top card windows.",
+          highlights: ["Drag out", "Edit live", "Dock back", "Multiple cards"],
+          groups: [
+            {
+              id: "floating-start",
+              title: "Create a floating card",
+              items: [
+                "Drag a note card or an open todo away from the list, then release it outside the panel.",
+                "The item opens as its own floating card and is hidden from the main list while it is floating.",
+                "Multiple notes and todos can be floating at the same time.",
+              ],
+            },
+            {
+              id: "floating-work",
+              title: "Work inside floating cards",
+              items: [
+                "Floating notes support title and body editing, formatting, group changes, color, and fold state.",
+                "Floating todos support group changes, reminder changes, completion, and the same status colors as the main list.",
+                "Completing a floating todo saves it, then docks and closes the floating card after a short delay.",
+              ],
+            },
+            {
+              id: "floating-dock",
+              title: "Move, dock, and close",
+              items: [
+                "Drag a floating card by its non-editing surface to move it around the screen.",
+                "Drag it back onto the QuickNote panel; the panel highlights as a dock zone, then release inside to dock it.",
+                "Click the close control on the floating card to dock it back into the main panel without deleting it.",
+              ],
+            },
+          ],
+        },
+      ],
+    };
+  }
+
+  return {
+    id: "floating",
+    title: "Floating cards",
+    summary: "Floating notes and todos need the macOS desktop host.",
+    articles: [
+      {
+        id: "floating-web",
+        eyebrow: "Preview",
+        title: "Desktop-only feature",
+        summary: "Browser preview cannot open native floating card windows.",
+        highlights: ["macOS desktop", "Native windows"],
+        groups: [
+          {
+            id: "floating-web-status",
+            title: "Availability",
+            items: [
+              "Floating note cards and floating todo cards are available in the macOS desktop app.",
+              "Browser preview cannot create separate always-on-top card windows.",
+              "On Windows, floating cards are planned for a future Windows release.",
             ],
           },
         ],
@@ -333,14 +437,15 @@ function buildChineseHelpContent(context: HelpContentContext): HelpDialogContent
           },
         ],
       },
+      buildChineseFloatingCardsSection(context),
       {
         id: "settings",
-        title: "Settings",
+        title: "设置选项",
         summary: "调整启动方式、语言、动效和提醒声音。",
         articles: [
           {
             id: "settings-workflow",
-            eyebrow: "Settings",
+            eyebrow: "设置选项",
             title: "调整 QuickNote 的打开方式与体验",
             summary: "设置集中管理行为、语言与动效控制。",
             highlights: [context.motionLabel, context.reminderSoundLabel],
@@ -397,6 +502,108 @@ function buildChineseHelpContent(context: HelpContentContext): HelpDialogContent
                   `全局快捷键：${context.hotkey}。`,
                 ],
               },
+            ],
+          },
+        ],
+      },
+    ],
+  };
+}
+
+function buildChineseFloatingCardsSection(context: HelpContentContext): HelpSection {
+  if (context.platform === "windows") {
+    return {
+      id: "floating",
+      title: "悬浮卡片",
+      summary: "Windows 端目前不支持悬浮 Notes 和 Todos。",
+      articles: [
+        {
+          id: "floating-windows",
+          eyebrow: "平台状态",
+          title: "Windows 支持状态",
+          summary: "悬浮卡片 planned for a future Windows release。",
+          highlights: ["Windows", "暂不支持", "Planned"],
+          groups: [
+            {
+              id: "floating-windows-status",
+              title: "当前状态",
+              items: [
+                "Windows 端目前不支持悬浮 note 卡片和悬浮 todo 卡片。",
+                "该功能 planned for a future Windows release。",
+                "在 Windows 上请先使用普通的 Notes 和 Todos 面板。",
+              ],
+            },
+          ],
+        },
+      ],
+    };
+  }
+
+  if (context.platform === "macos") {
+    return {
+      id: "floating",
+      title: "悬浮卡片",
+      summary: "把 Notes 和 Todos 从主面板拖出，保留在屏幕上，需要时再收回。",
+      articles: [
+        {
+          id: "floating-macos",
+          eyebrow: "macOS",
+          title: "悬浮 Notes 与 Todos",
+          summary: "在 macOS 上，Notes 和 Todos 可以作为独立置顶卡片停留在屏幕上。",
+          highlights: ["拖出悬浮", "实时编辑", "拖回收纳", "多卡片"],
+          groups: [
+            {
+              id: "floating-start",
+              title: "创建悬浮卡片",
+              items: [
+                "将一个 note 卡片或未完成 todo 从列表中拖出，并在面板外松开。",
+                "该项目会打开为独立悬浮卡片，并在悬浮期间从主列表中隐藏，避免重复显示。",
+                "可以同时悬浮多个 notes 和 todos。",
+              ],
+            },
+            {
+              id: "floating-work",
+              title: "在悬浮卡片中操作",
+              items: [
+                "悬浮 note 支持编辑标题和正文、文字格式、分组、颜色以及折叠状态。",
+                "悬浮 todo 支持更改分组、修改提醒、切换完成状态，并保留主列表中的状态颜色。",
+                "在悬浮 todo 中标记完成后，会先保存状态，然后在短暂延迟后自动收回并关闭悬浮卡片。",
+              ],
+            },
+            {
+              id: "floating-dock",
+              title: "移动、收回与关闭",
+              items: [
+                "按住悬浮卡片的非编辑区域可以在屏幕上移动卡片。",
+                "把悬浮卡片拖回 QuickNote 主面板时，面板会显示收纳区域；在面板内松开即可收回。",
+                "点击悬浮卡片上的关闭按钮会把卡片收回主面板，不会删除对应 note 或 todo。",
+              ],
+            },
+          ],
+        },
+      ],
+    };
+  }
+
+  return {
+    id: "floating",
+    title: "悬浮卡片",
+    summary: "悬浮 Notes 和 Todos 需要 macOS 桌面宿主。",
+    articles: [
+      {
+        id: "floating-web",
+        eyebrow: "预览环境",
+        title: "仅桌面端可用",
+        summary: "浏览器预览无法创建原生悬浮卡片窗口。",
+        highlights: ["macOS 桌面端", "原生窗口"],
+        groups: [
+          {
+            id: "floating-web-status",
+            title: "可用性",
+            items: [
+              "悬浮 note 卡片和悬浮 todo 卡片可在 macOS 桌面应用中使用。",
+              "浏览器预览无法创建独立置顶卡片窗口。",
+              "Windows 端悬浮卡片 planned for a future Windows release。",
             ],
           },
         ],

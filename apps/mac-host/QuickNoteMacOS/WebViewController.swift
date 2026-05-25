@@ -9,7 +9,14 @@ final class WebViewController: NSViewController, WKNavigationDelegate {
     private static let hotkeyRegistrationStateEventName = "quicknote:hotkey-registration-state"
     private static let textColorPanelChangeEventName = "quicknote:text-color-panel-change"
     private static let textColorPanelCloseEventName = "quicknote:text-color-panel-close"
+    private static let notesUpdatedEventName = "quicknote:notes-updated"
     private static let todosUpdatedEventName = "quicknote:todos-updated"
+    private static let floatingCardsStateEventName = "quicknote:floating-cards-state"
+    private static let floatingDockZoneEnterEventName = "quicknote:floating-dock-zone-enter"
+    private static let floatingDockZoneLeaveEventName = "quicknote:floating-dock-zone-leave"
+    private nonisolated static let debugPipeline: Bool = {
+        DebugFlags.isEnabled("DEBUG_FLOATING_PIPELINE")
+    }()
     private static let frontendBootstrapProbeScript = """
     (() => {
       const root = document.getElementById("root");
@@ -37,8 +44,10 @@ final class WebViewController: NSViewController, WKNavigationDelegate {
     private let loadingOverlay = NSView()
     private let loadingTitleLabel = NSTextField(labelWithString: "Loading QuickNote...")
     private let loadingDetailLabel = NSTextField(labelWithString: "Preparing the local app interface.")
+    private let loadingQuitButton = NSButton(title: "Quit QuickNote", target: nil, action: nil)
     private let scriptMessageProxy = ScriptMessageProxy()
     private let logger = Logger(subsystem: "com.quicknote.app", category: "WebView")
+    private let pipelineLogger = Logger(subsystem: "com.quicknote.app", category: "Pipeline")
     private var hasRetriedAfterTermination = false
     private var frontendProbeAttemptsRemaining = 0
     private var languageObserver: NSObjectProtocol?
@@ -183,6 +192,83 @@ final class WebViewController: NSViewController, WKNavigationDelegate {
         )
     }
 
+    func emitNotesUpdated(_ notes: Any) {
+        guard let json = jsonString(for: notes) else {
+            return
+        }
+
+        webView.evaluateJavaScript(
+            "window.dispatchEvent(new CustomEvent('\(Self.notesUpdatedEventName)', { detail: \(json) }));"
+        )
+    }
+
+    func emitFloatingCardsState(noteIDs: [String], todoIDs: [String]) {
+        let payload: [String: Any] = [
+            "noteIds": noteIDs,
+            "todoIds": todoIDs,
+        ]
+
+        guard let json = jsonString(for: payload) else {
+            return
+        }
+
+        if Self.debugPipeline {
+            pipelineLogger.info("emitFloatingCardsState JS payload=\(json, privacy: .public)")
+        }
+
+        webView.evaluateJavaScript(
+            "window.dispatchEvent(new CustomEvent('\(Self.floatingCardsStateEventName)', { detail: \(json) }));"
+        )
+    }
+
+    func emitFloatingDockZoneEnter(kind: String, cardID: String) {
+        let payload: [String: Any] = [
+            "kind": kind,
+            "id": cardID,
+        ]
+
+        guard let json = jsonString(for: payload) else {
+            logger.error("[FLT:DOCK] emitFloatingDockZoneEnter FAILED: json serialization")
+            return
+        }
+
+        logger.info("[FLT:DOCK] emitFloatingDockZoneEnter JS payload=\(json, privacy: .public)")
+        webView.evaluateJavaScript(
+            "window.dispatchEvent(new CustomEvent('\(Self.floatingDockZoneEnterEventName)', { detail: \(json) }));",
+            completionHandler: { result, error in
+                if let error {
+                    self.logger.error("[FLT:DOCK] emitFloatingDockZoneEnter JS FAILED: \(error.localizedDescription, privacy: .public)")
+                } else {
+                    self.logger.info("[FLT:DOCK] emitFloatingDockZoneEnter JS OK result=\(String(describing: result), privacy: .public)")
+                }
+            }
+        )
+    }
+
+    func emitFloatingDockZoneLeave(kind: String, cardID: String) {
+        let payload: [String: Any] = [
+            "kind": kind,
+            "id": cardID,
+        ]
+
+        guard let json = jsonString(for: payload) else {
+            logger.error("[FLT:DOCK] emitFloatingDockZoneLeave FAILED: json serialization")
+            return
+        }
+
+        logger.info("[FLT:DOCK] emitFloatingDockZoneLeave JS payload=\(json, privacy: .public)")
+        webView.evaluateJavaScript(
+            "window.dispatchEvent(new CustomEvent('\(Self.floatingDockZoneLeaveEventName)', { detail: \(json) }));",
+            completionHandler: { result, error in
+                if let error {
+                    self.logger.error("[FLT:DOCK] emitFloatingDockZoneLeave JS FAILED: \(error.localizedDescription, privacy: .public)")
+                } else {
+                    self.logger.info("[FLT:DOCK] emitFloatingDockZoneLeave JS OK result=\(String(describing: result), privacy: .public)")
+                }
+            }
+        )
+    }
+
     private func loadFrontend() {
         guard let indexURL = Bundle.main.url(forResource: "index", withExtension: "html", subdirectory: "web") else {
             logger.error("Missing bundled frontend assets in QuickNote.app/Contents/Resources/web.")
@@ -256,6 +342,11 @@ final class WebViewController: NSViewController, WKNavigationDelegate {
             if let state = bridgeDelegate?.currentHotKeyRegistrationState() {
                 emitHotkeyRegistrationState(state)
             }
+            let floatingCardState = bridgeDelegate?.currentFloatingCardState() ?? [:]
+            emitFloatingCardsState(
+                noteIDs: floatingCardState["note"] ?? [],
+                todoIDs: floatingCardState["todo"] ?? []
+            )
             hideLoadingOverlay()
             return
         case "setEditableInputActive":
@@ -282,6 +373,15 @@ final class WebViewController: NSViewController, WKNavigationDelegate {
                 title: localization.finishLoadingTitle,
                 detail: message
             )
+            return
+        case "reportFrontendDebug":
+            guard Self.debugPipeline else {
+                return
+            }
+
+            let source = params["source"] as? String ?? "unknown"
+            let message = params["message"] as? String ?? "Unknown frontend debug event."
+            pipelineLogger.info("Frontend debug from \(source, privacy: .public): \(message, privacy: .public)")
             return
         default:
             logger.debug("Received bridge request from WebView. method=\(method, privacy: .public)")
@@ -330,6 +430,8 @@ final class WebViewController: NSViewController, WKNavigationDelegate {
                         "window.close": true,
                         "window.drag": true,
                         "window.alwaysOnTop": true,
+                        "window.dragPreview": true,
+                        "window.floatingCards": true,
                         "notifications.send": true,
                         "notifications.schedule": true,
                         "notifications.openSettings": true,
@@ -405,6 +507,39 @@ final class WebViewController: NSViewController, WKNavigationDelegate {
                 result = NSNull()
             case "setAlwaysOnTop":
                 bridgeDelegate?.setAlwaysOnTopFromBridge(params["enabled"] as? Bool ?? true)
+                result = NSNull()
+            case "showDragPreview":
+                guard let payload = params["payload"] else {
+                    throw QuickNoteBridgeError.invalidParameters("QuickNote expected a drag preview payload from JavaScript.")
+                }
+                try bridgeDelegate?.showDragPreviewFromBridge(payload)
+                result = NSNull()
+            case "hideDragPreview":
+                bridgeDelegate?.hideDragPreviewFromBridge()
+                result = NSNull()
+            case "showFloatingCard":
+                guard let payload = params["payload"] else {
+                    throw QuickNoteBridgeError.invalidParameters("QuickNote expected a floating card payload from JavaScript.")
+                }
+                try bridgeDelegate?.showFloatingCardFromBridge(payload)
+                result = NSNull()
+            case "closeFloatingCard":
+                guard
+                    let kind = params["kind"] as? String, !kind.isEmpty,
+                    let cardID = params["id"] as? String, !cardID.isEmpty
+                else {
+                    throw QuickNoteBridgeError.invalidParameters("QuickNote expected a floating card reference from JavaScript.")
+                }
+                bridgeDelegate?.closeFloatingCardFromBridge(kind: kind, id: cardID)
+                result = NSNull()
+            case "startFloatingCardDrag":
+                guard
+                    let kind = params["kind"] as? String, !kind.isEmpty,
+                    let cardID = params["id"] as? String, !cardID.isEmpty
+                else {
+                    throw QuickNoteBridgeError.invalidParameters("QuickNote expected a floating card reference from JavaScript.")
+                }
+                try bridgeDelegate?.startFloatingCardDragFromBridge(kind: kind, id: cardID)
                 result = NSNull()
             case "quitApplication":
                 bridgeDelegate?.quitApplicationFromBridge()
@@ -518,6 +653,28 @@ final class WebViewController: NSViewController, WKNavigationDelegate {
 
         loadingOverlay.addSubview(loadingTitleLabel)
         loadingOverlay.addSubview(loadingDetailLabel)
+        loadingOverlay.addSubview(loadingQuitButton)
+
+        loadingQuitButton.translatesAutoresizingMaskIntoConstraints = false
+        loadingQuitButton.title = "Quit QuickNote"
+        loadingQuitButton.bezelStyle = .regularSquare
+        loadingQuitButton.isBordered = false
+        loadingQuitButton.controlSize = .regular
+        loadingQuitButton.font = .systemFont(ofSize: 13, weight: .semibold)
+        loadingQuitButton.target = NSApp
+        loadingQuitButton.action = #selector(NSApplication.terminate(_:))
+        loadingQuitButton.isHidden = true
+        loadingQuitButton.wantsLayer = true
+        loadingQuitButton.layer?.cornerRadius = 10
+        loadingQuitButton.layer?.masksToBounds = true
+        loadingQuitButton.layer?.backgroundColor = NSColor(calibratedRed: 0.86, green: 0.20, blue: 0.18, alpha: 1).cgColor
+        let title = NSAttributedString(
+            string: "Quit QuickNote",
+            attributes: [.foregroundColor: NSColor.white, .font: NSFont.systemFont(ofSize: 13, weight: .semibold)]
+        )
+        loadingQuitButton.attributedTitle = title
+        loadingQuitButton.setContentHuggingPriority(.defaultHigh, for: .horizontal)
+        loadingQuitButton.setContentHuggingPriority(.defaultHigh, for: .vertical)
 
         NSLayoutConstraint.activate([
             loadingTitleLabel.centerXAnchor.constraint(equalTo: loadingOverlay.centerXAnchor),
@@ -528,12 +685,18 @@ final class WebViewController: NSViewController, WKNavigationDelegate {
             loadingDetailLabel.centerXAnchor.constraint(equalTo: loadingOverlay.centerXAnchor),
             loadingDetailLabel.leadingAnchor.constraint(greaterThanOrEqualTo: loadingOverlay.leadingAnchor, constant: 32),
             loadingDetailLabel.trailingAnchor.constraint(lessThanOrEqualTo: loadingOverlay.trailingAnchor, constant: -32),
+            loadingQuitButton.topAnchor.constraint(equalTo: loadingDetailLabel.bottomAnchor, constant: 20),
+            loadingQuitButton.centerXAnchor.constraint(equalTo: loadingOverlay.centerXAnchor),
+            loadingQuitButton.widthAnchor.constraint(equalToConstant: 180),
+            loadingQuitButton.heightAnchor.constraint(equalToConstant: 36),
         ])
     }
 
     private func showLoadingOverlay(title: String, detail: String) {
         loadingTitleLabel.stringValue = title
         loadingDetailLabel.stringValue = detail
+        // Show quit button when this is an error/crash message, not during normal loading.
+        loadingQuitButton.isHidden = false
         loadingOverlay.alphaValue = 1
         loadingOverlay.isHidden = false
     }
@@ -647,16 +810,24 @@ final class WebViewController: NSViewController, WKNavigationDelegate {
         alpha: 0.98
     )
 
-    private static let bridgeBootstrapScript = """
+    private static let bridgeBootstrapScript: String = {
+        let debugPipelineLiteral = DebugFlags.isEnabled("DEBUG_FLOATING_PIPELINE") ? "true" : "false"
+
+        return """
     (() => {
       if (window.quickNoteHost) {
         return;
       }
 
+      const QUICKNOTE_DEBUG_PIPELINE = \(debugPipelineLiteral);
+
       const inflight = new Map();
       let nextId = 1;
+      let lastBridgeAction = "none";
+      let lastHostEvent = "none";
 
       const sendWithoutReply = (method, params = {}) => {
+        lastBridgeAction = `${method}:${safeStringify(params)}`;
         try {
           window.webkit.messageHandlers.quickNoteHost.postMessage({ method, params });
         } catch (error) {
@@ -666,6 +837,7 @@ final class WebViewController: NSViewController, WKNavigationDelegate {
 
       const send = (method, params = {}) => new Promise((resolve, reject) => {
         const id = nextId++;
+        lastBridgeAction = `${method}:${safeStringify(params)}`;
         inflight.set(id, { resolve, reject });
         window.webkit.messageHandlers.quickNoteHost.postMessage({ id, method, params });
       });
@@ -743,6 +915,24 @@ final class WebViewController: NSViewController, WKNavigationDelegate {
         setAlwaysOnTop(enabled) {
           return send("setAlwaysOnTop", { enabled: Boolean(enabled) });
         },
+        showDragPreview(payload) {
+          return send("showDragPreview", { payload });
+        },
+        hideDragPreview() {
+          return send("hideDragPreview");
+        },
+        showFloatingCard(payload) {
+          return send("showFloatingCard", { payload });
+        },
+        closeFloatingCard(card) {
+          return send("closeFloatingCard", { kind: String(card?.kind ?? ""), id: String(card?.id ?? "") });
+        },
+        resizeFloatingCard() {
+          return Promise.resolve();
+        },
+        startFloatingCardDrag(card) {
+          return send("startFloatingCardDrag", { kind: String(card?.kind ?? ""), id: String(card?.id ?? "") });
+        },
         hidePanelWindow() {
           return send("hideWindow");
         },
@@ -770,12 +960,105 @@ final class WebViewController: NSViewController, WKNavigationDelegate {
         reportFrontendError(message, source = "javascript") {
           sendWithoutReply("reportFrontendError", { message, source });
         },
+        reportFrontendDebug(message, source = "javascript.debug") {
+          sendWithoutReply("reportFrontendDebug", { message, source });
+        },
       };
 
       window.quickNoteNative = window.quickNoteHost;
 
+      const describeActiveElement = () => {
+        const element = document.activeElement;
+        if (!(element instanceof HTMLElement)) {
+          return "none";
+        }
+
+        const idPart = element.id ? `#${element.id}` : "";
+        const classPart = typeof element.className === "string" && element.className.trim().length > 0
+          ? `.${element.className.trim().split(/\\s+/).slice(0, 3).join(".")}`
+          : "";
+        const roleValue = element.getAttribute("role");
+        const rolePart = roleValue ? `[role=${roleValue}]` : "";
+        return `${element.tagName.toLowerCase()}${idPart}${classPart}${rolePart}`;
+      };
+
+      const safeStringify = (value) => {
+        try {
+          const stringValue = JSON.stringify(value);
+          if (!stringValue) {
+            return String(value);
+          }
+
+          return stringValue.length > 600 ? `${stringValue.slice(0, 600)}...` : stringValue;
+        } catch {
+          return String(value);
+        }
+      };
+
+      const emitDebug = (source, message) => {
+        if (!QUICKNOTE_DEBUG_PIPELINE) {
+          return;
+        }
+
+        window.quickNoteHost.reportFrontendDebug(String(message), source);
+      };
+
+      if (QUICKNOTE_DEBUG_PIPELINE) {
+        emitDebug("bootstrap", `url=${location.href} readyState=${document.readyState} visibility=${document.visibilityState} active=${describeActiveElement()}`);
+
+        window.addEventListener("quicknote:floating-cards-state", (event) => {
+          emitDebug("event.floatingCardsState", `detail=${safeStringify(event.detail)} active=${describeActiveElement()} visibility=${document.visibilityState}`);
+        });
+
+        window.addEventListener("quicknote:floating-dock-zone-enter", (event) => {
+          emitDebug("event.floatingDockZoneEnter", `detail=${safeStringify(event.detail)} active=${describeActiveElement()} visibility=${document.visibilityState}`);
+        });
+
+        window.addEventListener("quicknote:floating-dock-zone-leave", (event) => {
+          emitDebug("event.floatingDockZoneLeave", `detail=${safeStringify(event.detail)} active=${describeActiveElement()} visibility=${document.visibilityState}`);
+        });
+
+        window.addEventListener("focus", () => {
+          emitDebug("window.focus", `readyState=${document.readyState} visibility=${document.visibilityState} active=${describeActiveElement()}`);
+        }, true);
+
+        window.addEventListener("blur", () => {
+          emitDebug("window.blur", `readyState=${document.readyState} visibility=${document.visibilityState} active=${describeActiveElement()}`);
+        }, true);
+
+        document.addEventListener("visibilitychange", () => {
+          emitDebug("document.visibilitychange", `visibility=${document.visibilityState} readyState=${document.readyState} active=${describeActiveElement()}`);
+        });
+      }
+
+      window.addEventListener("quicknote:floating-cards-state", (event) => {
+        lastHostEvent = `floating-cards-state:${safeStringify(event.detail)}`;
+      });
+
+      window.addEventListener("quicknote:floating-dock-zone-enter", (event) => {
+        lastHostEvent = `floating-dock-zone-enter:${safeStringify(event.detail)}`;
+      });
+
+      window.addEventListener("quicknote:floating-dock-zone-leave", (event) => {
+        lastHostEvent = `floating-dock-zone-leave:${safeStringify(event.detail)}`;
+      });
+
       window.addEventListener("error", (event) => {
-        const message = event.error?.stack || event.message || "Unknown window error";
+        const baseMessage = event.error?.stack || event.message || "Unknown window error";
+        const locationPart =
+          event.filename || event.lineno || event.colno
+            ? ` @ ${event.filename || "unknown"}:${event.lineno || 0}:${event.colno || 0}`
+            : "";
+        const resourceTarget =
+          event.target instanceof HTMLScriptElement
+            ? ` script=${event.target.src || "[inline]"}`
+            : event.target instanceof HTMLLinkElement
+              ? ` link=${event.target.href || "[inline]"}`
+              : event.target instanceof HTMLImageElement
+                ? ` img=${event.target.currentSrc || event.target.src || "[inline]"}`
+                : "";
+        const contextPart = ` [readyState=${document.readyState} visibility=${document.visibilityState} active=${describeActiveElement()} lastBridgeAction=${lastBridgeAction} lastHostEvent=${lastHostEvent}${resourceTarget}]`;
+        const message = `${baseMessage}${locationPart}${contextPart}`;
         window.quickNoteHost.reportFrontendError(message, "window.error");
       });
 
@@ -799,6 +1082,7 @@ final class WebViewController: NSViewController, WKNavigationDelegate {
       });
 
       window.__quickNoteNativeReceive = (message) => {
+        lastHostEvent = `bridge-response:${safeStringify({ id: message.id, ok: message.ok, keys: Object.keys(message || {}) })}`;
         const record = inflight.get(message.id);
         if (!record) {
           return;
@@ -815,6 +1099,7 @@ final class WebViewController: NSViewController, WKNavigationDelegate {
       };
     })();
     """
+    }()
 
     private static func missingBundleHTML(for language: QuickNoteLanguage) -> String {
         let localization = language.localization

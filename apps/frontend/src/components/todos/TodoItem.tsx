@@ -1,14 +1,15 @@
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { motion } from "framer-motion";
-import { useRef, useState } from "react";
+import { AnimatePresence, motion } from "framer-motion";
+import { useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { useI18n } from "../../lib/i18n";
 import { resolveTodoAccentColor, resolveTodoGroup, type TodoItem as TodoItemModel } from "../../lib/models";
 import { formatDateKeyInTimeZone, formatTimestampInTimeZone } from "../../lib/timeZoneDate";
 import type { TimeFormat } from "../../lib/models";
 import { useSettingsStore } from "../../store/settingsStore";
 import { useTodosStore } from "../../store/todosStore";
-import { CheckSquareIcon, CircleCheckBigIcon, Trash2Icon } from "../icons/AppIcons";
+import { CalendarDaysIcon, CheckSquareIcon, CircleCheckBigIcon, SquarePenIcon, Trash2Icon, XIcon } from "../icons/AppIcons";
 import { TodoGroupDialog } from "./TodoGroupDialog";
 import { ReminderPicker } from "./ReminderPicker";
 
@@ -90,6 +91,7 @@ type TodoRowBodyProps = {
   isDropTargetPreview?: boolean;
   isSelected?: boolean;
   selectionMode?: boolean;
+  actionVariant?: "delete" | "dock";
 };
 
 function getStatusMeta(todo: TodoItemModel, doneFallbackLabel: string, timeZone: string, timeFormat: TimeFormat) {
@@ -174,6 +176,14 @@ function colorWithAlpha(color: string, alpha: string) {
   return /^#[\da-f]{6}$/i.test(color) ? `${color}${alpha}` : color;
 }
 
+const FLOATING_TODO_DRAG_THRESHOLD_PX = 6;
+const FLOATING_TODO_INTERACTIVE_SELECTOR =
+  'button,a,input,textarea,select,[contenteditable="true"],[role="button"],[role="checkbox"]';
+
+function isFloatingTodoInteractiveTarget(target: EventTarget | null) {
+  return target instanceof Element && Boolean(target.closest(FLOATING_TODO_INTERACTIVE_SELECTOR));
+}
+
 function getTodoCardSurface(todo: TodoItemModel, groupAccentColor: string) {
   const groupMist = colorWithAlpha(groupAccentColor, todo.done ? "10" : "24");
   const groupWash = colorWithAlpha(groupAccentColor, todo.done ? "0b" : "18");
@@ -206,6 +216,7 @@ function TodoRowBody({
   isDropTargetPreview = false,
   isSelected = false,
   selectionMode = false,
+  actionVariant = "delete",
 }: TodoRowBodyProps) {
   const { t } = useI18n();
   const setReminder = useTodosStore((state) => state.setReminder);
@@ -219,6 +230,7 @@ function TodoRowBody({
   const completedReminderLabel = todo.done && todo.reminderAt ? status.reminderLabel : null;
   const isInteractive = !preview;
   const canUseItemActions = isInteractive && !selectionMode;
+  const isDockAction = actionVariant === "dock";
   const selectionLabel = t.todos.selectTodo(todo.text);
   const canSelectTodo = selectionMode && !todo.done;
 
@@ -369,13 +381,15 @@ function TodoRowBody({
 
               <motion.button
                 type="button"
-                aria-label={t.todos.delete}
-                data-tooltip={t.todos.delete}
+                aria-label={isDockAction ? t.common.close : t.todos.delete}
+                data-tooltip={isDockAction ? t.common.close : t.todos.delete}
                 data-tooltip-align="left"
                 className={`paper-icon-button todo-card-action-button inline-flex h-6.5 min-w-10 items-center justify-center rounded-full px-2.5 ${
-                  todo.done
-                    ? "border-[rgba(151,156,152,0.14)] bg-[rgba(236,239,237,0.54)] text-[rgba(128,134,130,0.62)] shadow-[0_5px_12px_rgba(61,49,34,0.035)]"
-                    : "paper-button-danger"
+                  isDockAction
+                    ? "border-[rgba(151,156,152,0.2)] bg-[rgba(236,239,237,0.74)] text-[rgba(101,106,103,0.82)] shadow-[0_5px_12px_rgba(61,49,34,0.04)]"
+                    : todo.done
+                      ? "border-[rgba(151,156,152,0.14)] bg-[rgba(236,239,237,0.54)] text-[rgba(128,134,130,0.62)] shadow-[0_5px_12px_rgba(61,49,34,0.035)]"
+                      : "paper-button-danger"
                 }`}
                 whileHover={isInteractive ? { y: -1.5, scale: 1.03 } : undefined}
                 whileTap={isInteractive ? { scale: 0.97 } : undefined}
@@ -389,7 +403,7 @@ function TodoRowBody({
                     : undefined
                 }
               >
-                <Trash2Icon size={12.5} />
+                {isDockAction ? <XIcon size={12.5} /> : <Trash2Icon size={12.5} />}
               </motion.button>
             </>
           )}
@@ -418,16 +432,302 @@ export function TodoItemPreview({ todo, width, order }: { todo: TodoItemModel; w
   const groupAccentColor = resolveTodoAccentColor(todo, groups);
   return (
     <div
-      className={`paper-card cq-card relative h-full w-full overflow-hidden rounded-[18px] px-2 py-1.25 shadow-[0_24px_48px_rgba(61,49,34,0.2)] ${getStatusMeta(todo, t.todos.doneFallback, timeZone, timeFormat).cardClass}`}
+      className={`paper-card cq-card relative h-full w-full overflow-hidden rounded-[18px] px-2 py-1.25 ${getStatusMeta(todo, t.todos.doneFallback, timeZone, timeFormat).cardClass}`}
       style={{
         background: getTodoCardSurface(todo, groupAccentColor),
         borderColor: `${groupAccentColor}86`,
-        width: width ? `min(${width}px, calc(100vw - 48px))` : "min(100%, calc(100vw - 48px))",
-        maxWidth: "100%",
+        width: width ? `${width}px` : "100%",
       }}
     >
       <TodoRowBody todo={todo} order={order} preview />
     </div>
+  );
+}
+
+export function FloatingTodoItem({
+  todo,
+  width,
+  order,
+  onBeginDrag,
+  onDock,
+  onToggle,
+}: {
+  todo: TodoItemModel;
+  width?: number;
+  order?: number;
+  onBeginDrag: () => void;
+  onDock: () => void;
+  onToggle: (id: string, target: DOMRect, nextDone: boolean) => void;
+}) {
+  const { t } = useI18n();
+  const groups = useTodosStore((state) => state.groups);
+  const timeZone = useSettingsStore((state) => state.timeZone);
+  const timeFormat = useSettingsStore((state) => state.timeFormat);
+  const [isGroupDialogOpen, setIsGroupDialogOpen] = useState(false);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const cardRef = useRef<HTMLElement | null>(null);
+  const pendingPointerRef = useRef<{ pointerId: number; x: number; y: number } | null>(null);
+  const status = getStatusMeta(todo, t.todos.doneFallback, timeZone, timeFormat);
+  const groupAccentColor = resolveTodoAccentColor(todo, groups);
+
+  const clearPendingPointer = (element: HTMLElement, pointerId: number) => {
+    pendingPointerRef.current = null;
+    if (typeof element.hasPointerCapture === "function" && element.hasPointerCapture(pointerId)) {
+      element.releasePointerCapture(pointerId);
+    }
+  };
+
+  return (
+    <>
+      <motion.article
+        ref={cardRef}
+        data-no-window-drag="true"
+        data-testid="todo-item"
+        data-todo-item-id={todo.id}
+        aria-label={t.todos.reorder}
+        className={`paper-card cq-card relative overflow-hidden rounded-[18px] px-2 py-1.25 cursor-grab active:cursor-grabbing ${status.cardClass}`}
+        style={{
+          background: getTodoCardSurface(todo, groupAccentColor),
+          borderColor: `${groupAccentColor}78`,
+          boxShadow: `0 0 0 2px ${colorWithAlpha(groupAccentColor, "14")}, 0 12px 24px ${colorWithAlpha(groupAccentColor, "12")}, 0 10px 22px rgba(61,49,34,0.08)`,
+          width: width ? `${width}px` : "100%",
+        }}
+        onPointerDownCapture={(event) => {
+          if (event.button !== 0) {
+            return;
+          }
+
+          if (isFloatingTodoInteractiveTarget(event.target)) {
+            pendingPointerRef.current = null;
+            return;
+          }
+
+          pendingPointerRef.current = {
+            pointerId: event.pointerId,
+            x: event.clientX,
+            y: event.clientY,
+          };
+          event.currentTarget.setPointerCapture?.(event.pointerId);
+        }}
+        onPointerMoveCapture={(event) => {
+          const pendingPointer = pendingPointerRef.current;
+          if (!pendingPointer || pendingPointer.pointerId !== event.pointerId) {
+            return;
+          }
+
+          const distance = Math.hypot(event.clientX - pendingPointer.x, event.clientY - pendingPointer.y);
+          if (distance < FLOATING_TODO_DRAG_THRESHOLD_PX) {
+            return;
+          }
+
+          clearPendingPointer(event.currentTarget, event.pointerId);
+          // Defer to next microtask so the WebView finishes processing the
+          // pointer event before the native drag loop starts.
+          Promise.resolve().then(() => onBeginDrag());
+        }}
+        onPointerUpCapture={(event) => {
+          if (isFloatingTodoInteractiveTarget(event.target)) {
+            pendingPointerRef.current = null;
+            return;
+          }
+
+          const pendingPointer = pendingPointerRef.current;
+          if (!pendingPointer || pendingPointer.pointerId !== event.pointerId) {
+            return;
+          }
+
+          clearPendingPointer(event.currentTarget, event.pointerId);
+          setIsEditDialogOpen(true);
+        }}
+        onPointerCancelCapture={(event) => {
+          const pendingPointer = pendingPointerRef.current;
+          if (!pendingPointer || pendingPointer.pointerId !== event.pointerId) {
+            return;
+          }
+
+          clearPendingPointer(event.currentTarget, event.pointerId);
+        }}
+      >
+        <TodoRowBody
+          todo={todo}
+          order={order}
+          onDelete={onDock}
+          onOpenGroupDialog={() => setIsGroupDialogOpen(true)}
+          onToggle={(target, nextDone) => onToggle(todo.id, target, nextDone)}
+          actionVariant="dock"
+        />
+      </motion.article>
+      <FloatingTodoEditDialog todo={todo} isOpen={isEditDialogOpen} onClose={() => setIsEditDialogOpen(false)} />
+      <TodoGroupDialog todoId={todo.id} isOpen={isGroupDialogOpen} onClose={() => setIsGroupDialogOpen(false)} />
+    </>
+  );
+}
+
+function FloatingTodoEditDialog({
+  todo,
+  isOpen,
+  onClose,
+}: {
+  todo: TodoItemModel;
+  isOpen: boolean;
+  onClose: () => void;
+}) {
+  const { t } = useI18n();
+  const updateTodoText = useTodosStore((state) => state.updateTodoText);
+  const moveTodosToDate = useTodosStore((state) => state.moveTodosToDate);
+  const inputRef = useRef<HTMLInputElement | null>(null);
+  const [draft, setDraft] = useState(todo.text);
+  const [dateDraft, setDateDraft] = useState(todo.dateKey);
+  const normalizedDraft = draft.trim();
+  const isSaveDisabled =
+    normalizedDraft.length === 0 || (normalizedDraft === todo.text.trim() && dateDraft === todo.dateKey);
+
+  useEffect(() => {
+    if (!isOpen) {
+      return;
+    }
+
+    setDraft(todo.text);
+    setDateDraft(todo.dateKey);
+    window.requestAnimationFrame(() => {
+      inputRef.current?.focus();
+      inputRef.current?.select();
+    });
+  }, [isOpen, todo.dateKey, todo.text]);
+
+  const handleSave = () => {
+    if (isSaveDisabled) {
+      return;
+    }
+
+    if (normalizedDraft !== todo.text.trim()) {
+      updateTodoText(todo.id, normalizedDraft);
+    }
+
+    if (/^\d{4}-\d{2}-\d{2}$/.test(dateDraft) && dateDraft !== todo.dateKey) {
+      moveTodosToDate([todo.id], dateDraft);
+    }
+
+    onClose();
+  };
+
+  return createPortal(
+    <AnimatePresence>
+      {isOpen ? (
+        <motion.div
+          data-no-window-drag="true"
+          className="quicknote-modal-backdrop fixed inset-0 z-[90] flex items-center justify-center bg-[rgba(30,25,21,0.24)] px-5 py-6"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          onClick={onClose}
+        >
+          <motion.div
+            role="dialog"
+            aria-modal="true"
+            aria-label={t.todos.editDialogTitle}
+            className="paper-panel flex w-full max-w-[420px] flex-col rounded-[24px] p-5 shadow-[0_26px_48px_rgba(30,25,21,0.24)]"
+            initial={{ opacity: 0, scale: 0.95, y: 12 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.98, y: 8 }}
+            transition={{ duration: 0.18, ease: [0.22, 1, 0.36, 1] }}
+            onClick={(event) => event.stopPropagation()}
+          >
+            <div className="mb-4 flex items-start justify-between gap-3">
+              <div className="min-w-0">
+                <span className="status-chip" data-tone={todo.done ? "jade" : "coral"}>
+                  <SquarePenIcon size={11} />
+                  {todo.done ? t.todos.statusDone : t.todos.statusUndone}
+                </span>
+                <p className="mt-2 font-display text-[22px] font-semibold tracking-[-0.05em] text-[var(--brown-strong)]">
+                  {t.todos.editDialogTitle}
+                </p>
+                <p className="mt-1 text-[12px] leading-6 text-[var(--muted)]">{t.todos.editDialogSubtitle}</p>
+              </div>
+              <motion.button
+                type="button"
+                aria-label={t.common.close}
+                data-tooltip={t.common.close}
+                data-no-window-drag="true"
+                className="paper-icon-button inline-flex h-9 w-9 min-h-0 min-w-0 rounded-[12px]"
+                whileHover={{ y: -1.5, scale: 1.03 }}
+                whileTap={{ scale: 0.97 }}
+                onClick={onClose}
+              >
+                <XIcon size={14} />
+              </motion.button>
+            </div>
+
+            <form
+              className="space-y-4"
+              onSubmit={(event) => {
+                event.preventDefault();
+                handleSave();
+              }}
+            >
+              <label className="flex flex-col gap-2">
+                <span className="text-[11px] font-semibold uppercase tracking-[0.08em] text-[var(--muted)]">
+                  {t.todos.titleLabel}
+                </span>
+                <input
+                  ref={inputRef}
+                  type="text"
+                  aria-label={t.todos.titleLabel}
+                  value={draft}
+                  onChange={(event) => setDraft(event.currentTarget.value)}
+                  placeholder={t.todos.titlePlaceholder}
+                  className="surface-field min-w-0 rounded-[16px] px-3 py-2.5 text-[12.5px] font-medium text-[var(--dark-text)] outline-none placeholder:text-[var(--muted)]"
+                />
+              </label>
+
+              <label className="flex flex-col gap-2">
+                <span className="text-[11px] font-semibold uppercase tracking-[0.08em] text-[var(--muted)]">
+                  {t.todos.date}
+                </span>
+                <span className="surface-field inline-flex w-full items-center gap-2 rounded-[16px] border px-3 py-2.5 text-[12.5px] font-medium text-[var(--dark-text)]">
+                  <CalendarDaysIcon size={15} />
+                  <input
+                    type="date"
+                    aria-label={t.todos.date}
+                    value={dateDraft}
+                    onChange={(event) => setDateDraft(event.currentTarget.value)}
+                    className="min-w-0 flex-1 bg-transparent font-medium outline-none"
+                  />
+                </span>
+              </label>
+
+              <div className="flex items-center justify-end gap-2 pt-1">
+                <motion.button
+                  type="button"
+                  data-no-window-drag="true"
+                  data-tooltip={t.common.cancel}
+                  className="paper-button inline-flex items-center justify-center rounded-[14px] px-3.5 py-2.5 text-[12px] font-semibold text-[var(--dark-text)]"
+                  whileHover={{ y: -1.5, scale: 1.01 }}
+                  whileTap={{ scale: 0.985 }}
+                  onClick={onClose}
+                >
+                  {t.common.cancel}
+                </motion.button>
+                <motion.button
+                  type="submit"
+                  data-no-window-drag="true"
+                  data-tooltip={t.common.save}
+                  disabled={isSaveDisabled}
+                  className={`paper-button paper-button-primary inline-flex items-center justify-center rounded-[14px] px-3.5 py-2.5 text-[12px] font-semibold ${
+                    isSaveDisabled ? "cursor-not-allowed opacity-60" : ""
+                  }`}
+                  whileHover={isSaveDisabled ? undefined : { y: -1.5, scale: 1.01 }}
+                  whileTap={isSaveDisabled ? undefined : { scale: 0.985 }}
+                >
+                  {t.common.save}
+                </motion.button>
+              </div>
+            </form>
+          </motion.div>
+        </motion.div>
+      ) : null}
+    </AnimatePresence>,
+    document.body,
   );
 }
 

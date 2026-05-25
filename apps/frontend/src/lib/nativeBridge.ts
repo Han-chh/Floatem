@@ -1,4 +1,7 @@
 import type {
+  DragPreviewPayload,
+  FloatingCardReference,
+  FloatingCardsState,
   HostBridge,
   HostCapabilities,
   HotkeyRegistrationState,
@@ -28,7 +31,11 @@ export const HOTKEY_REGISTRATION_STATE_EVENT = hostEventNames.hotkeyRegistration
 export const TEXT_COLOR_PANEL_OPEN_EVENT = hostEventNames.textColorPanelOpen;
 export const TEXT_COLOR_PANEL_CHANGE_EVENT = hostEventNames.textColorPanelChange;
 export const TEXT_COLOR_PANEL_CLOSE_EVENT = hostEventNames.textColorPanelClose;
+export const NOTES_UPDATED_EVENT = hostEventNames.notesUpdated;
 export const TODOS_UPDATED_EVENT = hostEventNames.todosUpdated;
+export const FLOATING_CARDS_STATE_EVENT = hostEventNames.floatingCardsState;
+export const FLOATING_DOCK_ZONE_ENTER_EVENT = hostEventNames.floatingDockZoneEnter;
+export const FLOATING_DOCK_ZONE_LEAVE_EVENT = hostEventNames.floatingDockZoneLeave;
 
 export type TextColorPanelChangeDetail = {
   color: string;
@@ -39,7 +46,7 @@ export type TextColorPanelCloseDetail = {
   requestId: string;
 };
 
-export type QuickNoteNativeBridge = HostBridge<RawLoadAllResult, NotesDocument, TodosDocument, AppSettings> & {
+export type QuickNoteNativeBridge = HostBridge<RawLoadAllResult, NotesDocument, TodosDocument, Partial<AppSettings>> & {
   testReminderNotification: (options?: {
     soundEnabled?: boolean;
     language?: AppLanguage;
@@ -96,6 +103,8 @@ const browserBridge: QuickNoteNativeBridge = {
         "window.hide": false,
         "window.toggle": false,
         "window.alwaysOnTop": false,
+        "window.dragPreview": false,
+        "window.floatingCards": false,
         "notifications.send": false,
         "notifications.schedule": false,
         "notifications.openSettings": false,
@@ -207,6 +216,27 @@ const browserBridge: QuickNoteNativeBridge = {
   },
   async setAlwaysOnTop() {
     // Browser preview cannot set native window levels.
+  },
+  async showDragPreview(_payload: DragPreviewPayload) {
+    // Browser preview keeps drag overlays inside the current tab.
+  },
+  async hideDragPreview() {
+    // Browser preview keeps drag overlays inside the current tab.
+  },
+  async showFloatingCard(_payload: DragPreviewPayload) {
+    // Browser preview does not open separate floating card windows.
+  },
+  async closeFloatingCard(_card: FloatingCardReference) {
+    // Browser preview does not open separate floating card windows.
+  },
+  async resizeFloatingCard() {
+    // Browser preview does not open separate floating card windows.
+  },
+  async getFloatingCardScreenPlacement() {
+    return null;
+  },
+  async startFloatingCardDrag(_card: FloatingCardReference) {
+    // Browser preview does not open separate floating card windows.
   },
   async hidePanelWindow() {
     await this.hideWindow();
@@ -368,6 +398,27 @@ export function subscribeToTextColorPanelClose(listener: (detail: TextColorPanel
   };
 }
 
+export function subscribeToNotesUpdated(listener: (notes: NoteCard[] | NotesDocument) => void) {
+  if (typeof window === "undefined") {
+    return () => {};
+  }
+
+  const handler = (event: Event) => {
+    const detail = (event as CustomEvent<NoteCard[] | NotesDocument>).detail;
+    if (!Array.isArray(detail) && (!detail || typeof detail !== "object")) {
+      return;
+    }
+
+    listener(detail);
+  };
+
+  window.addEventListener(NOTES_UPDATED_EVENT, handler as EventListener);
+
+  return () => {
+    window.removeEventListener(NOTES_UPDATED_EVENT, handler as EventListener);
+  };
+}
+
 export function subscribeToTodosUpdated(listener: (todos: StoredTodosData) => void) {
   if (typeof window === "undefined") {
     return () => {};
@@ -386,5 +437,73 @@ export function subscribeToTodosUpdated(listener: (todos: StoredTodosData) => vo
 
   return () => {
     window.removeEventListener(TODOS_UPDATED_EVENT, handler as EventListener);
+  };
+}
+
+export function subscribeToFloatingCardsState(listener: (state: FloatingCardsState) => void) {
+  if (typeof window === "undefined") {
+    return () => {};
+  }
+
+  const handler = (event: Event) => {
+    const detail = (event as CustomEvent<FloatingCardsState>).detail;
+    if (!detail || !Array.isArray(detail.noteIds) || !Array.isArray(detail.todoIds)) {
+      return;
+    }
+
+    listener({
+      noteIds: detail.noteIds.filter((id): id is string => typeof id === "string" && id.length > 0),
+      todoIds: detail.todoIds.filter((id): id is string => typeof id === "string" && id.length > 0),
+    });
+  };
+
+  window.addEventListener(FLOATING_CARDS_STATE_EVENT, handler as EventListener);
+
+  return () => {
+    window.removeEventListener(FLOATING_CARDS_STATE_EVENT, handler as EventListener);
+  };
+}
+
+export type DockZoneEventDetail = { kind: string; id: string };
+
+export function subscribeToFloatingDockZoneEnter(listener: (detail: DockZoneEventDetail) => void) {
+  if (typeof window === "undefined") {
+    return () => {};
+  }
+
+  const handler = (event: Event) => {
+    const detail = (event as CustomEvent<DockZoneEventDetail>).detail;
+    if (!detail || typeof detail.kind !== "string" || typeof detail.id !== "string") {
+      return;
+    }
+
+    listener({ kind: detail.kind, id: detail.id });
+  };
+
+  window.addEventListener(FLOATING_DOCK_ZONE_ENTER_EVENT, handler as EventListener);
+
+  return () => {
+    window.removeEventListener(FLOATING_DOCK_ZONE_ENTER_EVENT, handler as EventListener);
+  };
+}
+
+export function subscribeToFloatingDockZoneLeave(listener: (detail: DockZoneEventDetail) => void) {
+  if (typeof window === "undefined") {
+    return () => {};
+  }
+
+  const handler = (event: Event) => {
+    const detail = (event as CustomEvent<DockZoneEventDetail>).detail;
+    if (!detail || typeof detail.kind !== "string" || typeof detail.id !== "string") {
+      return;
+    }
+
+    listener({ kind: detail.kind, id: detail.id });
+  };
+
+  window.addEventListener(FLOATING_DOCK_ZONE_LEAVE_EVENT, handler as EventListener);
+
+  return () => {
+    window.removeEventListener(FLOATING_DOCK_ZONE_LEAVE_EVENT, handler as EventListener);
   };
 }

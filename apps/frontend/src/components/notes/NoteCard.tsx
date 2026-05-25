@@ -6,8 +6,8 @@ import { formatCompactEditedLabel, useI18n } from "../../lib/i18n";
 import { resolveNoteAccentColor, resolveNoteGroup, type NoteCard as NoteCardModel } from "../../lib/models";
 import { syncTextareaHeight } from "../../lib/resizeTextarea";
 import { useNotesStore } from "../../store/notesStore";
-import { ChevronsUpDownIcon, Trash2Icon } from "../icons/AppIcons";
-import { Editor } from "./Editor";
+import { ChevronsUpDownIcon, Trash2Icon, XIcon } from "../icons/AppIcons";
+import { Editor, ReadOnlyEditorPreview } from "./Editor";
 import { NoteGroupDialog } from "./NoteGroupDialog";
 
 type NoteCardProps = {
@@ -27,9 +27,11 @@ type NoteCardBodyProps = {
   onUpdateTitle?: (value: string, element: HTMLTextAreaElement) => void;
   onUpdateContent?: (value: NoteCardModel["content"]) => void;
   titleRef?: Ref<HTMLTextAreaElement>;
+  instantToolbar?: boolean;
   isDraggingPlaceholder?: boolean;
   isDropTargetPreview?: boolean;
   preview?: boolean;
+  actionVariant?: "delete" | "dock";
 };
 
 function GroupColorGlyph({ color, size = "md" }: { color: string; size?: "sm" | "md" }) {
@@ -47,6 +49,13 @@ function GroupColorGlyph({ color, size = "md" }: { color: string; size?: "sm" | 
   );
 }
 
+const FLOATING_NOTE_EDIT_TARGET_SELECTOR =
+  'button,input,textarea,select,[contenteditable="true"],[role="textbox"],[data-floating-note-edit-region="true"]';
+
+function isFloatingNoteEditTarget(target: EventTarget | null) {
+  return target instanceof HTMLElement && Boolean(target.closest(FLOATING_NOTE_EDIT_TARGET_SELECTOR));
+}
+
 function NoteCardBody({
   note,
   accentColor,
@@ -58,12 +67,15 @@ function NoteCardBody({
   onUpdateTitle,
   onUpdateContent,
   titleRef,
+  instantToolbar = false,
   isDraggingPlaceholder = false,
   isDropTargetPreview = false,
   preview = false,
+  actionVariant = "delete",
 }: NoteCardBodyProps) {
   const { t } = useI18n();
   const isInteractive = !preview;
+  const isDockAction = actionVariant === "dock";
 
   return (
     <>
@@ -103,7 +115,7 @@ function NoteCardBody({
       <div className={`relative rounded-t-[28px] px-3 py-2.5 ${isDraggingPlaceholder ? "opacity-0" : ""}`}>
         <div className="note-card-header-grid">
           <div className="note-card-title-row">
-            <div className="note-card-title-block">
+            <div className="note-card-title-block" data-floating-note-edit-region="true">
               {preview ? (
                 <div className="surface-field wrap-anywhere min-h-[40px] rounded-[17px] px-3 py-2 text-[13px] font-semibold leading-[1.35] tracking-[-0.02em] text-[var(--dark-text)]">
                   {note.title || t.notes.untitled}
@@ -173,11 +185,15 @@ function NoteCardBody({
               </motion.button>
               <motion.button
                 type="button"
-                data-action="delete"
-                aria-label={t.notes.delete}
-                data-tooltip={t.notes.delete}
+                data-action={isDockAction ? "dock" : "delete"}
+                aria-label={isDockAction ? t.common.close : t.notes.delete}
+                data-tooltip={isDockAction ? t.common.close : t.notes.delete}
                 data-tooltip-shift="left"
-                className="note-card-action-button paper-icon-button paper-button-danger group relative rounded-[9px]"
+                className={`note-card-action-button paper-icon-button group relative rounded-[9px] ${
+                  isDockAction
+                    ? "border-[rgba(151,156,152,0.2)] bg-[rgba(236,239,237,0.74)] text-[rgba(101,106,103,0.82)] shadow-[0_5px_12px_rgba(61,49,34,0.04)]"
+                    : "paper-button-danger"
+                }`}
                 whileHover={isInteractive ? { y: -1.5, scale: 1.03 } : undefined}
                 whileTap={isInteractive ? { scale: 0.97 } : undefined}
                 onPointerDown={isInteractive ? (event) => event.stopPropagation() : undefined}
@@ -187,7 +203,7 @@ function NoteCardBody({
                     : undefined
                 }
               >
-                <Trash2Icon size={13} />
+                {isDockAction ? <XIcon size={13} /> : <Trash2Icon size={13} />}
               </motion.button>
             </div>
           </div>
@@ -195,13 +211,18 @@ function NoteCardBody({
       </div>
 
       {note.collapsed ? null : (
-        <div className={`relative space-y-2 px-3 pb-3 pt-0 ${isDraggingPlaceholder ? "opacity-0" : ""}`}>
+        <div
+          className={`relative space-y-2 px-3 pb-3 pt-0 ${isDraggingPlaceholder ? "opacity-0" : ""}`}
+          data-floating-note-edit-region="true"
+        >
           {preview ? (
-            <div className="surface-field min-h-[80px] rounded-[20px] px-3 py-3 text-[12.25px] leading-[1.62] text-[var(--muted)]">
-              {note.title ? t.notes.dragPreviewEditing : t.notes.dragPreview}
-            </div>
+            <ReadOnlyEditorPreview key={`${note.id}:${note.updatedAt}`} content={note.content} />
           ) : (
-            <Editor content={note.content} onChange={(value) => onUpdateContent?.(value)} />
+            <Editor
+              content={note.content}
+              instantToolbar={instantToolbar}
+              onChange={(value) => onUpdateContent?.(value)}
+            />
           )}
         </div>
       )}
@@ -218,8 +239,8 @@ export function NoteCardPreview({ note, width }: { note: NoteCardModel; width?: 
 
   return (
     <div
-      className="paper-card cq-card relative overflow-hidden rounded-[28px] border border-[rgba(213,198,180,0.92)] bg-[linear-gradient(180deg,rgba(255,252,248,0.98),rgba(255,247,239,0.95))] shadow-[0_30px_60px_rgba(61,49,34,0.22)]"
-      style={{ width: width ?? undefined, maxWidth: "calc(100vw - 48px)" }}
+      className="paper-card cq-card relative overflow-hidden rounded-[28px] border border-[rgba(213,198,180,0.92)] bg-[linear-gradient(180deg,rgba(255,252,248,0.98),rgba(255,247,239,0.95))]"
+      style={{ width: width ?? undefined }}
     >
       <NoteCardBody
         note={note}
@@ -229,6 +250,85 @@ export function NoteCardPreview({ note, width }: { note: NoteCardModel; width?: 
         preview
       />
     </div>
+  );
+}
+
+export function FloatingNoteCard({
+  note,
+  width,
+  onBeginDrag,
+  onDock,
+}: {
+  note: NoteCardModel;
+  width?: number;
+  onBeginDrag: () => void;
+  onDock: () => void;
+}) {
+  const { language, t } = useI18n();
+  const groups = useNotesStore((state) => state.groups);
+  const toggleCollapsed = useNotesStore((state) => state.toggleCollapsed);
+  const updateCardTitle = useNotesStore((state) => state.updateCardTitle);
+  const updateCardContent = useNotesStore((state) => state.updateCardContent);
+  const [isGroupDialogOpen, setIsGroupDialogOpen] = useState(false);
+  const titleRef = useRef<HTMLTextAreaElement | null>(null);
+  const cardRef = useRef<HTMLElement | null>(null);
+  const editedLabel = formatCompactEditedLabel(note.updatedAt, language);
+  const accentColor = resolveNoteAccentColor(note, groups);
+  const groupLabel = resolveNoteGroup(note, groups)?.name ?? t.notes.noGroup;
+
+  useEffect(() => {
+    if (titleRef.current) {
+      syncTextareaHeight(titleRef.current);
+    }
+  }, [note.id, note.title]);
+
+  return (
+    <>
+      <motion.article
+        ref={cardRef}
+        data-no-window-drag="true"
+        aria-label={t.notes.reorder}
+        data-testid="note-card"
+        data-note-card-id={note.id}
+        className="paper-card cq-card relative overflow-hidden rounded-[28px] border border-[rgba(213,198,180,0.92)] bg-[linear-gradient(180deg,rgba(255,252,248,0.98),rgba(255,247,239,0.95))] shadow-[0_18px_36px_rgba(61,49,34,0.10)] cursor-grab active:cursor-grabbing"
+        style={{ width: width ?? undefined }}
+        onPointerDownCapture={(event) => {
+          if (event.button !== 0) {
+            return;
+          }
+
+          if (isFloatingNoteEditTarget(event.target)) {
+            return;
+          }
+
+          // Defer to next microtask so the WebView finishes processing
+          // the pointer event before the native drag loop starts.
+          // Starting the drag loop during the capture phase otherwise
+          // crashes the WebView content process.
+          Promise.resolve().then(() => onBeginDrag());
+        }}
+      >
+        <NoteCardBody
+          note={note}
+          accentColor={accentColor}
+          editedLabel={editedLabel}
+          groupLabel={groupLabel}
+          onDelete={onDock}
+          onOpenGroupDialog={() => setIsGroupDialogOpen(true)}
+          onToggleCollapsed={() => toggleCollapsed(note.id)}
+          onUpdateTitle={(value, element) => {
+            syncTextareaHeight(element);
+            updateCardTitle(note.id, value);
+          }}
+          onUpdateContent={(value) => updateCardContent(note.id, value)}
+          instantToolbar
+          titleRef={titleRef}
+          actionVariant="dock"
+        />
+      </motion.article>
+
+      <NoteGroupDialog noteId={note.id} isOpen={isGroupDialogOpen} onClose={() => setIsGroupDialogOpen(false)} />
+    </>
   );
 }
 

@@ -2,7 +2,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import { useEffect, useMemo, useState } from "react";
 import { buildHelpDialogContent, type HelpSection } from "../../content/helpContent";
 import { useI18n } from "../../lib/i18n";
-import { isNativeQuickNoteHost } from "../../lib/nativeBridge";
+import { getQuickNoteBridge, isNativeQuickNoteHost } from "../../lib/nativeBridge";
 import { useSettingsStore } from "../../store/settingsStore";
 import {
   ChevronRightIcon,
@@ -24,6 +24,7 @@ const SECTION_ICON_MAP: Record<HelpSection["id"], typeof SparklesIcon> = {
   overview: SparklesIcon,
   notes: NotebookPenIcon,
   todos: ListChecksIcon,
+  floating: SparklesIcon,
   settings: SlidersHorizontalIcon,
   shortcuts: KeyboardIcon,
 };
@@ -37,6 +38,7 @@ export function HelpDialog({ isOpen, onClose }: HelpDialogProps) {
   const transitionStyle = useSettingsStore((state) => state.transitionStyle);
   const animationSpeed = useSettingsStore((state) => state.animationSpeed);
   const enableReminderSound = useSettingsStore((state) => state.enableReminderSound);
+  const platform = getQuickNoteBridge().platform;
   const content = useMemo(
     () =>
       buildHelpDialogContent({
@@ -63,6 +65,7 @@ export function HelpDialog({ isOpen, onClose }: HelpDialogProps) {
               ? t.settings.switchSpeedSlow
               : t.settings.switchSpeedMediate
         }`,
+        platform,
         reminderSoundLabel: enableReminderSound ? t.settings.reminderSoundTitle : t.settings.reminderMutedMeta,
         timeFormatLabel: timeFormat === "12h" ? t.settings.timeFormat12Body : t.settings.timeFormat24Body,
         timeZoneLabel: timeZone,
@@ -73,6 +76,7 @@ export function HelpDialog({ isOpen, onClose }: HelpDialogProps) {
       enableReminderSound,
       hotkey,
       language,
+      platform,
       t,
       timeFormat,
       timeZone,

@@ -125,6 +125,12 @@ export const DEFAULT_NOTE_CONTENT: Descendant[] = [
   },
 ];
 
+export function cloneNoteContent(content?: Descendant[]) {
+  const source = Array.isArray(content) && content.length > 0 ? content : DEFAULT_NOTE_CONTENT;
+
+  return JSON.parse(JSON.stringify(source)) as Descendant[];
+}
+
 export function isValidTimeZone(value: unknown): value is string {
   if (!isNonEmptyString(value)) {
     return false;
@@ -326,7 +332,7 @@ export function createNoteCard(overrides: Partial<NoteCard> = {}): NoteCard {
     dotColor: normalizeColor(overrides.dotColor, DEFAULT_UNGROUPED_NOTE_COLOR),
     groupId: isNonEmptyString(overrides.groupId) ? overrides.groupId.trim() : null,
     collapsed: typeof overrides.collapsed === "boolean" ? overrides.collapsed : false,
-    content: Array.isArray(overrides.content) ? overrides.content : DEFAULT_NOTE_CONTENT,
+    content: cloneNoteContent(overrides.content),
     createdAt,
     updatedAt: typeof overrides.updatedAt === "number" ? overrides.updatedAt : createdAt,
   };
@@ -425,7 +431,7 @@ export function normalizeNoteCard(value: unknown): NoteCard {
     dotColor: normalizeColor(candidate.dotColor, DEFAULT_UNGROUPED_NOTE_COLOR),
     groupId: isNonEmptyString(candidate.groupId) ? candidate.groupId.trim() : null,
     collapsed: typeof candidate.collapsed === "boolean" ? candidate.collapsed : false,
-    content: Array.isArray(candidate.content) ? candidate.content : DEFAULT_NOTE_CONTENT,
+    content: cloneNoteContent(candidate.content),
     createdAt,
     updatedAt: typeof candidate.updatedAt === "number" ? candidate.updatedAt : createdAt,
   };

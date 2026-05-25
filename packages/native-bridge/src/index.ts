@@ -5,6 +5,8 @@ export type HostCapability =
   | "window.hide"
   | "window.toggle"
   | "window.alwaysOnTop"
+  | "window.dragPreview"
+  | "window.floatingCards"
   | "notifications.send"
   | "notifications.schedule"
   | "notifications.openSettings"
@@ -35,10 +37,95 @@ export type ShortcutConfig = {
   shortcut: string;
 };
 
+export type DragPreviewSize = {
+  width: number;
+  height: number;
+};
+
+export type FloatingCardResize = DragPreviewSize & {
+  anchor?: "top" | "bottom";
+  horizontalAnchor?: "left" | "right";
+};
+
+export type DragPreviewPointerOffset = {
+  x: number;
+  y: number;
+};
+
+export type FloatingCardScreenRect = {
+  left: number;
+  top: number;
+  width: number;
+  height: number;
+};
+
+export type FloatingCardScreenPlacement = {
+  cardFrame: FloatingCardScreenRect;
+  availableFrame: FloatingCardScreenRect;
+};
+
+export type DragPreviewGroupSnapshot = {
+  id: string;
+  name: string;
+  color: string;
+};
+
+export type NoteDragPreviewCard = {
+  id: string;
+  title: string;
+  dotColor: string;
+  groupId: string | null;
+  collapsed: boolean;
+  content: unknown[];
+  previewText: string;
+  updatedAt: number;
+};
+
+export type TodoDragPreviewItem = {
+  id: string;
+  text: string;
+  done: boolean;
+  groupId: string | null;
+  reminderAt: number | null;
+  createdAt: number;
+  dateKey: string;
+};
+
+export type DragPreviewPayload =
+  | {
+      kind: "note";
+      language: string;
+      size: DragPreviewSize;
+      pointerOffset: DragPreviewPointerOffset;
+      note: NoteDragPreviewCard;
+      groups: DragPreviewGroupSnapshot[];
+    }
+  | {
+      kind: "todo";
+      language: string;
+      timeZone: string;
+      timeFormat: "24h" | "12h";
+      size: DragPreviewSize;
+      pointerOffset: DragPreviewPointerOffset;
+      order?: number;
+      todo: TodoDragPreviewItem;
+      groups: DragPreviewGroupSnapshot[];
+    };
+
 export type HotkeyRegistrationState = {
   shortcut: string;
   registration: "registered" | "conflict" | "unsupported";
   message?: string;
+};
+
+export type FloatingCardsState = {
+  noteIds: string[];
+  todoIds: string[];
+};
+
+export type FloatingCardReference = {
+  kind: DragPreviewPayload["kind"];
+  id: string;
 };
 
 export type HostEventMap = {
@@ -48,8 +135,12 @@ export type HostEventMap = {
   "text-color-panel-open": undefined;
   "text-color-panel-change": { color: string; requestId: string };
   "text-color-panel-close": { requestId: string };
+  "notes-updated": unknown;
   "todos-updated": unknown;
+  "floating-cards-state": FloatingCardsState;
   "shortcut-invoked": { shortcut: string };
+  "floating-dock-zone-enter": { kind: string; id: string };
+  "floating-dock-zone-leave": { kind: string; id: string };
 };
 
 export type HostEventName = keyof HostEventMap;
@@ -67,6 +158,13 @@ export type HostBridge<TLoadAllResult, TNotes, TTodos, TSettings> = {
   hideWindow: () => Promise<void>;
   toggleWindow: () => Promise<void>;
   setAlwaysOnTop: (enabled: boolean) => Promise<void>;
+  showDragPreview: (payload: DragPreviewPayload) => Promise<void>;
+  hideDragPreview: () => Promise<void>;
+  showFloatingCard: (payload: DragPreviewPayload) => Promise<void>;
+  closeFloatingCard: (card: FloatingCardReference) => Promise<void>;
+  resizeFloatingCard: (size: FloatingCardResize) => Promise<void>;
+  getFloatingCardScreenPlacement: () => Promise<FloatingCardScreenPlacement | null>;
+  startFloatingCardDrag: (card: FloatingCardReference) => Promise<void>;
   openNotificationSettings: () => Promise<void>;
   sendNotification: (request: NotificationRequest) => Promise<void>;
   showNotification: (request: NotificationRequest) => Promise<void>;
@@ -94,6 +192,10 @@ export const hostEventNames = {
   textColorPanelOpen: "quicknote:text-color-panel-open",
   textColorPanelChange: "quicknote:text-color-panel-change",
   textColorPanelClose: "quicknote:text-color-panel-close",
+  notesUpdated: "quicknote:notes-updated",
   todosUpdated: "quicknote:todos-updated",
+  floatingCardsState: "quicknote:floating-cards-state",
   shortcutInvoked: "quicknote:shortcut-invoked",
+  floatingDockZoneEnter: "quicknote:floating-dock-zone-enter",
+  floatingDockZoneLeave: "quicknote:floating-dock-zone-leave",
 } as const;

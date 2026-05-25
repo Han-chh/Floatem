@@ -16,6 +16,7 @@ import {
 type NotesState = {
   cards: NoteCard[];
   groups: NoteGroup[];
+  floatingCardIds: string[];
   isLoaded: boolean;
   initialize: (notes: NoteCard[] | NotesDocument) => void;
   addCard: () => NoteCard;
@@ -28,11 +29,13 @@ type NotesState = {
   deleteGroup: (id: string) => void;
   toggleCollapsed: (id: string) => void;
   moveCard: (activeId: string, overId: string) => void;
+  setFloatingCardIds: (ids: string[]) => void;
   reset: () => void;
 };
 
 const initialState = () => ({
   ...createEmptyNotesDocument(),
+  floatingCardIds: [] as string[],
   isLoaded: false,
 });
 
@@ -100,6 +103,7 @@ export const useNotesStore = create<NotesState>()(
       set({
         cards: normalizedNotes.cards,
         groups: normalizedNotes.groups,
+        floatingCardIds: [],
         isLoaded: true,
       });
     },
@@ -273,6 +277,17 @@ export const useNotesStore = create<NotesState>()(
         return {
           cards: arrayMove(state.cards, oldIndex, newIndex),
         };
+      });
+    },
+    setFloatingCardIds: (ids) => {
+      set((state) => {
+        const validIds = new Set(state.cards.map((card) => card.id));
+        const nextIds = ids.filter((id, index) => validIds.has(id) && ids.indexOf(id) === index);
+        const isUnchanged =
+          nextIds.length === state.floatingCardIds.length &&
+          nextIds.every((id, index) => id === state.floatingCardIds[index]);
+
+        return isUnchanged ? state : { floatingCardIds: nextIds };
       });
     },
     reset: () => {

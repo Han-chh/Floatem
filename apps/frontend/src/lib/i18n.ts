@@ -96,6 +96,8 @@ type MessageCatalog = {
     aboutTodosTitle: string;
     aboutTrayFlowBody: string;
     aboutTrayFlowTitle: string;
+    appVersionBody: (version: string) => string;
+    appVersionTitle: string;
     appIntro: string;
     backToSettings: string;
     categoryAboutDescription: string;
@@ -403,6 +405,8 @@ const messages: Record<AppLanguage, MessageCatalog> = {
       aboutTodosTitle: "Todos",
       aboutTrayFlowBody: "Open from the global shortcut, keep the panel floating, and tune motion to match your pace.",
       aboutTrayFlowTitle: "Tray flow",
+      appVersionBody: (version) => `Current app version: ${version}. This value is read from package.json at build time.`,
+      appVersionTitle: "Version",
       appIntro: "Configure how the tray panel opens, switches between Notes and Todos, and how much motion feedback you want while working.",
       backToSettings: "All settings",
       categoryAboutDescription: "App overview and local-only data details.",
@@ -710,6 +714,8 @@ const messages: Record<AppLanguage, MessageCatalog> = {
       aboutTodosTitle: "待办",
       aboutTrayFlowBody: "通过全局快捷键呼出面板，让窗口保持悬浮，并按你的节奏调整动画。",
       aboutTrayFlowTitle: "托盘流程",
+      appVersionBody: (version) => `当前应用版本：${version}。该值会在构建时从 package.json 读取。`,
+      appVersionTitle: "版本号",
       appIntro: "配置托盘面板的打开方式、Notes 与 Todos 的切换方式，以及你希望保留多少动效反馈。",
       backToSettings: "全部设置",
       categoryAboutDescription: "应用概览和仅本地存储的数据说明。",
