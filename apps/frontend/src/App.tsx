@@ -33,6 +33,7 @@ import {
   subscribeToTodosUpdated,
 } from "./lib/nativeBridge";
 import type { TabId } from "./lib/models";
+import { getPlatformFeatures } from "./lib/platformFeatures";
 import { getTabMotionConfig } from "./lib/transitionMotion";
 import { useNotesStore } from "./store/notesStore";
 import { useSettingsStore } from "./store/settingsStore";
@@ -196,7 +197,10 @@ function QuickNoteApp() {
   }, []);
 
   useEffect(() => {
-    if (typeof window === "undefined") {
+    const features = getPlatformFeatures();
+    const canUseFloatingCards = features.floatingNotes || features.floatingTodos;
+
+    if (typeof window === "undefined" || !canUseFloatingCards) {
       return;
     }
 
@@ -232,6 +236,11 @@ function QuickNoteApp() {
   }, []);
 
   useEffect(() => {
+    const features = getPlatformFeatures();
+    if (!features.floatingNotes && !features.floatingTodos) {
+      return;
+    }
+
     return subscribeToFloatingDockZoneEnter((_detail) => {
       // Instant visual feedback — startTransition would defer the green
       // dock-zone highlight, defeating the purpose of real-time feedback.
@@ -240,6 +249,11 @@ function QuickNoteApp() {
   }, []);
 
   useEffect(() => {
+    const features = getPlatformFeatures();
+    if (!features.floatingNotes && !features.floatingTodos) {
+      return;
+    }
+
     return subscribeToFloatingDockZoneLeave(() => {
       setIsDockZoneActive(false);
     });

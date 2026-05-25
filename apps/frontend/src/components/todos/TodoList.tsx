@@ -32,6 +32,7 @@ import { useDragPointerTracking } from "../../hooks/useDragPointerTracking";
 import { buildTodoDragPreviewPayload } from "../../lib/dragPreview";
 import { isPrimaryShortcut } from "../../lib/isPrimaryShortcut";
 import { useI18n } from "../../lib/i18n";
+import { canUseFloatingTodos } from "../../lib/platformFeatures";
 import { formatLocalDateKey, parseLocalDateKey, type TodoItem as TodoItemModel } from "../../lib/models";
 import { isNativeQuickNoteHost } from "../../lib/nativeBridge";
 import { readPlainTextFromClipboard, writePlainTextToClipboard } from "../../lib/plainTextClipboard";
@@ -398,6 +399,7 @@ export function TodoList() {
       activationConstraint: { distance: 6 },
     }),
   );
+  const floatingTodosEnabled = canUseFloatingTodos();
   const selectedDate = useMemo(() => parseLocalDateKey(selectedDateKey), [selectedDateKey]);
   const selectedDateLabel = getRelativeDateLabel(selectedDateKey, timeZone);
   const locale = language === "zh-CN" ? "zh-CN" : "en-US";
@@ -409,9 +411,9 @@ export function TodoList() {
         (todo) =>
           todo.dateKey === selectedDateKey &&
           !removingIds.includes(todo.id) &&
-          !floatingTodoIds.includes(todo.id),
+          (!floatingTodosEnabled || !floatingTodoIds.includes(todo.id)),
       ),
-    [floatingTodoIds, removingIds, selectedDateKey, todos],
+    [floatingTodoIds, floatingTodosEnabled, removingIds, selectedDateKey, todos],
   );
   const availableFilterKeys = useMemo(
     () => [TODO_FILTER_UNGROUPED_KEY, ...groups.map((group) => group.id)],
@@ -851,6 +853,10 @@ export function TodoList() {
     setActiveDragWidth(event.active.rect.current.initial?.width ?? null);
     syncLatestDragPointerCoordinates(event.activatorEvent);
 
+    if (!floatingTodosEnabled) {
+      return;
+    }
+
     const rect = document.querySelector<HTMLElement>(`[data-todo-item-id="${activeId}"]`)?.getBoundingClientRect();
     const coordinates = readEventCoordinates(event.activatorEvent);
     const activeTodo = openTodos.find((todo) => todo.id === activeId);
@@ -887,6 +893,10 @@ export function TodoList() {
     setActiveDragWidth(null);
 
     if (!overId) {
+      if (!floatingTodosEnabled) {
+        return;
+      }
+
       const rect = document.querySelector<HTMLElement>(`[data-todo-item-id="${activeId}"]`)?.getBoundingClientRect();
       const coordinates = dragPointerCoordinates;
 
@@ -907,7 +917,9 @@ export function TodoList() {
       void hideDragPreview();
       return;
     }
-    void hideDragPreview();
+    if (floatingTodosEnabled) {
+      void hideDragPreview();
+    }
     moveTodo(activeId, overId);
   };
 
@@ -1304,7 +1316,9 @@ export function TodoList() {
                   setActiveDragId(null);
                   setActiveDragOverId(null);
                   setActiveDragWidth(null);
-                  void hideDragPreview();
+                  if (floatingTodosEnabled) {
+                    void hideDragPreview();
+                  }
                 }}
               >
                 <SortableContext items={openTodos.map((todo) => todo.id)} strategy={verticalListSortingStrategy}>

@@ -232,22 +232,23 @@ function buildEnglishFloatingCardsSection(context: HelpContentContext): HelpSect
     return {
       id: "floating",
       title: "Floating cards",
-      summary: "Floating notes and todos are not supported on Windows yet.",
+      summary: "Floating Notes & Todos are currently supported on macOS only.",
       articles: [
         {
           id: "floating-windows",
           eyebrow: "Platform",
           title: "Windows support status",
-          summary: "Floating cards are planned for a future Windows release.",
-          highlights: ["Windows", "Not supported", "Planned"],
+          summary: "Floating notes and todos are disabled on Windows in v0.5.0.",
+          highlights: ["Windows", "Not supported", "v0.5.0"],
           groups: [
             {
               id: "floating-windows-status",
               title: "Current status",
               items: [
-                "Floating note cards and floating todo cards are currently not supported on Windows.",
-                "This feature is planned for a future Windows release.",
-                "Use the regular Notes and Todos panel on Windows for now.",
+                "Floating Notes & Todos are currently supported on macOS only.",
+                "They are disabled on Windows in v0.5.0 due to rendering/composition instability.",
+                "Windows keeps the stable v0.4.5 notes/todos behavior.",
+                "Windows floating support will require a separate architecture redesign in a future release.",
               ],
             },
           ],
@@ -320,7 +321,7 @@ function buildEnglishFloatingCardsSection(context: HelpContentContext): HelpSect
             items: [
               "Floating note cards and floating todo cards are available in the macOS desktop app.",
               "Browser preview cannot create separate always-on-top card windows.",
-              "On Windows, floating cards are planned for a future Windows release.",
+              "On Windows, floating notes and todos are disabled in v0.5.0.",
             ],
           },
         ],
@@ -515,22 +516,23 @@ function buildChineseFloatingCardsSection(context: HelpContentContext): HelpSect
     return {
       id: "floating",
       title: "悬浮卡片",
-      summary: "Windows 端目前不支持悬浮 Notes 和 Todos。",
+      summary: "Floating Notes & Todos 当前仅支持 macOS。",
       articles: [
         {
           id: "floating-windows",
           eyebrow: "平台状态",
           title: "Windows 支持状态",
-          summary: "悬浮卡片 planned for a future Windows release。",
-          highlights: ["Windows", "暂不支持", "Planned"],
+          summary: "Windows 端在 v0.5.0 中禁用悬浮 Notes 和 Todos。",
+          highlights: ["Windows", "暂不支持", "v0.5.0"],
           groups: [
             {
               id: "floating-windows-status",
               title: "当前状态",
               items: [
-                "Windows 端目前不支持悬浮 note 卡片和悬浮 todo 卡片。",
-                "该功能 planned for a future Windows release。",
-                "在 Windows 上请先使用普通的 Notes 和 Todos 面板。",
+                "Floating Notes & Todos 当前仅支持 macOS。",
+                "由于渲染和窗口合成不稳定，Windows 端在 v0.5.0 中禁用该功能。",
+                "Windows 端会保留稳定的 v0.4.5 Notes 和 Todos 行为。",
+                "未来的 Windows 悬浮支持需要在独立的架构重设计分支中开发。",
               ],
             },
           ],
@@ -603,7 +605,7 @@ function buildChineseFloatingCardsSection(context: HelpContentContext): HelpSect
             items: [
               "悬浮 note 卡片和悬浮 todo 卡片可在 macOS 桌面应用中使用。",
               "浏览器预览无法创建独立置顶卡片窗口。",
-              "Windows 端悬浮卡片 planned for a future Windows release。",
+              "Windows 端在 v0.5.0 中禁用悬浮 Notes 和 Todos。",
             ],
           },
         ],

@@ -16,6 +16,7 @@ import { hideDragPreview, showDragPreview, showFloatingCard } from "../../hooks/
 import { useDragPointerTracking } from "../../hooks/useDragPointerTracking";
 import { buildNoteDragPreviewPayload } from "../../lib/dragPreview";
 import { useI18n } from "../../lib/i18n";
+import { canUseFloatingNotes } from "../../lib/platformFeatures";
 import {
   centerOverlayToCursor,
   readEventCoordinates,
@@ -55,9 +56,15 @@ export function NotesList() {
       activationConstraint: { distance: 4 },
     }),
   );
+  const floatingNotesEnabled = canUseFloatingNotes();
   const baseVisibleCards = useMemo(
-    () => cards.filter((card) => !removingIds.includes(card.id) && !floatingCardIds.includes(card.id)),
-    [cards, floatingCardIds, removingIds],
+    () =>
+      cards.filter(
+        (card) =>
+          !removingIds.includes(card.id) &&
+          (!floatingNotesEnabled || !floatingCardIds.includes(card.id)),
+      ),
+    [cards, floatingCardIds, floatingNotesEnabled, removingIds],
   );
   const availableFilterKeys = useMemo(
     () => [NOTE_FILTER_UNGROUPED_KEY, ...groups.map((group) => group.id)],
@@ -180,6 +187,10 @@ export function NotesList() {
     setActiveDragWidth(event.active.rect.current.initial?.width ?? null);
     syncLatestDragPointerCoordinates(event.activatorEvent);
 
+    if (!floatingNotesEnabled) {
+      return;
+    }
+
     const rect = document.querySelector<HTMLElement>(`[data-note-card-id="${activeId}"]`)?.getBoundingClientRect();
     const coordinates = readEventCoordinates(event.activatorEvent);
     const activeCard = cards.find((card) => card.id === activeId);
@@ -213,6 +224,10 @@ export function NotesList() {
     setActiveDragWidth(null);
 
     if (!overId) {
+      if (!floatingNotesEnabled) {
+        return;
+      }
+
       const rect = document.querySelector<HTMLElement>(`[data-note-card-id="${activeId}"]`)?.getBoundingClientRect();
       const coordinates = dragPointerCoordinates;
 
@@ -231,7 +246,9 @@ export function NotesList() {
       void hideDragPreview();
       return;
     }
-    void hideDragPreview();
+    if (floatingNotesEnabled) {
+      void hideDragPreview();
+    }
     moveCard(activeId, overId);
   };
 
@@ -273,7 +290,9 @@ export function NotesList() {
               setActiveDragId(null);
               setActiveDragOverId(null);
               setActiveDragWidth(null);
-              void hideDragPreview();
+              if (floatingNotesEnabled) {
+                void hideDragPreview();
+              }
             }}
           >
             <SortableContext items={visibleCards.map((card) => card.id)} strategy={verticalListSortingStrategy}>

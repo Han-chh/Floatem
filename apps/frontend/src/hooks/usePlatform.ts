@@ -6,7 +6,8 @@ import type {
 } from "@quicknote/native-bridge";
 import type { AppSettings, LoadAllResult, NotesDocument, TodosDocument } from "../lib/models";
 import { normalizeNotesDocument, normalizeTodosDocument } from "../lib/models";
-import { getQuickNoteBridge, isNativeQuickNoteHost } from "../lib/nativeBridge";
+import { getQuickNoteBridge, isNativeQuickNoteHost, type QuickNoteNativeBridge } from "../lib/nativeBridge";
+import { canUseFloatingNotes, canUseFloatingTodos } from "../lib/platformFeatures";
 
 export function usePlatform() {
   const isNativeHost = isNativeQuickNoteHost();
@@ -68,29 +69,48 @@ export async function reportFrontendError(message: string, source?: string) {
 }
 
 export async function showDragPreview(payload: DragPreviewPayload) {
-  await getQuickNoteBridge().showDragPreview(payload);
+  if (!canUseFloatingPayload(payload)) {
+    return;
+  }
+
+  const bridge = getQuickNoteBridge() as Partial<QuickNoteNativeBridge>;
+  await bridge.showDragPreview?.(payload);
 }
 
 export async function hideDragPreview() {
-  await getQuickNoteBridge().hideDragPreview();
+  const bridge = getQuickNoteBridge() as Partial<QuickNoteNativeBridge>;
+  await bridge.hideDragPreview?.();
 }
 
 export async function showFloatingCard(payload: DragPreviewPayload) {
-  await getQuickNoteBridge().showFloatingCard(payload);
+  if (!canUseFloatingPayload(payload)) {
+    return;
+  }
+
+  const bridge = getQuickNoteBridge() as Partial<QuickNoteNativeBridge>;
+  await bridge.showFloatingCard?.(payload);
 }
 
 export async function closeFloatingCard(card: FloatingCardReference) {
-  await getQuickNoteBridge().closeFloatingCard(card);
+  const bridge = getQuickNoteBridge() as Partial<QuickNoteNativeBridge>;
+  await bridge.closeFloatingCard?.(card);
 }
 
 export async function resizeFloatingCard(size: FloatingCardResize) {
-  await getQuickNoteBridge().resizeFloatingCard(size);
+  const bridge = getQuickNoteBridge() as Partial<QuickNoteNativeBridge>;
+  await bridge.resizeFloatingCard?.(size);
 }
 
 export async function getFloatingCardScreenPlacement(): Promise<FloatingCardScreenPlacement | null> {
-  return await getQuickNoteBridge().getFloatingCardScreenPlacement();
+  const bridge = getQuickNoteBridge() as Partial<QuickNoteNativeBridge>;
+  return (await bridge.getFloatingCardScreenPlacement?.()) ?? null;
 }
 
 export async function startFloatingCardDrag(card: FloatingCardReference) {
-  await getQuickNoteBridge().startFloatingCardDrag(card);
+  const bridge = getQuickNoteBridge() as Partial<QuickNoteNativeBridge>;
+  await bridge.startFloatingCardDrag?.(card);
+}
+
+function canUseFloatingPayload(payload: DragPreviewPayload) {
+  return payload.kind === "note" ? canUseFloatingNotes() : canUseFloatingTodos();
 }
