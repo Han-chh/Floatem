@@ -1,6 +1,8 @@
 import { AnimatePresence, motion } from "framer-motion";
-import { startTransition, useEffect, useRef, useState } from "react";
+import { Component, startTransition, useEffect, useRef, useState, type ErrorInfo, type ReactNode } from "react";
+import { DragPreviewApp } from "./components/drag-preview/DragPreviewApp";
 import { TooltipLayer } from "./components/feedback/TooltipLayer";
+import { FloatingNoteApp } from "./components/floating-note/FloatingNoteApp";
 import { PanelShell } from "./components/layout/PanelShell";
 import { NotesList } from "./components/notes/NotesList";
 import { FigmaNotesHomePreview } from "./components/preview/FigmaNotesHomePreview";
@@ -21,26 +23,82 @@ import { useI18n } from "./lib/i18n";
 import {
   subscribeToPanelPosition,
   subscribeToPanelWillOpen,
+  subscribeToFloatingCardsState,
+  subscribeToFloatingDockZoneEnter,
+  subscribeToFloatingDockZoneLeave,
   subscribeToHotkeyRegistrationState,
+  subscribeToNotesUpdated,
   subscribeToTextColorPanelClose,
   subscribeToTextColorPanelOpen,
   subscribeToTodosUpdated,
 } from "./lib/nativeBridge";
 import type { TabId } from "./lib/models";
+import { getPlatformFeatures } from "./lib/platformFeatures";
 import { getTabMotionConfig } from "./lib/transitionMotion";
 import { useNotesStore } from "./store/notesStore";
 import { useSettingsStore } from "./store/settingsStore";
 import { useTodosStore } from "./store/todosStore";
 
-function isDesignPreviewMode() {
+function getFrontendMode() {
   if (typeof window === "undefined") {
-    return false;
+    return "main" as const;
   }
 
-  return new URLSearchParams(window.location.search).get("preview") === "figma-notes-home";
+  const searchParams = new URLSearchParams(window.location.search);
+
+  if (searchParams.get("mode") === "drag-preview") {
+    return "drag-preview" as const;
+  }
+
+  if (searchParams.get("mode") === "floating-note") {
+    return "floating-note" as const;
+  }
+
+  if (searchParams.get("preview") === "figma-notes-home") {
+    return "figma-notes-home" as const;
+  }
+
+  return "main" as const;
 }
 
 type TabTurnDirection = -1 | 1;
+
+type FrontendErrorBoundaryProps = {
+  children: ReactNode;
+};
+
+type FrontendErrorBoundaryState = {
+  hasError: boolean;
+};
+
+class FrontendErrorBoundary extends Component<FrontendErrorBoundaryProps, FrontendErrorBoundaryState> {
+  state: FrontendErrorBoundaryState = { hasError: false };
+
+  static getDerivedStateFromError(): FrontendErrorBoundaryState {
+    return { hasError: true };
+  }
+
+  componentDidCatch(error: Error, errorInfo: ErrorInfo) {
+    const errorMessage = error?.stack || error?.message || String(error);
+    const componentStack = errorInfo.componentStack?.trim() || "[empty component stack]";
+    void reportFrontendError(
+      `React error boundary caught: ${errorMessage}\ncomponentStack=${componentStack}`,
+      "react-error-boundary",
+    );
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div className="paper-card flex h-full items-center justify-center rounded-[26px] text-[13px] font-medium text-[var(--muted)]">
+          QuickNote encountered an internal rendering error.
+        </div>
+      );
+    }
+
+    return this.props.children;
+  }
+}
 
 function getTabDirection(activeTab: TabId): TabTurnDirection {
   return activeTab === "todos" ? 1 : -1;
@@ -68,6 +126,7 @@ function QuickNoteApp() {
   const setActiveTab = useSettingsStore((state) => state.setActiveTab);
   const [isBooting, setIsBooting] = useState(true);
   const [showSettings, setShowSettings] = useState(false);
+  const [isDockZoneActive, setIsDockZoneActive] = useState(false);
   const isNativeTextColorPanelOpenRef = useRef(false);
 
   useAutoSave();
@@ -118,10 +177,85 @@ function QuickNoteApp() {
   }, []);
 
   useEffect(() => {
+    return subscribeToNotesUpdated((notes) => {
+      startTransition(() => {
+        const floatingCardIds = useNotesStore.getState().floatingCardIds;
+        useNotesStore.getState().initialize(notes);
+        useNotesStore.getState().setFloatingCardIds(floatingCardIds);
+      });
+    });
+  }, []);
+
+  useEffect(() => {
     return subscribeToTodosUpdated((todos) => {
       startTransition(() => {
+        const floatingTodoIds = useTodosStore.getState().floatingTodoIds;
         useTodosStore.getState().initialize(todos);
+        useTodosStore.getState().setFloatingTodoIds(floatingTodoIds);
       });
+    });
+  }, []);
+
+  useEffect(() => {
+    const features = getPlatformFeatures();
+    const canUseFloatingCards = features.floatingNotes || features.floatingTodos;
+
+    if (typeof window === "undefined" || !canUseFloatingCards) {
+      return;
+    }
+
+    let frame: number | null = null;
+    const unsubscribe = subscribeToFloatingCardsState((state) => {
+      if (frame !== null) {
+        window.cancelAnimationFrame(frame);
+      }
+
+      frame = window.requestAnimationFrame(() => {
+        frame = null;
+
+        try {
+          useNotesStore.getState().setFloatingCardIds(state.noteIds);
+          useTodosStore.getState().setFloatingTodoIds(state.todoIds);
+        } catch (error) {
+          const message = error instanceof Error ? `${error.message}\n${error.stack ?? ""}` : String(error);
+          void reportFrontendError(
+            `Failed to apply floating cards state: ${message} payload=${JSON.stringify(state)}`,
+            "floating-cards-state-listener",
+          );
+        }
+      });
+    });
+
+    return () => {
+      if (frame !== null) {
+        window.cancelAnimationFrame(frame);
+      }
+
+      unsubscribe();
+    };
+  }, []);
+
+  useEffect(() => {
+    const features = getPlatformFeatures();
+    if (!features.floatingNotes && !features.floatingTodos) {
+      return;
+    }
+
+    return subscribeToFloatingDockZoneEnter((_detail) => {
+      // Instant visual feedback — startTransition would defer the green
+      // dock-zone highlight, defeating the purpose of real-time feedback.
+      setIsDockZoneActive(true);
+    });
+  }, []);
+
+  useEffect(() => {
+    const features = getPlatformFeatures();
+    if (!features.floatingNotes && !features.floatingTodos) {
+      return;
+    }
+
+    return subscribeToFloatingDockZoneLeave(() => {
+      setIsDockZoneActive(false);
     });
   }, []);
 
@@ -265,7 +399,7 @@ function QuickNoteApp() {
   const showHotkeyConflictBanner = hotkeyRegistrationState?.registration === "conflict";
 
   return (
-    <>
+    <FrontendErrorBoundary>
       <PanelShell
       activeTab={activeTab}
       animationSpeed={animationSpeed}
@@ -317,7 +451,13 @@ function QuickNoteApp() {
               style={tabMotion.contentStyle}
               className="absolute inset-px h-auto will-change-transform"
             >
-              <div className="relative h-full overflow-hidden rounded-[24px]">
+              <div
+                className={`relative h-full overflow-hidden rounded-[24px] ${
+                  isDockZoneActive
+                    ? "border-2 border-[rgba(31,168,122,0.82)] bg-[rgba(31,168,122,0.05)] shadow-[0_0_0_4px_rgba(31,168,122,0.14)]"
+                    : ""
+                }`}
+              >
                 {activeTab === "notes" ? <NotesList /> : <TodoList />}
               </div>
             </motion.div>
@@ -326,15 +466,30 @@ function QuickNoteApp() {
       )}
       </PanelShell>
       <TooltipLayer />
-    </>
+    </FrontendErrorBoundary>
   );
 }
 
 function App() {
-  if (isDesignPreviewMode()) {
+  const mode = getFrontendMode();
+
+  if (mode === "figma-notes-home") {
     return (
       <>
         <FigmaNotesHomePreview />
+        <TooltipLayer />
+      </>
+    );
+  }
+
+  if (mode === "drag-preview") {
+    return <DragPreviewApp />;
+  }
+
+  if (mode === "floating-note") {
+    return (
+      <>
+        <FloatingNoteApp />
         <TooltipLayer />
       </>
     );

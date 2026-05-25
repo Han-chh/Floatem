@@ -95,7 +95,17 @@ export const useSettingsStore = create<SettingsState>()(
       set({ timeFormat: normalizeTimeFormat(timeFormat) });
     },
     setPanelPosition: (panelPosition) => {
-      set({ panelPosition });
+      set((state) => {
+        const current = state.panelPosition;
+        const isUnchanged =
+          current === panelPosition ||
+          (current !== null &&
+            panelPosition !== null &&
+            current.x === panelPosition.x &&
+            current.y === panelPosition.y);
+
+        return isUnchanged ? state : { panelPosition };
+      });
     },
     setTransitionStyle: (transitionStyle) => {
       set({ transitionStyle });

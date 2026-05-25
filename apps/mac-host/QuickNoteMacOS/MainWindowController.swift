@@ -5,9 +5,9 @@ import OSLog
 final class MainWindowController: NSObject, NSWindowDelegate, QuickNoteNativeBridgeHandling {
     private static let defaultPanelSize = NSSize(width: 400, height: 680)
     private static let minimumPanelSize = NSSize(width: 320, height: 480)
-    private static let overlayPanelLevel = NSWindow.Level.statusBar
+    static let overlayPanelLevel = NSWindow.Level.statusBar
     private static let interactivePanelLevel = NSWindow.Level.floating
-    private static var overlayCollectionBehavior: NSWindow.CollectionBehavior {
+    static var overlayCollectionBehavior: NSWindow.CollectionBehavior {
         var behavior: NSWindow.CollectionBehavior = [
             .canJoinAllSpaces,
             .fullScreenAuxiliary,
@@ -27,7 +27,20 @@ final class MainWindowController: NSObject, NSWindowDelegate, QuickNoteNativeBri
     private let notificationManager: NotificationManager
     private let panel: FloatingPanel
     private let webViewController: WebViewController
+    private let dragPreviewWindowController = DragPreviewWindowController()
     private let logger = Logger(subsystem: "com.quicknote.app", category: "Window")
+    private static let lifecycle = Logger(subsystem: "com.quicknote.floating", category: "Lifecycle")
+    private static let pipeline = Logger(subsystem: "com.quicknote.floating", category: "Pipeline")
+
+    /// When enabled (via `defaults write com.quicknote.app DEBUG_FLOATING_LIFECYCLE -bool true`),
+    /// lifecycle events are logged at info level so you can trace create/destroy/deinit through every drag cycle.
+    private nonisolated static let debugLifecycle: Bool = {
+        DebugFlags.isEnabled("DEBUG_FLOATING_LIFECYCLE")
+    }()
+    private nonisolated static let debugPipeline: Bool = {
+        DebugFlags.isEnabled("DEBUG_FLOATING_PIPELINE")
+    }()
+
     private var lastHotKeyPressTimestamp: CFAbsoluteTime = 0
     private var activeTextColorPanelRequestID: String?
     private var isEditableInputActive = false
@@ -36,6 +49,10 @@ final class MainWindowController: NSObject, NSWindowDelegate, QuickNoteNativeBri
     private var textColorPanelChangeObserver: NSObjectProtocol?
     private var textColorPanelCloseObserver: NSObjectProtocol?
     private var appDidBecomeActiveObserver: NSObjectProtocol?
+    private var dragPreviewTimer: Timer?
+    private var activeDragPreviewSession: DragPreviewSession?
+    private var isDragPreviewDockZoneActive = false
+    private var floatingCardWindowControllers: [String: FloatingNoteWindowController] = [:]
 
     private static let hotKeyDebounceInterval: CFAbsoluteTime = 0.25
 
@@ -96,6 +113,8 @@ final class MainWindowController: NSObject, NSWindowDelegate, QuickNoteNativeBri
     }
 
     deinit {
+        dragPreviewTimer?.invalidate()
+
         if let spaceObserver {
             NSWorkspace.shared.notificationCenter.removeObserver(spaceObserver)
         }
@@ -154,6 +173,7 @@ final class MainWindowController: NSObject, NSWindowDelegate, QuickNoteNativeBri
     func hideMainWindow() {
         persistPanelPosition()
         dismissTextColorPanel(emitClose: true)
+        hideDragPreviewFromBridge()
         isEditableInputActive = false
         isTextCompositionActive = false
         panel.orderOut(nil)
@@ -300,6 +320,22 @@ final class MainWindowController: NSObject, NSWindowDelegate, QuickNoteNativeBri
         hotKeyRegistrationStatePayload(from: hotKeyManager.registrationState)
     }
 
+    func currentFloatingCardState() -> [String: [String]] {
+        let noteIDs = floatingCardWindowControllers.values
+            .filter { $0.cardKind == "note" }
+            .map(\.cardID)
+            .sorted()
+        let todoIDs = floatingCardWindowControllers.values
+            .filter { $0.cardKind == "todo" }
+            .map(\.cardID)
+            .sorted()
+
+        return [
+            "note": noteIDs,
+            "todo": todoIDs,
+        ]
+    }
+
     func registerHotKey(shortcut: String) throws {
         try hotKeyManager.register(shortcut: shortcut)
     }
@@ -326,6 +362,206 @@ final class MainWindowController: NSObject, NSWindowDelegate, QuickNoteNativeBri
         }
 
         updatePanelPresentationForCurrentInteraction()
+    }
+
+    func showDragPreviewFromBridge(_ payload: Any) throws {
+        guard let payloadDictionary = payload as? [String: Any],
+              let session = DragPreviewSession(payload: payloadDictionary)
+        else {
+            throw QuickNoteBridgeError.invalidParameters("QuickNote expected a valid drag preview payload from JavaScript.")
+        }
+
+        if Self.debugPipeline {
+            Self.pipeline.info("showDragPreview(kind=\(session.cardKind, privacy: .public), cardId=\(session.cardID, privacy: .public))")
+        }
+
+        setDragPreviewDockZoneActive(false, session: activeDragPreviewSession)
+        activeDragPreviewSession = session
+        dragPreviewWindowController.updatePayload(payloadDictionary)
+        updateDragPreviewWindow()
+        ensureDragPreviewTimer()
+    }
+
+    func hideDragPreviewFromBridge() {
+        if Self.debugPipeline, let session = activeDragPreviewSession {
+            Self.pipeline.info("hideDragPreview(kind=\(session.cardKind, privacy: .public), cardId=\(session.cardID, privacy: .public))")
+        }
+
+        setDragPreviewDockZoneActive(false, session: activeDragPreviewSession)
+        activeDragPreviewSession = nil
+        dragPreviewTimer?.invalidate()
+        dragPreviewTimer = nil
+        dragPreviewWindowController.hidePreview()
+    }
+
+    func showFloatingCardFromBridge(_ payload: Any) throws {
+        guard
+            let payloadDictionary = payload as? [String: Any],
+            let kind = payloadDictionary["kind"] as? String,
+            ["note", "todo"].contains(kind),
+            let cardID = Self.floatingCardID(from: payloadDictionary, kind: kind),
+            let session = DragPreviewSession(payload: payloadDictionary)
+        else {
+            throw QuickNoteBridgeError.invalidParameters("QuickNote expected a valid floating card payload from JavaScript.")
+        }
+
+        let mouseLocation = NSEvent.mouseLocation
+        if panel.isVisible && panel.frame.contains(mouseLocation) {
+            return
+        }
+
+        hideDragPreviewFromBridge()
+
+        let key = Self.floatingCardKey(kind: kind, id: cardID)
+        let controller = floatingCardWindowControllers[key] ?? FloatingNoteWindowController(cardKind: kind, cardID: cardID)
+        controller.onClose = { [weak self] itemKind, id in
+            Task { @MainActor [weak self] in
+                self?.closeFloatingCardFromBridge(kind: itemKind, id: id)
+            }
+        }
+        controller.onRequestDrag = { [weak self] itemKind, id in
+            self?.logger.info("[FLT:DOCK] onRequestDrag callback fired kind=\(itemKind, privacy: .public) id=\(id, privacy: .public)")
+            Task { @MainActor [weak self] in
+                self?.logger.info("[FLT:DOCK] Task executing startFloatingCardDragFromBridge")
+                self?.startFloatingCardDragFromBridge(kind: itemKind, id: id)
+            }
+        }
+        controller.onLoadAllData = { [weak self] in
+            guard let self else {
+                return [:]
+            }
+
+            return try self.storage.loadAllData()
+        }
+        controller.onSaveNotes = { [weak self] notes in
+            guard let self else {
+                return
+            }
+
+            try self.storage.saveNotes(notes)
+            self.webViewController.emitNotesUpdated(notes)
+        }
+        controller.onSaveTodos = { [weak self] todos in
+            guard let self else {
+                return
+            }
+
+            try self.saveTodos(todos)
+            self.webViewController.emitTodosUpdated(todos)
+        }
+        controller.onSaveSettings = { [weak self] settings in
+            guard let self else {
+                return
+            }
+
+            try self.saveSettings(settings)
+        }
+        controller.onReadClipboardText = { [weak self] in
+            self?.readClipboardText() ?? ""
+        }
+        controller.onWriteClipboardText = { [weak self] text in
+            self?.writeClipboardText(text)
+        }
+        floatingCardWindowControllers[key] = controller
+        if Self.debugLifecycle {
+            Self.lifecycle.info("panelCreated(cardId=\(cardID, privacy: .public)) kind=\(kind, privacy: .public)")
+            logRemainingFloatingPanelCount()
+        }
+        let cardFrame = floatingCardFrame(for: mouseLocation, session: session)
+        controller.updatePayload(payloadDictionary)
+        controller.showWindow(frame: cardFrame)
+        emitFloatingCardsState()
+    }
+
+    func closeFloatingCardFromBridge(kind: String, id: String) {
+        destroyFloatingCardPanel(kind: kind, id: id, restoreDockedState: true)
+    }
+
+    func startFloatingCardDragFromBridge(kind: String, id: String) {
+        guard let controller = floatingCardWindowControllers[Self.floatingCardKey(kind: kind, id: id)] else {
+            logger.error("[FLT:DOCK] controller not found for key kind=\(kind, privacy: .public) id=\(id, privacy: .public)")
+            return
+        }
+
+        logger.info("[FLT:DOCK] dragStart kind=\(kind, privacy: .public) id=\(id, privacy: .public)")
+        if Self.debugPipeline, activeDragPreviewSession != nil {
+            Self.pipeline.info("dragStart clearingResidualPreview(kind=\(kind, privacy: .public), cardId=\(id, privacy: .public))")
+        }
+
+        var previousInDockZone = false
+        var moveCount = 0
+
+        // During drag: detect dock-zone enter/leave for visual feedback.
+        // Uses BOTH cursor-over-panel AND window-overlap detection so the
+        // user gets immediate visual feedback as soon as any part of the
+        // floating window touches the main panel — not just when the cursor
+        // itself enters the panel bounds.
+        controller.onMove = { [weak self] floatingFrame in
+            guard let self else {
+                return
+            }
+
+            moveCount += 1
+            let mouseLoc = NSEvent.mouseLocation
+            let panelFrame = self.panel.frame
+            let panelVisible = self.panel.isVisible
+
+            let cursorInPanel = panelVisible && panelFrame.contains(mouseLoc)
+            let windowOverlapsPanel = panelVisible && panelFrame.intersects(floatingFrame)
+            let isInDockZone = cursorInPanel || windowOverlapsPanel
+
+            if moveCount <= 3 || isInDockZone || moveCount % 20 == 0 {
+                self.logger.info("[FLT:DOCK] onMove #\(moveCount) floatingFrame=(\(Int(floatingFrame.origin.x)),\(Int(floatingFrame.origin.y)),\(Int(floatingFrame.size.width))x\(Int(floatingFrame.size.height))) panelFrame=(\(Int(panelFrame.origin.x)),\(Int(panelFrame.origin.y)),\(Int(panelFrame.size.width))x\(Int(panelFrame.size.height))) mouse=(\(Int(mouseLoc.x)),\(Int(mouseLoc.y))) panelVisible=\(panelVisible) cursorIn=\(cursorInPanel) overlap=\(windowOverlapsPanel) dockZone=\(isInDockZone)")
+            }
+
+            if isInDockZone, !previousInDockZone {
+                self.logger.info("[FLT:DOCK] emitFloatingDockZoneEnter kind=\(kind, privacy: .public) cardID=\(id, privacy: .public)")
+                self.webViewController.emitFloatingDockZoneEnter(kind: kind, cardID: id)
+            } else if !isInDockZone, previousInDockZone {
+                self.logger.info("[FLT:DOCK] emitFloatingDockZoneLeave kind=\(kind, privacy: .public) cardID=\(id, privacy: .public)")
+                self.webViewController.emitFloatingDockZoneLeave(kind: kind, cardID: id)
+            }
+
+            previousInDockZone = isInDockZone
+        }
+
+        let currentEvent = NSApp.currentEvent
+        logger.info("[FLT:DOCK] startWindowDrag currentEvent=\(currentEvent != nil ? "present" : "NIL", privacy: .public)")
+
+        let dragMouseUpEvent = controller.startWindowDrag()
+        logger.info("[FLT:DOCK] performDrag returned after \(moveCount) move events")
+        controller.onMove = nil
+
+        // Clean up dock-zone highlight regardless of where the drag ended.
+        if previousInDockZone {
+            logger.info("[FLT:DOCK] emitFloatingDockZoneLeave (cleanup) kind=\(kind, privacy: .public) cardID=\(id, privacy: .public)")
+            webViewController.emitFloatingDockZoneLeave(kind: kind, cardID: id)
+        }
+
+        // After drag: check if the cursor was released inside the dock zone.
+        let mouseAtRelease = NSEvent.mouseLocation
+        let panelBounds = panel.frame
+        let panelVisible = panel.isVisible
+        let isInside = panelVisible && panelBounds.contains(mouseAtRelease)
+
+        logger.info("[FLT:DOCK] dragEnd releaseCheck panelVisible=\(panelVisible) panelFrame=(\(Int(panelBounds.origin.x)),\(Int(panelBounds.origin.y)),\(Int(panelBounds.size.width))x\(Int(panelBounds.size.height))) mouse=(\(Int(mouseAtRelease.x)),\(Int(mouseAtRelease.y))) isInside=\(isInside)")
+
+        guard isInside else {
+            controller.restoreWebViewInputAfterDrag(mouseUpEvent: dragMouseUpEvent)
+
+            logger.info("[FLT:DOCK] dragEnd NOT inside dock zone — bailing")
+            return
+        }
+
+        logger.info("[FLT:DOCK] dockingStart — removing from dict, emitting state, closing window")
+
+        // Remove from dict → emit state → destroy panel.
+        // State is emitted BEFORE the window is destroyed so the frontend
+        // restores the docked placeholder without any visible gap.
+        // Panel close with explicit handler teardown ensures no zombie
+        // WebView processes linger after repeated undock/dock cycles.
+        destroyFloatingCardPanel(kind: kind, id: id, restoreDockedState: true, controller: controller)
+        logger.info("[FLT:DOCK] floatingWindowDestroyed — docking complete")
     }
 
     func writeClipboardText(_ text: String) {
@@ -421,12 +657,195 @@ final class MainWindowController: NSObject, NSWindowDelegate, QuickNoteNativeBri
         return false
     }
 
+    private func ensureDragPreviewTimer() {
+        guard dragPreviewTimer == nil else {
+            return
+        }
+
+        dragPreviewTimer = Timer.scheduledTimer(withTimeInterval: 1.0 / 60.0, repeats: true) { [weak self] _ in
+            Task { @MainActor [weak self] in
+                self?.updateDragPreviewWindow()
+            }
+        }
+    }
+
+    private func updateDragPreviewWindow() {
+        guard let session = activeDragPreviewSession else {
+            dragPreviewWindowController.hidePreview()
+            return
+        }
+
+        let mouseLocation = NSEvent.mouseLocation
+        let isInDockZone = panel.isVisible && panel.frame.contains(mouseLocation)
+        setDragPreviewDockZoneActive(isInDockZone, session: session)
+
+        if isInDockZone {
+            dragPreviewWindowController.hidePreview()
+            return
+        }
+
+        dragPreviewWindowController.showPreview(frame: dragPreviewFrame(for: mouseLocation, session: session))
+    }
+
+    private func setDragPreviewDockZoneActive(_ active: Bool, session: DragPreviewSession?) {
+        guard active != isDragPreviewDockZoneActive else {
+            return
+        }
+
+        isDragPreviewDockZoneActive = active
+
+        guard let session, !session.cardKind.isEmpty, !session.cardID.isEmpty else {
+            return
+        }
+
+        if active {
+            webViewController.emitFloatingDockZoneEnter(kind: session.cardKind, cardID: session.cardID)
+        } else {
+            webViewController.emitFloatingDockZoneLeave(kind: session.cardKind, cardID: session.cardID)
+        }
+    }
+
+    private func dragPreviewFrame(for mouseLocation: CGPoint, session: DragPreviewSession) -> NSRect {
+        NSRect(
+            x: mouseLocation.x - session.pointerOffset.x - DragPreviewSession.windowPadding,
+            y: mouseLocation.y - session.windowHeight + session.pointerOffset.y + DragPreviewSession.windowPadding,
+            width: session.windowWidth,
+            height: session.windowHeight
+        )
+    }
+
+    private func floatingCardFrame(for mouseLocation: CGPoint, session: DragPreviewSession) -> NSRect {
+        NSRect(
+            x: mouseLocation.x - session.pointerOffset.x,
+            y: mouseLocation.y - session.contentHeight + session.pointerOffset.y,
+            width: session.contentWidth,
+            height: session.contentHeight
+        )
+    }
+
     private func activeScreen() -> NSScreen? {
         let mouseLocation = NSEvent.mouseLocation
 
         return NSScreen.screens.first(where: { screen in
             NSMouseInRect(mouseLocation, screen.frame, false)
         }) ?? NSScreen.main ?? NSScreen.screens.first
+    }
+
+    private func emitFloatingCardsState() {
+        let state = currentFloatingCardState()
+
+        if Self.debugPipeline {
+            let noteIDs = state["note"] ?? []
+            let todoIDs = state["todo"] ?? []
+            Self.pipeline.info("emitFloatingCardsState(noteIds=\(noteIDs.joined(separator: ","), privacy: .public), todoIds=\(todoIDs.joined(separator: ","), privacy: .public), count=\(noteIDs.count + todoIDs.count))")
+        }
+
+        webViewController.emitFloatingCardsState(
+            noteIDs: state["note"] ?? [],
+            todoIDs: state["todo"] ?? []
+        )
+    }
+
+    private func destroyFloatingCardPanel(
+        kind: String,
+        id: String,
+        restoreDockedState: Bool,
+        controller providedController: FloatingNoteWindowController? = nil
+    ) {
+        let key = Self.floatingCardKey(kind: kind, id: id)
+        guard let controller = floatingCardWindowControllers.removeValue(forKey: key) ?? providedController else {
+            return
+        }
+
+        if Self.debugLifecycle {
+            Self.lifecycle.info("dockStart(cardId=\(id, privacy: .public))")
+        }
+
+        controller.closeWindow()
+
+        if restoreDockedState {
+            DispatchQueue.main.async { [weak self] in
+                guard let self else {
+                    return
+                }
+
+                self.emitFloatingCardsState()
+
+                if Self.debugLifecycle {
+                    Self.lifecycle.info("restoreDockedState(cardId=\(id, privacy: .public))")
+                }
+            }
+        }
+
+        if Self.debugLifecycle {
+            Self.lifecycle.info("panel removedFromRegistry(cardId=\(id, privacy: .public))")
+            logRemainingFloatingPanelCount()
+        }
+    }
+
+    private func logRemainingFloatingPanelCount() {
+        guard Self.debugLifecycle else {
+            return
+        }
+
+        Self.lifecycle.info("remainingFloatingPanelCount=\(self.floatingCardWindowControllers.count)")
+    }
+
+    private static func floatingCardKey(kind: String, id: String) -> String {
+        "\(kind):\(id)"
+    }
+
+    private static func floatingCardID(from payload: [String: Any], kind: String) -> String? {
+        switch kind {
+        case "note":
+            return (payload["note"] as? [String: Any])?["id"] as? String
+        case "todo":
+            return (payload["todo"] as? [String: Any])?["id"] as? String
+        default:
+            return nil
+        }
+    }
+
+    private struct DragPreviewSession {
+        static let windowPadding: CGFloat = 16
+
+        let windowWidth: CGFloat
+        let windowHeight: CGFloat
+        let contentWidth: CGFloat
+        let contentHeight: CGFloat
+        let pointerOffset: CGPoint
+        let cardKind: String
+        let cardID: String
+
+        init?(payload: [String: Any]) {
+            guard
+                let size = payload["size"] as? [String: Any],
+                let pointerOffset = payload["pointerOffset"] as? [String: Any],
+                let width = size["width"] as? Double,
+                let height = size["height"] as? Double,
+                let offsetX = pointerOffset["x"] as? Double,
+                let offsetY = pointerOffset["y"] as? Double,
+                width > 0,
+                height > 0
+            else {
+                return nil
+            }
+
+            self.contentWidth = width
+            self.contentHeight = height
+            self.windowWidth = width + Self.windowPadding * 2
+            self.windowHeight = height + Self.windowPadding * 2
+            self.pointerOffset = CGPoint(x: offsetX, y: offsetY)
+            self.cardKind = payload["kind"] as? String ?? ""
+            switch cardKind {
+            case "note":
+                self.cardID = (payload["note"] as? [String: Any])?["id"] as? String ?? ""
+            case "todo":
+                self.cardID = (payload["todo"] as? [String: Any])?["id"] as? String ?? ""
+            default:
+                self.cardID = ""
+            }
+        }
     }
 
     private func restoreDefaultPanelSizeIfNeeded() {

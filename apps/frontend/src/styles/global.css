@@ -230,6 +230,50 @@
     -webkit-backdrop-filter: none !important;
   }
 
+  html[data-quicknote-floating-card-window="true"] .quicknote-modal-backdrop {
+    background: transparent !important;
+    box-shadow: none !important;
+  }
+
+  html[data-quicknote-floating-card-window="true"] .quicknote-modal-backdrop {
+    align-items: stretch !important;
+    justify-content: flex-start !important;
+    overflow: visible !important;
+    padding: 0 !important;
+  }
+
+  html[data-quicknote-floating-card-window="true"] .quicknote-modal-backdrop > [role="dialog"] {
+    margin: 0 !important;
+    max-height: 100dvh !important;
+    position: fixed !important;
+    top: 0 !important;
+  }
+
+  html[data-quicknote-floating-card-window="true"][data-quicknote-floating-dialog-side="right"]
+    .quicknote-modal-backdrop
+    > [role="dialog"] {
+    left: calc(var(--quicknote-floating-card-width) + var(--quicknote-floating-dialog-gap)) !important;
+  }
+
+  html[data-quicknote-floating-card-window="true"][data-quicknote-floating-dialog-side="left"]
+    .quicknote-modal-backdrop
+    > [role="dialog"] {
+    left: auto !important;
+    right: calc(var(--quicknote-floating-card-width) + var(--quicknote-floating-dialog-gap)) !important;
+  }
+
+  html[data-quicknote-floating-card-window="true"] :is(.paper-card, .paper-panel, .cq-card, [class*="shadow-"]),
+  html[data-quicknote-floating-card-window="true"] .quicknote-modal-backdrop,
+  html[data-quicknote-floating-card-window="true"] .quicknote-modal-backdrop * {
+    box-shadow: none !important;
+    text-shadow: none !important;
+  }
+
+  html[data-quicknote-floating-card-window="true"] :is([class*="drop-shadow-"]),
+  html[data-quicknote-floating-card-window="true"] .quicknote-modal-backdrop :is([class*="drop-shadow-"]) {
+    filter: none !important;
+  }
+
   .cq-panel {
     container: panel / inline-size;
   }

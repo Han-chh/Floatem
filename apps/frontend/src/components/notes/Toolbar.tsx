@@ -32,6 +32,7 @@ type ToolbarProps = {
   activeFormats: Record<TextFormat, boolean>;
   canRedo: boolean;
   canUndo: boolean;
+  instant?: boolean;
   isColorPaletteOpen: boolean;
   onApplyColor: (color: string) => void;
   onClearFormatting: () => void;
@@ -43,6 +44,7 @@ type ToolbarProps = {
   onToggleColorPalette: () => void;
   onToggleFormat: (format: TextFormat) => void;
   onUndo: () => void;
+  visualOnly?: boolean;
 };
 
 export function Toolbar({
@@ -50,6 +52,7 @@ export function Toolbar({
   activeFormats,
   canRedo,
   canUndo,
+  instant = false,
   isColorPaletteOpen,
   onApplyColor,
   onClearFormatting,
@@ -61,6 +64,7 @@ export function Toolbar({
   onToggleColorPalette,
   onToggleFormat,
   onUndo,
+  visualOnly = false,
 }: ToolbarProps) {
   const { t } = useI18n();
   const colorButtonRef = useRef<HTMLButtonElement | null>(null);
@@ -192,7 +196,9 @@ export function Toolbar({
             data-tooltip={shortcut ? `${label} ${shortcut}` : label}
             data-tooltip-align={tooltipAlign}
             onPointerDown={
-              format
+              visualOnly
+                ? undefined
+                : format
                 ? (event) => {
                     if (disabled) {
                       return;
@@ -213,7 +219,7 @@ export function Toolbar({
                   }
             }
             onClick={
-              format || action
+              !visualOnly && (format || action)
                 ? (event) => {
                     if (disabled) {
                       return;
@@ -239,11 +245,11 @@ export function Toolbar({
             } ${
               disabled ? "opacity-45 saturate-75" : ""
             }`}
-            initial={{ opacity: 0, y: 8 }}
+            initial={instant ? { opacity: 1, y: 0 } : { opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.18, delay: 0.02 * index }}
-            whileHover={disabled ? undefined : { y: -1.5, scale: 1.03 }}
-            whileTap={disabled ? undefined : { scale: 0.97 }}
+            transition={instant ? { duration: 0 } : { duration: 0.18, delay: 0.02 * index }}
+            whileHover={visualOnly || disabled ? undefined : { y: -1.5, scale: 1.03 }}
+            whileTap={visualOnly || disabled ? undefined : { scale: 0.97 }}
           >
             <Icon size={11} />
             {action === "color" ? (

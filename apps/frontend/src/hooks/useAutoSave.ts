@@ -1,4 +1,5 @@
 import { useEffect, useRef } from "react";
+import { shallow } from "zustand/shallow";
 import { useNotesStore } from "../store/notesStore";
 import { useSettingsStore } from "../store/settingsStore";
 import { useTodosStore } from "../store/todosStore";
@@ -38,6 +39,7 @@ export function useAutoSave() {
           });
         }, SAVE_DELAY);
       },
+      { equalityFn: shallow },
     );
 
     const unsubscribeTodos = useTodosStore.subscribe(
@@ -63,6 +65,7 @@ export function useAutoSave() {
           });
         }, SAVE_DELAY);
       },
+      { equalityFn: shallow },
     );
 
     const unsubscribeSettings = useSettingsStore.subscribe(
@@ -74,7 +77,6 @@ export function useAutoSave() {
         timeZone: state.timeZone,
         timeFormat: state.timeFormat,
         lastActiveTab: state.lastActiveTab,
-        panelPosition: state.panelPosition,
         transitionStyle: state.transitionStyle,
         animationSpeed: state.animationSpeed,
         enableParticles: state.enableParticles,
@@ -104,7 +106,6 @@ export function useAutoSave() {
             timeZone: nextState.timeZone,
             timeFormat: nextState.timeFormat,
             lastActiveTab: nextState.lastActiveTab,
-            panelPosition: nextState.panelPosition,
             transitionStyle: nextState.transitionStyle,
             animationSpeed: nextState.animationSpeed,
             enableParticles: nextState.enableParticles,
@@ -112,17 +113,49 @@ export function useAutoSave() {
           });
         }, SAVE_DELAY);
       },
+      { equalityFn: shallow },
     );
 
     return () => {
+      const notesState = useNotesStore.getState();
+      const todosState = useTodosStore.getState();
+      const settingsState = useSettingsStore.getState();
+
       if (notesTimer.current) {
         window.clearTimeout(notesTimer.current);
+        if (notesState.isLoaded) {
+          void saveNotes({
+            cards: notesState.cards,
+            groups: notesState.groups,
+          });
+        }
       }
       if (todosTimer.current) {
         window.clearTimeout(todosTimer.current);
+        if (todosState.isLoaded) {
+          void saveTodos({
+            groups: todosState.groups,
+            items: todosState.todos,
+          });
+        }
       }
       if (settingsTimer.current) {
         window.clearTimeout(settingsTimer.current);
+        if (settingsState.isLoaded) {
+          void saveSettings({
+            activeTab: settingsState.activeTab,
+            defaultOpenSection: settingsState.defaultOpenSection,
+            hotkey: settingsState.hotkey,
+            language: settingsState.language,
+            timeZone: settingsState.timeZone,
+            timeFormat: settingsState.timeFormat,
+            lastActiveTab: settingsState.lastActiveTab,
+            transitionStyle: settingsState.transitionStyle,
+            animationSpeed: settingsState.animationSpeed,
+            enableParticles: settingsState.enableParticles,
+            enableReminderSound: settingsState.enableReminderSound,
+          });
+        }
       }
       unsubscribeNotes();
       unsubscribeTodos();

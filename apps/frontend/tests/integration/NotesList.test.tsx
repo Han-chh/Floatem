@@ -2,6 +2,7 @@ import { fireEvent, render, screen, waitFor, within } from "@testing-library/rea
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 import { createNoteCard, createNoteGroup, DEFAULT_NOTE_CONTENT, DEFAULT_SETTINGS } from "../../src/lib/models";
+import { NoteCardPreview } from "../../src/components/notes/NoteCard";
 import { NotesList } from "../../src/components/notes/NotesList";
 import { useNotesStore } from "../../src/store/notesStore";
 
@@ -24,6 +25,8 @@ describe("NotesList", () => {
           "window.hide": true,
           "window.toggle": true,
           "window.alwaysOnTop": true,
+          "window.dragPreview": true,
+          "window.floatingCards": true,
           "notifications.send": true,
           "notifications.schedule": true,
           "notifications.openSettings": true,
@@ -43,6 +46,13 @@ describe("NotesList", () => {
       hideWindow: vi.fn(async () => {}),
       toggleWindow: vi.fn(async () => {}),
       setAlwaysOnTop: vi.fn(async () => {}),
+      showDragPreview: vi.fn(async () => {}),
+      hideDragPreview: vi.fn(async () => {}),
+      showFloatingCard: vi.fn(async () => {}),
+      closeFloatingCard: vi.fn(async () => {}),
+      resizeFloatingCard: vi.fn(async () => {}),
+      getFloatingCardScreenPlacement: vi.fn(async () => null),
+      startFloatingCardDrag: vi.fn(async () => {}),
       openNotificationSettings: vi.fn(async () => {}),
       sendNotification: vi.fn(async () => {}),
       showNotification: vi.fn(async () => {}),
@@ -162,6 +172,22 @@ describe("NotesList", () => {
     nowSpy.mockRestore();
   });
 
+  it("renders the empty note preview with the shared readonly editor field", () => {
+    const note = createNoteCard({
+      id: "note-empty-preview",
+      title: "",
+      content: DEFAULT_NOTE_CONTENT,
+      updatedAt: new Date("2026-05-22T12:00:00.000Z").valueOf(),
+    });
+
+    const { container } = render(<NoteCardPreview note={note} width={340} />);
+    const editor = container.querySelector(".note-editor-input");
+
+    expect(editor).toBeInTheDocument();
+    expect(editor).toHaveClass("surface-field", "min-h-[76px]", "px-3", "py-3", "text-[12.25px]", "leading-[1.6]");
+    expect(container.querySelector(".note-editor-input + span")).not.toBeInTheDocument();
+  });
+
   it("shows formatting shortcuts in the toolbar tooltips", async () => {
     useNotesStore.getState().initialize([
       createNoteCard({
@@ -186,13 +212,13 @@ describe("NotesList", () => {
     expect(boldButton).toHaveAttribute("aria-pressed", "true");
     await user.click(boldButton);
     expect(boldButton).toHaveAttribute("aria-pressed", "false");
-    expect(screen.getByText("Cmd+B")).toBeInTheDocument();
-    expect(screen.getByText("Cmd+I")).toBeInTheDocument();
-    expect(screen.getByText("Cmd+U")).toBeInTheDocument();
-    expect(screen.getByText("Cmd+C")).toBeInTheDocument();
-    expect(screen.getByText("Cmd+Z")).toBeInTheDocument();
-    expect(screen.getByText("Cmd+Shift+Z")).toBeInTheDocument();
-    expect(screen.getByText("Cmd+V")).toBeInTheDocument();
+    expect(boldButton).toHaveAttribute("data-tooltip", "Bold Cmd+B");
+    expect(italicButton).toHaveAttribute("data-tooltip", "Italic Cmd+I");
+    expect(underlineButton).toHaveAttribute("data-tooltip", "Underline Cmd+U");
+    expect(screen.getByRole("button", { name: "Copy" })).toHaveAttribute("data-tooltip", "Copy Cmd+C");
+    expect(screen.getByRole("button", { name: "Undo" })).toHaveAttribute("data-tooltip", "Undo Cmd+Z");
+    expect(screen.getByRole("button", { name: "Redo" })).toHaveAttribute("data-tooltip", "Redo Cmd+Shift+Z");
+    expect(screen.getByRole("button", { name: "Paste" })).toHaveAttribute("data-tooltip", "Paste Cmd+V");
   });
 
   it("supports undo and redo from the toolbar", async () => {

@@ -421,7 +421,7 @@ export function SettingsPanel({ onClose }: SettingsPanelProps) {
         icon: <NotebookPenIcon size={18} />,
         title: t.settings.categoryAboutTitle,
         description: t.settings.categoryAboutDescription,
-        meta: t.settings.dataScopeTitle,
+        meta: `${t.settings.appVersionTitle} ${__QUICKNOTE_VERSION__}`,
       },
     ],
     [enableReminderSound, hotkey, language, t, timeZone, transitionStyle],
@@ -1413,6 +1413,11 @@ function AboutQuickNoteSettings() {
     <>
       <SettingSection title={t.settings.aboutOverviewTitle} description={t.settings.aboutSubtitle}>
         <div className="grid gap-3">
+          <SettingRow
+            icon={<NotebookPenIcon size={15} />}
+            title={t.settings.appVersionTitle}
+            description={t.settings.appVersionBody(__QUICKNOTE_VERSION__)}
+          />
           <SettingRow icon={<NotebookPenIcon size={15} />} title={t.settings.aboutNotesTitle} description={t.settings.aboutNotesBody} />
           <SettingRow icon={<CircleCheckBigIcon size={15} />} title={t.settings.aboutTodosTitle} description={t.settings.aboutTodosBody} />
           <SettingRow icon={<SlidersHorizontalIcon size={15} />} title={t.settings.aboutTrayFlowTitle} description={t.settings.aboutTrayFlowBody} />

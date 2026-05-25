@@ -1,5 +1,47 @@
 import Foundation
 
+enum DebugFlags {
+    private static let supportedDomains = [
+        "com.quicknote.app",
+        "com.quicknote.floating",
+    ]
+
+    static func isEnabled(_ key: String) -> Bool {
+        if let environmentValue = ProcessInfo.processInfo.environment[key] {
+            return boolValue(environmentValue)
+        }
+
+        if let standardValue = UserDefaults.standard.object(forKey: key) {
+            return boolValue(standardValue)
+        }
+
+        for domain in supportedDomains {
+            if let suiteValue = UserDefaults(suiteName: domain)?.object(forKey: key) {
+                return boolValue(suiteValue)
+            }
+
+            if let persistentValue = UserDefaults.standard.persistentDomain(forName: domain)?[key] {
+                return boolValue(persistentValue)
+            }
+        }
+
+        return false
+    }
+
+    private static func boolValue(_ rawValue: Any) -> Bool {
+        switch rawValue {
+        case let value as Bool:
+            return value
+        case let value as NSNumber:
+            return value.boolValue
+        case let value as String:
+            return ["1", "true", "yes", "on"].contains(value.trimmingCharacters(in: .whitespacesAndNewlines).lowercased())
+        default:
+            return false
+        }
+    }
+}
+
 @MainActor
 protocol QuickNoteNativeBridgeHandling: AnyObject {
     func loadAllData() throws -> [String: Any]
@@ -13,6 +55,7 @@ protocol QuickNoteNativeBridgeHandling: AnyObject {
     func openTextColorPanel(requestID: String, colorHex: String?) throws
     func testReminderNotification(soundEnabled: Bool, language: QuickNoteLanguage) async throws
     func currentHotKeyRegistrationState() -> [String: Any]
+    func currentFloatingCardState() -> [String: [String]]
     func readClipboardText() -> String
     func registerHotKey(shortcut: String) throws
     func setEditableInputActiveFromBridge(_ active: Bool)
@@ -24,6 +67,11 @@ protocol QuickNoteNativeBridgeHandling: AnyObject {
     func maximizeMainWindowFromBridge()
     func closeMainWindowFromBridge()
     func setAlwaysOnTopFromBridge(_ enabled: Bool)
+    func showDragPreviewFromBridge(_ payload: Any) throws
+    func hideDragPreviewFromBridge()
+    func showFloatingCardFromBridge(_ payload: Any) throws
+    func closeFloatingCardFromBridge(kind: String, id: String)
+    func startFloatingCardDragFromBridge(kind: String, id: String) throws
     func quitApplicationFromBridge()
     func startWindowDragFromBridge() throws
 }

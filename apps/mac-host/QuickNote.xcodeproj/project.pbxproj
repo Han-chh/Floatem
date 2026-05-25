@@ -20,6 +20,8 @@
 		A00000000000000000000211 /* Carbon.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A00000000000000000000114 /* Carbon.framework */; };
 		A00000000000000000000212 /* main.swift in Sources */ = {isa = PBXBuildFile; fileRef = A00000000000000000000116 /* main.swift */; };
 		A00000000000000000000213 /* NotificationManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = A00000000000000000000117 /* NotificationManager.swift */; };
+		A00000000000000000000214 /* DragPreviewWindowController.swift in Sources */ = {isa = PBXBuildFile; fileRef = A00000000000000000000118 /* DragPreviewWindowController.swift */; };
+		A00000000000000000000215 /* FloatingNoteWindowController.swift in Sources */ = {isa = PBXBuildFile; fileRef = A00000000000000000000119 /* FloatingNoteWindowController.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -40,6 +42,8 @@
 		A00000000000000000000115 /* QuickNote.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = QuickNote.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		A00000000000000000000116 /* main.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = main.swift; sourceTree = "<group>"; };
 		A00000000000000000000117 /* NotificationManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationManager.swift; sourceTree = "<group>"; };
+		A00000000000000000000118 /* DragPreviewWindowController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DragPreviewWindowController.swift; sourceTree = "<group>"; };
+		A00000000000000000000119 /* FloatingNoteWindowController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FloatingNoteWindowController.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -94,6 +98,8 @@
 				A00000000000000000000105 /* GlobalHotKey.swift */,
 				A00000000000000000000106 /* MainWindowController.swift */,
 				A00000000000000000000117 /* NotificationManager.swift */,
+				A00000000000000000000118 /* DragPreviewWindowController.swift */,
+				A00000000000000000000119 /* FloatingNoteWindowController.swift */,
 				A00000000000000000000107 /* WebViewController.swift */,
 				A00000000000000000000116 /* main.swift */,
 				A00000000000000000000108 /* Info.plist */,
@@ -214,6 +220,8 @@
 				A00000000000000000000205 /* GlobalHotKey.swift in Sources */,
 				A00000000000000000000206 /* MainWindowController.swift in Sources */,
 				A00000000000000000000213 /* NotificationManager.swift in Sources */,
+				A00000000000000000000214 /* DragPreviewWindowController.swift in Sources */,
+				A00000000000000000000215 /* FloatingNoteWindowController.swift in Sources */,
 				A00000000000000000000207 /* WebViewController.swift in Sources */,
 				A00000000000000000000212 /* main.swift in Sources */,
 			);
@@ -257,7 +265,7 @@
 				CODE_SIGN_IDENTITY = "Apple Development";
 				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 26;
+				CURRENT_PROJECT_VERSION = 27;
 				DEVELOPMENT_TEAM = 7JXFC39YLS;
 				ENABLE_DEBUG_DYLIB = NO;
 				ENABLE_HARDENED_RUNTIME = NO;
@@ -268,7 +276,7 @@
 					"@executable_path/../Frameworks",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 14.0;
-				MARKETING_VERSION = 0.3.4;
+				MARKETING_VERSION = 0.5.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.quicknote.app;
 				PRODUCT_NAME = QuickNote;
 				PROVISIONING_PROFILE_SPECIFIER = "";
@@ -284,7 +292,7 @@
 				CODE_SIGNING_REQUIRED = YES;
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 26;
+				CURRENT_PROJECT_VERSION = 27;
 				DEVELOPMENT_TEAM = 7JXFC39YLS;
 				ENABLE_DEBUG_DYLIB = NO;
 				ENABLE_HARDENED_RUNTIME = NO;
@@ -295,7 +303,7 @@
 					"@executable_path/../Frameworks",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 14.0;
-				MARKETING_VERSION = 0.3.4;
+				MARKETING_VERSION = 0.5.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.quicknote.app;
 				PRODUCT_NAME = QuickNote;
 				PROVISIONING_PROFILE_SPECIFIER = "";

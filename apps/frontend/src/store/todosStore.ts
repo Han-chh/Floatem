@@ -16,6 +16,7 @@ import { isFutureReminderTimestamp } from "../lib/reminders";
 type TodosState = {
   todos: TodoItem[];
   groups: TodoGroup[];
+  floatingTodoIds: string[];
   selectedDateKey: string;
   isLoaded: boolean;
   initialize: (todos: TodoItem[] | TodosDocument) => void;
@@ -33,6 +34,7 @@ type TodosState = {
   removeTodo: (id: string) => void;
   removeTodos: (ids: string[]) => void;
   setReminder: (id: string, reminderAt: number | null) => void;
+  setFloatingTodoIds: (ids: string[]) => void;
   reset: () => void;
 };
 
@@ -45,6 +47,7 @@ function partitionTodos(todos: TodoItem[]) {
 const initialState = () => ({
   todos: [] as TodoItem[],
   groups: createEmptyTodosDocument().groups,
+  floatingTodoIds: [] as string[],
   selectedDateKey: formatLocalDateKey(new Date()),
   isLoaded: false,
 });
@@ -123,6 +126,7 @@ export const useTodosStore = create<TodosState>()(
       set({
         todos: [...openTodos, ...doneTodos],
         groups: normalizedDocument.groups,
+        floatingTodoIds: [],
         isLoaded: true,
       });
     },
@@ -409,6 +413,17 @@ export const useTodosStore = create<TodosState>()(
             : todo,
         ),
       }));
+    },
+    setFloatingTodoIds: (ids) => {
+      set((state) => {
+        const validIds = new Set(state.todos.map((todo) => todo.id));
+        const nextIds = ids.filter((id, index) => validIds.has(id) && ids.indexOf(id) === index);
+        const isUnchanged =
+          nextIds.length === state.floatingTodoIds.length &&
+          nextIds.every((id, index) => id === state.floatingTodoIds[index]);
+
+        return isUnchanged ? state : { floatingTodoIds: nextIds };
+      });
     },
     reset: () => {
       set(initialState());
