@@ -124,10 +124,12 @@ final class MainWindowController: NSObject, NSWindowDelegate, StickItNativeBridg
         switch theme {
         case "forest":
             return NSColor(srgbRed: 0.863, green: 0.910, blue: 0.875, alpha: 1)
-        case "ivory":
-            return NSColor(srgbRed: 1.000, green: 0.992, blue: 0.961, alpha: 1)
-        case "violet":
-            return NSColor(srgbRed: 0.925, green: 0.910, blue: 0.973, alpha: 1)
+        case "orchid":
+            return NSColor(srgbRed: 0.933, green: 0.961, blue: 0.922, alpha: 1)
+        case "plum":
+            return NSColor(srgbRed: 0.957, green: 0.882, blue: 0.898, alpha: 1)
+        case "chrysanthemum":
+            return NSColor(srgbRed: 0.961, green: 0.929, blue: 0.812, alpha: 1)
         case "night":
             return NSColor(srgbRed: 0.067, green: 0.082, blue: 0.063, alpha: 1)
         default:

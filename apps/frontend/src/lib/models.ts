@@ -6,7 +6,7 @@ export type DefaultOpenSection = "last" | TabId;
 export type TransitionStyle = "page" | "slide" | "lift";
 export type AnimationSpeed = "rapid" | "mediate" | "slow";
 export type TimeFormat = "24h" | "12h";
-export type ThemeId = "classic" | "forest" | "ivory" | "violet" | "night";
+export type ThemeId = "classic" | "forest" | "orchid" | "plum" | "chrysanthemum" | "night";
 export type LightThemeId = Exclude<ThemeId, "night">;
 export type ThemeMode = "manual" | "system";
 
@@ -244,7 +244,9 @@ export function normalizeTimeFormat(value: unknown): TimeFormat {
 }
 
 export function normalizeTheme(value: unknown): ThemeId {
-  return value === "forest" || value === "ivory" || value === "violet" || value === "night" ? value : "classic";
+  return value === "forest" || value === "orchid" || value === "plum" || value === "chrysanthemum" || value === "night"
+    ? value
+    : "classic";
 }
 
 export function normalizeLightTheme(value: unknown): LightThemeId {

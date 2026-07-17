@@ -204,17 +204,18 @@ type MessageCatalog = {
     themeBehaviorBody: string;
     themeBehaviorTitle: string;
     themeClassicTitle: string;
+    themeChrysanthemumTitle: string;
     themeFollowSystemBody: string;
     themeFollowSystemTitle: string;
     themeForestTitle: string;
-    themeIvoryTitle: string;
+    themeOrchidTitle: string;
     themeManualBody: string;
     themeManualTitle: string;
     themeNightAutomaticBody: string;
     themeNightTitle: string;
     themeSystemLightBody: string;
     themeSystemLightTitle: string;
-    themeVioletTitle: string;
+    themePlumTitle: string;
     transitionLift: string;
     transitionPage: string;
     transitionSlide: string;
@@ -533,17 +534,18 @@ const messages: Record<AppLanguage, MessageCatalog> = {
       themeBehaviorBody: "Choose a fixed appearance or let macOS switch StickIt into Night when the system enters Dark Mode.",
       themeBehaviorTitle: "Theme behavior",
       themeClassicTitle: "Classic",
+      themeChrysanthemumTitle: "Chrysanthemum yellow · Chrysanthemum",
       themeFollowSystemBody: "Use your chosen light theme during the day and Night when macOS changes to Dark Mode.",
       themeFollowSystemTitle: "Follow system appearance",
-      themeForestTitle: "Forest green",
-      themeIvoryTitle: "Ivory",
+      themeForestTitle: "Ink green · Bamboo",
+      themeOrchidTitle: "White green · Orchid",
       themeManualBody: "Apply one appearance at all times until you change it again.",
       themeManualTitle: "Manual theme",
       themeNightAutomaticBody: "Night is applied automatically while the system uses Dark Mode. Your selected light theme returns with Light Mode.",
       themeNightTitle: "Night",
       themeSystemLightBody: "Choose which light theme StickIt should use before the system changes to Dark Mode.",
       themeSystemLightTitle: "Preferred light theme",
-      themeVioletTitle: "Violet",
+      themePlumTitle: "Plum red · Plum blossom",
       transitionLift: "Lift",
       transitionPage: "Page turn",
       transitionSlide: "Slide",
@@ -860,17 +862,18 @@ const messages: Record<AppLanguage, MessageCatalog> = {
       themeBehaviorBody: "选择固定外观，或让 macOS 进入深色模式时自动将 StickIt 切换为黑夜色。",
       themeBehaviorTitle: "主题切换方式",
       themeClassicTitle: "经典色",
+      themeChrysanthemumTitle: "菊花黄 · 菊",
       themeFollowSystemBody: "白天使用你选定的亮色主题，macOS 切换为深色模式时使用黑夜色。",
       themeFollowSystemTitle: "随系统外观切换",
-      themeForestTitle: "墨绿色",
-      themeIvoryTitle: "乳白色",
+      themeForestTitle: "墨绿色 · 竹",
+      themeOrchidTitle: "白绿色 · 兰",
       themeManualBody: "始终使用选定主题，直到你再次手动更改。",
       themeManualTitle: "手动主题",
       themeNightAutomaticBody: "系统处于深色模式时会自动应用黑夜色；回到亮色模式后恢复你选定的亮色主题。",
       themeNightTitle: "黑夜色",
       themeSystemLightBody: "选择系统进入深色模式之前，StickIt 应使用的亮色主题。",
       themeSystemLightTitle: "首选亮色主题",
-      themeVioletTitle: "紫罗兰色",
+      themePlumTitle: "深红粉 · 梅",
       transitionLift: "抬升",
       transitionPage: "翻页",
       transitionSlide: "滑动",

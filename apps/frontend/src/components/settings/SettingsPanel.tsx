@@ -974,8 +974,9 @@ function getTransitionLabel(transitionStyle: "lift" | "page" | "slide", t: Retur
 const THEME_PREVIEWS: Record<ThemeId, { background: string; surface: string; accent: string; text: string }> = {
   classic: { background: "#f1e5d3", surface: "#fff9f0", accent: "#ff7a59", text: "#1e1915" },
   forest: { background: "#c8dacb", surface: "#f1f7f2", accent: "#2f7350", text: "#14251b" },
-  ivory: { background: "#f5edd9", surface: "#fffef9", accent: "#b78a4f", text: "#211e18" },
-  violet: { background: "#ddd5ef", surface: "#faf8ff", accent: "#7b5cfa", text: "#241d31" },
+  orchid: { background: "#dfeadd", surface: "#fbfdf9", accent: "#73906b", text: "#1f2d20" },
+  plum: { background: "#e9cbd2", surface: "#fff7f8", accent: "#a43f5c", text: "#421c26" },
+  chrysanthemum: { background: "#eadca8", surface: "#fffaf0", accent: "#ad7f1d", text: "#352c16" },
   night: { background: "#090c09", surface: "#222821", accent: "#77b892", text: "#f0eee8" },
 };
 
@@ -983,8 +984,9 @@ function getThemeLabel(theme: ThemeId, t: ReturnType<typeof useI18n>["t"]) {
   return {
     classic: t.settings.themeClassicTitle,
     forest: t.settings.themeForestTitle,
-    ivory: t.settings.themeIvoryTitle,
-    violet: t.settings.themeVioletTitle,
+    orchid: t.settings.themeOrchidTitle,
+    plum: t.settings.themePlumTitle,
+    chrysanthemum: t.settings.themeChrysanthemumTitle,
     night: t.settings.themeNightTitle,
   }[theme];
 }
@@ -1042,7 +1044,7 @@ function ThemeSettings({
   setSystemLightTheme: (theme: LightThemeId) => void;
 }) {
   const { t } = useI18n();
-  const lightThemes: LightThemeId[] = ["classic", "forest", "ivory", "violet"];
+  const lightThemes: LightThemeId[] = ["classic", "forest", "orchid", "plum", "chrysanthemum"];
   const manualThemes: ThemeId[] = [...lightThemes, "night"];
 
   return (

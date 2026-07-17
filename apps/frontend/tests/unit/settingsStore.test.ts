@@ -15,7 +15,7 @@ describe("settingsStore", () => {
       language: "zh-CN",
       timeZone: "Asia/Tokyo",
       timeFormat: "12h",
-      theme: "violet",
+      theme: "plum",
       themeMode: "system",
       systemLightTheme: "forest",
       lastActiveTab: "todos",
@@ -33,7 +33,7 @@ describe("settingsStore", () => {
     expect(state.language).toBe("zh-CN");
     expect(state.timeZone).toBe("Asia/Tokyo");
     expect(state.timeFormat).toBe("12h");
-    expect(state.theme).toBe("violet");
+    expect(state.theme).toBe("plum");
     expect(state.themeMode).toBe("system");
     expect(state.systemLightTheme).toBe("forest");
     expect(state.lastActiveTab).toBe("todos");
@@ -53,7 +53,7 @@ describe("settingsStore", () => {
     useSettingsStore.getState().setTimeFormat("12h");
     useSettingsStore.getState().setTheme("forest");
     useSettingsStore.getState().setThemeMode("system");
-    useSettingsStore.getState().setSystemLightTheme("ivory");
+    useSettingsStore.getState().setSystemLightTheme("chrysanthemum");
     useSettingsStore.getState().setPanelPosition({ x: 12, y: 16 });
     useSettingsStore.getState().setTransitionStyle("page");
     useSettingsStore.getState().setAnimationSpeed("rapid");
@@ -69,7 +69,7 @@ describe("settingsStore", () => {
     expect(state.timeFormat).toBe("12h");
     expect(state.theme).toBe("forest");
     expect(state.themeMode).toBe("system");
-    expect(state.systemLightTheme).toBe("ivory");
+    expect(state.systemLightTheme).toBe("chrysanthemum");
     expect(state.lastActiveTab).toBe("todos");
     expect(state.panelPosition).toEqual({ x: 12, y: 16 });
     expect(state.transitionStyle).toBe("page");
@@ -198,11 +198,11 @@ describe("settingsStore", () => {
   });
 
   it("remembers the latest light theme when night is selected manually", () => {
-    useSettingsStore.getState().setTheme("violet");
+    useSettingsStore.getState().setTheme("plum");
     useSettingsStore.getState().setTheme("night");
 
     const state = useSettingsStore.getState();
     expect(state.theme).toBe("night");
-    expect(state.systemLightTheme).toBe("violet");
+    expect(state.systemLightTheme).toBe("plum");
   });
 });

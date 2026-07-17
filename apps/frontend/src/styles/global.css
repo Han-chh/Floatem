@@ -208,8 +208,9 @@
   html[data-stickit-theme="classic"] .theme-motif--classic,
   html:not([data-stickit-theme]) .theme-motif--classic,
   html[data-stickit-theme="forest"] .theme-motif--forest,
-  html[data-stickit-theme="ivory"] .theme-motif--ivory,
-  html[data-stickit-theme="violet"] .theme-motif--violet,
+  html[data-stickit-theme="orchid"] .theme-motif--orchid,
+  html[data-stickit-theme="plum"] .theme-motif--plum,
+  html[data-stickit-theme="chrysanthemum"] .theme-motif--chrysanthemum,
   html[data-stickit-theme="night"] .theme-motif--night {
     display: block;
   }
