@@ -11,7 +11,6 @@ import type { AnimationSpeed, TabId, TransitionStyle } from "../../lib/models";
 import { getSurfaceMotionConfig } from "../../lib/transitionMotion";
 import { HelpDialog } from "./HelpDialog";
 import { TabBar } from "./TabBar";
-import { ThemeAtmosphere } from "../theme/ThemeAtmosphere";
 
 type PanelShellProps = {
   activeTab: TabId;
@@ -57,8 +56,6 @@ export function PanelShell({
         className="h-full"
       >
         <div className="stickit-content cq-panel">
-          <ThemeAtmosphere />
-
           <div className="stickit-page-viewport relative h-full min-h-0 overflow-hidden" style={surfaceMotion.sceneStyle}>
             <AnimatePresence initial={false} mode={surfaceMotion.presenceMode} custom={pageDirection}>
               {showSettings ? (

@@ -34,6 +34,7 @@ import {
   SparklesIcon,
   XIcon,
 } from "../icons/AppIcons";
+import { ThemeAtmosphere } from "../theme/ThemeAtmosphere";
 
 type SettingsPanelProps = {
   onClose: () => void;
@@ -266,15 +267,11 @@ function FirstLevelAction({
 
   return (
     <div
-      className={`rounded-[24px] border px-4 py-4 ${
-        danger
-          ? "border-[rgba(226,132,112,0.34)] bg-[rgba(255,248,245,0.92)]"
-          : "border-[rgba(213,198,180,0.88)] bg-white/78"
-      }`}
+      className={`first-level-action rounded-[24px] border px-4 py-4 ${danger ? "first-level-action--danger" : ""}`}
     >
       <div className="flex flex-col gap-3">
         <div className="min-w-0">
-          <p className={`text-[13px] font-semibold ${danger ? "text-[rgb(150,68,52)]" : "text-[var(--brown-strong)]"}`}>
+          <p className={`text-[13px] font-semibold ${danger ? "text-[var(--theme-action-text)]" : "text-[var(--brown-strong)]"}`}>
             {title}
           </p>
           <p className="mt-1 text-[12px] leading-6 text-[var(--muted)]">{description}</p>
@@ -291,7 +288,7 @@ function FirstLevelAction({
             data-tooltip={buttonLabel}
             className={
               danger
-                ? "inline-flex shrink-0 items-center justify-center rounded-[14px] border border-[rgba(201,93,68,0.32)] bg-[rgba(201,93,68,0.12)] px-3.5 py-2.5 text-[12px] font-semibold text-[rgb(150,68,52)]"
+                ? "paper-button paper-button-danger inline-flex shrink-0 items-center justify-center rounded-[14px] px-3.5 py-2.5 text-[12px] font-semibold"
                 : "paper-button paper-button-secondary inline-flex shrink-0 items-center justify-center rounded-[14px] px-3.5 py-2.5 text-[12px] font-semibold"
             }
             whileHover={{ y: -1.5, scale: 1.01 }}
@@ -649,10 +646,12 @@ export function SettingsPanel({ onClose }: SettingsPanelProps) {
       <div
         ref={scrollRegionRef}
         data-testid="settings-scroll-region"
-        className="settings-scroll-region paper-scroll h-full overflow-y-auto px-5 pb-5 pt-5"
+        className="settings-scroll-region paper-scroll relative h-full overflow-y-auto px-5 pb-5 pt-5"
         style={categoryMotion.sceneStyle}
       >
-        <AnimatePresence mode={categoryMotion.presenceMode} initial={false} custom={categoryDirection}>
+        <ThemeAtmosphere scrollRootRef={scrollRegionRef} />
+        <div data-theme-scroll-content className="relative z-10 min-h-full">
+          <AnimatePresence mode={categoryMotion.presenceMode} initial={false} custom={categoryDirection}>
           {activeCategory && currentCategory ? (
             <motion.div
               key={activeCategory}
@@ -856,7 +855,8 @@ export function SettingsPanel({ onClose }: SettingsPanelProps) {
               </div>
             </motion.div>
           )}
-        </AnimatePresence>
+          </AnimatePresence>
+        </div>
       </div>
 
       <AnimatePresence>

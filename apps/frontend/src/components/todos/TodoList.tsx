@@ -49,6 +49,7 @@ import {
   formatTimeInTimeZone,
 } from "../../lib/timeZoneDate";
 import { ParticleField } from "../feedback/ParticleField";
+import { ThemeAtmosphere } from "../theme/ThemeAtmosphere";
 import {
   CalendarDaysIcon,
   CheckSquareIcon,
@@ -391,6 +392,7 @@ export function TodoList() {
   const [isFilterDialogOpen, setIsFilterDialogOpen] = useState(false);
   const [groupFilterState, setGroupFilterState] = useState<TodoGroupFilterState>({ mode: "all" });
   const formRef = useRef<HTMLFormElement>(null);
+  const cardScrollRegionRef = useRef<HTMLDivElement>(null);
   const draftRef = useRef<HTMLTextAreaElement | null>(null);
   const editInputRef = useRef<HTMLInputElement | null>(null);
   const previousTimeZoneRef = useRef(timeZone);
@@ -1315,7 +1317,13 @@ export function TodoList() {
       >
         <ParticleField bursts={enableParticles ? bursts : []} />
 
-        <div data-testid="todo-card-scroll-region" className="paper-scroll h-full overflow-y-auto pr-1">
+        <div
+          ref={cardScrollRegionRef}
+          data-testid="todo-card-scroll-region"
+          className="paper-scroll relative h-full overflow-y-auto pr-1"
+        >
+          <ThemeAtmosphere scrollRootRef={cardScrollRegionRef} />
+          <div data-theme-scroll-content className="relative z-10 min-h-full">
           {visibleTodos.length === 0 ? (
             <motion.div
               initial={{ opacity: 0, y: 10 }}
@@ -1403,6 +1411,7 @@ export function TodoList() {
               ) : null}
             </div>
           )}
+          </div>
         </div>
       </motion.div>
 

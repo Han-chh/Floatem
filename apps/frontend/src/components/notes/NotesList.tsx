@@ -10,7 +10,7 @@ import {
 } from "@dnd-kit/core";
 import { SortableContext, verticalListSortingStrategy } from "@dnd-kit/sortable";
 import { AnimatePresence, motion } from "framer-motion";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { hideDragPreview, showDragPreview, showFloatingCard } from "../../hooks/usePlatform";
 import { useDragPointerTracking } from "../../hooks/useDragPointerTracking";
@@ -29,6 +29,7 @@ import { useNotesStore } from "../../store/notesStore";
 import { useSettingsStore } from "../../store/settingsStore";
 import { ParticleField } from "../feedback/ParticleField";
 import { GroupFilterIcon, PlusIcon } from "../icons/AppIcons";
+import { ThemeAtmosphere } from "../theme/ThemeAtmosphere";
 import { NoteCard, NoteCardPreview } from "./NoteCard";
 import { NOTE_FILTER_UNGROUPED_KEY, NoteGroupFilterDialog } from "./NoteGroupFilterDialog";
 
@@ -37,6 +38,7 @@ type NoteGroupFilterState =
   | { mode: "custom"; keys: string[] };
 
 export function NotesList() {
+  const cardScrollRegionRef = useRef<HTMLDivElement>(null);
   const { t, language } = useI18n();
   const cards = useNotesStore((state) => state.cards);
   const groups = useNotesStore((state) => state.groups);
@@ -294,8 +296,13 @@ export function NotesList() {
             }}
           >
             <SortableContext items={visibleCards.map((card) => card.id)} strategy={verticalListSortingStrategy}>
-              <div data-testid="note-card-scroll-region" className="paper-scroll h-full overflow-y-auto pr-1">
-                <div className="flex flex-col gap-3 pb-1 pt-2">
+              <div
+                ref={cardScrollRegionRef}
+                data-testid="note-card-scroll-region"
+                className="paper-scroll relative h-full overflow-y-auto pr-1"
+              >
+                <ThemeAtmosphere scrollRootRef={cardScrollRegionRef} />
+                <div data-theme-scroll-content className="relative z-10 flex flex-col gap-3 pb-1 pt-2">
                   <AnimatePresence>
                     {visibleCards.map((card) => (
                       <NoteCard
