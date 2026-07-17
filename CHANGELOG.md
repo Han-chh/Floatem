@@ -4,6 +4,7 @@ All notable repository changes are recorded here.
 
 ## Unreleased
 
+- Preserve rounded note and todo silhouettes in drag previews and detached floating windows by making their dedicated WebView root surfaces fully transparent.
 - Add a default-enabled launch-at-login preference to General Settings, backed by `SMAppService.mainApp` on macOS and the current-user Run key on Windows.
 - Register the macOS login item during first launch, request alert and sound notification authorization when the system has not decided yet, and open Login Items once when macOS reports that startup requires user approval.
 

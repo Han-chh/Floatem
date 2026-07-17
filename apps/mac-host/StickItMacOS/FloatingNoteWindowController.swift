@@ -196,6 +196,8 @@ final class FloatingNoteWindowController: NSObject, WKNavigationDelegate, WKScri
 
         webView.navigationDelegate = self
         webView.translatesAutoresizingMaskIntoConstraints = false
+        webView.wantsLayer = true
+        webView.layer?.backgroundColor = NSColor.clear.cgColor
         webView.underPageBackgroundColor = .clear
         webView.setValue(false, forKey: "drawsBackground")
 
