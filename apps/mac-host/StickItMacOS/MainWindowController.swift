@@ -25,6 +25,7 @@ final class MainWindowController: NSObject, NSWindowDelegate, StickItNativeBridg
     private let storage: AppStorage
     private let hotKeyManager: GlobalHotKeyManager
     private let notificationManager: NotificationManager
+    private let launchAtLoginManager: LaunchAtLoginManager
     private let panel: FloatingPanel
     private let webViewController: WebViewController
     private let dragPreviewWindowController = DragPreviewWindowController()
@@ -61,10 +62,16 @@ final class MainWindowController: NSObject, NSWindowDelegate, StickItNativeBridg
         panel.isVisible
     }
 
-    init(storage: AppStorage, hotKeyManager: GlobalHotKeyManager, notificationManager: NotificationManager) {
+    init(
+        storage: AppStorage,
+        hotKeyManager: GlobalHotKeyManager,
+        notificationManager: NotificationManager,
+        launchAtLoginManager: LaunchAtLoginManager
+    ) {
         self.storage = storage
         self.hotKeyManager = hotKeyManager
         self.notificationManager = notificationManager
+        self.launchAtLoginManager = launchAtLoginManager
 
         panel = FloatingPanel(
             contentRect: NSRect(origin: .zero, size: Self.defaultPanelSize),
@@ -247,6 +254,12 @@ final class MainWindowController: NSObject, NSWindowDelegate, StickItNativeBridg
         settingsDictionary["hotkey"] = GlobalHotKeyManager.isShortcutValid(candidateShortcut)
             ? GlobalHotKeyManager.normalize(shortcut: candidateShortcut)
             : fallbackShortcut
+
+        let launchAtLogin = settingsDictionary["launchAtLogin"] as? Bool
+            ?? (try? storage.currentLaunchAtLogin())
+            ?? true
+        try launchAtLoginManager.setEnabled(launchAtLogin)
+        settingsDictionary["launchAtLogin"] = launchAtLogin
 
         try storage.saveSettings(settingsDictionary)
         let todos = try storage.loadTodos()

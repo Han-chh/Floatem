@@ -13,19 +13,22 @@ internal sealed class HostBridgeController
     private readonly AppStorage storage;
     private readonly Native.Win32HotKeyManager hotKeys;
     private readonly NotificationScheduler notifications;
+    private readonly LaunchAtLoginManager launchAtLogin;
 
     public HostBridgeController(
         MainWindow window,
         WebView2 webView,
         AppStorage storage,
         Native.Win32HotKeyManager hotKeys,
-        NotificationScheduler notifications)
+        NotificationScheduler notifications,
+        LaunchAtLoginManager launchAtLogin)
     {
         this.window = window;
         this.webView = webView;
         this.storage = storage;
         this.hotKeys = hotKeys;
         this.notifications = notifications;
+        this.launchAtLogin = launchAtLogin;
         this.hotKeys.RegistrationStateChanged += (_, state) => _ = EmitHotkeyRegistrationStateAsync(state);
     }
 
@@ -111,7 +114,13 @@ internal sealed class HostBridgeController
                 notifications.SyncTodoReminders(storage.LoadTodos(), storage.LoadSettings());
                 return null;
             case "saveSettings":
-                storage.SaveSettings((parameters["settings"] as JsonObject)?.DeepClone().AsObject() ?? new JsonObject());
+                var settings = (parameters["settings"] as JsonObject)?.DeepClone().AsObject() ?? new JsonObject();
+                var launchAtLoginEnabled = settings["launchAtLogin"]?.GetValue<bool>()
+                    ?? storage.LoadSettings()["launchAtLogin"]?.GetValue<bool>()
+                    ?? true;
+                launchAtLogin.SetEnabled(launchAtLoginEnabled);
+                settings["launchAtLogin"] = launchAtLoginEnabled;
+                storage.SaveSettings(settings);
                 notifications.SyncTodoReminders(storage.LoadTodos(), storage.LoadSettings());
                 return null;
             case "showWindow":

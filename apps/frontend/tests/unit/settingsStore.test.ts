@@ -22,6 +22,7 @@ describe("settingsStore", () => {
       panelPosition: { x: 120, y: 320 },
       transitionStyle: "slide",
       animationSpeed: "slow",
+      launchAtLogin: false,
       enableParticles: false,
       enableReminderSound: false,
     });
@@ -40,6 +41,7 @@ describe("settingsStore", () => {
     expect(state.panelPosition).toEqual({ x: 120, y: 320 });
     expect(state.transitionStyle).toBe("slide");
     expect(state.animationSpeed).toBe("slow");
+    expect(state.launchAtLogin).toBe(false);
     expect(state.enableParticles).toBe(false);
     expect(state.enableReminderSound).toBe(false);
   });
@@ -57,6 +59,7 @@ describe("settingsStore", () => {
     useSettingsStore.getState().setPanelPosition({ x: 12, y: 16 });
     useSettingsStore.getState().setTransitionStyle("page");
     useSettingsStore.getState().setAnimationSpeed("rapid");
+    useSettingsStore.getState().setLaunchAtLogin(false);
     useSettingsStore.getState().setEnableParticles(true);
     useSettingsStore.getState().setEnableReminderSound(false);
 
@@ -74,6 +77,7 @@ describe("settingsStore", () => {
     expect(state.panelPosition).toEqual({ x: 12, y: 16 });
     expect(state.transitionStyle).toBe("page");
     expect(state.animationSpeed).toBe("rapid");
+    expect(state.launchAtLogin).toBe(false);
     expect(state.enableParticles).toBe(true);
     expect(state.enableReminderSound).toBe(false);
   });
@@ -146,6 +150,7 @@ describe("settingsStore", () => {
       panelPosition: { x: 88, y: 144 },
       transitionStyle: "slide",
       animationSpeed: "slow",
+      launchAtLogin: false,
       enableParticles: false,
       enableReminderSound: false,
     });
@@ -161,6 +166,7 @@ describe("settingsStore", () => {
     expect(state.defaultOpenSection).toBe("last");
     expect(state.transitionStyle).toBe("page");
     expect(state.animationSpeed).toBe("mediate");
+    expect(state.launchAtLogin).toBe(true);
     expect(state.enableParticles).toBe(true);
     expect(state.enableReminderSound).toBe(true);
     expect(state.panelPosition).toBeNull();

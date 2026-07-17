@@ -82,6 +82,7 @@ export function useAutoSave() {
         lastActiveTab: state.lastActiveTab,
         transitionStyle: state.transitionStyle,
         animationSpeed: state.animationSpeed,
+        launchAtLogin: state.launchAtLogin,
         enableParticles: state.enableParticles,
         enableReminderSound: state.enableReminderSound,
         isLoaded: state.isLoaded,
@@ -114,6 +115,7 @@ export function useAutoSave() {
             lastActiveTab: nextState.lastActiveTab,
             transitionStyle: nextState.transitionStyle,
             animationSpeed: nextState.animationSpeed,
+            launchAtLogin: nextState.launchAtLogin,
             enableParticles: nextState.enableParticles,
             enableReminderSound: nextState.enableReminderSound,
           });
@@ -161,6 +163,7 @@ export function useAutoSave() {
             lastActiveTab: settingsState.lastActiveTab,
             transitionStyle: settingsState.transitionStyle,
             animationSpeed: settingsState.animationSpeed,
+            launchAtLogin: settingsState.launchAtLogin,
             enableParticles: settingsState.enableParticles,
             enableReminderSound: settingsState.enableReminderSound,
           });

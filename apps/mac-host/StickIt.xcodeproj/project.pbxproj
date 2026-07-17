@@ -22,6 +22,7 @@
 		A00000000000000000000213 /* NotificationManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = A00000000000000000000117 /* NotificationManager.swift */; };
 		A00000000000000000000214 /* DragPreviewWindowController.swift in Sources */ = {isa = PBXBuildFile; fileRef = A00000000000000000000118 /* DragPreviewWindowController.swift */; };
 		A00000000000000000000215 /* FloatingNoteWindowController.swift in Sources */ = {isa = PBXBuildFile; fileRef = A00000000000000000000119 /* FloatingNoteWindowController.swift */; };
+		A00000000000000000000216 /* LaunchAtLoginManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = A00000000000000000000120 /* LaunchAtLoginManager.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -44,6 +45,7 @@
 		A00000000000000000000117 /* NotificationManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationManager.swift; sourceTree = "<group>"; };
 		A00000000000000000000118 /* DragPreviewWindowController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DragPreviewWindowController.swift; sourceTree = "<group>"; };
 		A00000000000000000000119 /* FloatingNoteWindowController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FloatingNoteWindowController.swift; sourceTree = "<group>"; };
+		A00000000000000000000120 /* LaunchAtLoginManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LaunchAtLoginManager.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -100,6 +102,7 @@
 				A00000000000000000000117 /* NotificationManager.swift */,
 				A00000000000000000000118 /* DragPreviewWindowController.swift */,
 				A00000000000000000000119 /* FloatingNoteWindowController.swift */,
+				A00000000000000000000120 /* LaunchAtLoginManager.swift */,
 				A00000000000000000000107 /* WebViewController.swift */,
 				A00000000000000000000116 /* main.swift */,
 				A00000000000000000000108 /* Info.plist */,
@@ -222,6 +225,7 @@
 				A00000000000000000000213 /* NotificationManager.swift in Sources */,
 				A00000000000000000000214 /* DragPreviewWindowController.swift in Sources */,
 				A00000000000000000000215 /* FloatingNoteWindowController.swift in Sources */,
+				A00000000000000000000216 /* LaunchAtLoginManager.swift in Sources */,
 				A00000000000000000000207 /* WebViewController.swift in Sources */,
 				A00000000000000000000212 /* main.swift in Sources */,
 			);

@@ -16,6 +16,7 @@ public partial class MainWindow : Window
     private readonly AppStorage storage = new();
     private readonly NotificationScheduler notifications;
     private readonly Win32HotKeyManager hotKeys;
+    private readonly LaunchAtLoginManager launchAtLogin = new();
     private readonly DispatcherTimer topmostReinforcementTimer;
     private readonly DispatcherTimer imeReinforcementTimer;
     private readonly DispatcherTimer deferredTaskbarRestoreTimer;
@@ -298,11 +299,14 @@ public partial class MainWindow : Window
         WebView.CoreWebView2.Settings.IsStatusBarEnabled = false;
         WebView.DefaultBackgroundColor = System.Drawing.Color.Transparent;
 
-        bridge = new HostBridgeController(this, WebView, storage, hotKeys, notifications);
+        var settings = storage.LoadSettings();
+        launchAtLogin.SetEnabled(settings["launchAtLogin"]?.GetValue<bool>() ?? true);
+
+        bridge = new HostBridgeController(this, WebView, storage, hotKeys, notifications, launchAtLogin);
         await bridge.InstallAsync();
         try
         {
-            hotKeys.Register(storage.LoadSettings()["hotkey"]?.GetValue<string>() ?? "Shift+Space");
+            hotKeys.Register(settings["hotkey"]?.GetValue<string>() ?? "Shift+Space");
         }
         catch (InvalidOperationException)
         {

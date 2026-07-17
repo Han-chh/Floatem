@@ -136,6 +136,8 @@ type MessageCatalog = {
     languageSectionSubtitle: string;
     languageSimplifiedChineseBody: string;
     languageTitle: string;
+    launchAtLoginBody: string;
+    launchAtLoginTitle: string;
     lastSavedPosition: string;
     lastStoredSection: (section: string) => string;
     launchAndNavigationSubtitle: string;
@@ -185,6 +187,8 @@ type MessageCatalog = {
     shortcutUnchanged: (shortcut: string) => string;
     shortcutUnsupported: string;
     shortcutNeedsModifier: string;
+    startupSubtitle: string;
+    startupTitle: string;
     switchSpeed: string;
     switchSpeedFast: string;
     switchSpeedMediate: string;
@@ -431,7 +435,7 @@ const messages: Record<AppLanguage, MessageCatalog> = {
       backToSettings: "All settings",
       categoryAboutDescription: "App overview and local-only data details.",
       categoryAboutTitle: "About StickIt",
-      categoryGeneralDescription: "Language and timezone preferences for the app.",
+      categoryGeneralDescription: "Startup, language, and timezone preferences for the app.",
       categoryGeneralTitle: "General",
       categoryMotionDescription: "Tab transitions, switching speed, and small completion effects.",
       categoryMotionTitle: "Motion and feedback",
@@ -466,6 +470,8 @@ const messages: Record<AppLanguage, MessageCatalog> = {
       languageSectionSubtitle: "Switch the app interface language instantly.",
       languageSimplifiedChineseBody: "Switch the interface to Simplified Chinese.",
       languageTitle: "Language",
+      launchAtLoginBody: "Automatically start StickIt after you sign in to this computer. You can also manage it in System Settings > General > Login Items.",
+      launchAtLoginTitle: "Open StickIt at login",
       lastSavedPosition: "Last saved position",
       lastStoredSection: (section) => `Last stored section: ${section}.`,
       launchAndNavigationSubtitle: "Control how the panel opens and which section should be ready first.",
@@ -503,7 +509,7 @@ const messages: Record<AppLanguage, MessageCatalog> = {
       quitApplicationButton: "Quit StickIt",
       quitApplicationFailed: "StickIt could not quit from the current environment.",
       restoreDefaults: "Restore defaults",
-      restoreDefaultsBody: "Reset theme, language, timezone, time format, shortcut, default section, motion, reminder sound, and saved panel position.",
+      restoreDefaultsBody: "Reset startup, theme, language, timezone, time format, shortcut, default section, motion, reminder sound, and saved panel position.",
       restoreDefaultsFailed: (shortcut) => `Defaults were not restored. Keeping ${shortcut}.`,
       restoreDefaultsSuccess: "Default settings restored.",
       shortcutApply: "Apply shortcut",
@@ -515,6 +521,8 @@ const messages: Record<AppLanguage, MessageCatalog> = {
       shortcutUnchanged: (shortcut) => `Shortcut unchanged: ${shortcut}.`,
       shortcutUnsupported: "This key combination is not supported for the global shortcut.",
       shortcutNeedsModifier: "Global shortcuts need at least one modifier key.",
+      startupSubtitle: "Choose whether StickIt should be ready as soon as you sign in.",
+      startupTitle: "Startup",
       switchSpeed: "Switch speed",
       switchSpeedFast: "Fast",
       switchSpeedMediate: "Mediate",
@@ -759,7 +767,7 @@ const messages: Record<AppLanguage, MessageCatalog> = {
       backToSettings: "全部设置",
       categoryAboutDescription: "应用概览和仅本地存储的数据说明。",
       categoryAboutTitle: "关于 StickIt",
-      categoryGeneralDescription: "应用语言和时区偏好设置。",
+      categoryGeneralDescription: "开机启动、应用语言和时区偏好设置。",
       categoryGeneralTitle: "通用",
       categoryMotionDescription: "标签切换、切换速度和完成反馈效果。",
       categoryMotionTitle: "动效与反馈",
@@ -794,6 +802,8 @@ const messages: Record<AppLanguage, MessageCatalog> = {
       languageSectionSubtitle: "立即切换应用界面语言。",
       languageSimplifiedChineseBody: "将界面切换为简体中文。",
       languageTitle: "语言",
+      launchAtLoginBody: "登录这台电脑后自动启动 StickIt。你也可以在“系统设置 > 通用 > 登录项”中管理它。",
+      launchAtLoginTitle: "登录时打开 StickIt",
       lastSavedPosition: "上次保存的位置",
       lastStoredSection: (section) => `上次停留分区：${section}。`,
       launchAndNavigationSubtitle: "控制面板如何打开，以及优先显示哪个分区。",
@@ -831,7 +841,7 @@ const messages: Record<AppLanguage, MessageCatalog> = {
       quitApplicationButton: "完全退出 StickIt",
       quitApplicationFailed: "当前环境下无法退出 StickIt。",
       restoreDefaults: "恢复默认设置",
-      restoreDefaultsBody: "重置主题、语言、时区、时间格式、快捷键、默认分区、动效、提醒声音以及保存的窗口位置。",
+      restoreDefaultsBody: "重置开机启动、主题、语言、时区、时间格式、快捷键、默认分区、动效、提醒声音以及保存的窗口位置。",
       restoreDefaultsFailed: (shortcut) => `默认设置未恢复，当前仍保留 ${shortcut}。`,
       restoreDefaultsSuccess: "默认设置已恢复。",
       shortcutApply: "应用快捷键",
@@ -843,6 +853,8 @@ const messages: Record<AppLanguage, MessageCatalog> = {
       shortcutUnchanged: (shortcut) => `快捷键未变化：${shortcut}。`,
       shortcutUnsupported: "这个快捷键组合当前不受支持。",
       shortcutNeedsModifier: "全局快捷键至少需要一个修饰键。",
+      startupSubtitle: "选择是否让 StickIt 在登录系统后立即就绪。",
+      startupTitle: "开机启动",
       switchSpeed: "切换速度",
       switchSpeedFast: "快速",
       switchSpeedMediate: "中速",

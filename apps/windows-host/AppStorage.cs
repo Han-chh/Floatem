@@ -131,6 +131,7 @@ internal sealed class AppStorage
             ["defaultOpenSection"] = "last",
             ["transitionStyle"] = "page",
             ["animationSpeed"] = "mediate",
+            ["launchAtLogin"] = true,
             ["enableParticles"] = true,
             ["enableReminderSound"] = true,
         };

@@ -40,6 +40,7 @@ type SettingsState = AppSettings & {
   setPanelPosition: (position: PanelPosition | null) => void;
   setTransitionStyle: (transitionStyle: TransitionStyle) => void;
   setAnimationSpeed: (animationSpeed: AnimationSpeed) => void;
+  setLaunchAtLogin: (launchAtLogin: boolean) => void;
   setEnableParticles: (enableParticles: boolean) => void;
   setEnableReminderSound: (enableReminderSound: boolean) => void;
   reset: () => void;
@@ -130,6 +131,9 @@ export const useSettingsStore = create<SettingsState>()(
     },
     setAnimationSpeed: (animationSpeed) => {
       set({ animationSpeed });
+    },
+    setLaunchAtLogin: (launchAtLogin) => {
+      set({ launchAtLogin });
     },
     setEnableParticles: (enableParticles) => {
       set({ enableParticles });

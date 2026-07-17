@@ -317,6 +317,7 @@ export function SettingsPanel({ onClose }: SettingsPanelProps) {
   const lastActiveTab = useSettingsStore((state) => state.lastActiveTab);
   const transitionStyle = useSettingsStore((state) => state.transitionStyle);
   const animationSpeed = useSettingsStore((state) => state.animationSpeed);
+  const launchAtLogin = useSettingsStore((state) => state.launchAtLogin);
   const enableParticles = useSettingsStore((state) => state.enableParticles);
   const enableReminderSound = useSettingsStore((state) => state.enableReminderSound);
   const setHotkey = useSettingsStore((state) => state.setHotkey);
@@ -329,6 +330,7 @@ export function SettingsPanel({ onClose }: SettingsPanelProps) {
   const setDefaultOpenSection = useSettingsStore((state) => state.setDefaultOpenSection);
   const setTransitionStyle = useSettingsStore((state) => state.setTransitionStyle);
   const setAnimationSpeed = useSettingsStore((state) => state.setAnimationSpeed);
+  const setLaunchAtLogin = useSettingsStore((state) => state.setLaunchAtLogin);
   const setEnableParticles = useSettingsStore((state) => state.setEnableParticles);
   const setEnableReminderSound = useSettingsStore((state) => state.setEnableReminderSound);
   const restoreDefaults = useSettingsStore((state) => state.restoreDefaults);
@@ -719,6 +721,8 @@ export function SettingsPanel({ onClose }: SettingsPanelProps) {
                     setTimeZone={setTimeZone}
                     timeFormat={timeFormat}
                     setTimeFormat={setTimeFormat}
+                    launchAtLogin={launchAtLogin}
+                    setLaunchAtLogin={setLaunchAtLogin}
                   />
                 ) : null}
 
@@ -1101,6 +1105,8 @@ function GeneralSettings({
   setTimeZone,
   timeFormat,
   setTimeFormat,
+  launchAtLogin,
+  setLaunchAtLogin,
 }: {
   language: "en" | "zh-CN";
   setLanguage: (language: "en" | "zh-CN") => void;
@@ -1108,11 +1114,28 @@ function GeneralSettings({
   setTimeZone: (timeZone: string) => void;
   timeFormat: TimeFormat;
   setTimeFormat: (timeFormat: TimeFormat) => void;
+  launchAtLogin: boolean;
+  setLaunchAtLogin: (launchAtLogin: boolean) => void;
 }) {
   const { t } = useI18n();
 
   return (
     <>
+      <SettingSection title={t.settings.startupTitle} description={t.settings.startupSubtitle}>
+        <SettingRow
+          icon={<SlidersHorizontalIcon size={15} />}
+          title={t.settings.launchAtLoginTitle}
+          description={t.settings.launchAtLoginBody}
+          action={
+            <ToggleButton
+              enabled={launchAtLogin}
+              tooltip={t.settings.launchAtLoginTitle}
+              onClick={() => setLaunchAtLogin(!launchAtLogin)}
+            />
+          }
+        />
+      </SettingSection>
+
       <SettingSection title={t.settings.languageTitle} description={t.settings.languageSectionSubtitle}>
         <div className="grid gap-2">
           <OptionButton selected={language === "en"} icon={<EnglishLanguageIcon size={16} />} onClick={() => setLanguage("en")}>

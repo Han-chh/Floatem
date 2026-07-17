@@ -5,12 +5,14 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private let storage = AppStorage()
     private let hotKeyManager = GlobalHotKeyManager()
     private let notificationManager = NotificationManager()
+    private let launchAtLoginManager = LaunchAtLoginManager()
     private var currentLanguage: StickItLanguage = .english
 
     private lazy var mainWindowController = MainWindowController(
         storage: storage,
         hotKeyManager: hotKeyManager,
-        notificationManager: notificationManager
+        notificationManager: notificationManager,
+        launchAtLoginManager: launchAtLoginManager
     )
 
     private weak var statusToggleItem: NSMenuItem?
@@ -56,6 +58,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         currentLanguage = (try? storage.currentLanguage()) ?? .english
         notificationManager.configure()
         notificationManager.logCurrentAuthorizationStatus()
+        launchAtLoginManager.configureOnLaunch(enabled: (try? storage.currentLaunchAtLogin()) ?? true)
 
         configureMainMenu()
         configureStatusItem()

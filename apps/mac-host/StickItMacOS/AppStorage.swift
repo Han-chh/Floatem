@@ -54,6 +54,11 @@ final class AppStorage {
         return StickItLanguage(storedValue: settings["language"])
     }
 
+    func currentLaunchAtLogin() throws -> Bool {
+        let settings = try loadSettings()
+        return settings["launchAtLogin"] as? Bool ?? true
+    }
+
     func updateHotkey(_ shortcut: String) throws {
         var settings = try loadSettings()
         settings["hotkey"] = shortcut
@@ -153,6 +158,7 @@ final class AppStorage {
             "defaultOpenSection": "last",
             "transitionStyle": "page",
             "animationSpeed": "mediate",
+            "launchAtLogin": true,
             "enableParticles": true,
             "enableReminderSound": true,
         ]

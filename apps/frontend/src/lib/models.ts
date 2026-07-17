@@ -80,6 +80,7 @@ export type AppSettings = {
   defaultOpenSection: DefaultOpenSection;
   transitionStyle: TransitionStyle;
   animationSpeed: AnimationSpeed;
+  launchAtLogin: boolean;
   enableParticles: boolean;
   enableReminderSound: boolean;
 };
@@ -184,6 +185,7 @@ export function createDefaultSettings(): AppSettings {
     defaultOpenSection: "last",
     transitionStyle: "page",
     animationSpeed: "mediate",
+    launchAtLogin: true,
     enableParticles: true,
     enableReminderSound: true,
   };
@@ -292,6 +294,7 @@ export function normalizeAppSettings(settings: Partial<AppSettings> = {}): AppSe
     defaultOpenSection: normalizeDefaultOpenSection(settings.defaultOpenSection),
     transitionStyle: normalizeTransitionStyle(settings.transitionStyle),
     animationSpeed: normalizeAnimationSpeed(settings.animationSpeed),
+    launchAtLogin: typeof settings.launchAtLogin === "boolean" ? settings.launchAtLogin : defaultSettings.launchAtLogin,
     enableParticles: typeof settings.enableParticles === "boolean" ? settings.enableParticles : defaultSettings.enableParticles,
     enableReminderSound:
       typeof settings.enableReminderSound === "boolean"

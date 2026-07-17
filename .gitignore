@@ -18,6 +18,7 @@ dist-ssr
 coverage
 apps/windows-host/bin/
 apps/windows-host/obj/
+apps/windows-host/.mono/
 playwright-report/
 test-results/
 *.tsbuildinfo
