@@ -42,6 +42,10 @@
   --theme-ambient-one: rgba(255, 122, 89, 0.12);
   --theme-ambient-two: rgba(47, 107, 255, 0.1);
   --theme-selection-ring: rgba(255, 122, 89, 0.18);
+  --theme-art-fill: rgba(167, 126, 82, 0.13);
+  --theme-art-line: rgba(126, 87, 54, 0.24);
+  --theme-art-detail: rgba(93, 64, 43, 0.18);
+  --theme-art-glow: rgba(255, 244, 220, 0.28);
 
   --panel-radius: 32px;
   --card-radius: 26px;
@@ -137,6 +141,10 @@
   --theme-ambient-one: rgba(32, 115, 72, 0.16);
   --theme-ambient-two: rgba(78, 114, 86, 0.12);
   --theme-selection-ring: rgba(47, 115, 80, 0.22);
+  --theme-art-fill: rgba(43, 105, 68, 0.13);
+  --theme-art-line: rgba(31, 86, 53, 0.3);
+  --theme-art-detail: rgba(19, 71, 41, 0.22);
+  --theme-art-glow: rgba(224, 246, 228, 0.25);
   --shadow-soft: 0 24px 56px rgba(34, 62, 43, 0.15);
   --shadow-card: 0 16px 34px rgba(34, 62, 43, 0.09);
   --shadow-button: 0 12px 24px rgba(34, 62, 43, 0.08);
@@ -171,6 +179,10 @@
   --theme-ambient-one: rgba(206, 162, 91, 0.12);
   --theme-ambient-two: rgba(173, 143, 91, 0.09);
   --theme-selection-ring: rgba(183, 138, 79, 0.2);
+  --theme-art-fill: rgba(255, 255, 255, 0.42);
+  --theme-art-line: rgba(180, 155, 115, 0.22);
+  --theme-art-detail: rgba(148, 122, 82, 0.17);
+  --theme-art-glow: rgba(255, 255, 255, 0.68);
 }
 
 :root[data-stickit-theme="violet"] {
@@ -202,6 +214,10 @@
   --theme-ambient-one: rgba(123, 92, 250, 0.18);
   --theme-ambient-two: rgba(92, 75, 161, 0.13);
   --theme-selection-ring: rgba(123, 92, 250, 0.2);
+  --theme-art-fill: rgba(113, 76, 174, 0.15);
+  --theme-art-line: rgba(91, 57, 146, 0.27);
+  --theme-art-detail: rgba(73, 43, 126, 0.2);
+  --theme-art-glow: rgba(238, 223, 255, 0.38);
   --shadow-soft: 0 24px 56px rgba(58, 43, 87, 0.15);
   --shadow-card: 0 16px 34px rgba(58, 43, 87, 0.09);
   --shadow-button: 0 12px 24px rgba(58, 43, 87, 0.08);
@@ -236,6 +252,10 @@
   --theme-ambient-one: rgba(50, 128, 86, 0.14);
   --theme-ambient-two: rgba(94, 77, 164, 0.14);
   --theme-selection-ring: rgba(119, 184, 146, 0.22);
+  --theme-art-fill: rgba(119, 139, 176, 0.1);
+  --theme-art-line: rgba(180, 193, 220, 0.2);
+  --theme-art-detail: rgba(217, 224, 238, 0.5);
+  --theme-art-glow: rgba(210, 220, 239, 0.15);
   --shadow-soft: 0 24px 60px rgba(0, 0, 0, 0.42);
   --shadow-card: 0 16px 36px rgba(0, 0, 0, 0.28);
   --shadow-button: 0 12px 26px rgba(0, 0, 0, 0.24);

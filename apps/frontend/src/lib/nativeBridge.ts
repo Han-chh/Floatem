@@ -199,6 +199,9 @@ const browserBridge: StickItNativeBridge = {
   async setTextCompositionActive() {
     // Browser preview does not need native IME window-level coordination.
   },
+  setWindowTheme() {
+    // Browser preview paints the complete viewport with CSS theme tokens.
+  },
   async writeClipboardText(text) {
     if (typeof navigator === "undefined" || !navigator.clipboard?.writeText) {
       return;

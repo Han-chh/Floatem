@@ -122,6 +122,11 @@ final class WebViewController: NSViewController, WKNavigationDelegate {
         view = containerView
     }
 
+    func setHostBackgroundColor(_ color: NSColor) {
+        containerView.layer?.backgroundColor = color.cgColor
+        loadingOverlay.layer?.backgroundColor = color.cgColor
+    }
+
     func emitPanelPosition(_ point: CGPoint) {
         let payload: [String: Any] = [
             "x": Int(point.x.rounded()),
@@ -364,6 +369,14 @@ final class WebViewController: NSViewController, WKNavigationDelegate {
             }
 
             bridgeDelegate?.setTextCompositionActiveFromBridge(active)
+            return
+        case "setWindowTheme":
+            guard let theme = params["theme"] as? String else {
+                logger.error("Bridge method 'setWindowTheme' was missing a theme name.")
+                return
+            }
+
+            bridgeDelegate?.setWindowThemeFromBridge(theme)
             return
         case "reportFrontendError":
             let source = params["source"] as? String ?? "unknown"
@@ -979,6 +992,9 @@ final class WebViewController: NSViewController, WKNavigationDelegate {
         },
         setTextCompositionActive(active) {
           sendWithoutReply("setTextCompositionActive", { active: Boolean(active) });
+        },
+        setWindowTheme(theme) {
+          sendWithoutReply("setWindowTheme", { theme: String(theme ?? "classic") });
         },
         reportFrontendError(message, source = "javascript") {
           sendWithoutReply("reportFrontendError", { message, source });

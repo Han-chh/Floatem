@@ -86,7 +86,7 @@ final class MainWindowController: NSObject, NSWindowDelegate, StickItNativeBridg
 
         panel.delegate = self
         panel.isReleasedWhenClosed = false
-        panel.backgroundColor = NSColor(calibratedRed: 247 / 255, green: 242 / 255, blue: 232 / 255, alpha: 1)
+        panel.backgroundColor = Self.windowColor(for: "classic")
         panel.isOpaque = true
         panel.hasShadow = true
         panel.level = Self.overlayPanelLevel
@@ -110,6 +110,28 @@ final class MainWindowController: NSObject, NSWindowDelegate, StickItNativeBridg
         }
         hotKeyManager.onRegistrationStateChanged = { [weak self] state in
             self?.webViewController.emitHotkeyRegistrationState(self?.hotKeyRegistrationStatePayload(from: state) ?? [:])
+        }
+    }
+
+    func setWindowThemeFromBridge(_ theme: String) {
+        let color = Self.windowColor(for: theme)
+        panel.backgroundColor = color
+        panel.appearance = NSAppearance(named: theme == "night" ? .darkAqua : .aqua)
+        webViewController.setHostBackgroundColor(color)
+    }
+
+    private static func windowColor(for theme: String) -> NSColor {
+        switch theme {
+        case "forest":
+            return NSColor(srgbRed: 0.863, green: 0.910, blue: 0.875, alpha: 1)
+        case "ivory":
+            return NSColor(srgbRed: 1.000, green: 0.992, blue: 0.961, alpha: 1)
+        case "violet":
+            return NSColor(srgbRed: 0.925, green: 0.910, blue: 0.973, alpha: 1)
+        case "night":
+            return NSColor(srgbRed: 0.067, green: 0.082, blue: 0.063, alpha: 1)
+        default:
+            return NSColor(srgbRed: 0.969, green: 0.949, blue: 0.910, alpha: 1)
         }
     }
 

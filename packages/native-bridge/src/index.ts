@@ -184,6 +184,7 @@ export type HostBridge<TLoadAllResult, TNotes, TTodos, TSettings> = {
   unregisterHotkey: () => Promise<void>;
   setEditableInputActive: (active: boolean) => void | Promise<void>;
   setTextCompositionActive: (active: boolean) => void | Promise<void>;
+  setWindowTheme?: (theme: string) => void | Promise<void>;
   openDevTools: () => Promise<void>;
   quitApplication: () => Promise<void>;
   reportFrontendReady: () => void | Promise<void>;

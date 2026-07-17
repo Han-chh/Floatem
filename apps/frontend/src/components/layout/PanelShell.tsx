@@ -11,6 +11,7 @@ import type { AnimationSpeed, TabId, TransitionStyle } from "../../lib/models";
 import { getSurfaceMotionConfig } from "../../lib/transitionMotion";
 import { HelpDialog } from "./HelpDialog";
 import { TabBar } from "./TabBar";
+import { ThemeAtmosphere } from "../theme/ThemeAtmosphere";
 
 type PanelShellProps = {
   activeTab: TabId;
@@ -56,13 +57,7 @@ export function PanelShell({
         className="h-full"
       >
         <div className="stickit-content cq-panel">
-          <div className="pointer-events-none absolute inset-[18px] overflow-hidden rounded-[24px]">
-            <div className="absolute -left-14 top-10 h-56 w-56 rounded-full bg-[rgba(255,122,89,0.18)] blur-3xl" />
-            <div className="absolute left-10 top-1/2 h-36 w-36 rounded-full bg-[rgba(244,185,66,0.12)] blur-3xl" />
-            <div className="absolute right-[-4.5rem] top-24 h-56 w-56 rounded-full bg-[rgba(47,107,255,0.14)] blur-3xl" />
-            <div className="absolute right-12 top-1/2 h-40 w-40 rounded-full bg-[rgba(123,92,250,0.12)] blur-3xl" />
-            <div className="absolute bottom-[-3.5rem] left-1/3 h-64 w-64 rounded-full bg-[rgba(31,168,122,0.11)] blur-3xl" />
-          </div>
+          <ThemeAtmosphere />
 
           <div className="stickit-page-viewport relative h-full min-h-0 overflow-hidden" style={surfaceMotion.sceneStyle}>
             <AnimatePresence initial={false} mode={surfaceMotion.presenceMode} custom={pageDirection}>
@@ -88,12 +83,6 @@ export function PanelShell({
                     }}
                     className="paper-panel stickit-fill-panel relative h-full min-h-0 flex-1 overflow-hidden rounded-[32px] p-3"
                   >
-                    <div className="pointer-events-none absolute inset-0 overflow-hidden rounded-[32px]">
-                      <div className="absolute inset-x-10 top-0 h-px bg-[linear-gradient(90deg,transparent,rgba(255,255,255,0.95),transparent)]" />
-                      <div className="absolute -left-8 top-16 h-36 w-36 rounded-full bg-[rgba(47,107,255,0.12)] blur-2xl" />
-                      <div className="absolute bottom-10 right-6 h-28 w-28 rounded-full bg-[rgba(255,122,89,0.12)] blur-2xl" />
-                    </div>
-
                     <div className="theme-inset-surface relative h-full overflow-visible rounded-[26px]">
                       {settingsPanel}
                     </div>
@@ -229,12 +218,6 @@ export function PanelShell({
                     }}
                     className="paper-panel stickit-fill-panel relative min-h-0 flex-1 overflow-hidden rounded-[32px] p-3"
                   >
-                    <div className="pointer-events-none absolute inset-0 overflow-hidden rounded-[32px]">
-                      <div className="absolute inset-x-10 top-0 h-px bg-[linear-gradient(90deg,transparent,rgba(255,255,255,0.95),transparent)]" />
-                      <div className="absolute -right-8 top-14 h-32 w-32 rounded-full bg-[rgba(255,122,89,0.14)] blur-2xl" />
-                      <div className="absolute bottom-10 left-8 h-24 w-24 rounded-full bg-[rgba(47,107,255,0.1)] blur-2xl" />
-                    </div>
-
                     <div
                       data-testid="panel-scroll-region"
                       className="theme-inset-surface paper-scroll relative h-full overflow-y-auto rounded-[26px] p-1.5"

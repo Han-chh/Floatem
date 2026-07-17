@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import type { ThemeId } from "../lib/models";
 import { useSettingsStore } from "../store/settingsStore";
+import { getStickItBridge } from "../lib/nativeBridge";
 
 const SYSTEM_DARK_QUERY = "(prefers-color-scheme: dark)";
 
@@ -38,6 +39,7 @@ export function useTheme() {
 
     document.documentElement.dataset.stickitTheme = resolvedTheme;
     document.documentElement.style.colorScheme = resolvedTheme === "night" ? "dark" : "light";
+    void getStickItBridge().setWindowTheme?.(resolvedTheme);
   }, [resolvedTheme]);
 
   return { resolvedTheme, systemDark };

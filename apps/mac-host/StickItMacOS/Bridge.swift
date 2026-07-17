@@ -61,6 +61,7 @@ protocol StickItNativeBridgeHandling: AnyObject {
     func registerHotKey(shortcut: String) throws
     func setEditableInputActiveFromBridge(_ active: Bool)
     func setTextCompositionActiveFromBridge(_ active: Bool)
+    func setWindowThemeFromBridge(_ theme: String)
     func writeClipboardText(_ text: String)
     func hideMainWindowFromBridge()
     func toggleMainWindowFromBridge()
