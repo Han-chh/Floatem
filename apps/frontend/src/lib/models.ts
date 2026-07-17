@@ -6,6 +6,9 @@ export type DefaultOpenSection = "last" | TabId;
 export type TransitionStyle = "page" | "slide" | "lift";
 export type AnimationSpeed = "rapid" | "mediate" | "slow";
 export type TimeFormat = "24h" | "12h";
+export type ThemeId = "classic" | "forest" | "ivory" | "violet" | "night";
+export type LightThemeId = Exclude<ThemeId, "night">;
+export type ThemeMode = "manual" | "system";
 
 export type PanelPosition = {
   x: number;
@@ -68,6 +71,9 @@ export type AppSettings = {
   language: AppLanguage;
   timeZone: string;
   timeFormat: TimeFormat;
+  theme: ThemeId;
+  themeMode: ThemeMode;
+  systemLightTheme: LightThemeId;
   panelPosition: PanelPosition | null;
   activeTab: TabId;
   lastActiveTab: TabId;
@@ -169,6 +175,9 @@ export function createDefaultSettings(): AppSettings {
     language: "en",
     timeZone: getSystemTimeZone(),
     timeFormat: "24h",
+    theme: "classic",
+    themeMode: "manual",
+    systemLightTheme: "classic",
     panelPosition: null,
     activeTab: "notes",
     lastActiveTab: "notes",
@@ -234,6 +243,19 @@ export function normalizeTimeFormat(value: unknown): TimeFormat {
   return value === "12h" ? "12h" : "24h";
 }
 
+export function normalizeTheme(value: unknown): ThemeId {
+  return value === "forest" || value === "ivory" || value === "violet" || value === "night" ? value : "classic";
+}
+
+export function normalizeLightTheme(value: unknown): LightThemeId {
+  const theme = normalizeTheme(value);
+  return theme === "night" ? "classic" : theme;
+}
+
+export function normalizeThemeMode(value: unknown): ThemeMode {
+  return value === "system" ? "system" : "manual";
+}
+
 export function normalizePanelPosition(value: unknown): PanelPosition | null {
   if (!value || typeof value !== "object") {
     return null;
@@ -259,6 +281,9 @@ export function normalizeAppSettings(settings: Partial<AppSettings> = {}): AppSe
     language: normalizeLanguage(settings.language),
     timeZone: normalizeTimeZone(settings.timeZone, defaultSettings.timeZone),
     timeFormat: normalizeTimeFormat(settings.timeFormat),
+    theme: normalizeTheme(settings.theme),
+    themeMode: normalizeThemeMode(settings.themeMode),
+    systemLightTheme: normalizeLightTheme(settings.systemLightTheme ?? settings.theme),
     panelPosition: normalizePanelPosition(settings.panelPosition),
     activeTab,
     lastActiveTab: normalizeTabId(settings.lastActiveTab ?? activeTab),

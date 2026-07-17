@@ -15,6 +15,9 @@ describe("settingsStore", () => {
       language: "zh-CN",
       timeZone: "Asia/Tokyo",
       timeFormat: "12h",
+      theme: "violet",
+      themeMode: "system",
+      systemLightTheme: "forest",
       lastActiveTab: "todos",
       panelPosition: { x: 120, y: 320 },
       transitionStyle: "slide",
@@ -30,6 +33,9 @@ describe("settingsStore", () => {
     expect(state.language).toBe("zh-CN");
     expect(state.timeZone).toBe("Asia/Tokyo");
     expect(state.timeFormat).toBe("12h");
+    expect(state.theme).toBe("violet");
+    expect(state.themeMode).toBe("system");
+    expect(state.systemLightTheme).toBe("forest");
     expect(state.lastActiveTab).toBe("todos");
     expect(state.panelPosition).toEqual({ x: 120, y: 320 });
     expect(state.transitionStyle).toBe("slide");
@@ -45,6 +51,9 @@ describe("settingsStore", () => {
     useSettingsStore.getState().setLanguage("zh-CN");
     useSettingsStore.getState().setTimeZone("Europe/London");
     useSettingsStore.getState().setTimeFormat("12h");
+    useSettingsStore.getState().setTheme("forest");
+    useSettingsStore.getState().setThemeMode("system");
+    useSettingsStore.getState().setSystemLightTheme("ivory");
     useSettingsStore.getState().setPanelPosition({ x: 12, y: 16 });
     useSettingsStore.getState().setTransitionStyle("page");
     useSettingsStore.getState().setAnimationSpeed("rapid");
@@ -58,6 +67,9 @@ describe("settingsStore", () => {
     expect(state.language).toBe("zh-CN");
     expect(state.timeZone).toBe("Europe/London");
     expect(state.timeFormat).toBe("12h");
+    expect(state.theme).toBe("forest");
+    expect(state.themeMode).toBe("system");
+    expect(state.systemLightTheme).toBe("ivory");
     expect(state.lastActiveTab).toBe("todos");
     expect(state.panelPosition).toEqual({ x: 12, y: 16 });
     expect(state.transitionStyle).toBe("page");
@@ -170,5 +182,27 @@ describe("settingsStore", () => {
     });
 
     expect(useSettingsStore.getState().timeFormat).toBe("24h");
+  });
+
+  it("normalizes unknown themes and keeps a valid system light theme", () => {
+    useSettingsStore.getState().hydrateSettings({
+      theme: "midnight-blue" as never,
+      themeMode: "automatic" as never,
+      systemLightTheme: "night" as never,
+    });
+
+    const state = useSettingsStore.getState();
+    expect(state.theme).toBe("classic");
+    expect(state.themeMode).toBe("manual");
+    expect(state.systemLightTheme).toBe("classic");
+  });
+
+  it("remembers the latest light theme when night is selected manually", () => {
+    useSettingsStore.getState().setTheme("violet");
+    useSettingsStore.getState().setTheme("night");
+
+    const state = useSettingsStore.getState();
+    expect(state.theme).toBe("night");
+    expect(state.systemLightTheme).toBe("violet");
   });
 });

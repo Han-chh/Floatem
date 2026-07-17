@@ -11,6 +11,7 @@ import { TodoList } from "./components/todos/TodoList";
 import { AlertTriangleIcon } from "./components/icons/AppIcons";
 import { useAutoSave } from "./hooks/useAutoSave";
 import { useHotkey } from "./hooks/useHotkey";
+import { useTheme } from "./hooks/useTheme";
 import {
   getHotkeyRegistrationState,
   loadAllData,
@@ -495,6 +496,7 @@ function StickItApp() {
 }
 
 function App() {
+  useTheme();
   const mode = getFrontendMode();
 
   if (mode === "figma-notes-home") {

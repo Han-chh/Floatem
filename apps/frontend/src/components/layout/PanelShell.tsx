@@ -94,7 +94,7 @@ export function PanelShell({
                       <div className="absolute bottom-10 right-6 h-28 w-28 rounded-full bg-[rgba(255,122,89,0.12)] blur-2xl" />
                     </div>
 
-                    <div className="relative h-full overflow-visible rounded-[26px] bg-[linear-gradient(180deg,rgba(255,251,246,0.66),rgba(255,251,246,0.28))]">
+                    <div className="theme-inset-surface relative h-full overflow-visible rounded-[26px]">
                       {settingsPanel}
                     </div>
                   </motion.section>
@@ -237,7 +237,7 @@ export function PanelShell({
 
                     <div
                       data-testid="panel-scroll-region"
-                      className="paper-scroll relative h-full overflow-y-auto rounded-[26px] bg-[linear-gradient(180deg,rgba(255,251,246,0.5),rgba(255,251,246,0.16))] p-1.5"
+                      className="theme-inset-surface paper-scroll relative h-full overflow-y-auto rounded-[26px] p-1.5"
                     >
                       {children}
                     </div>

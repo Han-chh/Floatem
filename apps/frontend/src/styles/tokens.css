@@ -27,6 +27,22 @@
   --accent-marigold-soft: rgba(244, 185, 66, 0.14);
   --accent-plum-soft: rgba(123, 92, 250, 0.12);
 
+  --theme-panel-start: rgba(255, 252, 247, 0.97);
+  --theme-panel-end: rgba(255, 247, 238, 0.92);
+  --theme-card-start: rgba(255, 252, 248, 0.98);
+  --theme-card-end: rgba(255, 247, 238, 0.94);
+  --theme-button-start: rgba(255, 255, 255, 0.96);
+  --theme-button-end: rgba(250, 245, 237, 0.94);
+  --theme-field-start: rgba(255, 255, 255, 0.94);
+  --theme-field-end: rgba(248, 243, 235, 0.92);
+  --theme-inset-start: rgba(255, 251, 246, 0.66);
+  --theme-inset-end: rgba(255, 251, 246, 0.24);
+  --theme-border: rgba(213, 198, 180, 0.9);
+  --theme-highlight: rgba(255, 255, 255, 0.86);
+  --theme-ambient-one: rgba(255, 122, 89, 0.12);
+  --theme-ambient-two: rgba(47, 107, 255, 0.1);
+  --theme-selection-ring: rgba(255, 122, 89, 0.18);
+
   --panel-radius: 32px;
   --card-radius: 26px;
   --button-radius: 16px;
@@ -90,4 +106,137 @@
     "Times New Roman",
     "PingFang SC",
     serif;
+}
+
+:root[data-stickit-theme="forest"] {
+  --base-bg: #dce8df;
+  --base-bg-deep: #c6d8ca;
+  --cream: #f1f7f2;
+  --cream-strong: #f8fbf8;
+  --sand: #dfeae1;
+  --sand-deep: #c9d9cc;
+  --shell: #d4e2d7;
+  --border: #a9bdaa;
+  --border-strong: #587760;
+  --muted: #506157;
+  --brown: #3d6850;
+  --brown-strong: #14251b;
+  --dark-text: #14251b;
+  --theme-panel-start: rgba(246, 251, 247, 0.98);
+  --theme-panel-end: rgba(225, 238, 228, 0.95);
+  --theme-card-start: rgba(250, 253, 250, 0.98);
+  --theme-card-end: rgba(231, 241, 233, 0.95);
+  --theme-button-start: rgba(252, 254, 252, 0.98);
+  --theme-button-end: rgba(224, 237, 227, 0.96);
+  --theme-field-start: rgba(247, 251, 248, 0.96);
+  --theme-field-end: rgba(220, 234, 223, 0.94);
+  --theme-inset-start: rgba(235, 245, 237, 0.72);
+  --theme-inset-end: rgba(211, 228, 215, 0.32);
+  --theme-border: rgba(137, 164, 143, 0.72);
+  --theme-highlight: rgba(255, 255, 255, 0.72);
+  --theme-ambient-one: rgba(32, 115, 72, 0.16);
+  --theme-ambient-two: rgba(78, 114, 86, 0.12);
+  --theme-selection-ring: rgba(47, 115, 80, 0.22);
+  --shadow-soft: 0 24px 56px rgba(34, 62, 43, 0.15);
+  --shadow-card: 0 16px 34px rgba(34, 62, 43, 0.09);
+  --shadow-button: 0 12px 24px rgba(34, 62, 43, 0.08);
+}
+
+:root[data-stickit-theme="ivory"] {
+  --base-bg: #fffdf5;
+  --base-bg-deep: #f3ecd9;
+  --cream: #fffef9;
+  --cream-strong: #ffffff;
+  --sand: #f8f1df;
+  --sand-deep: #eadfc5;
+  --shell: #f7f0df;
+  --border: #ddd1b8;
+  --border-strong: #b79565;
+  --muted: #635d52;
+  --brown: #8a6b45;
+  --brown-strong: #211e18;
+  --dark-text: #211e18;
+  --theme-panel-start: rgba(255, 255, 252, 0.99);
+  --theme-panel-end: rgba(250, 246, 234, 0.96);
+  --theme-card-start: rgba(255, 255, 253, 0.99);
+  --theme-card-end: rgba(252, 248, 238, 0.96);
+  --theme-button-start: rgba(255, 255, 255, 0.99);
+  --theme-button-end: rgba(248, 243, 231, 0.96);
+  --theme-field-start: rgba(255, 255, 253, 0.98);
+  --theme-field-end: rgba(247, 242, 229, 0.95);
+  --theme-inset-start: rgba(255, 254, 248, 0.8);
+  --theme-inset-end: rgba(247, 241, 225, 0.32);
+  --theme-border: rgba(221, 209, 184, 0.86);
+  --theme-highlight: rgba(255, 255, 255, 0.94);
+  --theme-ambient-one: rgba(206, 162, 91, 0.12);
+  --theme-ambient-two: rgba(173, 143, 91, 0.09);
+  --theme-selection-ring: rgba(183, 138, 79, 0.2);
+}
+
+:root[data-stickit-theme="violet"] {
+  --base-bg: #ece8f8;
+  --base-bg-deep: #d9d1ee;
+  --cream: #faf8ff;
+  --cream-strong: #fefcff;
+  --sand: #e9e2f5;
+  --sand-deep: #d7ccea;
+  --shell: #e1daf0;
+  --border: #c3b7dc;
+  --border-strong: #8068ae;
+  --muted: #625b70;
+  --brown: #68538d;
+  --brown-strong: #241d31;
+  --dark-text: #241d31;
+  --theme-panel-start: rgba(252, 250, 255, 0.98);
+  --theme-panel-end: rgba(235, 230, 247, 0.95);
+  --theme-card-start: rgba(254, 252, 255, 0.98);
+  --theme-card-end: rgba(239, 234, 249, 0.95);
+  --theme-button-start: rgba(255, 254, 255, 0.98);
+  --theme-button-end: rgba(235, 230, 247, 0.96);
+  --theme-field-start: rgba(252, 250, 255, 0.96);
+  --theme-field-end: rgba(231, 225, 244, 0.94);
+  --theme-inset-start: rgba(244, 240, 252, 0.74);
+  --theme-inset-end: rgba(220, 211, 240, 0.32);
+  --theme-border: rgba(179, 164, 210, 0.75);
+  --theme-highlight: rgba(255, 255, 255, 0.78);
+  --theme-ambient-one: rgba(123, 92, 250, 0.18);
+  --theme-ambient-two: rgba(92, 75, 161, 0.13);
+  --theme-selection-ring: rgba(123, 92, 250, 0.2);
+  --shadow-soft: 0 24px 56px rgba(58, 43, 87, 0.15);
+  --shadow-card: 0 16px 34px rgba(58, 43, 87, 0.09);
+  --shadow-button: 0 12px 24px rgba(58, 43, 87, 0.08);
+}
+
+:root[data-stickit-theme="night"] {
+  --base-bg: #111510;
+  --base-bg-deep: #080b08;
+  --cream: #1a1f19;
+  --cream-strong: #222821;
+  --sand: #20261f;
+  --sand-deep: #2a3229;
+  --shell: #151a15;
+  --border: #3b453a;
+  --border-strong: #71816f;
+  --muted: #aaaFA7;
+  --brown: #a7b79f;
+  --brown-strong: #f0eee8;
+  --dark-text: #f0eee8;
+  --theme-panel-start: rgba(31, 37, 30, 0.98);
+  --theme-panel-end: rgba(20, 25, 20, 0.97);
+  --theme-card-start: rgba(37, 43, 35, 0.98);
+  --theme-card-end: rgba(24, 29, 24, 0.97);
+  --theme-button-start: rgba(49, 57, 47, 0.98);
+  --theme-button-end: rgba(31, 37, 30, 0.97);
+  --theme-field-start: rgba(42, 49, 40, 0.96);
+  --theme-field-end: rgba(26, 32, 26, 0.96);
+  --theme-inset-start: rgba(30, 36, 29, 0.78);
+  --theme-inset-end: rgba(14, 18, 14, 0.44);
+  --theme-border: rgba(82, 96, 80, 0.74);
+  --theme-highlight: rgba(255, 255, 255, 0.08);
+  --theme-ambient-one: rgba(50, 128, 86, 0.14);
+  --theme-ambient-two: rgba(94, 77, 164, 0.14);
+  --theme-selection-ring: rgba(119, 184, 146, 0.22);
+  --shadow-soft: 0 24px 60px rgba(0, 0, 0, 0.42);
+  --shadow-card: 0 16px 36px rgba(0, 0, 0, 0.28);
+  --shadow-button: 0 12px 26px rgba(0, 0, 0, 0.24);
 }

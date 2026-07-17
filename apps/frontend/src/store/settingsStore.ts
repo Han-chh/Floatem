@@ -10,6 +10,9 @@ import {
   type PanelPosition,
   type TabId,
   type TimeFormat,
+  type ThemeId,
+  type ThemeMode,
+  type LightThemeId,
   type TransitionStyle,
   createDefaultSettings,
   normalizeAppSettings,
@@ -31,6 +34,9 @@ type SettingsState = AppSettings & {
   setLanguage: (language: AppLanguage) => void;
   setTimeZone: (timeZone: string) => void;
   setTimeFormat: (timeFormat: TimeFormat) => void;
+  setTheme: (theme: ThemeId) => void;
+  setThemeMode: (themeMode: ThemeMode) => void;
+  setSystemLightTheme: (theme: LightThemeId) => void;
   setPanelPosition: (position: PanelPosition | null) => void;
   setTransitionStyle: (transitionStyle: TransitionStyle) => void;
   setAnimationSpeed: (animationSpeed: AnimationSpeed) => void;
@@ -93,6 +99,18 @@ export const useSettingsStore = create<SettingsState>()(
     },
     setTimeFormat: (timeFormat) => {
       set({ timeFormat: normalizeTimeFormat(timeFormat) });
+    },
+    setTheme: (theme) => {
+      set((state) => ({
+        theme,
+        systemLightTheme: theme === "night" ? state.systemLightTheme : theme,
+      }));
+    },
+    setThemeMode: (themeMode) => {
+      set({ themeMode });
+    },
+    setSystemLightTheme: (systemLightTheme) => {
+      set({ systemLightTheme });
     },
     setPanelPosition: (panelPosition) => {
       set((state) => {

@@ -3,7 +3,15 @@ import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { registerHotkey } from "../../hooks/usePlatform";
 import { captureShortcutFromKeyEvent, getShortcutDisplayLabel } from "../../lib/hotkeyCapture";
 import { useI18n } from "../../lib/i18n";
-import { DEFAULT_SETTINGS, getSelectableTimeZones, getSystemTimeZone, type TimeFormat } from "../../lib/models";
+import {
+  DEFAULT_SETTINGS,
+  getSelectableTimeZones,
+  getSystemTimeZone,
+  type LightThemeId,
+  type ThemeId,
+  type ThemeMode,
+  type TimeFormat,
+} from "../../lib/models";
 import { getStickItBridge, isNativeStickItHost } from "../../lib/nativeBridge";
 import { formatTimeInTimeZone } from "../../lib/timeZoneDate";
 import { getSettingsMenuMotionConfig, type TransitionDirection } from "../../lib/transitionMotion";
@@ -21,6 +29,7 @@ import {
   HourglassIcon,
   KeyboardIcon,
   NotebookPenIcon,
+  PaletteIcon,
   SlidersHorizontalIcon,
   SparklesIcon,
   XIcon,
@@ -37,7 +46,7 @@ type HotkeyFeedback = {
   tone: FeedbackTone;
 };
 
-type SettingsCategoryId = "general" | "shortcuts" | "motion" | "notifications" | "about";
+type SettingsCategoryId = "general" | "theme" | "shortcuts" | "motion" | "notifications" | "about";
 
 const FEEDBACK_AUTO_DISMISS_MS = 4_000;
 
@@ -304,6 +313,9 @@ export function SettingsPanel({ onClose }: SettingsPanelProps) {
   const language = useSettingsStore((state) => state.language);
   const timeZone = useSettingsStore((state) => state.timeZone);
   const timeFormat = useSettingsStore((state) => state.timeFormat);
+  const theme = useSettingsStore((state) => state.theme);
+  const themeMode = useSettingsStore((state) => state.themeMode);
+  const systemLightTheme = useSettingsStore((state) => state.systemLightTheme);
   const defaultOpenSection = useSettingsStore((state) => state.defaultOpenSection);
   const lastActiveTab = useSettingsStore((state) => state.lastActiveTab);
   const transitionStyle = useSettingsStore((state) => state.transitionStyle);
@@ -314,6 +326,9 @@ export function SettingsPanel({ onClose }: SettingsPanelProps) {
   const setLanguage = useSettingsStore((state) => state.setLanguage);
   const setTimeZone = useSettingsStore((state) => state.setTimeZone);
   const setTimeFormat = useSettingsStore((state) => state.setTimeFormat);
+  const setTheme = useSettingsStore((state) => state.setTheme);
+  const setThemeMode = useSettingsStore((state) => state.setThemeMode);
+  const setSystemLightTheme = useSettingsStore((state) => state.setSystemLightTheme);
   const setDefaultOpenSection = useSettingsStore((state) => state.setDefaultOpenSection);
   const setTransitionStyle = useSettingsStore((state) => state.setTransitionStyle);
   const setAnimationSpeed = useSettingsStore((state) => state.setAnimationSpeed);
@@ -396,6 +411,13 @@ export function SettingsPanel({ onClose }: SettingsPanelProps) {
         meta: `${language === "en" ? t.settings.englishMode : t.settings.zhMode} / ${timeZone}`,
       },
       {
+        id: "theme" as const,
+        icon: <PaletteIcon size={18} />,
+        title: t.settings.categoryThemeTitle,
+        description: t.settings.categoryThemeDescription,
+        meta: themeMode === "system" ? t.settings.themeFollowSystemTitle : getThemeLabel(theme, t),
+      },
+      {
         id: "shortcuts" as const,
         icon: <KeyboardIcon size={18} />,
         title: t.settings.categoryShortcutsTitle,
@@ -424,7 +446,7 @@ export function SettingsPanel({ onClose }: SettingsPanelProps) {
         meta: `${t.settings.appVersionTitle} ${__STICKIT_VERSION__}`,
       },
     ],
-    [enableReminderSound, hotkey, language, t, timeZone, transitionStyle],
+    [enableReminderSound, hotkey, language, t, theme, themeMode, timeZone, transitionStyle],
   );
   const showHotkeyConflictWarning = hotkeyRegistrationState?.registration === "conflict";
 
@@ -713,6 +735,17 @@ export function SettingsPanel({ onClose }: SettingsPanelProps) {
                   />
                 ) : null}
 
+                {activeCategory === "theme" ? (
+                  <ThemeSettings
+                    theme={theme}
+                    themeMode={themeMode}
+                    systemLightTheme={systemLightTheme}
+                    setTheme={setTheme}
+                    setThemeMode={setThemeMode}
+                    setSystemLightTheme={setSystemLightTheme}
+                  />
+                ) : null}
+
                 {activeCategory === "motion" ? (
                   <MotionSettings
                     transitionStyle={transitionStyle}
@@ -936,6 +969,127 @@ function getTransitionLabel(transitionStyle: "lift" | "page" | "slide", t: Retur
   }
 
   return t.settings.transitionSlide;
+}
+
+const THEME_PREVIEWS: Record<ThemeId, { background: string; surface: string; accent: string; text: string }> = {
+  classic: { background: "#f1e5d3", surface: "#fff9f0", accent: "#ff7a59", text: "#1e1915" },
+  forest: { background: "#c8dacb", surface: "#f1f7f2", accent: "#2f7350", text: "#14251b" },
+  ivory: { background: "#f5edd9", surface: "#fffef9", accent: "#b78a4f", text: "#211e18" },
+  violet: { background: "#ddd5ef", surface: "#faf8ff", accent: "#7b5cfa", text: "#241d31" },
+  night: { background: "#090c09", surface: "#222821", accent: "#77b892", text: "#f0eee8" },
+};
+
+function getThemeLabel(theme: ThemeId, t: ReturnType<typeof useI18n>["t"]) {
+  return {
+    classic: t.settings.themeClassicTitle,
+    forest: t.settings.themeForestTitle,
+    ivory: t.settings.themeIvoryTitle,
+    violet: t.settings.themeVioletTitle,
+    night: t.settings.themeNightTitle,
+  }[theme];
+}
+
+function ThemeChoice({
+  theme,
+  selected,
+  onClick,
+}: {
+  theme: ThemeId;
+  selected: boolean;
+  onClick: () => void;
+}) {
+  const { t } = useI18n();
+  const preview = THEME_PREVIEWS[theme];
+
+  return (
+    <motion.button
+      type="button"
+      aria-pressed={selected}
+      className={`group overflow-hidden rounded-[20px] border p-2.5 text-left ${
+        selected ? "border-[var(--border-strong)] shadow-[0_0_0_3px_var(--theme-selection-ring)]" : "border-[var(--theme-border)]"
+      }`}
+      style={{ background: preview.background }}
+      whileHover={{ y: -2, scale: 1.008 }}
+      whileTap={{ scale: 0.985 }}
+      onClick={onClick}
+    >
+      <span className="block rounded-[15px] border border-white/25 p-3" style={{ background: preview.surface }}>
+        <span className="mb-5 flex items-center justify-between">
+          <span className="h-2.5 w-12 rounded-full opacity-70" style={{ background: preview.text }} />
+          <span className="h-5 w-5 rounded-full" style={{ background: preview.accent }} />
+        </span>
+        <span className="block text-[12px] font-semibold" style={{ color: preview.text }}>
+          {getThemeLabel(theme, t)}
+        </span>
+      </span>
+    </motion.button>
+  );
+}
+
+function ThemeSettings({
+  theme,
+  themeMode,
+  systemLightTheme,
+  setTheme,
+  setThemeMode,
+  setSystemLightTheme,
+}: {
+  theme: ThemeId;
+  themeMode: ThemeMode;
+  systemLightTheme: LightThemeId;
+  setTheme: (theme: ThemeId) => void;
+  setThemeMode: (mode: ThemeMode) => void;
+  setSystemLightTheme: (theme: LightThemeId) => void;
+}) {
+  const { t } = useI18n();
+  const lightThemes: LightThemeId[] = ["classic", "forest", "ivory", "violet"];
+  const manualThemes: ThemeId[] = [...lightThemes, "night"];
+
+  return (
+    <>
+      <SettingSection title={t.settings.themeBehaviorTitle} description={t.settings.themeBehaviorBody}>
+        <SettingRow
+          icon={<PaletteIcon size={15} />}
+          title={t.settings.themeFollowSystemTitle}
+          description={t.settings.themeFollowSystemBody}
+          action={
+            <ToggleButton
+              enabled={themeMode === "system"}
+              tooltip={t.settings.themeFollowSystemTitle}
+              onClick={() => setThemeMode(themeMode === "system" ? "manual" : "system")}
+            />
+          }
+        />
+      </SettingSection>
+
+      <SettingSection
+        title={themeMode === "system" ? t.settings.themeSystemLightTitle : t.settings.themeManualTitle}
+        description={themeMode === "system" ? t.settings.themeSystemLightBody : t.settings.themeManualBody}
+      >
+        <div className="grid grid-cols-2 gap-2.5">
+          {(themeMode === "system" ? lightThemes : manualThemes).map((candidate) => (
+            <ThemeChoice
+              key={candidate}
+              theme={candidate}
+              selected={themeMode === "system" ? systemLightTheme === candidate : theme === candidate}
+              onClick={() => {
+                if (themeMode === "system") {
+                  setSystemLightTheme(candidate as LightThemeId);
+                } else {
+                  setTheme(candidate);
+                }
+              }}
+            />
+          ))}
+        </div>
+        {themeMode === "system" ? (
+          <div className="surface-field mt-3 rounded-[18px] px-4 py-3 text-[12px] leading-6 text-[var(--muted)]">
+            {t.settings.themeNightAutomaticBody}
+          </div>
+        ) : null}
+      </SettingSection>
+    </>
+  );
 }
 
 function GeneralSettings({

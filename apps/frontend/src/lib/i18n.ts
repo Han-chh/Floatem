@@ -111,6 +111,8 @@ type MessageCatalog = {
     categoryNotificationsTitle: string;
     categoryShortcutsDescription: string;
     categoryShortcutsTitle: string;
+    categoryThemeDescription: string;
+    categoryThemeTitle: string;
     changeShortcut: string;
     currentShortcut: string;
     dataScopeBody: string;
@@ -199,6 +201,20 @@ type MessageCatalog = {
     timeZoneSystemLabel: (timeZone: string) => string;
     timeZoneTitle: string;
     timeZoneUseSystem: string;
+    themeBehaviorBody: string;
+    themeBehaviorTitle: string;
+    themeClassicTitle: string;
+    themeFollowSystemBody: string;
+    themeFollowSystemTitle: string;
+    themeForestTitle: string;
+    themeIvoryTitle: string;
+    themeManualBody: string;
+    themeManualTitle: string;
+    themeNightAutomaticBody: string;
+    themeNightTitle: string;
+    themeSystemLightBody: string;
+    themeSystemLightTitle: string;
+    themeVioletTitle: string;
     transitionLift: string;
     transitionPage: string;
     transitionSlide: string;
@@ -422,6 +438,8 @@ const messages: Record<AppLanguage, MessageCatalog> = {
       categoryNotificationsTitle: "Notifications",
       categoryShortcutsDescription: "Global shortcut and which section appears when StickIt opens.",
       categoryShortcutsTitle: "Shortcuts and launch",
+      categoryThemeDescription: "Background, surfaces, contrast, and automatic night appearance.",
+      categoryThemeTitle: "Theme",
       changeShortcut: "Change",
       currentShortcut: "Current shortcut",
       dataScopeBody: "Notes, todos, and settings are stored locally in the app data directory and auto-saved after edits.",
@@ -484,7 +502,7 @@ const messages: Record<AppLanguage, MessageCatalog> = {
       quitApplicationButton: "Quit StickIt",
       quitApplicationFailed: "StickIt could not quit from the current environment.",
       restoreDefaults: "Restore defaults",
-      restoreDefaultsBody: "Reset language, timezone, time format, shortcut, default section, transition style, switch speed, particle feedback, reminder sound, and saved panel position.",
+      restoreDefaultsBody: "Reset theme, language, timezone, time format, shortcut, default section, motion, reminder sound, and saved panel position.",
       restoreDefaultsFailed: (shortcut) => `Defaults were not restored. Keeping ${shortcut}.`,
       restoreDefaultsSuccess: "Default settings restored.",
       shortcutApply: "Apply shortcut",
@@ -512,6 +530,20 @@ const messages: Record<AppLanguage, MessageCatalog> = {
       timeZoneSystemLabel: (timeZone) => `System timezone: ${timeZone}`,
       timeZoneTitle: "Timezone",
       timeZoneUseSystem: "Use system timezone",
+      themeBehaviorBody: "Choose a fixed appearance or let macOS switch StickIt into Night when the system enters Dark Mode.",
+      themeBehaviorTitle: "Theme behavior",
+      themeClassicTitle: "Classic",
+      themeFollowSystemBody: "Use your chosen light theme during the day and Night when macOS changes to Dark Mode.",
+      themeFollowSystemTitle: "Follow system appearance",
+      themeForestTitle: "Forest green",
+      themeIvoryTitle: "Ivory",
+      themeManualBody: "Apply one appearance at all times until you change it again.",
+      themeManualTitle: "Manual theme",
+      themeNightAutomaticBody: "Night is applied automatically while the system uses Dark Mode. Your selected light theme returns with Light Mode.",
+      themeNightTitle: "Night",
+      themeSystemLightBody: "Choose which light theme StickIt should use before the system changes to Dark Mode.",
+      themeSystemLightTitle: "Preferred light theme",
+      themeVioletTitle: "Violet",
       transitionLift: "Lift",
       transitionPage: "Page turn",
       transitionSlide: "Slide",
@@ -733,6 +765,8 @@ const messages: Record<AppLanguage, MessageCatalog> = {
       categoryNotificationsTitle: "通知",
       categoryShortcutsDescription: "全局快捷键，以及 StickIt 打开时优先显示的分区。",
       categoryShortcutsTitle: "快捷键与启动",
+      categoryThemeDescription: "调整整体背景、界面层级、对比度和自动夜间外观。",
+      categoryThemeTitle: "主题",
       changeShortcut: "更改",
       currentShortcut: "当前快捷键",
       dataScopeBody: "笔记、待办和设置都会保存在本地应用数据目录中，并在编辑后自动保存。",
@@ -795,7 +829,7 @@ const messages: Record<AppLanguage, MessageCatalog> = {
       quitApplicationButton: "完全退出 StickIt",
       quitApplicationFailed: "当前环境下无法退出 StickIt。",
       restoreDefaults: "恢复默认设置",
-      restoreDefaultsBody: "重置语言、时区、时间格式、快捷键、默认分区、切换样式、切换速度、粒子反馈、提醒声音，以及保存的窗口位置。",
+      restoreDefaultsBody: "重置主题、语言、时区、时间格式、快捷键、默认分区、动效、提醒声音以及保存的窗口位置。",
       restoreDefaultsFailed: (shortcut) => `默认设置未恢复，当前仍保留 ${shortcut}。`,
       restoreDefaultsSuccess: "默认设置已恢复。",
       shortcutApply: "应用快捷键",
@@ -823,6 +857,20 @@ const messages: Record<AppLanguage, MessageCatalog> = {
       timeZoneSystemLabel: (timeZone) => `系统时区：${timeZone}`,
       timeZoneTitle: "时区",
       timeZoneUseSystem: "使用系统时区",
+      themeBehaviorBody: "选择固定外观，或让 macOS 进入深色模式时自动将 StickIt 切换为黑夜色。",
+      themeBehaviorTitle: "主题切换方式",
+      themeClassicTitle: "经典色",
+      themeFollowSystemBody: "白天使用你选定的亮色主题，macOS 切换为深色模式时使用黑夜色。",
+      themeFollowSystemTitle: "随系统外观切换",
+      themeForestTitle: "墨绿色",
+      themeIvoryTitle: "乳白色",
+      themeManualBody: "始终使用选定主题，直到你再次手动更改。",
+      themeManualTitle: "手动主题",
+      themeNightAutomaticBody: "系统处于深色模式时会自动应用黑夜色；回到亮色模式后恢复你选定的亮色主题。",
+      themeNightTitle: "黑夜色",
+      themeSystemLightBody: "选择系统进入深色模式之前，StickIt 应使用的亮色主题。",
+      themeSystemLightTitle: "首选亮色主题",
+      themeVioletTitle: "紫罗兰色",
       transitionLift: "抬升",
       transitionPage: "翻页",
       transitionSlide: "滑动",
