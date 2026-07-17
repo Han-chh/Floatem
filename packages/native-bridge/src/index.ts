@@ -99,6 +99,8 @@ export type DragPreviewPayload =
       pointerOffset: DragPreviewPointerOffset;
       note: NoteDragPreviewCard;
       groups: DragPreviewGroupSnapshot[];
+      desktopPinned?: boolean;
+      minimumSize?: DragPreviewSize;
     }
   | {
       kind: "todo";
@@ -110,6 +112,8 @@ export type DragPreviewPayload =
       order?: number;
       todo: TodoDragPreviewItem;
       groups: DragPreviewGroupSnapshot[];
+      desktopPinned?: boolean;
+      minimumSize?: DragPreviewSize;
     };
 
 export type HotkeyRegistrationState = {
@@ -169,6 +173,7 @@ export type HostBridge<TLoadAllResult, TNotes, TTodos, TSettings> = {
   resizeFloatingCard: (size: FloatingCardResize) => Promise<void>;
   getFloatingCardScreenPlacement: () => Promise<FloatingCardScreenPlacement | null>;
   startFloatingCardDrag: (card: FloatingCardReference) => Promise<void>;
+  setFloatingCardDesktopPinned?: (card: FloatingCardReference, pinned: boolean) => Promise<void>;
   openNotificationSettings: () => Promise<void>;
   sendNotification: (request: NotificationRequest) => Promise<void>;
   showNotification: (request: NotificationRequest) => Promise<void>;

@@ -55,6 +55,7 @@ final class MainWindowController: NSObject, NSWindowDelegate, StickItNativeBridg
     private var activeDragPreviewSession: DragPreviewSession?
     private var isDragPreviewDockZoneActive = false
     private var floatingCardWindowControllers: [String: FloatingNoteWindowController] = [:]
+    private var floatingCardPayloads: [String: [String: Any]] = [:]
 
     private static let hotKeyDebounceInterval: CFAbsoluteTime = 0.25
 
@@ -491,6 +492,13 @@ final class MainWindowController: NSObject, NSWindowDelegate, StickItNativeBridg
                 self?.startFloatingCardDragFromBridge(kind: itemKind, id: id)
             }
         }
+        controller.onSetDesktopPinned = { [weak self] itemKind, id, pinned in
+            try? self?.setFloatingCardDesktopPinnedFromBridge(kind: itemKind, id: id, pinned: pinned)
+        }
+        controller.onFrameChange = { [weak self, weak controller] frame in
+            guard let self, controller?.isDesktopPinned == true else { return }
+            self.persistDesktopCard(kind: kind, id: cardID, frame: frame)
+        }
         controller.onLoadAllData = { [weak self] in
             guard let self else {
                 return [:]
@@ -535,6 +543,7 @@ final class MainWindowController: NSObject, NSWindowDelegate, StickItNativeBridg
             return try await self.pickScreenColor()
         }
         floatingCardWindowControllers[key] = controller
+        floatingCardPayloads[key] = payloadDictionary
         if Self.debugLifecycle {
             Self.lifecycle.info("panelCreated(cardId=\(cardID, privacy: .public)) kind=\(kind, privacy: .public)")
             logRemainingFloatingPanelCount()
@@ -549,9 +558,64 @@ final class MainWindowController: NSObject, NSWindowDelegate, StickItNativeBridg
         destroyFloatingCardPanel(kind: kind, id: id, restoreDockedState: true)
     }
 
+    func setFloatingCardDesktopPinnedFromBridge(kind: String, id: String, pinned: Bool) throws {
+        let key = Self.floatingCardKey(kind: kind, id: id)
+        guard let controller = floatingCardWindowControllers[key] else {
+            throw StickItBridgeError.invalidParameters("StickIt could not find the requested floating card.")
+        }
+
+        controller.setDesktopPinned(pinned)
+        if pinned {
+            persistDesktopCard(kind: kind, id: id, frame: controller.currentFrame)
+        } else {
+            removePersistedDesktopCard(kind: kind, id: id)
+        }
+    }
+
+    func restorePinnedDesktopCards() {
+        guard let records = try? storage.loadDesktopCards() else { return }
+
+        for record in records {
+            guard
+                let payload = record["payload"] as? [String: Any],
+                let frameValue = record["frame"] as? [String: Any],
+                let x = frameValue["x"] as? Double,
+                let y = frameValue["y"] as? Double,
+                let width = frameValue["width"] as? Double,
+                let height = frameValue["height"] as? Double
+            else { continue }
+
+            var restoredPayload = payload
+            restoredPayload["desktopPinned"] = true
+            restoredPayload["minimumSize"] = payload["size"]
+            restoredPayload["size"] = ["width": width, "height": height]
+            do {
+                try showFloatingCardFromBridge(restoredPayload)
+                let kind = restoredPayload["kind"] as? String ?? ""
+                let id = Self.floatingCardID(from: restoredPayload, kind: kind) ?? ""
+                let key = Self.floatingCardKey(kind: kind, id: id)
+                guard let controller = floatingCardWindowControllers[key] else { continue }
+                controller.setDesktopPinned(true)
+                controller.showWindow(
+                    frame: NSRect(x: x, y: y, width: width, height: height),
+                    updateMinimumSize: false
+                )
+            } catch {
+                logger.error("Failed to restore a desktop card. error=\(error.localizedDescription, privacy: .public)")
+            }
+        }
+    }
+
     func startFloatingCardDragFromBridge(kind: String, id: String) {
         guard let controller = floatingCardWindowControllers[Self.floatingCardKey(kind: kind, id: id)] else {
             logger.error("[FLT:DOCK] controller not found for key kind=\(kind, privacy: .public) id=\(id, privacy: .public)")
+            return
+        }
+
+        if controller.isDesktopPinned {
+            let mouseUpEvent = controller.startWindowDrag()
+            controller.restoreWebViewInputAfterDrag(mouseUpEvent: mouseUpEvent)
+            persistDesktopCard(kind: kind, id: id, frame: controller.currentFrame)
             return
         }
 
@@ -834,6 +898,8 @@ final class MainWindowController: NSObject, NSWindowDelegate, StickItNativeBridg
         }
 
         controller.closeWindow()
+        floatingCardPayloads.removeValue(forKey: key)
+        removePersistedDesktopCard(kind: kind, id: id)
 
         if restoreDockedState {
             DispatchQueue.main.async { [weak self] in
@@ -852,6 +918,40 @@ final class MainWindowController: NSObject, NSWindowDelegate, StickItNativeBridg
         if Self.debugLifecycle {
             Self.lifecycle.info("panel removedFromRegistry(cardId=\(id, privacy: .public))")
             logRemainingFloatingPanelCount()
+        }
+    }
+
+    private func persistDesktopCard(kind: String, id: String, frame: NSRect) {
+        let key = Self.floatingCardKey(kind: kind, id: id)
+        guard var payload = floatingCardPayloads[key] else { return }
+        payload["desktopPinned"] = true
+
+        var records = (try? storage.loadDesktopCards()) ?? []
+        records.removeAll { record in
+            record["kind"] as? String == kind && record["id"] as? String == id
+        }
+        records.append([
+            "kind": kind,
+            "id": id,
+            "payload": payload,
+            "frame": [
+                "x": frame.origin.x,
+                "y": frame.origin.y,
+                "width": frame.width,
+                "height": frame.height,
+            ],
+        ])
+        try? storage.saveDesktopCards(records)
+    }
+
+    private func removePersistedDesktopCard(kind: String, id: String) {
+        var records = (try? storage.loadDesktopCards()) ?? []
+        let originalCount = records.count
+        records.removeAll { record in
+            record["kind"] as? String == kind && record["id"] as? String == id
+        }
+        if records.count != originalCount {
+            try? storage.saveDesktopCards(records)
         }
     }
 

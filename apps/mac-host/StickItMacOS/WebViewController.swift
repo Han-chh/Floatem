@@ -574,6 +574,19 @@ final class WebViewController: NSViewController, WKNavigationDelegate {
                 }
                 try bridgeDelegate?.startFloatingCardDragFromBridge(kind: kind, id: cardID)
                 result = NSNull()
+            case "setFloatingCardDesktopPinned":
+                guard
+                    let kind = params["kind"] as? String, !kind.isEmpty,
+                    let cardID = params["id"] as? String, !cardID.isEmpty
+                else {
+                    throw StickItBridgeError.invalidParameters("StickIt expected a floating card reference from JavaScript.")
+                }
+                try bridgeDelegate?.setFloatingCardDesktopPinnedFromBridge(
+                    kind: kind,
+                    id: cardID,
+                    pinned: params["pinned"] as? Bool ?? false
+                )
+                result = NSNull()
             case "quitApplication":
                 bridgeDelegate?.quitApplicationFromBridge()
                 result = NSNull()
@@ -968,6 +981,13 @@ final class WebViewController: NSViewController, WKNavigationDelegate {
         },
         startFloatingCardDrag(card) {
           return send("startFloatingCardDrag", { kind: String(card?.kind ?? ""), id: String(card?.id ?? "") });
+        },
+        setFloatingCardDesktopPinned(card, pinned) {
+          return send("setFloatingCardDesktopPinned", {
+            kind: String(card?.kind ?? ""),
+            id: String(card?.id ?? ""),
+            pinned: Boolean(pinned),
+          });
         },
         hidePanelWindow() {
           return send("hideWindow");

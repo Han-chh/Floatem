@@ -246,6 +246,9 @@ const browserBridge: StickItNativeBridge = {
   async startFloatingCardDrag(_card: FloatingCardReference) {
     // Browser preview does not open separate floating card windows.
   },
+  async setFloatingCardDesktopPinned(_card: FloatingCardReference, _pinned: boolean) {
+    // Browser preview does not own desktop-level card windows.
+  },
   async hidePanelWindow() {
     await this.hideWindow();
   },

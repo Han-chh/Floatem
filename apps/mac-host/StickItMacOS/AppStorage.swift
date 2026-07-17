@@ -122,6 +122,14 @@ final class AppStorage {
         }
     }
 
+    func loadDesktopCards() throws -> [[String: Any]] {
+        try readJSONObject(at: desktopCardsURL) as? [[String: Any]] ?? []
+    }
+
+    func saveDesktopCards(_ cards: [[String: Any]]) throws {
+        try saveJSONObject(cards, to: desktopCardsURL)
+    }
+
     func savePanelPosition(origin: CGPoint) throws {
         var settings = try loadSettings()
         settings["panelPosition"] = [
@@ -141,6 +149,10 @@ final class AppStorage {
 
     private var settingsURL: URL {
         appSupportDirectory.appendingPathComponent("settings.json")
+    }
+
+    private var desktopCardsURL: URL {
+        appSupportDirectory.appendingPathComponent("desktop-cards.json")
     }
 
     private var defaultSettings: [String: Any] {

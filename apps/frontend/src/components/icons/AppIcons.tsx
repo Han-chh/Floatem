@@ -495,3 +495,13 @@ export function XIcon(props: IconProps) {
     </BaseIcon>
   );
 }
+
+export function PinIcon(props: IconProps) {
+  return (
+    <BaseIcon {...props}>
+      <path d="M12 17v5" />
+      <path d="M5 17h14" />
+      <path d="M6 3h12l-1 7 2 3H5l2-3Z" />
+    </BaseIcon>
+  );
+}

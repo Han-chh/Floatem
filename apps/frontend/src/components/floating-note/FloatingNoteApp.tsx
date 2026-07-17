@@ -8,6 +8,7 @@ import {
   resizeFloatingCard,
   saveTodos,
   setEditableInputActive,
+  setFloatingCardDesktopPinned,
   setTextCompositionActive,
   startFloatingCardDrag,
 } from "../../hooks/usePlatform";
@@ -121,8 +122,11 @@ function createPreviewNoteCard(payload: Extract<DragPreviewPayload, { kind: "not
 }
 
 export function FloatingNoteApp() {
-  const [payload, setPayload] = useState<DragPreviewPayload | null>(() => readInitialState());
-  const [frameSize, setFrameSize] = useState(() => readInitialState()?.size ?? { width: 1, height: 1 });
+  const initialPayload = readInitialState();
+  const [payload, setPayload] = useState<DragPreviewPayload | null>(initialPayload);
+  const [cardSize, setCardSize] = useState(() => initialPayload?.size ?? { width: 1, height: 1 });
+  const [frameSize, setFrameSize] = useState(() => initialPayload?.size ?? { width: 1, height: 1 });
+  const [isDesktopPinned, setIsDesktopPinned] = useState(() => Boolean(initialPayload?.desktopPinned));
   const [hasOpenDialog, setHasOpenDialog] = useState(false);
   const [dialogSide, setDialogSide] = useState<FloatingDialogSide>("right");
   const [isHydrated, setIsHydrated] = useState(false);
@@ -134,6 +138,14 @@ export function FloatingNoteApp() {
   const dialogStateRequestRef = useRef(0);
   const hasEditableFocusRef = useRef(false);
   const isTextComposingRef = useRef(false);
+  const minimumCardSizeRef = useRef(initialPayload?.minimumSize ?? initialPayload?.size ?? { width: 1, height: 1 });
+  const resizeSessionRef = useRef<{
+    pointerId: number;
+    startX: number;
+    startY: number;
+    startWidth: number;
+    startHeight: number;
+  } | null>(null);
   const { t } = useI18n();
   const noteCards = useNotesStore((state) => state.cards);
   const todoItems = useTodosStore((state) => state.todos);
@@ -251,7 +263,13 @@ export function FloatingNoteApp() {
     }
 
     syncedFrameSizeRef.current = payload.size;
+    minimumCardSizeRef.current = payload.minimumSize ?? payload.size;
+    setCardSize((current) => ({
+      width: Math.max(payload.size.width, current.width),
+      height: Math.max(payload.size.height, current.height),
+    }));
     setFrameSize(payload.size);
+    setIsDesktopPinned(Boolean(payload.desktopPinned));
   }, [payload]);
 
   useEffect(() => {
@@ -269,14 +287,14 @@ export function FloatingNoteApp() {
       animationFrame = null;
       const rect = node.getBoundingClientRect();
       const contentSize = {
-        width: Math.max(1, Math.ceil(rect.width || payload.size.width)),
-        height: Math.max(payload.size.height, Math.ceil(rect.height || payload.size.height)),
+        width: Math.max(cardSize.width, Math.ceil(rect.width || cardSize.width)),
+        height: Math.max(cardSize.height, Math.ceil(rect.height || cardSize.height)),
       };
       const nextSize = hasOpenDialog
         ? {
             width: Math.max(
               contentSize.width,
-              payload.size.width + FLOATING_DIALOG_GAP_PX + FLOATING_DIALOG_VIEWPORT_SIZE.width,
+              cardSize.width + FLOATING_DIALOG_GAP_PX + FLOATING_DIALOG_VIEWPORT_SIZE.width,
             ),
             height: Math.max(contentSize.height, FLOATING_DIALOG_VIEWPORT_SIZE.height),
           }
@@ -322,7 +340,7 @@ export function FloatingNoteApp() {
         window.cancelAnimationFrame(animationFrame);
       }
     };
-  }, [dialogSide, hasOpenDialog, payload]);
+  }, [cardSize, dialogSide, hasOpenDialog, payload]);
 
   useEffect(() => {
     if (typeof document === "undefined") {
@@ -334,7 +352,7 @@ export function FloatingNoteApp() {
       if (isOpen && !isDialogOpenRef.current && payload) {
         const cardRect = contentRef.current?.getBoundingClientRect();
         const cardScreenLeft = Number(window.screenX) + (cardRect?.left ?? 0);
-        const cardWidth = Math.ceil(cardRect?.width || payload.size.width);
+        const cardWidth = Math.ceil(cardRect?.width || cardSize.width);
         const requestId = dialogStateRequestRef.current + 1;
         dialogStateRequestRef.current = requestId;
         lastDialogSideRef.current = "right";
@@ -372,7 +390,7 @@ export function FloatingNoteApp() {
     return () => {
       observer.disconnect();
     };
-  }, [payload]);
+  }, [cardSize.width, payload]);
 
   useEffect(() => {
     if (typeof document === "undefined") {
@@ -381,7 +399,7 @@ export function FloatingNoteApp() {
 
     const html = document.documentElement;
     html.dataset.stickitFloatingDialogSide = dialogSide;
-    html.style.setProperty("--stickit-floating-card-width", `${payload?.size.width ?? 0}px`);
+    html.style.setProperty("--stickit-floating-card-width", `${cardSize.width}px`);
     html.style.setProperty("--stickit-floating-dialog-width", `${FLOATING_DIALOG_VIEWPORT_SIZE.width}px`);
     html.style.setProperty("--stickit-floating-dialog-gap", `${FLOATING_DIALOG_GAP_PX}px`);
 
@@ -391,7 +409,7 @@ export function FloatingNoteApp() {
       html.style.removeProperty("--stickit-floating-dialog-width");
       html.style.removeProperty("--stickit-floating-dialog-gap");
     };
-  }, [dialogSide, payload?.size.width]);
+  }, [cardSize.width, dialogSide]);
 
   useEffect(() => {
     if (typeof window === "undefined") {
@@ -518,6 +536,28 @@ export function FloatingNoteApp() {
     void closeFloatingCard(cardReference);
   };
 
+  const handleDesktopPinToggle = () => {
+    const nextPinned = !isDesktopPinned;
+    setIsDesktopPinned(nextPinned);
+    void setFloatingCardDesktopPinned(cardReference, nextPinned).catch(() => {
+      setIsDesktopPinned(!nextPinned);
+    });
+  };
+
+  const updateUserSize = (clientX: number, clientY: number) => {
+    const session = resizeSessionRef.current;
+    if (!session) return;
+    const minimum = minimumCardSizeRef.current;
+    const nextSize = {
+      width: Math.max(minimum.width, Math.round(session.startWidth + clientX - session.startX)),
+      height: Math.max(minimum.height, Math.round(session.startHeight + clientY - session.startY)),
+    };
+    setCardSize(nextSize);
+    setFrameSize(nextSize);
+    syncedFrameSizeRef.current = nextSize;
+    void resizeFloatingCard({ ...nextSize, anchor: "top", horizontalAnchor: "left" });
+  };
+
   const handleToggleTodo = (id: string, _target: DOMRect, nextDone: boolean) => {
     useTodosStore.getState().toggleTodo(id);
 
@@ -553,26 +593,32 @@ export function FloatingNoteApp() {
         data-floating-card-dialog-side={hasOpenDialog ? dialogSide : "none"}
         className="relative"
         style={{
-          width: payload.size.width,
-          minHeight: payload.size.height,
+          width: cardSize.width,
+          minHeight: cardSize.height,
           marginLeft: cardOffsetLeft,
         }}
       >
         {payload.kind === "note" && note && isInteractive ? (
           <FloatingNoteCard
             note={note}
-            width={payload.size.width}
+            width={cardSize.width}
+            minHeight={cardSize.height}
             onBeginDrag={() => void startFloatingCardDrag(cardReference)}
             onDock={handleDock}
+            desktopPinned={isDesktopPinned}
+            onToggleDesktopPinned={handleDesktopPinToggle}
           />
         ) : payload.kind === "todo" && todo && isInteractive ? (
           <FloatingTodoItem
             todo={todo}
-            width={payload.size.width}
+            width={cardSize.width}
+            minHeight={cardSize.height}
             order={payload.order}
             onBeginDrag={() => void startFloatingCardDrag(cardReference)}
             onDock={handleDock}
             onToggle={handleToggleTodo}
+            desktopPinned={isDesktopPinned}
+            onToggleDesktopPinned={handleDesktopPinToggle}
           />
         ) : payload.kind === "note" ? (
           <div
@@ -580,12 +626,12 @@ export function FloatingNoteApp() {
             tabIndex={0}
             aria-label={t.notes.reorder}
             className="relative cursor-grab active:cursor-grabbing"
-            style={{ width: payload.size.width, height: payload.size.height }}
+            style={{ width: cardSize.width, height: cardSize.height }}
             onPointerDown={() => {
               void startFloatingCardDrag(cardReference);
             }}
           >
-            <NoteCardPreview note={createPreviewNoteCard(payload)} width={payload.size.width} />
+            <NoteCardPreview note={createPreviewNoteCard(payload)} width={cardSize.width} />
           </div>
         ) : (
           <div
@@ -593,14 +639,47 @@ export function FloatingNoteApp() {
             tabIndex={0}
             aria-label={t.todos.reorder}
             className="relative cursor-grab active:cursor-grabbing"
-            style={{ width: payload.size.width, height: payload.size.height }}
+            style={{ width: cardSize.width, height: cardSize.height }}
             onPointerDown={() => {
               void startFloatingCardDrag(cardReference);
             }}
           >
-            <TodoItemPreview todo={payload.todo} width={payload.size.width} order={payload.order} />
+            <TodoItemPreview todo={payload.todo} width={cardSize.width} order={payload.order} />
           </div>
         )}
+        {!hasOpenDialog ? (
+          <div
+            role="separator"
+            aria-label={t.common.resizeFloatingCard}
+            data-tooltip={t.common.resizeFloatingCard}
+            className="absolute bottom-1.5 right-1.5 z-40 h-5 w-5 cursor-nwse-resize rounded-br-[10px] opacity-55 transition-opacity hover:opacity-100"
+            onPointerDown={(event) => {
+              event.preventDefault();
+              event.stopPropagation();
+              resizeSessionRef.current = {
+                pointerId: event.pointerId,
+                startX: event.clientX,
+                startY: event.clientY,
+                startWidth: cardSize.width,
+                startHeight: cardSize.height,
+              };
+              event.currentTarget.setPointerCapture?.(event.pointerId);
+            }}
+            onPointerMove={(event) => {
+              if (resizeSessionRef.current?.pointerId !== event.pointerId) return;
+              event.stopPropagation();
+              updateUserSize(event.clientX, event.clientY);
+            }}
+            onPointerUp={(event) => {
+              if (resizeSessionRef.current?.pointerId !== event.pointerId) return;
+              updateUserSize(event.clientX, event.clientY);
+              resizeSessionRef.current = null;
+              event.currentTarget.releasePointerCapture?.(event.pointerId);
+            }}
+          >
+            <span className="absolute bottom-0.5 right-0.5 h-2.5 w-2.5 border-b-2 border-r-2 border-[var(--muted)]" />
+          </div>
+        ) : null}
       </article>
     </main>
   );

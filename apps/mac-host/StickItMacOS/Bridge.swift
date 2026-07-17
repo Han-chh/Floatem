@@ -74,6 +74,7 @@ protocol StickItNativeBridgeHandling: AnyObject {
     func showFloatingCardFromBridge(_ payload: Any) throws
     func closeFloatingCardFromBridge(kind: String, id: String)
     func startFloatingCardDragFromBridge(kind: String, id: String) throws
+    func setFloatingCardDesktopPinnedFromBridge(kind: String, id: String, pinned: Bool) throws
     func quitApplicationFromBridge()
     func startWindowDragFromBridge() throws
 }

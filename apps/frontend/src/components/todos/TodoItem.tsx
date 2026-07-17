@@ -9,7 +9,7 @@ import { formatDateKeyInTimeZone, formatTimestampInTimeZone } from "../../lib/ti
 import type { TimeFormat } from "../../lib/models";
 import { useSettingsStore } from "../../store/settingsStore";
 import { useTodosStore } from "../../store/todosStore";
-import { CalendarDaysIcon, CheckSquareIcon, CircleCheckBigIcon, SquarePenIcon, Trash2Icon, XIcon } from "../icons/AppIcons";
+import { CalendarDaysIcon, CheckSquareIcon, CircleCheckBigIcon, PinIcon, SquarePenIcon, Trash2Icon, XIcon } from "../icons/AppIcons";
 import { TodoGroupDialog } from "./TodoGroupDialog";
 import { ReminderPicker } from "./ReminderPicker";
 
@@ -92,6 +92,8 @@ type TodoRowBodyProps = {
   isSelected?: boolean;
   selectionMode?: boolean;
   actionVariant?: "delete" | "dock";
+  desktopPinned?: boolean;
+  onToggleDesktopPinned?: () => void;
 };
 
 function getStatusMeta(todo: TodoItemModel, doneFallbackLabel: string, timeZone: string, timeFormat: TimeFormat) {
@@ -217,6 +219,8 @@ function TodoRowBody({
   isSelected = false,
   selectionMode = false,
   actionVariant = "delete",
+  desktopPinned = false,
+  onToggleDesktopPinned,
 }: TodoRowBodyProps) {
   const { t } = useI18n();
   const setReminder = useTodosStore((state) => state.setReminder);
@@ -330,6 +334,26 @@ function TodoRowBody({
         <div className="todo-row-actions">
           {selectionMode ? null : (
             <>
+              {onToggleDesktopPinned ? (
+                <motion.button
+                  type="button"
+                  aria-label={desktopPinned ? t.common.removeFromDesktop : t.common.keepOnDesktop}
+                  aria-pressed={desktopPinned}
+                  data-tooltip={desktopPinned ? t.common.removeFromDesktop : t.common.keepOnDesktop}
+                  className={`paper-icon-button todo-card-action-button inline-flex shrink-0 items-center justify-center rounded-full border p-0 ${
+                    desktopPinned ? "text-[var(--accent-cobalt)]" : ""
+                  }`}
+                  whileHover={{ y: -1.5, scale: 1.06 }}
+                  whileTap={{ scale: 0.94 }}
+                  onPointerDown={(event) => event.stopPropagation()}
+                  onClick={(event) => {
+                    event.stopPropagation();
+                    onToggleDesktopPinned();
+                  }}
+                >
+                  <PinIcon size={12.5} />
+                </motion.button>
+              ) : null}
               <motion.button
                 type="button"
                 aria-label={t.todos.changeGroup}
@@ -451,6 +475,9 @@ export function FloatingTodoItem({
   onBeginDrag,
   onDock,
   onToggle,
+  desktopPinned = false,
+  onToggleDesktopPinned,
+  minHeight,
 }: {
   todo: TodoItemModel;
   width?: number;
@@ -458,6 +485,9 @@ export function FloatingTodoItem({
   onBeginDrag: () => void;
   onDock: () => void;
   onToggle: (id: string, target: DOMRect, nextDone: boolean) => void;
+  desktopPinned?: boolean;
+  onToggleDesktopPinned?: () => void;
+  minHeight?: number;
 }) {
   const { t } = useI18n();
   const groups = useTodosStore((state) => state.groups);
@@ -491,6 +521,7 @@ export function FloatingTodoItem({
           borderColor: `${groupAccentColor}78`,
           boxShadow: `0 0 0 2px ${colorWithAlpha(groupAccentColor, "14")}, 0 12px 24px ${colorWithAlpha(groupAccentColor, "12")}, 0 10px 22px rgba(61,49,34,0.08)`,
           width: width ? `${width}px` : "100%",
+          minHeight,
         }}
         onPointerDownCapture={(event) => {
           if (event.button !== 0) {
@@ -555,6 +586,8 @@ export function FloatingTodoItem({
           onOpenGroupDialog={() => setIsGroupDialogOpen(true)}
           onToggle={(target, nextDone) => onToggle(todo.id, target, nextDone)}
           actionVariant="dock"
+          desktopPinned={desktopPinned}
+          onToggleDesktopPinned={onToggleDesktopPinned}
         />
       </motion.article>
       <FloatingTodoEditDialog todo={todo} isOpen={isEditDialogOpen} onClose={() => setIsEditDialogOpen(false)} />

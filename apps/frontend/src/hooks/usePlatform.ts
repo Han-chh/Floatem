@@ -111,6 +111,11 @@ export async function startFloatingCardDrag(card: FloatingCardReference) {
   await bridge.startFloatingCardDrag?.(card);
 }
 
+export async function setFloatingCardDesktopPinned(card: FloatingCardReference, pinned: boolean) {
+  const bridge = getStickItBridge() as Partial<StickItNativeBridge>;
+  await bridge.setFloatingCardDesktopPinned?.(card, pinned);
+}
+
 function canUseFloatingPayload(payload: DragPreviewPayload) {
   return payload.kind === "note" ? canUseFloatingNotes() : canUseFloatingTodos();
 }

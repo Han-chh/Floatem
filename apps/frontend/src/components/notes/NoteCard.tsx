@@ -6,7 +6,7 @@ import { formatCompactEditedLabel, useI18n } from "../../lib/i18n";
 import { resolveNoteAccentColor, resolveNoteGroup, type NoteCard as NoteCardModel } from "../../lib/models";
 import { syncTextareaHeight } from "../../lib/resizeTextarea";
 import { useNotesStore } from "../../store/notesStore";
-import { ChevronsUpDownIcon, Trash2Icon, XIcon } from "../icons/AppIcons";
+import { ChevronsUpDownIcon, PinIcon, Trash2Icon, XIcon } from "../icons/AppIcons";
 import { Editor, ReadOnlyEditorPreview } from "./Editor";
 import { NoteGroupDialog } from "./NoteGroupDialog";
 
@@ -32,6 +32,8 @@ type NoteCardBodyProps = {
   isDropTargetPreview?: boolean;
   preview?: boolean;
   actionVariant?: "delete" | "dock";
+  desktopPinned?: boolean;
+  onToggleDesktopPinned?: () => void;
 };
 
 function GroupColorGlyph({ color, size = "md" }: { color: string; size?: "sm" | "md" }) {
@@ -84,6 +86,8 @@ function NoteCardBody({
   isDropTargetPreview = false,
   preview = false,
   actionVariant = "delete",
+  desktopPinned = false,
+  onToggleDesktopPinned,
 }: NoteCardBodyProps) {
   const { t } = useI18n();
   const isInteractive = !preview;
@@ -154,6 +158,23 @@ function NoteCardBody({
             </div>
 
             <div className="note-card-actions">
+              {onToggleDesktopPinned ? (
+                <motion.button
+                  type="button"
+                  aria-label={desktopPinned ? t.common.removeFromDesktop : t.common.keepOnDesktop}
+                  aria-pressed={desktopPinned}
+                  data-tooltip={desktopPinned ? t.common.removeFromDesktop : t.common.keepOnDesktop}
+                  className={`note-card-action-button paper-icon-button relative rounded-[9px] ${
+                    desktopPinned ? "text-[var(--accent-cobalt)]" : ""
+                  }`}
+                  whileHover={{ y: -1.5, scale: 1.03 }}
+                  whileTap={{ scale: 0.97 }}
+                  onPointerDown={(event) => event.stopPropagation()}
+                  onClick={onToggleDesktopPinned}
+                >
+                  <PinIcon size={13} />
+                </motion.button>
+              ) : null}
               <div className="note-card-action-anchor group">
                 <motion.button
                   type="button"
@@ -265,11 +286,17 @@ export function FloatingNoteCard({
   width,
   onBeginDrag,
   onDock,
+  desktopPinned = false,
+  onToggleDesktopPinned,
+  minHeight,
 }: {
   note: NoteCardModel;
   width?: number;
   onBeginDrag: () => void;
   onDock: () => void;
+  desktopPinned?: boolean;
+  onToggleDesktopPinned?: () => void;
+  minHeight?: number;
 }) {
   const { language, t } = useI18n();
   const groups = useNotesStore((state) => state.groups);
@@ -303,6 +330,7 @@ export function FloatingNoteCard({
           borderColor: colorWithAlpha(accentColor, "4d"),
           boxShadow: `0 0 0 2px ${colorWithAlpha(accentColor, "10")}, 0 18px 36px rgba(61,49,34,0.10)`,
           width: width ?? undefined,
+          minHeight,
         }}
         onPointerDownCapture={(event) => {
           if (event.button !== 0) {
@@ -336,6 +364,8 @@ export function FloatingNoteCard({
           instantToolbar
           titleRef={titleRef}
           actionVariant="dock"
+          desktopPinned={desktopPinned}
+          onToggleDesktopPinned={onToggleDesktopPinned}
         />
       </motion.article>
 

@@ -107,6 +107,13 @@ final class FloatingNoteWindowController: NSObject, WKNavigationDelegate, WKScri
         startFloatingCardDrag(card) {
           return send("startFloatingCardDrag", { kind: String(card?.kind ?? ""), id: String(card?.id ?? "") });
         },
+        setFloatingCardDesktopPinned(card, pinned) {
+          return send("setFloatingCardDesktopPinned", {
+            kind: String(card?.kind ?? ""),
+            id: String(card?.id ?? ""),
+            pinned: Boolean(pinned),
+          });
+        },
         showWindow() { return Promise.resolve(); },
         hideWindow() { return Promise.resolve(); },
         toggleWindow() { return Promise.resolve(); },
@@ -146,6 +153,8 @@ final class FloatingNoteWindowController: NSObject, WKNavigationDelegate, WKScri
     let cardID: String
     var onClose: ((String, String) -> Void)?
     var onRequestDrag: ((String, String) -> Void)?
+    var onSetDesktopPinned: ((String, String, Bool) -> Void)?
+    var onFrameChange: ((NSRect) -> Void)?
     var onMove: ((NSRect) -> Void)?
     var onLoadAllData: (() throws -> [String: Any])?
     var onSaveNotes: ((Any) throws -> Void)?
@@ -163,6 +172,7 @@ final class FloatingNoteWindowController: NSObject, WKNavigationDelegate, WKScri
     private var isTextCompositionActive = false
     private var minimumContentSize = NSSize(width: 1, height: 1)
     private var pendingPayload: Any?
+    private(set) var isDesktopPinned = false
 
     init(cardKind: String, cardID: String) {
         self.cardKind = cardKind
@@ -249,10 +259,16 @@ final class FloatingNoteWindowController: NSObject, WKNavigationDelegate, WKScri
         applyPendingPayloadIfPossible()
     }
 
-    func showWindow(frame: NSRect) {
+    var currentFrame: NSRect {
+        panel?.frame ?? .zero
+    }
+
+    func showWindow(frame: NSRect, updateMinimumSize: Bool = true) {
         guard !isDestroyed else { return }
         guard let panel else { return }
-        minimumContentSize = frame.size
+        if updateMinimumSize {
+            minimumContentSize = frame.size
+        }
         panel.setFrame(frame, display: true)
         panel.orderFrontRegardless()
         focusWebView()
@@ -271,6 +287,8 @@ final class FloatingNoteWindowController: NSObject, WKNavigationDelegate, WKScri
         onMove = nil
         onClose = nil
         onRequestDrag = nil
+        onSetDesktopPinned = nil
+        onFrameChange = nil
         onLoadAllData = nil
         onSaveNotes = nil
         onSaveTodos = nil
@@ -470,6 +488,7 @@ final class FloatingNoteWindowController: NSObject, WKNavigationDelegate, WKScri
             display: true
         )
         panel.orderFrontRegardless()
+        onFrameChange?(nextFrame)
     }
 
     private func currentScreenPlacement() -> [String: Any]? {
@@ -521,6 +540,20 @@ final class FloatingNoteWindowController: NSObject, WKNavigationDelegate, WKScri
         panel?.level = MainWindowController.overlayPanelLevel
     }
 
+    func setDesktopPinned(_ pinned: Bool) {
+        guard !isDestroyed, let panel else { return }
+        isDesktopPinned = pinned
+        if pinned {
+            let desktopIconLevel = Int(CGWindowLevelForKey(.desktopIconWindow)) + 1
+            panel.level = NSWindow.Level(rawValue: desktopIconLevel)
+            panel.collectionBehavior = [.canJoinAllSpaces, .stationary, .ignoresCycle]
+        } else {
+            panel.collectionBehavior = MainWindowController.overlayCollectionBehavior
+            configurePanelForGlobalOverlay()
+        }
+        panel.orderFrontRegardless()
+    }
+
     private func configurePanelForInteractiveInput() {
         panel?.level = Self.interactiveInputPanelLevel
     }
@@ -531,6 +564,11 @@ final class FloatingNoteWindowController: NSObject, WKNavigationDelegate, WKScri
 
     private func updatePanelPresentationForCurrentInteraction() {
         guard let panel, panel.isVisible else {
+            return
+        }
+
+        if isDesktopPinned {
+            setDesktopPinned(true)
             return
         }
 
@@ -574,6 +612,12 @@ final class FloatingNoteWindowController: NSObject, WKNavigationDelegate, WKScri
             let requestedCardID = params["id"] as? String ?? cardID
             Self.diagnostics.info("WKScriptMessage startFloatingCardDrag kind=\(kind, privacy: .public) id=\(requestedCardID, privacy: .public) onRequestDrag=\(self.onRequestDrag != nil)")
             onRequestDrag?(kind, requestedCardID)
+            resolveBridgeRequest(id: requestID, ok: true, result: NSNull())
+        case "setFloatingCardDesktopPinned":
+            let kind = params["kind"] as? String ?? cardKind
+            let requestedCardID = params["id"] as? String ?? cardID
+            let pinned = params["pinned"] as? Bool ?? false
+            onSetDesktopPinned?(kind, requestedCardID, pinned)
             resolveBridgeRequest(id: requestID, ok: true, result: NSNull())
         case "getCapabilities":
             resolveBridgeRequest(id: requestID, ok: true, result: floatingCapabilities())

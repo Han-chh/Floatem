@@ -21,6 +21,9 @@ type MessageCatalog = {
     close: string;
     english: string;
     language: string;
+    keepOnDesktop: string;
+    removeFromDesktop: string;
+    resizeFloatingCard: string;
     save: string;
     scrollToBottom: string;
     scrollToTop: string;
@@ -353,6 +356,9 @@ const messages: Record<AppLanguage, MessageCatalog> = {
       close: "Close",
       english: "English",
       language: "Language",
+      keepOnDesktop: "Keep floating on desktop",
+      removeFromDesktop: "Remove from desktop",
+      resizeFloatingCard: "Resize floating card",
       save: "Save",
       scrollToBottom: "Scroll to bottom",
       scrollToTop: "Scroll to top",
@@ -685,6 +691,9 @@ const messages: Record<AppLanguage, MessageCatalog> = {
       close: "关闭",
       english: "English",
       language: "语言",
+      keepOnDesktop: "保持悬浮在桌面",
+      removeFromDesktop: "取消桌面固定",
+      resizeFloatingCard: "调整悬浮卡片大小",
       save: "保存",
       scrollToBottom: "滚动到底部",
       scrollToTop: "滚动到顶部",
