@@ -16,7 +16,8 @@ type Motif = {
   variant: number;
 };
 
-const MOTIF_STEP = 280;
+const MOTIF_STEP = 170;
+const INITIAL_MOTIF_COUNT = 6;
 
 function seededValue(seed: number, index: number, salt: number) {
   const value = Math.sin(seed * 0.013 + index * 12.9898 + salt * 78.233) * 43_758.5453;
@@ -24,14 +25,15 @@ function seededValue(seed: number, index: number, salt: number) {
 }
 
 function buildMotif(seed: number, index: number): Motif {
-  const side = seededValue(seed, index, 1) > 0.5 ? "right" : "left";
+  const startsOnRight = seededValue(seed, 0, 1) > 0.5;
+  const side = (index + (startsOnRight ? 1 : 0)) % 2 === 0 ? "left" : "right";
   return {
     id: index,
     side,
-    top: index * MOTIF_STEP + 42 + seededValue(seed, index, 2) * 110,
-    size: 92 + seededValue(seed, index, 3) * 74,
-    rotation: -28 + seededValue(seed, index, 4) * 56,
-    variant: index % 4,
+    top: index * MOTIF_STEP + 20 + seededValue(seed, index, 2) * 62,
+    size: 88 + seededValue(seed, index, 3) * 62,
+    rotation: -34 + seededValue(seed, index, 4) * 68,
+    variant: (index + Math.floor(seed)) % 4,
   };
 }
 
@@ -81,7 +83,7 @@ function MotifGlyph({ variant }: { variant: number }) {
 export function ThemeAtmosphere({ scrollRootRef, contentSelector = "[data-theme-scroll-content]" }: ThemeAtmosphereProps) {
   const [seed] = useState(() => Math.random() * 100_000);
   const [contentHeight, setContentHeight] = useState(720);
-  const [motifCount, setMotifCount] = useState(4);
+  const [motifCount, setMotifCount] = useState(INITIAL_MOTIF_COUNT);
 
   useEffect(() => {
     const root = scrollRootRef.current;
@@ -93,7 +95,7 @@ export function ThemeAtmosphere({ scrollRootRef, contentSelector = "[data-theme-
     const measure = () => {
       const nextHeight = Math.max(root.clientHeight, content?.scrollHeight ?? root.scrollHeight);
       setContentHeight(nextHeight);
-      setMotifCount((current) => Math.max(current, Math.min(Math.ceil(nextHeight / MOTIF_STEP), 4)));
+      setMotifCount((current) => Math.max(current, Math.min(Math.ceil(nextHeight / MOTIF_STEP), INITIAL_MOTIF_COUNT)));
     };
     const extendForScroll = () => {
       const needed = Math.ceil((root.scrollTop + root.clientHeight * 1.5) / MOTIF_STEP);
