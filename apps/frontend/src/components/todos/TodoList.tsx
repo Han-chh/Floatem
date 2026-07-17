@@ -39,7 +39,7 @@ import {
   resolveTodoAccentColor,
   type TodoItem as TodoItemModel,
 } from "../../lib/models";
-import { isNativeQuickNoteHost } from "../../lib/nativeBridge";
+import { isNativeStickItHost } from "../../lib/nativeBridge";
 import { readPlainTextFromClipboard, writePlainTextToClipboard } from "../../lib/plainTextClipboard";
 import {
   addDaysToDateKey,
@@ -1432,7 +1432,7 @@ export function TodoList() {
                 }
 
                 event.preventDefault();
-                if (isNativeQuickNoteHost()) {
+                if (isNativeStickItHost()) {
                   void writePlainTextToClipboard(text);
                   return;
                 }
@@ -1449,7 +1449,7 @@ export function TodoList() {
                   return;
                 }
 
-                if (isNativeQuickNoteHost()) {
+                if (isNativeStickItHost()) {
                   void handleDraftPaste(event.currentTarget);
                 }
               }}
@@ -1493,7 +1493,7 @@ export function TodoList() {
               {isCalendarOpen ? (
                 <motion.div
                   data-no-window-drag="true"
-                  className="quicknote-modal-backdrop fixed inset-0 z-[88] flex items-center justify-center bg-[rgba(30,25,21,0.24)] px-5 py-6"
+                  className="stickit-modal-backdrop fixed inset-0 z-[88] flex items-center justify-center bg-[rgba(30,25,21,0.24)] px-5 py-6"
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   exit={{ opacity: 0 }}
@@ -1548,7 +1548,7 @@ export function TodoList() {
               {editingTodo ? (
                 <motion.div
                   data-no-window-drag="true"
-                  className="quicknote-modal-backdrop fixed inset-0 z-[90] flex items-center justify-center bg-[rgba(30,25,21,0.24)] px-5 py-6"
+                  className="stickit-modal-backdrop fixed inset-0 z-[90] flex items-center justify-center bg-[rgba(30,25,21,0.24)] px-5 py-6"
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   exit={{ opacity: 0 }}
@@ -1666,7 +1666,7 @@ export function TodoList() {
               {dateChangeDialog ? (
                 <motion.div
                   data-no-window-drag="true"
-                  className="quicknote-modal-backdrop fixed inset-0 z-[91] flex items-center justify-center bg-[rgba(30,25,21,0.24)] px-5 py-6"
+                  className="stickit-modal-backdrop fixed inset-0 z-[91] flex items-center justify-center bg-[rgba(30,25,21,0.24)] px-5 py-6"
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   exit={{ opacity: 0 }}
@@ -1742,7 +1742,7 @@ export function TodoList() {
               {pendingBulkConfirmation ? (
                 <motion.div
                   data-no-window-drag="true"
-                  className="quicknote-modal-backdrop fixed inset-0 z-[92] flex items-center justify-center bg-[rgba(30,25,21,0.24)] px-5 py-6"
+                  className="stickit-modal-backdrop fixed inset-0 z-[92] flex items-center justify-center bg-[rgba(30,25,21,0.24)] px-5 py-6"
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   exit={{ opacity: 0 }}

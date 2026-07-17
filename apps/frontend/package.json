@@ -1,5 +1,5 @@
 {
-  "name": "@quicknote/frontend",
+  "name": "@stickit/frontend",
   "private": true,
   "version": "0.5.0",
   "type": "module"

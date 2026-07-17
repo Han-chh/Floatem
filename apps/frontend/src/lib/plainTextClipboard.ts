@@ -1,13 +1,13 @@
-import { getQuickNoteBridge, isNativeQuickNoteHost } from "./nativeBridge";
+import { getStickItBridge, isNativeStickItHost } from "./nativeBridge";
 
 export async function writePlainTextToClipboard(text: string) {
   if (!text) {
     return false;
   }
 
-  if (isNativeQuickNoteHost()) {
+  if (isNativeStickItHost()) {
     try {
-      await getQuickNoteBridge().writeClipboardText(text);
+      await getStickItBridge().writeClipboardText(text);
       return true;
     } catch {
       // Fall through to the browser clipboard helpers.
@@ -46,9 +46,9 @@ export async function writePlainTextToClipboard(text: string) {
 }
 
 export async function readPlainTextFromClipboard() {
-  if (isNativeQuickNoteHost()) {
+  if (isNativeStickItHost()) {
     try {
-      return await getQuickNoteBridge().readClipboardText();
+      return await getStickItBridge().readClipboardText();
     } catch {
       // Fall through to the browser clipboard helpers.
     }

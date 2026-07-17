@@ -11,8 +11,8 @@
     "moduleResolution": "bundler",
     "baseUrl": ".",
     "paths": {
-      "@quicknote/branding": ["../../packages/branding/src"],
-      "@quicknote/native-bridge": ["../../packages/native-bridge/src"]
+      "@stickit/branding": ["../../packages/branding/src"],
+      "@stickit/native-bridge": ["../../packages/native-bridge/src"]
     },
     "allowImportingTsExtensions": true,
     "resolveJsonModule": true,

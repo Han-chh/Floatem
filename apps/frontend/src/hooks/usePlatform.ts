@@ -3,14 +3,14 @@ import type {
   FloatingCardReference,
   FloatingCardResize,
   FloatingCardScreenPlacement,
-} from "@quicknote/native-bridge";
+} from "@stickit/native-bridge";
 import type { AppSettings, LoadAllResult, NotesDocument, TodosDocument } from "../lib/models";
 import { normalizeNotesDocument, normalizeTodosDocument } from "../lib/models";
-import { getQuickNoteBridge, isNativeQuickNoteHost, type QuickNoteNativeBridge } from "../lib/nativeBridge";
+import { getStickItBridge, isNativeStickItHost, type StickItNativeBridge } from "../lib/nativeBridge";
 import { canUseFloatingNotes, canUseFloatingTodos } from "../lib/platformFeatures";
 
 export function usePlatform() {
-  const isNativeHost = isNativeQuickNoteHost();
+  const isNativeHost = isNativeStickItHost();
 
   return {
     isNativeHost,
@@ -19,7 +19,7 @@ export function usePlatform() {
 }
 
 export async function loadAllData(): Promise<LoadAllResult> {
-  const result = await getQuickNoteBridge().loadAllData();
+  const result = await getStickItBridge().loadAllData();
 
   return {
     ...result,
@@ -29,43 +29,43 @@ export async function loadAllData(): Promise<LoadAllResult> {
 }
 
 export async function saveNotes(notes: NotesDocument) {
-  await getQuickNoteBridge().saveNotes(notes);
+  await getStickItBridge().saveNotes(notes);
 }
 
 export async function saveTodos(todos: TodosDocument) {
-  await getQuickNoteBridge().saveTodos(todos);
+  await getStickItBridge().saveTodos(todos);
 }
 
 export async function saveSettings(settings: Partial<AppSettings>) {
-  await getQuickNoteBridge().saveSettings(settings);
+  await getStickItBridge().saveSettings(settings);
 }
 
 export async function registerHotkey(shortcut: string) {
-  await getQuickNoteBridge().registerHotkey(shortcut);
+  await getStickItBridge().registerHotkey(shortcut);
 }
 
 export async function getHotkeyRegistrationState() {
-  return await getQuickNoteBridge().getHotkeyRegistrationState();
+  return await getStickItBridge().getHotkeyRegistrationState();
 }
 
 export async function setEditableInputActive(active: boolean) {
-  await getQuickNoteBridge().setEditableInputActive(active);
+  await getStickItBridge().setEditableInputActive(active);
 }
 
 export async function setTextCompositionActive(active: boolean) {
-  await getQuickNoteBridge().setTextCompositionActive(active);
+  await getStickItBridge().setTextCompositionActive(active);
 }
 
 export async function hidePanelWindow() {
-  await getQuickNoteBridge().hideWindow();
+  await getStickItBridge().hideWindow();
 }
 
 export async function reportFrontendReady() {
-  await getQuickNoteBridge().reportFrontendReady();
+  await getStickItBridge().reportFrontendReady();
 }
 
 export async function reportFrontendError(message: string, source?: string) {
-  await getQuickNoteBridge().reportFrontendError(message, source);
+  await getStickItBridge().reportFrontendError(message, source);
 }
 
 export async function showDragPreview(payload: DragPreviewPayload) {
@@ -73,12 +73,12 @@ export async function showDragPreview(payload: DragPreviewPayload) {
     return;
   }
 
-  const bridge = getQuickNoteBridge() as Partial<QuickNoteNativeBridge>;
+  const bridge = getStickItBridge() as Partial<StickItNativeBridge>;
   await bridge.showDragPreview?.(payload);
 }
 
 export async function hideDragPreview() {
-  const bridge = getQuickNoteBridge() as Partial<QuickNoteNativeBridge>;
+  const bridge = getStickItBridge() as Partial<StickItNativeBridge>;
   await bridge.hideDragPreview?.();
 }
 
@@ -87,27 +87,27 @@ export async function showFloatingCard(payload: DragPreviewPayload) {
     return;
   }
 
-  const bridge = getQuickNoteBridge() as Partial<QuickNoteNativeBridge>;
+  const bridge = getStickItBridge() as Partial<StickItNativeBridge>;
   await bridge.showFloatingCard?.(payload);
 }
 
 export async function closeFloatingCard(card: FloatingCardReference) {
-  const bridge = getQuickNoteBridge() as Partial<QuickNoteNativeBridge>;
+  const bridge = getStickItBridge() as Partial<StickItNativeBridge>;
   await bridge.closeFloatingCard?.(card);
 }
 
 export async function resizeFloatingCard(size: FloatingCardResize) {
-  const bridge = getQuickNoteBridge() as Partial<QuickNoteNativeBridge>;
+  const bridge = getStickItBridge() as Partial<StickItNativeBridge>;
   await bridge.resizeFloatingCard?.(size);
 }
 
 export async function getFloatingCardScreenPlacement(): Promise<FloatingCardScreenPlacement | null> {
-  const bridge = getQuickNoteBridge() as Partial<QuickNoteNativeBridge>;
+  const bridge = getStickItBridge() as Partial<StickItNativeBridge>;
   return (await bridge.getFloatingCardScreenPlacement?.()) ?? null;
 }
 
 export async function startFloatingCardDrag(card: FloatingCardReference) {
-  const bridge = getQuickNoteBridge() as Partial<QuickNoteNativeBridge>;
+  const bridge = getStickItBridge() as Partial<StickItNativeBridge>;
   await bridge.startFloatingCardDrag?.(card);
 }
 

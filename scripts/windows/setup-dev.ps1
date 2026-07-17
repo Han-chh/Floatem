@@ -1,7 +1,7 @@
 #Requires -Version 5.1
 <#
 .SYNOPSIS
-  Read-only checks for QuickNote Windows development prerequisites.
+  Read-only checks for StickIt Windows development prerequisites.
 
 .DESCRIPTION
   Does not install software or change execution policy. Run from repo root:
@@ -21,11 +21,11 @@ function Write-Fail($msg) {
     $script:DevCheckFailed = $true
 }
 
-Write-Host "QuickNote Windows dev prerequisite check" -ForegroundColor Cyan
+Write-Host "StickIt Windows dev prerequisite check" -ForegroundColor Cyan
 $repoRoot = Resolve-Path (Join-Path $PSScriptRoot "..\..")
 Write-Host "Repo root (resolved): $repoRoot`n"
 
-$csprojPath = Join-Path $repoRoot "apps\windows-host\QuickNote.Windows.csproj"
+$csprojPath = Join-Path $repoRoot "apps\windows-host\StickIt.Windows.csproj"
 $rootPkg = Join-Path $repoRoot "package.json"
 $workspaceFile = Join-Path $repoRoot "pnpm-workspace.yaml"
 if (-not (Test-Path -LiteralPath $csprojPath)) {
@@ -35,7 +35,7 @@ else {
     Write-Ok "Windows host project found"
 }
 if (-not (Test-Path -LiteralPath $rootPkg)) {
-    Write-Fail "Root package.json missing — are you in the QuickNote repository root?"
+    Write-Fail "Root package.json missing — are you in the StickIt repository root?"
 }
 else {
     Write-Ok "Root package.json found"
@@ -118,7 +118,7 @@ else {
 # Optional: Rust / Tauri (should NOT be required)
 $cargo = Get-Command cargo -ErrorAction SilentlyContinue
 if ($cargo) {
-    Write-Warn "Rust (cargo) is on PATH — QuickNote no longer uses a Tauri/Rust host; you do not need cargo for this repo."
+    Write-Warn "Rust (cargo) is on PATH — StickIt no longer uses a Tauri/Rust host; you do not need cargo for this repo."
 }
 
 Write-Host ""

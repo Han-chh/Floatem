@@ -55,7 +55,7 @@ async function bootPreview(page: Page) {
 
 async function seedNotes(page: Page, notes: unknown) {
   await page.addInitScript((seed) => {
-    window.localStorage.setItem("quicknote.notes", JSON.stringify(seed));
+    window.localStorage.setItem("stickit.notes", JSON.stringify(seed));
   }, notes);
 }
 
@@ -335,7 +335,7 @@ for (const viewport of VIEWPORTS) {
 
       await expectWithinViewport(page, closeButton);
       await expectWithinViewport(page, panel.getByRole("button", { name: "Shortcuts and launch" }));
-      await expectWithinViewport(page, panel.getByRole("button", { name: /^About QuickNote\b/ }));
+      await expectWithinViewport(page, panel.getByRole("button", { name: /^About StickIt\b/ }));
       await panel.getByRole("button", { name: "Shortcuts and launch" }).click();
       await expectWithinViewport(page, panel.getByRole("heading", { name: "Shortcuts and launch" }));
       await expectWithinViewport(page, panel.getByTestId("settings-category-title-frame"));
@@ -348,8 +348,8 @@ for (const viewport of VIEWPORTS) {
       await panel.getByRole("button", { name: "Cancel" }).click();
       await expect(dialog).toBeHidden();
       await panel.getByRole("button", { name: "All settings" }).click();
-      await panel.getByRole("button", { name: /^About QuickNote\b/ }).click();
-      await expectWithinViewport(page, panel.getByRole("heading", { name: "About QuickNote" }));
+      await panel.getByRole("button", { name: /^About StickIt\b/ }).click();
+      await expectWithinViewport(page, panel.getByRole("heading", { name: "About StickIt" }));
       await expectWithinViewport(page, panel.getByRole("heading", { name: "Data scope" }));
       await panel.getByRole("button", { name: "All settings" }).click();
       await expectWithinViewport(page, panel.getByRole("button", { name: "Restore defaults" }));

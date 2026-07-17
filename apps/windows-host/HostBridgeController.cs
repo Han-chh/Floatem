@@ -4,7 +4,7 @@ using System.Diagnostics;
 using Microsoft.Web.WebView2.Core;
 using Microsoft.Web.WebView2.Wpf;
 
-namespace QuickNote.Windows;
+namespace StickIt.Windows;
 
 internal sealed class HostBridgeController
 {
@@ -37,18 +37,18 @@ internal sealed class HostBridgeController
 
     public Task EmitPanelWillOpenAsync()
     {
-        return DispatchEventAsync("quicknote:panel-will-open");
+        return DispatchEventAsync("stickit:panel-will-open");
     }
 
     public Task EmitShortcutInvokedAsync(string shortcut)
     {
         var detail = new JsonObject { ["shortcut"] = shortcut };
-        return DispatchEventAsync("quicknote:shortcut-invoked", detail);
+        return DispatchEventAsync("stickit:shortcut-invoked", detail);
     }
 
     public Task EmitHotkeyRegistrationStateAsync(Native.Win32HotKeyManager.RegistrationState? state = null)
     {
-        return DispatchEventAsync("quicknote:hotkey-registration-state", ToHotkeyRegistrationState(state ?? hotKeys.GetRegistrationState()));
+        return DispatchEventAsync("stickit:hotkey-registration-state", ToHotkeyRegistrationState(state ?? hotKeys.GetRegistrationState()));
     }
 
     private async void OnWebMessageReceived(object? sender, CoreWebView2WebMessageReceivedEventArgs e)
@@ -94,7 +94,7 @@ internal sealed class HostBridgeController
                 window.SetTextCompositionActive(parameters["active"]?.GetValue<bool>() ?? false);
                 return null;
             case "reportFrontendError":
-                Debug.WriteLine($"QuickNote frontend error ({parameters["source"]?.GetValue<string>() ?? "frontend"}): {parameters["message"]?.GetValue<string>() ?? ""}");
+                Debug.WriteLine($"StickIt frontend error ({parameters["source"]?.GetValue<string>() ?? "frontend"}): {parameters["message"]?.GetValue<string>() ?? ""}");
                 return null;
             case "getCapabilities":
                 return Capabilities();
@@ -148,11 +148,11 @@ internal sealed class HostBridgeController
                 return null;
             case "testReminderNotification":
                 await notifications.ScheduleAndConfirmAsync(
-                    $"quicknote.test.notification.{Guid.NewGuid():N}",
+                    $"stickit.test.notification.{Guid.NewGuid():N}",
                     Branding.DisplayName,
                     parameters["language"]?.GetValue<string>() == "zh-CN"
-                        ? "这是一条 QuickNote 测试提醒。"
-                        : "This is a QuickNote test reminder.",
+                        ? "这是一条 StickIt 测试提醒。"
+                        : "This is a StickIt test reminder.",
                     DateTimeOffset.Now.AddSeconds(2),
                     parameters["soundEnabled"]?.GetValue<bool>() ?? true);
                 return null;
@@ -536,7 +536,7 @@ internal sealed class HostBridgeController
             ["limitations"] = new JsonArray
             {
                 "Topmost windows cannot reliably appear above every fullscreen-exclusive or secure desktop surface on Windows.",
-                "Reminder scheduling is app-managed and runs while QuickNote is running; Windows App SDK app notifications are used when a reminder is delivered.",
+                "Reminder scheduling is app-managed and runs while StickIt is running; Windows App SDK app notifications are used when a reminder is delivered.",
             },
         };
     }
@@ -558,7 +558,7 @@ internal sealed class HostBridgeController
         };
 
         response[ok ? "result" : "error"] = payload?.DeepClone();
-        return webView.CoreWebView2.ExecuteScriptAsync($"window.__quickNoteNativeReceive({response.ToJsonString()});");
+        return webView.CoreWebView2.ExecuteScriptAsync($"window.__stickItNativeReceive({response.ToJsonString()});");
     }
 
     private Task SendResponseAsync(int id, bool ok, string message)
@@ -618,7 +618,7 @@ internal sealed class HostBridgeController
 
     private const string BridgeScript = """
 (() => {
-  if (window.quickNoteHost) {
+  if (window.stickItHost) {
     return;
   }
 
@@ -635,7 +635,7 @@ internal sealed class HostBridgeController
     chrome.webview.postMessage({ id, method, params });
   });
 
-  window.quickNoteHost = {
+  window.stickItHost = {
     platform: "windows",
     getCapabilities: () => send("getCapabilities"),
     loadAllData: () => send("loadAllData"),
@@ -674,19 +674,19 @@ internal sealed class HostBridgeController
     hidePanelWindow: () => send("hideWindow"),
   };
 
-  window.quickNoteNative = window.quickNoteHost;
+  window.stickItNative = window.stickItHost;
 
   window.addEventListener("error", (event) => {
-    window.quickNoteHost.reportFrontendError(event.message || "Unhandled frontend error", event.filename || "window.error");
+    window.stickItHost.reportFrontendError(event.message || "Unhandled frontend error", event.filename || "window.error");
   });
 
   window.addEventListener("unhandledrejection", (event) => {
     const reason = event.reason;
     const message = reason && typeof reason.message === "string" ? reason.message : String(reason || "Unhandled promise rejection");
-    window.quickNoteHost.reportFrontendError(message, "unhandledrejection");
+    window.stickItHost.reportFrontendError(message, "unhandledrejection");
   });
 
-  window.__quickNoteNativeReceive = (message) => {
+  window.__stickItNativeReceive = (message) => {
     const record = inflight.get(message.id);
     if (!record) {
       return;
@@ -697,7 +697,7 @@ internal sealed class HostBridgeController
     if (message.ok) {
       record.resolve(message.result);
     } else {
-      record.reject(new Error(message.error || "Unknown QuickNote host bridge error"));
+      record.reject(new Error(message.error || "Unknown StickIt host bridge error"));
     }
   };
 })();

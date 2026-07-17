@@ -108,14 +108,14 @@ html = html.replace(/<script\b[^>]*>\s*<\/script>/gi, (tag) => {
 const styleTags = inlineStyles
   .map(
     ({ href, content }) =>
-      `    <style data-quicknote-inline="${href}">\n${sanitizeInlineStyle(content)}\n    </style>`,
+      `    <style data-stickit-inline="${href}">\n${sanitizeInlineStyle(content)}\n    </style>`,
   )
   .join("\n");
 
 const scriptTags = inlineScripts
   .map(
     ({ src, content }) =>
-      `    <script type="module" data-quicknote-inline="${src}">\n${sanitizeInlineScript(content)}\n    </script>`,
+      `    <script type="module" data-stickit-inline="${src}">\n${sanitizeInlineScript(content)}\n    </script>`,
   )
   .join("\n");
 

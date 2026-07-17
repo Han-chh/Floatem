@@ -1,0 +1,60 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net8.0-windows10.0.19041.0</TargetFramework>
+    <UseWPF>true</UseWPF>
+    <UseWindowsForms>true</UseWindowsForms>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <EnableWindowsTargeting>true</EnableWindowsTargeting>
+    <WindowsPackageType>None</WindowsPackageType>
+    <WindowsAppSDKSelfContained>false</WindowsAppSDKSelfContained>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <AssemblyName>StickIt.Windows</AssemblyName>
+    <RootNamespace>StickIt.Windows</RootNamespace>
+    <WebView2PackageVersion>1.0.3351.48</WebView2PackageVersion>
+    <ApplicationIcon Condition="Exists('Assets\AppIcon.ico')">Assets\AppIcon.ico</ApplicationIcon>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Web.WebView2" Version="$(WebView2PackageVersion)" ExcludeAssets="all" />
+    <PackageReference Include="Microsoft.WindowsAppSDK.Foundation" Version="1.8.260203002" />
+    <PackageReference Include="Microsoft.WindowsAppSDK.Runtime" Version="1.8.260209005" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Reference Remove="Microsoft.Web.WebView2.Core.Projection" />
+    <Reference Include="Microsoft.Web.WebView2.Core">
+      <HintPath>$(NuGetPackageRoot)microsoft.web.webview2\$(WebView2PackageVersion)\lib_manual\netcoreapp3.0\Microsoft.Web.WebView2.Core.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.Web.WebView2.Wpf">
+      <HintPath>$(NuGetPackageRoot)microsoft.web.webview2\$(WebView2PackageVersion)\lib_manual\netcoreapp3.0\Microsoft.Web.WebView2.Wpf.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Include="$(NuGetPackageRoot)microsoft.web.webview2\$(WebView2PackageVersion)\runtimes\win-x64\native\WebView2Loader.dll">
+      <Link>runtimes\win-x64\native\WebView2Loader.dll</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="$(NuGetPackageRoot)microsoft.web.webview2\$(WebView2PackageVersion)\runtimes\win-x86\native\WebView2Loader.dll">
+      <Link>runtimes\win-x86\native\WebView2Loader.dll</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="$(NuGetPackageRoot)microsoft.web.webview2\$(WebView2PackageVersion)\runtimes\win-arm64\native\WebView2Loader.dll">
+      <Link>runtimes\win-arm64\native\WebView2Loader.dll</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Include="..\frontend\dist\**\*">
+      <Link>web\%(RecursiveDir)%(Filename)%(Extension)</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="..\..\packages\branding\branding.json">
+      <Link>branding\branding.json</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+</Project>

@@ -3,13 +3,13 @@ using System.Windows;
 using System.Windows.Interop;
 using System.Windows.Threading;
 using Microsoft.Web.WebView2.Core;
-using QuickNote.Windows.Native;
+using StickIt.Windows.Native;
 
-namespace QuickNote.Windows;
+namespace StickIt.Windows;
 
 public partial class MainWindow : Window
 {
-    private const string FrontendVirtualHost = "quicknote.local";
+    private const string FrontendVirtualHost = "stickit.local";
     private const int WmClose = 0x0010;
     private const int WmSysCommand = 0x0112;
     private const int ScClose = 0xF060;
@@ -348,7 +348,7 @@ public partial class MainWindow : Window
 
     private static Uri ResolveFrontendUri(CoreWebView2 coreWebView2)
     {
-        var devUrl = Environment.GetEnvironmentVariable("QUICKNOTE_FRONTEND_URL");
+        var devUrl = Environment.GetEnvironmentVariable("STICKIT_FRONTEND_URL");
         if (!string.IsNullOrWhiteSpace(devUrl))
         {
             return new Uri(devUrl);

@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" role="img" aria-label="StickIt app icon">
+  <rect width="256" height="256" rx="56" fill="#f7f2e8"/>
+  <path d="M74 55h82c14 0 25 11 25 25v96c0 14-11 25-25 25H74c-14 0-25-11-25-25V80c0-14 11-25 25-25Z" fill="#fffaf0" stroke="#1e1915" stroke-width="12"/>
+  <path d="M82 101h66M82 130h52" stroke="#1e1915" stroke-width="12" stroke-linecap="round"/>
+  <path d="m139 167 47-47 22 22-47 47-31 9 9-31Z" fill="#ff7a59" stroke="#1e1915" stroke-width="10" stroke-linejoin="round"/>
+</svg>

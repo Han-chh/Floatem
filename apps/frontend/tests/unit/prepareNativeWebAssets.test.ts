@@ -5,7 +5,7 @@ import path from "node:path";
 
 describe("prepare-native-web-assets", () => {
   it("inlines bundled entry assets while preserving copied files", () => {
-    const fixtureRoot = mkdtempSync(path.join(tmpdir(), "quicknote-native-web-"));
+    const fixtureRoot = mkdtempSync(path.join(tmpdir(), "stickit-native-web-"));
     const distDir = path.join(fixtureRoot, "dist");
     const outputDir = path.join(fixtureRoot, "native-web");
     const assetsDir = path.join(distDir, "assets");
@@ -41,8 +41,8 @@ describe("prepare-native-web-assets", () => {
 
       const outputHtml = readFileSync(path.join(outputDir, "index.html"), "utf8");
 
-      expect(outputHtml).toContain('data-quicknote-inline="./assets/app.css"');
-      expect(outputHtml).toContain('data-quicknote-inline="./assets/app.js"');
+      expect(outputHtml).toContain('data-stickit-inline="./assets/app.css"');
+      expect(outputHtml).toContain('data-stickit-inline="./assets/app.js"');
       expect(outputHtml).not.toContain('<link rel="stylesheet" href="./assets/app.css">');
       expect(outputHtml).not.toContain('<script type="module" src="./assets/app.js"></script>');
       expect(outputHtml).toContain('console.log("<\\/script>inline-safe");');

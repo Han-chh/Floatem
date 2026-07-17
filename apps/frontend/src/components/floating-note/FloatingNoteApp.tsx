@@ -1,4 +1,4 @@
-import type { DragPreviewPayload, FloatingCardScreenPlacement } from "@quicknote/native-bridge";
+import type { DragPreviewPayload, FloatingCardScreenPlacement } from "@stickit/native-bridge";
 import { useEffect, useRef, useState } from "react";
 import type { Descendant } from "slate";
 import {
@@ -29,7 +29,7 @@ import { FloatingTodoItem, TodoItemPreview } from "../todos/TodoItem";
 
 declare global {
   interface Window {
-    __QUICKNOTE_FLOATING_CARD_STATE__?: DragPreviewPayload | null;
+    __STICKIT_FLOATING_CARD_STATE__?: DragPreviewPayload | null;
   }
 }
 
@@ -39,7 +39,7 @@ const FLOATING_DIALOG_VIEWPORT_SIZE = {
   height: 680,
 };
 const FLOATING_DIALOG_GAP_PX = 12;
-const FLOATING_DIALOG_BACKDROP_SELECTOR = ".quicknote-modal-backdrop";
+const FLOATING_DIALOG_BACKDROP_SELECTOR = ".stickit-modal-backdrop";
 const EDITABLE_TARGET_SELECTOR = 'input,textarea,select,[contenteditable="true"],[role="textbox"]';
 type FloatingDialogSide = "left" | "right";
 
@@ -48,7 +48,7 @@ function readInitialState() {
     return null;
   }
 
-  return window.__QUICKNOTE_FLOATING_CARD_STATE__ ?? null;
+  return window.__STICKIT_FLOATING_CARD_STATE__ ?? null;
 }
 
 function isEditableTarget(target: EventTarget | null) {
@@ -224,7 +224,7 @@ export function FloatingNoteApp() {
     const body = document.body;
     const root = document.getElementById("root");
 
-    html.dataset.quicknoteFloatingCardWindow = "true";
+    html.dataset.stickitFloatingCardWindow = "true";
     html.style.overflow = "hidden";
     body.style.overflow = "hidden";
     body.style.margin = "0";
@@ -234,7 +234,7 @@ export function FloatingNoteApp() {
     }
 
     return () => {
-      delete html.dataset.quicknoteFloatingCardWindow;
+      delete html.dataset.stickitFloatingCardWindow;
       html.style.overflow = "";
       body.style.overflow = "";
       body.style.margin = "";
@@ -380,16 +380,16 @@ export function FloatingNoteApp() {
     }
 
     const html = document.documentElement;
-    html.dataset.quicknoteFloatingDialogSide = dialogSide;
-    html.style.setProperty("--quicknote-floating-card-width", `${payload?.size.width ?? 0}px`);
-    html.style.setProperty("--quicknote-floating-dialog-width", `${FLOATING_DIALOG_VIEWPORT_SIZE.width}px`);
-    html.style.setProperty("--quicknote-floating-dialog-gap", `${FLOATING_DIALOG_GAP_PX}px`);
+    html.dataset.stickitFloatingDialogSide = dialogSide;
+    html.style.setProperty("--stickit-floating-card-width", `${payload?.size.width ?? 0}px`);
+    html.style.setProperty("--stickit-floating-dialog-width", `${FLOATING_DIALOG_VIEWPORT_SIZE.width}px`);
+    html.style.setProperty("--stickit-floating-dialog-gap", `${FLOATING_DIALOG_GAP_PX}px`);
 
     return () => {
-      delete html.dataset.quicknoteFloatingDialogSide;
-      html.style.removeProperty("--quicknote-floating-card-width");
-      html.style.removeProperty("--quicknote-floating-dialog-width");
-      html.style.removeProperty("--quicknote-floating-dialog-gap");
+      delete html.dataset.stickitFloatingDialogSide;
+      html.style.removeProperty("--stickit-floating-card-width");
+      html.style.removeProperty("--stickit-floating-dialog-width");
+      html.style.removeProperty("--stickit-floating-dialog-gap");
     };
   }, [dialogSide, payload?.size.width]);
 
@@ -400,7 +400,7 @@ export function FloatingNoteApp() {
 
     const handleState = (event: Event) => {
       const detail = (event as CustomEvent<DragPreviewPayload | null>).detail;
-      setPayload(detail ?? window.__QUICKNOTE_FLOATING_CARD_STATE__ ?? null);
+      setPayload(detail ?? window.__STICKIT_FLOATING_CARD_STATE__ ?? null);
     };
 
     window.addEventListener(FLOATING_CARD_STATE_EVENT, handleState as EventListener);
@@ -476,7 +476,7 @@ export function FloatingNoteApp() {
         setIsHydrated(true);
       })
       .catch((error) => {
-        console.error("QuickNote failed to load floating card data.", error);
+        console.error("StickIt failed to load floating card data.", error);
         if (isCancelled) {
           return;
         }

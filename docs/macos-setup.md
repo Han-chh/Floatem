@@ -14,10 +14,10 @@ pnpm install
 pnpm macos:run
 ```
 
-This builds the shared frontend from `apps/frontend`, compiles `apps/mac-host/QuickNote.xcodeproj`, and opens:
+This builds the shared frontend from `apps/frontend`, compiles `apps/mac-host/StickIt.xcodeproj`, and opens:
 
 ```text
-build/DerivedData/Build/Products/Debug/QuickNote.app
+build/DerivedData/Build/Products/Debug/StickIt.app
 ```
 
 ## Build Only
@@ -32,14 +32,14 @@ The Xcode build phase calls `scripts/build-web-assets.sh`, which rebuilds the fr
 
 ```bash
 pnpm frontend:build
-open apps/mac-host/QuickNote.xcodeproj
+open apps/mac-host/StickIt.xcodeproj
 ```
 
-Then run the `QuickNote` scheme.
+Then run the `StickIt` scheme.
 
 ## Native Capabilities
 
 - AppKit owns app lifecycle, menu bar item, status menu, window levels, and overlay behavior.
 - Carbon hotkeys provide the global shortcut.
 - UserNotifications schedules test notifications and todo reminders.
-- WKWebView injects the shared `quickNoteHost` bridge into the React frontend.
+- WKWebView injects the shared `stickItHost` bridge into the React frontend.

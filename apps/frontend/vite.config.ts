@@ -10,12 +10,12 @@ export default defineConfig({
   plugins: [react(), tailwindcss()],
   clearScreen: false,
   define: {
-    __QUICKNOTE_VERSION__: JSON.stringify(rootPackage.version),
+    __STICKIT_VERSION__: JSON.stringify(rootPackage.version),
   },
   resolve: {
     alias: {
-      "@quicknote/branding": fileURLToPath(new URL("../../packages/branding/src", import.meta.url)),
-      "@quicknote/native-bridge": fileURLToPath(new URL("../../packages/native-bridge/src", import.meta.url)),
+      "@stickit/branding": fileURLToPath(new URL("../../packages/branding/src", import.meta.url)),
+      "@stickit/native-bridge": fileURLToPath(new URL("../../packages/native-bridge/src", import.meta.url)),
     },
   },
   build: {

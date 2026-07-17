@@ -616,7 +616,7 @@ function FloatingTodoEditDialog({
       {isOpen ? (
         <motion.div
           data-no-window-drag="true"
-          className="quicknote-modal-backdrop fixed inset-0 z-[90] flex items-center justify-center bg-[rgba(30,25,21,0.24)] px-5 py-6"
+          className="stickit-modal-backdrop fixed inset-0 z-[90] flex items-center justify-center bg-[rgba(30,25,21,0.24)] px-5 py-6"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}

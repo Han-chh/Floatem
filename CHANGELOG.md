@@ -34,7 +34,7 @@ Contents:
 - Expand section-opening controls with `Open last stored section by default`, update hotkey summon behavior so Notes or Todos can be forced on each summon, and add a one-click `Restore defaults` action for the full Settings state.
 - Extend page-turn and slide animations to main-surface and Settings transitions, add the new `Lift` transition, retune switch-speed tiers with dedicated icons, and keep particle feedback toggle rendering stable without clipping.
 - Replace manual shortcut text editing with a record-in-dialog flow that captures key combos directly, validates modifier requirements, reports success or failure, and preserves the previous shortcut if native registration fails.
-- Add complete English and Simplified Chinese localization across the React UI and native macOS shell, including a language switcher with dedicated language icons while keeping the app name `QuickNote` unchanged in both languages.
+- Add complete English and Simplified Chinese localization across the React UI and native macOS shell, including a language switcher with dedicated language icons while keeping the app name `StickIt` unchanged in both languages.
 - Bump the repository version to `0.2.4`.
 
 ## v0.2.3 - 2026-04-02
@@ -74,7 +74,7 @@ Contents:
 ## v0.2.0 - 2026-03-31
 
 Purpose:
-- Replace the unstable Tauri + Rust desktop shell with a pure macOS native AppKit + WKWebView host while preserving the existing QuickNote frontend UI and interactions.
+- Replace the unstable Tauri + Rust desktop shell with a pure macOS native AppKit + WKWebView host while preserving the existing StickIt frontend UI and interactions.
 
 Contents:
 - Remove the Tauri/Rust host layer and rebuild the desktop runtime around a native AppKit application, a single owned floating panel, and a thin `WKWebView` JavaScript bridge.
@@ -412,7 +412,7 @@ Contents:
 ## v0.1.0 - 2026-03-28
 
 Purpose:
-- Establish the initial QuickNote desktop scaffold and baseline version tag.
+- Establish the initial StickIt desktop scaffold and baseline version tag.
 
 Contents:
 - Initialize the Tauri 2 + React 18 + TypeScript project structure.
@@ -460,7 +460,7 @@ Purpose:
 - Add a reviewable, Figma-style Notes home preview so the next visual direction can be inspected before applying it to the main app shell.
 
 Contents:
-- Add a standalone design-preview route at `?preview=figma-notes-home` without changing the production QuickNote flow.
+- Add a standalone design-preview route at `?preview=figma-notes-home` without changing the production StickIt flow.
 - Build an icon-rich Notes home board with tokens, components, responsive frames, textures, and a clickable prototype section.
 - Add local SVG icon components to model the intended Lucide-style action language across tabs, hero actions, note cards, and settings.
 - Export review screenshots locally because a real Figma MCP workspace is still unavailable in this environment.
@@ -468,7 +468,7 @@ Contents:
 ## v0.1.5 - 2026-03-28
 
 Purpose:
-- Apply the approved icon-rich Notes Home design language to the production QuickNote interface.
+- Apply the approved icon-rich Notes Home design language to the production StickIt interface.
 
 Contents:
 - Migrate the main panel shell and segmented tabs to the higher-contrast, texture-light, icon-first visual system.
@@ -482,7 +482,7 @@ Purpose:
 - Expand the working space of the main panel and turn settings into a full-page destination with real motion and behavior controls.
 
 Contents:
-- Remove the QuickNote intro copy from the main shell so Notes and Todos get more vertical space.
+- Remove the StickIt intro copy from the main shell so Notes and Todos get more vertical space.
 - Replace the old settings overlay with a full-window settings view that includes product introduction and broader option controls.
 - Add persisted settings for transition style, transition speed, and particle effects, and wire them into the live app.
 - Speed up Notes/Todos switching and add an optional page-turn transition style as the default behavior.

@@ -8,7 +8,7 @@ export function useHotkey(shortcut: string) {
     }
 
     void registerHotkey(shortcut).catch((error) => {
-      console.error("QuickNote failed to register the global shortcut.", error);
+      console.error("StickIt failed to register the global shortcut.", error);
     });
   }, [shortcut]);
 }

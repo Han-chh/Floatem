@@ -8,7 +8,7 @@ import { useNotesStore } from "../../src/store/notesStore";
 
 describe("NotesList", () => {
   function installNativeBridge() {
-    const originalBridge = window.quickNoteHost;
+    const originalBridge = window.stickItHost;
     const clipboard = { value: "" };
     const writeClipboardText = vi.fn(async (text: string) => {
       clipboard.value = text;
@@ -16,7 +16,7 @@ describe("NotesList", () => {
     const readClipboardText = vi.fn(async () => clipboard.value);
     const pickScreenColor = vi.fn(async (): Promise<{ sRGBHex: string } | null> => null);
 
-    window.quickNoteHost = {
+    window.stickItHost = {
       platform: "macos",
       getCapabilities: vi.fn(async () => ({
         platform: "macos" as const,
@@ -81,11 +81,11 @@ describe("NotesList", () => {
 
     return {
       clipboard,
-      openTextColorPanel: window.quickNoteHost.openTextColorPanel,
+      openTextColorPanel: window.stickItHost.openTextColorPanel,
       pickScreenColor,
       readClipboardText,
       restore() {
-        window.quickNoteHost = originalBridge;
+        window.stickItHost = originalBridge;
       },
       writeClipboardText,
     };

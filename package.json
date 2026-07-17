@@ -1,5 +1,5 @@
 {
-  "name": "quicknote",
+  "name": "stickit",
   "private": true,
   "version": "0.5.1",
   "type": "module",
@@ -9,10 +9,10 @@
     "frontend:build": "tsc -p apps/frontend/tsconfig.json && vite build --config apps/frontend/vite.config.ts",
     "frontend:preview": "vite preview --config apps/frontend/vite.config.ts",
     "build": "pnpm frontend:build",
-    "macos:build": "pnpm build && xcodebuild -project apps/mac-host/QuickNote.xcodeproj -scheme QuickNote -configuration Debug -derivedDataPath build/DerivedData build",
+    "macos:build": "pnpm build && xcodebuild -project apps/mac-host/StickIt.xcodeproj -scheme StickIt -configuration Debug -derivedDataPath build/DerivedData build",
     "macos:run": "./scripts/run-macos-dev.sh",
-    "windows:build": "pnpm build && dotnet build apps/windows-host/QuickNote.Windows.csproj",
-    "windows:run": "pnpm build && dotnet run --project apps/windows-host/QuickNote.Windows.csproj",
+    "windows:build": "pnpm build && dotnet build apps/windows-host/StickIt.Windows.csproj",
+    "windows:run": "pnpm build && dotnet run --project apps/windows-host/StickIt.Windows.csproj",
     "preview": "pnpm frontend:preview",
     "test": "vitest --config apps/frontend/vite.config.ts",
     "test:layout": "playwright test --config apps/frontend/playwright.config.ts"

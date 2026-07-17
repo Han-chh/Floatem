@@ -7,8 +7,8 @@ import type {
   HotkeyRegistrationState,
   NotificationRequest,
   ShortcutConfig,
-} from "@quicknote/native-bridge";
-import { hostEventNames } from "@quicknote/native-bridge";
+} from "@stickit/native-bridge";
+import { hostEventNames } from "@stickit/native-bridge";
 import type {
   AppLanguage,
   AppSettings,
@@ -21,9 +21,10 @@ import type {
 } from "./models";
 import { DEFAULT_SETTINGS, normalizeAppSettings, normalizeNotesDocument, normalizeTodosDocument } from "./models";
 
-const NOTES_STORAGE_KEY = "quicknote.notes";
-const TODOS_STORAGE_KEY = "quicknote.todos";
-const SETTINGS_STORAGE_KEY = "quicknote.settings";
+const NOTES_STORAGE_KEY = "stickit.notes";
+const TODOS_STORAGE_KEY = "stickit.todos";
+const SETTINGS_STORAGE_KEY = "stickit.settings";
+const LEGACY_STORAGE_PREFIX = "quicknote.";
 
 export const PANEL_POSITION_EVENT = hostEventNames.panelPosition;
 export const PANEL_WILL_OPEN_EVENT = hostEventNames.panelWillOpen;
@@ -46,7 +47,7 @@ export type TextColorPanelCloseDetail = {
   requestId: string;
 };
 
-export type QuickNoteNativeBridge = HostBridge<RawLoadAllResult, NotesDocument, TodosDocument, Partial<AppSettings>> & {
+export type StickItNativeBridge = HostBridge<RawLoadAllResult, NotesDocument, TodosDocument, Partial<AppSettings>> & {
   testReminderNotification: (options?: {
     soundEnabled?: boolean;
     language?: AppLanguage;
@@ -58,8 +59,8 @@ export type QuickNoteNativeBridge = HostBridge<RawLoadAllResult, NotesDocument, 
 
 declare global {
   interface Window {
-    quickNoteHost?: QuickNoteNativeBridge;
-    quickNoteNative?: QuickNoteNativeBridge;
+    stickItHost?: StickItNativeBridge;
+    stickItNative?: StickItNativeBridge;
   }
 }
 
@@ -69,7 +70,8 @@ function readStoredValue<T>(key: string, fallback: T) {
   }
 
   try {
-    const rawValue = window.localStorage.getItem(key);
+    const legacyKey = `${LEGACY_STORAGE_PREFIX}${key.slice(key.indexOf(".") + 1)}`;
+    const rawValue = window.localStorage.getItem(key) ?? window.localStorage.getItem(legacyKey);
     if (!rawValue) {
       return fallback;
     }
@@ -92,7 +94,7 @@ function writeStoredValue(key: string, value: unknown) {
   }
 }
 
-const browserBridge: QuickNoteNativeBridge = {
+const browserBridge: StickItNativeBridge = {
   platform: "web",
   async getCapabilities(): Promise<HostCapabilities> {
     return {
@@ -258,17 +260,17 @@ const browserBridge: QuickNoteNativeBridge = {
   },
 };
 
-export function isNativeQuickNoteHost() {
+export function isNativeStickItHost() {
   return (
     typeof window !== "undefined" &&
-    (typeof window.quickNoteHost?.loadAllData === "function" ||
-      typeof window.quickNoteNative?.loadAllData === "function")
+    (typeof window.stickItHost?.loadAllData === "function" ||
+      typeof window.stickItNative?.loadAllData === "function")
   );
 }
 
-export function getQuickNoteBridge() {
+export function getStickItBridge() {
   if (typeof window !== "undefined") {
-    return window.quickNoteHost ?? window.quickNoteNative ?? browserBridge;
+    return window.stickItHost ?? window.stickItNative ?? browserBridge;
   }
 
   return browserBridge;

@@ -3,7 +3,7 @@ using System.Text;
 using System.Windows;
 using System.Windows.Interop;
 
-namespace QuickNote.Windows.Native;
+namespace StickIt.Windows.Native;
 
 internal static partial class WindowInterop
 {

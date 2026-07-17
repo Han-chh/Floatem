@@ -1,7 +1,7 @@
 import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
-import type { DragPreviewPayload } from "@quicknote/native-bridge";
+import type { DragPreviewPayload } from "@stickit/native-bridge";
 import { FloatingNoteApp } from "../../src/components/floating-note/FloatingNoteApp";
 import {
   createEmptyNotesDocument,
@@ -88,7 +88,7 @@ function createFloatingScreenPlacement(left: number, width: number, availableWid
 }
 
 function installFloatingBridge(note: NoteCard) {
-  const originalBridge = window.quickNoteHost;
+  const originalBridge = window.stickItHost;
   const clipboard = { value: "" };
   const startFloatingCardDrag = vi.fn(async () => {});
   const closeFloatingCard = vi.fn(async () => {});
@@ -100,8 +100,8 @@ function installFloatingBridge(note: NoteCard) {
     clipboard.value = text;
   });
 
-  window.__QUICKNOTE_FLOATING_CARD_STATE__ = createFloatingNotePayload(note);
-  window.quickNoteHost = {
+  window.__STICKIT_FLOATING_CARD_STATE__ = createFloatingNotePayload(note);
+  window.stickItHost = {
     platform: "macos",
     getCapabilities: vi.fn(async () => ({
       platform: "macos" as const,
@@ -173,8 +173,8 @@ function installFloatingBridge(note: NoteCard) {
   return {
     clipboard,
     restore() {
-      window.quickNoteHost = originalBridge;
-      window.__QUICKNOTE_FLOATING_CARD_STATE__ = undefined;
+      window.stickItHost = originalBridge;
+      window.__STICKIT_FLOATING_CARD_STATE__ = undefined;
     },
     startFloatingCardDrag,
     closeFloatingCard,
@@ -187,7 +187,7 @@ function installFloatingBridge(note: NoteCard) {
 }
 
 function installFloatingTodoBridge(todo: TodoItem) {
-  const originalBridge = window.quickNoteHost;
+  const originalBridge = window.stickItHost;
   const startFloatingCardDrag = vi.fn(async () => {});
   const closeFloatingCard = vi.fn(async () => {});
   const resizeFloatingCard = vi.fn(async () => {});
@@ -196,8 +196,8 @@ function installFloatingTodoBridge(todo: TodoItem) {
   const setEditableInputActive = vi.fn();
   const setTextCompositionActive = vi.fn();
 
-  window.__QUICKNOTE_FLOATING_CARD_STATE__ = createFloatingTodoPayload(todo);
-  window.quickNoteHost = {
+  window.__STICKIT_FLOATING_CARD_STATE__ = createFloatingTodoPayload(todo);
+  window.stickItHost = {
     platform: "macos",
     getCapabilities: vi.fn(async () => ({
       platform: "macos" as const,
@@ -268,8 +268,8 @@ function installFloatingTodoBridge(todo: TodoItem) {
 
   return {
     restore() {
-      window.quickNoteHost = originalBridge;
-      window.__QUICKNOTE_FLOATING_CARD_STATE__ = undefined;
+      window.stickItHost = originalBridge;
+      window.__STICKIT_FLOATING_CARD_STATE__ = undefined;
     },
     closeFloatingCard,
     resizeFloatingCard,

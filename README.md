@@ -1,6 +1,6 @@
-# QuickNote
+# StickIt
 
-QuickNote is a cross-platform desktop app with a shared React frontend and isolated native host layers.
+StickIt is a cross-platform desktop app with a shared React frontend and isolated native host layers.
 
 - `apps/frontend`: shared React/Vite UI.
 - `apps/mac-host`: AppKit/WKWebView host.
@@ -11,6 +11,7 @@ QuickNote is a cross-platform desktop app with a shared React frontend and isola
 ## Docs
 
 - [Architecture](docs/architecture.md)
+- [Four-day macOS prelaunch plan](docs/four-day-prelaunch-plan.md)
 - [macOS setup](docs/macos-setup.md)
 - [Windows setup (host features)](docs/windows-setup.md)
 - [Windows dev environment](docs/windows-dev-setup.md)

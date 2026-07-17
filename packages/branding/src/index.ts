@@ -1,13 +1,13 @@
-export const quickNoteBranding = {
-  displayName: "QuickNote",
-  productName: "QuickNote",
-  bundleIdentifier: "com.quicknote.app",
-  windowsAppUserModelId: "com.quicknote.app",
+export const stickItBranding = {
+  displayName: "StickIt",
+  productName: "StickIt",
+  bundleIdentifier: "com.stickit.app",
+  windowsAppUserModelId: "com.stickit.app",
   icons: {
-    sourceSvg: "packages/branding/assets/quicknote-icon.svg",
-    macIcns: "apps/mac-host/QuickNoteMacOS/Resources/AppIcon.icns",
+    sourceSvg: "packages/branding/assets/stickit-icon.svg",
+    macIcns: "apps/mac-host/StickItMacOS/Resources/AppIcon.icns",
     windowsIco: "apps/windows-host/Assets/AppIcon.ico",
   },
 } as const;
 
-export type QuickNoteBranding = typeof quickNoteBranding;
+export type StickItBranding = typeof stickItBranding;

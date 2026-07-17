@@ -2,11 +2,14 @@ using System.IO;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 
-namespace QuickNote.Windows;
+namespace StickIt.Windows;
 
 internal sealed class AppStorage
 {
     private readonly string dataDirectory = Path.Combine(
+        Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
+        "StickIt");
+    private readonly string legacyDataDirectory = Path.Combine(
         Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
         "QuickNote");
 
@@ -97,6 +100,11 @@ internal sealed class AppStorage
     private JsonNode? ReadJson(string fileName)
     {
         var path = Path.Combine(dataDirectory, fileName);
+        if (!File.Exists(path))
+        {
+            path = Path.Combine(legacyDataDirectory, fileName);
+        }
+
         return File.Exists(path) ? JsonNode.Parse(File.ReadAllText(path)) : null;
     }
 

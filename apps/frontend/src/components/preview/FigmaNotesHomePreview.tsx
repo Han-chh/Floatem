@@ -406,10 +406,10 @@ function NotesHomeFrame({
           <div className={`flex ${compact ? "items-start" : "items-center"} justify-between gap-3`}>
             <div className="min-w-0">
               <div className="mb-2 flex flex-wrap items-center gap-2">
-                <DesignTag tone="coral">QuickNote</DesignTag>
+                <DesignTag tone="coral">StickIt</DesignTag>
                 {!compact ? <DesignTag tone="neutral">Notes home</DesignTag> : null}
               </div>
-              <h1 className="text-[24px] font-semibold tracking-[-0.05em] text-[#1E1915]">QuickNote</h1>
+              <h1 className="text-[24px] font-semibold tracking-[-0.05em] text-[#1E1915]">StickIt</h1>
               {!compact ? <p className="mt-1 text-[12px] text-[#5E554D]">Fast notes with visual clarity</p> : null}
             </div>
 
@@ -611,7 +611,7 @@ export function FigmaNotesHomePreview() {
           <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
             <div className="min-w-0">
               <div className="mb-3 flex flex-wrap gap-2">
-                <DesignTag tone="coral">QuickNote</DesignTag>
+                <DesignTag tone="coral">StickIt</DesignTag>
                 <DesignTag tone="blue">Notes Home</DesignTag>
                 <DesignTag tone="jade">icon-rich</DesignTag>
                 <DesignTag tone="plum">animated</DesignTag>
@@ -627,7 +627,7 @@ export function FigmaNotesHomePreview() {
             <div className="grid gap-2 rounded-[24px] border border-[rgba(213,198,180,0.92)] bg-white/82 p-4 text-[12px] text-[#5E554D] shadow-[0_16px_32px_rgba(61,49,34,0.06)]">
               <div className="flex items-center gap-2">
                 <span className="h-2.5 w-2.5 rounded-full bg-[#FF7A59]" />
-                QuickNote Notes Home v1
+                StickIt Notes Home v1
               </div>
               <div className="flex items-center gap-2">
                 <span className="h-2.5 w-2.5 rounded-full bg-[#2F6BFF]" />

@@ -59,7 +59,7 @@ function buildEnglishHelpContent(context: HelpContentContext): HelpDialogContent
             id: "overview-panel",
             eyebrow: "Start here",
             title: "Panel flow and current setup",
-            summary: "QuickNote is a lightweight floating space for notes and date-based todos.",
+            summary: "StickIt is a lightweight floating space for notes and date-based todos.",
             highlights: [context.hotkey, context.defaultSectionLabel, context.timeZoneLabel],
             groups: [
               {
@@ -163,7 +163,7 @@ function buildEnglishHelpContent(context: HelpContentContext): HelpDialogContent
           {
             id: "settings-workflow",
             eyebrow: "Settings",
-            title: "Adjust how QuickNote opens and feels",
+            title: "Adjust how StickIt opens and feels",
             summary: "Settings keep behavior, localization, and motion controls in one place.",
             highlights: [context.motionLabel, context.reminderSoundLabel],
             groups: [
@@ -171,7 +171,7 @@ function buildEnglishHelpContent(context: HelpContentContext): HelpDialogContent
                 id: "settings-general",
                 title: "General",
                 items: [
-                  "Choose whether QuickNote opens to the last section, Notes, or Todos.",
+                  "Choose whether StickIt opens to the last section, Notes, or Todos.",
                   "Switch language, timezone, and time format independently from the system.",
                   "Review the current summon shortcut in the shortcuts section.",
                 ],
@@ -198,7 +198,7 @@ function buildEnglishHelpContent(context: HelpContentContext): HelpDialogContent
             id: "shortcuts-core",
             eyebrow: "Shortcuts",
             title: "Key shortcuts",
-            summary: "QuickNote keeps its keyboard actions compact and predictable.",
+            summary: "StickIt keeps its keyboard actions compact and predictable.",
             highlights: ["Cmd/Ctrl+B", "Cmd/Ctrl+Z", "Enter", "Escape"],
             groups: [
               {
@@ -293,7 +293,7 @@ function buildEnglishFloatingCardsSection(context: HelpContentContext): HelpSect
               title: "Move, dock, and close",
               items: [
                 "Drag a floating card by its non-editing surface to move it around the screen.",
-                "Drag it back onto the QuickNote panel; the panel highlights as a dock zone, then release inside to dock it.",
+                "Drag it back onto the StickIt panel; the panel highlights as a dock zone, then release inside to dock it.",
                 "Click the close control on the floating card to dock it back into the main panel without deleting it.",
               ],
             },
@@ -345,7 +345,7 @@ function buildChineseHelpContent(context: HelpContentContext): HelpDialogContent
             id: "overview-panel",
             eyebrow: "先看这里",
             title: "面板流转与当前配置",
-            summary: "QuickNote 是一个用于快速记录便签和日期待办的悬浮工作区。",
+            summary: "StickIt 是一个用于快速记录便签和日期待办的悬浮工作区。",
             highlights: [context.hotkey, context.defaultSectionLabel, context.timeZoneLabel],
             groups: [
               {
@@ -447,7 +447,7 @@ function buildChineseHelpContent(context: HelpContentContext): HelpDialogContent
           {
             id: "settings-workflow",
             eyebrow: "设置选项",
-            title: "调整 QuickNote 的打开方式与体验",
+            title: "调整 StickIt 的打开方式与体验",
             summary: "设置集中管理行为、语言与动效控制。",
             highlights: [context.motionLabel, context.reminderSoundLabel],
             groups: [
@@ -482,7 +482,7 @@ function buildChineseHelpContent(context: HelpContentContext): HelpDialogContent
             id: "shortcuts-core",
             eyebrow: "快捷键",
             title: "关键快捷键",
-            summary: "QuickNote 的快捷键尽量保持少而稳定。",
+            summary: "StickIt 的快捷键尽量保持少而稳定。",
             highlights: ["Cmd/Ctrl+B", "Cmd/Ctrl+Z", "Enter", "Escape"],
             groups: [
               {
@@ -577,7 +577,7 @@ function buildChineseFloatingCardsSection(context: HelpContentContext): HelpSect
               title: "移动、收回与关闭",
               items: [
                 "按住悬浮卡片的非编辑区域可以在屏幕上移动卡片。",
-                "把悬浮卡片拖回 QuickNote 主面板时，面板会显示收纳区域；在面板内松开即可收回。",
+                "把悬浮卡片拖回 StickIt 主面板时，面板会显示收纳区域；在面板内松开即可收回。",
                 "点击悬浮卡片上的关闭按钮会把卡片收回主面板，不会删除对应 note 或 todo。",
               ],
             },

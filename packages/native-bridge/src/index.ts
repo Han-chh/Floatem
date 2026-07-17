@@ -191,16 +191,16 @@ export type HostBridge<TLoadAllResult, TNotes, TTodos, TSettings> = {
 };
 
 export const hostEventNames = {
-  panelPosition: "quicknote:panel-position",
-  panelWillOpen: "quicknote:panel-will-open",
-  hotkeyRegistrationState: "quicknote:hotkey-registration-state",
-  textColorPanelOpen: "quicknote:text-color-panel-open",
-  textColorPanelChange: "quicknote:text-color-panel-change",
-  textColorPanelClose: "quicknote:text-color-panel-close",
-  notesUpdated: "quicknote:notes-updated",
-  todosUpdated: "quicknote:todos-updated",
-  floatingCardsState: "quicknote:floating-cards-state",
-  shortcutInvoked: "quicknote:shortcut-invoked",
-  floatingDockZoneEnter: "quicknote:floating-dock-zone-enter",
-  floatingDockZoneLeave: "quicknote:floating-dock-zone-leave",
+  panelPosition: "stickit:panel-position",
+  panelWillOpen: "stickit:panel-will-open",
+  hotkeyRegistrationState: "stickit:hotkey-registration-state",
+  textColorPanelOpen: "stickit:text-color-panel-open",
+  textColorPanelChange: "stickit:text-color-panel-change",
+  textColorPanelClose: "stickit:text-color-panel-close",
+  notesUpdated: "stickit:notes-updated",
+  todosUpdated: "stickit:todos-updated",
+  floatingCardsState: "stickit:floating-cards-state",
+  shortcutInvoked: "stickit:shortcut-invoked",
+  floatingDockZoneEnter: "stickit:floating-dock-zone-enter",
+  floatingDockZoneLeave: "stickit:floating-dock-zone-leave",
 } as const;

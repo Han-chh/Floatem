@@ -4,7 +4,7 @@ import { registerHotkey } from "../../hooks/usePlatform";
 import { captureShortcutFromKeyEvent, getShortcutDisplayLabel } from "../../lib/hotkeyCapture";
 import { useI18n } from "../../lib/i18n";
 import { DEFAULT_SETTINGS, getSelectableTimeZones, getSystemTimeZone, type TimeFormat } from "../../lib/models";
-import { getQuickNoteBridge, isNativeQuickNoteHost } from "../../lib/nativeBridge";
+import { getStickItBridge, isNativeStickItHost } from "../../lib/nativeBridge";
 import { formatTimeInTimeZone } from "../../lib/timeZoneDate";
 import { getSettingsMenuMotionConfig, type TransitionDirection } from "../../lib/transitionMotion";
 import { useSettingsStore } from "../../store/settingsStore";
@@ -421,7 +421,7 @@ export function SettingsPanel({ onClose }: SettingsPanelProps) {
         icon: <NotebookPenIcon size={18} />,
         title: t.settings.categoryAboutTitle,
         description: t.settings.categoryAboutDescription,
-        meta: `${t.settings.appVersionTitle} ${__QUICKNOTE_VERSION__}`,
+        meta: `${t.settings.appVersionTitle} ${__STICKIT_VERSION__}`,
       },
     ],
     [enableReminderSound, hotkey, language, t, timeZone, transitionStyle],
@@ -536,7 +536,7 @@ export function SettingsPanel({ onClose }: SettingsPanelProps) {
       return;
     }
 
-    if (!isNativeQuickNoteHost()) {
+    if (!isNativeStickItHost()) {
       setNotificationFeedback({
         text: t.settings.reminderTestUnsupported,
         tone: "info",
@@ -548,7 +548,7 @@ export function SettingsPanel({ onClose }: SettingsPanelProps) {
     setNotificationFeedback(null);
 
     try {
-      await getQuickNoteBridge().testReminderNotification({
+      await getStickItBridge().testReminderNotification({
         soundEnabled: enableReminderSound,
         language,
       });
@@ -572,7 +572,7 @@ export function SettingsPanel({ onClose }: SettingsPanelProps) {
       return;
     }
 
-    if (!isNativeQuickNoteHost()) {
+    if (!isNativeStickItHost()) {
       setNotificationFeedback({
         text: t.settings.notificationOpenSettingsUnsupported,
         tone: "info",
@@ -583,7 +583,7 @@ export function SettingsPanel({ onClose }: SettingsPanelProps) {
     setIsOpeningNotificationSettings(true);
 
     try {
-      await getQuickNoteBridge().openNotificationSettings();
+      await getStickItBridge().openNotificationSettings();
     } catch (error) {
       const message = error instanceof Error ? error.message : t.settings.notificationOpenSettingsFailed;
       setNotificationFeedback({
@@ -600,7 +600,7 @@ export function SettingsPanel({ onClose }: SettingsPanelProps) {
       return;
     }
 
-    if (!isNativeQuickNoteHost()) {
+    if (!isNativeStickItHost()) {
       setSystemFeedback({
         text: t.settings.quitApplicationFailed,
         tone: "info",
@@ -611,7 +611,7 @@ export function SettingsPanel({ onClose }: SettingsPanelProps) {
     setIsQuittingApplication(true);
 
     try {
-      await getQuickNoteBridge().quitApplication();
+      await getStickItBridge().quitApplication();
     } catch (error) {
       const message = error instanceof Error ? error.message : t.settings.quitApplicationFailed;
       setSystemFeedback({
@@ -737,7 +737,7 @@ export function SettingsPanel({ onClose }: SettingsPanelProps) {
                 ) : null}
 
                 {activeCategory === "about" ? (
-                  <AboutQuickNoteSettings />
+                  <AboutStickItSettings />
                 ) : null}
               </div>
             </motion.div>
@@ -763,7 +763,7 @@ export function SettingsPanel({ onClose }: SettingsPanelProps) {
                     <span className="status-chip" data-tone="neutral">{t.app.localOnly}</span>
                   </div>
                   <h2 className="font-display text-[26px] font-semibold tracking-normal text-[var(--brown-strong)]">
-                    QuickNote
+                    StickIt
                   </h2>
                   <p className="mt-2 max-w-[58ch] text-[13px] leading-6 text-[var(--muted)]">
                     {t.settings.appIntro}
@@ -830,7 +830,7 @@ export function SettingsPanel({ onClose }: SettingsPanelProps) {
         {hotkeyDialogOpen ? (
           <motion.div
             data-no-window-drag="true"
-            className="quicknote-modal-backdrop absolute inset-0 z-40 flex items-center justify-center bg-[rgba(30,25,21,0.24)] px-5 py-8"
+            className="stickit-modal-backdrop absolute inset-0 z-40 flex items-center justify-center bg-[rgba(30,25,21,0.24)] px-5 py-8"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
@@ -1092,15 +1092,15 @@ function TimeZoneSettings({
           </div>
 
           <div ref={timeZoneMenuRef} className="relative mt-3">
-            <p className="mb-1 block text-[11px] font-semibold text-[var(--muted)]" id="quicknote-time-zone-label">
+            <p className="mb-1 block text-[11px] font-semibold text-[var(--muted)]" id="stickit-time-zone-label">
               {t.settings.timeZoneSelectLabel}
             </p>
             <button
               type="button"
-              id="quicknote-time-zone"
+              id="stickit-time-zone"
               aria-expanded={isTimeZoneMenuOpen}
               aria-haspopup="listbox"
-              aria-labelledby="quicknote-time-zone-label quicknote-time-zone"
+              aria-labelledby="stickit-time-zone-label stickit-time-zone"
               data-no-window-drag="true"
               data-tooltip={t.settings.timeZoneSelectLabel}
               className="flex w-full items-center justify-between gap-3 rounded-[16px] border border-[rgba(213,198,180,0.88)] bg-white/92 px-3 py-2.5 text-left text-[12px] font-semibold text-[var(--brown-strong)] outline-none focus:border-[rgba(47,107,255,0.45)]"
@@ -1112,7 +1112,7 @@ function TimeZoneSettings({
             {isTimeZoneMenuOpen ? (
               <div
                 role="listbox"
-                aria-labelledby="quicknote-time-zone-label"
+                aria-labelledby="stickit-time-zone-label"
                 className="absolute left-0 right-0 top-[calc(100%+6px)] z-50 max-h-64 overflow-y-auto rounded-[18px] border border-[rgba(213,198,180,0.92)] bg-white p-1.5 shadow-[0_18px_36px_rgba(30,25,21,0.14)]"
               >
                 {timeZoneOptions.map((option) => {
@@ -1171,7 +1171,7 @@ function ShortcutSettings({
   hotkey: string;
   defaultOpenSection: "last" | "notes" | "todos";
   lastActiveTab: "notes" | "todos";
-  hotkeyRegistrationState: import("@quicknote/native-bridge").HotkeyRegistrationState | null;
+  hotkeyRegistrationState: import("@stickit/native-bridge").HotkeyRegistrationState | null;
   hotkeyFeedback: HotkeyFeedback | null;
   openHotkeyDialog: () => void;
   setDefaultOpenSection: (section: "last" | "notes" | "todos") => void;
@@ -1406,7 +1406,7 @@ function NotificationSettings({
   );
 }
 
-function AboutQuickNoteSettings() {
+function AboutStickItSettings() {
   const { t } = useI18n();
 
   return (
@@ -1416,7 +1416,7 @@ function AboutQuickNoteSettings() {
           <SettingRow
             icon={<NotebookPenIcon size={15} />}
             title={t.settings.appVersionTitle}
-            description={t.settings.appVersionBody(__QUICKNOTE_VERSION__)}
+            description={t.settings.appVersionBody(__STICKIT_VERSION__)}
           />
           <SettingRow icon={<NotebookPenIcon size={15} />} title={t.settings.aboutNotesTitle} description={t.settings.aboutNotesBody} />
           <SettingRow icon={<CircleCheckBigIcon size={15} />} title={t.settings.aboutTodosTitle} description={t.settings.aboutTodosBody} />

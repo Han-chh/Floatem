@@ -1,5 +1,5 @@
-import type { ScreenColorPickResult } from "@quicknote/native-bridge";
-import { getQuickNoteBridge, isNativeQuickNoteHost, type QuickNoteNativeBridge } from "./nativeBridge";
+import type { ScreenColorPickResult } from "@stickit/native-bridge";
+import { getStickItBridge, isNativeStickItHost, type StickItNativeBridge } from "./nativeBridge";
 
 type BrowserScreenColorPicker = {
   open: () => Promise<ScreenColorPickResult>;
@@ -16,11 +16,11 @@ declare global {
 }
 
 function getNativeScreenColorPicker() {
-  if (!isNativeQuickNoteHost()) {
+  if (!isNativeStickItHost()) {
     return null;
   }
 
-  const bridge = getQuickNoteBridge() as Partial<QuickNoteNativeBridge>;
+  const bridge = getStickItBridge() as Partial<StickItNativeBridge>;
   return typeof bridge.pickScreenColor === "function" ? bridge.pickScreenColor.bind(bridge) : null;
 }
 

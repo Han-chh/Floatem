@@ -1,13 +1,13 @@
 using System.IO;
 using System.Text.Json;
 
-namespace QuickNote.Windows;
+namespace StickIt.Windows;
 
 internal static class Branding
 {
-    public static string DisplayName { get; } = LoadValue("displayName", "QuickNote");
-    public static string ProductName { get; } = LoadValue("productName", "QuickNote");
-    public static string AppUserModelId { get; } = LoadValue("windowsAppUserModelId", "com.quicknote.app");
+    public static string DisplayName { get; } = LoadValue("displayName", "StickIt");
+    public static string ProductName { get; } = LoadValue("productName", "StickIt");
+    public static string AppUserModelId { get; } = LoadValue("windowsAppUserModelId", "com.stickit.app");
 
     private static string LoadValue(string propertyName, string fallback)
     {

@@ -1,4 +1,4 @@
-import type { DragPreviewPayload } from "@quicknote/native-bridge";
+import type { DragPreviewPayload } from "@stickit/native-bridge";
 import { Node } from "slate";
 import { cloneNoteContent } from "./models";
 import type {
@@ -10,8 +10,8 @@ import type {
   TodoItem,
 } from "./models";
 
-export const DRAG_PREVIEW_STATE_EVENT = "quicknote:drag-preview-state";
-export const FLOATING_CARD_STATE_EVENT = "quicknote:floating-card-state";
+export const DRAG_PREVIEW_STATE_EVENT = "stickit:drag-preview-state";
+export const FLOATING_CARD_STATE_EVENT = "stickit:floating-card-state";
 
 function clamp(value: number, min: number, max: number) {
   return Math.min(Math.max(value, min), max);

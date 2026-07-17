@@ -48,14 +48,14 @@ export function PanelShell({
   const headerToggleLabel = isHeaderCollapsed ? t.app.expandNavigation : t.app.collapseNavigation;
 
   return (
-    <main className="quicknote-content-surface h-screen overflow-hidden text-[13.5px] text-[var(--dark-text)]">
+    <main className="stickit-content-surface h-screen overflow-hidden text-[13.5px] text-[var(--dark-text)]">
       <motion.div
         initial={{ opacity: 0, y: 16, scale: 0.98 }}
         animate={{ opacity: 1, y: 0, scale: 1 }}
         transition={{ duration: 0.32, ease: [0.22, 1, 0.36, 1] }}
         className="h-full"
       >
-        <div className="quicknote-content cq-panel">
+        <div className="stickit-content cq-panel">
           <div className="pointer-events-none absolute inset-[18px] overflow-hidden rounded-[24px]">
             <div className="absolute -left-14 top-10 h-56 w-56 rounded-full bg-[rgba(255,122,89,0.18)] blur-3xl" />
             <div className="absolute left-10 top-1/2 h-36 w-36 rounded-full bg-[rgba(244,185,66,0.12)] blur-3xl" />
@@ -64,7 +64,7 @@ export function PanelShell({
             <div className="absolute bottom-[-3.5rem] left-1/3 h-64 w-64 rounded-full bg-[rgba(31,168,122,0.11)] blur-3xl" />
           </div>
 
-          <div className="quicknote-page-viewport relative h-full min-h-0 overflow-hidden" style={surfaceMotion.sceneStyle}>
+          <div className="stickit-page-viewport relative h-full min-h-0 overflow-hidden" style={surfaceMotion.sceneStyle}>
             <AnimatePresence initial={false} mode={surfaceMotion.presenceMode} custom={pageDirection}>
               {showSettings ? (
                 <motion.div
@@ -86,7 +86,7 @@ export function PanelShell({
                       delay: getPanelChromeDelay(0.04),
                       ease: [0.22, 1, 0.36, 1],
                     }}
-                    className="paper-panel quicknote-fill-panel relative h-full min-h-0 flex-1 overflow-hidden rounded-[32px] p-3"
+                    className="paper-panel stickit-fill-panel relative h-full min-h-0 flex-1 overflow-hidden rounded-[32px] p-3"
                   >
                     <div className="pointer-events-none absolute inset-0 overflow-hidden rounded-[32px]">
                       <div className="absolute inset-x-10 top-0 h-px bg-[linear-gradient(90deg,transparent,rgba(255,255,255,0.95),transparent)]" />
@@ -145,7 +145,7 @@ export function PanelShell({
                             <div className="space-y-1.5">
                               <div className="flex min-w-0 items-center justify-between gap-2.5">
                                 <p className="font-display text-[clamp(16px,4.5vw,19px)] font-semibold tracking-normal text-[var(--brown-strong)]">
-                                  QuickNote
+                                  StickIt
                                 </p>
                                 <div className="flex shrink-0 items-center gap-1.5">
                                   <motion.button
@@ -227,7 +227,7 @@ export function PanelShell({
                       delay: getPanelChromeDelay(0.06),
                       ease: [0.22, 1, 0.36, 1],
                     }}
-                    className="paper-panel quicknote-fill-panel relative min-h-0 flex-1 overflow-hidden rounded-[32px] p-3"
+                    className="paper-panel stickit-fill-panel relative min-h-0 flex-1 overflow-hidden rounded-[32px] p-3"
                   >
                     <div className="pointer-events-none absolute inset-0 overflow-hidden rounded-[32px]">
                       <div className="absolute inset-x-10 top-0 h-px bg-[linear-gradient(90deg,transparent,rgba(255,255,255,0.95),transparent)]" />

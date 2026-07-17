@@ -93,7 +93,7 @@ class FrontendErrorBoundary extends Component<FrontendErrorBoundaryProps, Fronte
     if (this.state.hasError) {
       return (
         <div className="paper-card flex h-full items-center justify-center rounded-[26px] text-[13px] font-medium text-[var(--muted)]">
-          QuickNote encountered an internal rendering error.
+          StickIt encountered an internal rendering error.
         </div>
       );
     }
@@ -118,7 +118,7 @@ function isEditableTarget(target: EventTarget | null) {
   );
 }
 
-function QuickNoteApp() {
+function StickItApp() {
   const { t } = useI18n();
   const activeTab = useSettingsStore((state) => state.activeTab);
   const hotkey = useSettingsStore((state) => state.hotkey);
@@ -142,10 +142,10 @@ function QuickNoteApp() {
       return;
     }
 
-    document.documentElement.dataset.quicknoteFrontendState = "mounted";
+    document.documentElement.dataset.stickitFrontendState = "mounted";
 
     return () => {
-      delete document.documentElement.dataset.quicknoteFrontendState;
+      delete document.documentElement.dataset.stickitFrontendState;
     };
   }, []);
 
@@ -175,7 +175,7 @@ function QuickNoteApp() {
         settingsStore.setHotkeyRegistrationState(state);
       })
       .catch((error) => {
-        console.error("QuickNote failed to read the current hotkey registration state.", error);
+        console.error("StickIt failed to read the current hotkey registration state.", error);
       });
 
     return unsubscribe;
@@ -391,9 +391,9 @@ function QuickNoteApp() {
       })
       .catch((error) => {
         const message = error instanceof Error ? error.message : String(error);
-        console.error("QuickNote failed to load initial data.", error);
+        console.error("StickIt failed to load initial data.", error);
         if (typeof document !== "undefined") {
-          document.documentElement.dataset.quicknoteFrontendState = "error";
+          document.documentElement.dataset.stickitFrontendState = "error";
         }
         void reportFrontendError(`Initial data load failed: ${message}`, "loadAllData");
       });
@@ -406,13 +406,13 @@ function QuickNoteApp() {
   useEffect(() => {
     if (isBooting) {
       if (typeof document !== "undefined") {
-        document.documentElement.dataset.quicknoteFrontendState = "booting";
+        document.documentElement.dataset.stickitFrontendState = "booting";
       }
       return;
     }
 
     if (typeof document !== "undefined") {
-      document.documentElement.dataset.quicknoteFrontendState = "ready";
+      document.documentElement.dataset.stickitFrontendState = "ready";
     }
 
     void reportFrontendReady();
@@ -519,7 +519,7 @@ function App() {
     );
   }
 
-  return <QuickNoteApp />;
+  return <StickItApp />;
 }
 
 export default App;

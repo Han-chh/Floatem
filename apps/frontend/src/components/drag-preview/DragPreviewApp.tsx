@@ -1,4 +1,4 @@
-import type { DragPreviewPayload } from "@quicknote/native-bridge";
+import type { DragPreviewPayload } from "@stickit/native-bridge";
 import { useEffect, useState } from "react";
 import type { Descendant } from "slate";
 import { NoteCardPreview } from "../notes/NoteCard";
@@ -18,7 +18,7 @@ import { useTodosStore } from "../../store/todosStore";
 
 declare global {
   interface Window {
-    __QUICKNOTE_DRAG_PREVIEW_STATE__?: DragPreviewPayload | null;
+    __STICKIT_DRAG_PREVIEW_STATE__?: DragPreviewPayload | null;
   }
 }
 
@@ -27,7 +27,7 @@ function readInitialState() {
     return null;
   }
 
-  return window.__QUICKNOTE_DRAG_PREVIEW_STATE__ ?? null;
+  return window.__STICKIT_DRAG_PREVIEW_STATE__ ?? null;
 }
 
 function buildPreviewSettings(payload: DragPreviewPayload): Partial<AppSettings> {
@@ -57,7 +57,7 @@ export function DragPreviewApp() {
 
     const handleState = (event: Event) => {
       const detail = (event as CustomEvent<DragPreviewPayload | null>).detail;
-      setPayload(detail ?? window.__QUICKNOTE_DRAG_PREVIEW_STATE__ ?? null);
+      setPayload(detail ?? window.__STICKIT_DRAG_PREVIEW_STATE__ ?? null);
     };
 
     window.addEventListener(DRAG_PREVIEW_STATE_EVENT, handleState as EventListener);

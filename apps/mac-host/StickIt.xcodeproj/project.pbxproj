@@ -1,0 +1,339 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 60;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		A00000000000000000000201 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = A00000000000000000000101 /* AppDelegate.swift */; };
+		A00000000000000000000202 /* AppStorage.swift in Sources */ = {isa = PBXBuildFile; fileRef = A00000000000000000000102 /* AppStorage.swift */; };
+		A00000000000000000000203 /* Bridge.swift in Sources */ = {isa = PBXBuildFile; fileRef = A00000000000000000000103 /* Bridge.swift */; };
+		A00000000000000000000204 /* FloatingPanel.swift in Sources */ = {isa = PBXBuildFile; fileRef = A00000000000000000000104 /* FloatingPanel.swift */; };
+		A00000000000000000000205 /* GlobalHotKey.swift in Sources */ = {isa = PBXBuildFile; fileRef = A00000000000000000000105 /* GlobalHotKey.swift */; };
+		A00000000000000000000206 /* MainWindowController.swift in Sources */ = {isa = PBXBuildFile; fileRef = A00000000000000000000106 /* MainWindowController.swift */; };
+		A00000000000000000000207 /* WebViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = A00000000000000000000107 /* WebViewController.swift */; };
+		A00000000000000000000208 /* AppIcon.icns in Resources */ = {isa = PBXBuildFile; fileRef = A00000000000000000000109 /* AppIcon.icns */; };
+		A00000000000000000000209 /* AppKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A00000000000000000000112 /* AppKit.framework */; };
+		A00000000000000000000210 /* WebKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A00000000000000000000113 /* WebKit.framework */; };
+		A00000000000000000000211 /* Carbon.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A00000000000000000000114 /* Carbon.framework */; };
+		A00000000000000000000212 /* main.swift in Sources */ = {isa = PBXBuildFile; fileRef = A00000000000000000000116 /* main.swift */; };
+		A00000000000000000000213 /* NotificationManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = A00000000000000000000117 /* NotificationManager.swift */; };
+		A00000000000000000000214 /* DragPreviewWindowController.swift in Sources */ = {isa = PBXBuildFile; fileRef = A00000000000000000000118 /* DragPreviewWindowController.swift */; };
+		A00000000000000000000215 /* FloatingNoteWindowController.swift in Sources */ = {isa = PBXBuildFile; fileRef = A00000000000000000000119 /* FloatingNoteWindowController.swift */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXFileReference section */
+		A00000000000000000000101 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
+		A00000000000000000000102 /* AppStorage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppStorage.swift; sourceTree = "<group>"; };
+		A00000000000000000000103 /* Bridge.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Bridge.swift; sourceTree = "<group>"; };
+		A00000000000000000000104 /* FloatingPanel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FloatingPanel.swift; sourceTree = "<group>"; };
+		A00000000000000000000105 /* GlobalHotKey.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GlobalHotKey.swift; sourceTree = "<group>"; };
+		A00000000000000000000106 /* MainWindowController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainWindowController.swift; sourceTree = "<group>"; };
+		A00000000000000000000107 /* WebViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WebViewController.swift; sourceTree = "<group>"; };
+		A00000000000000000000108 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		A00000000000000000000109 /* AppIcon.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; path = AppIcon.icns; sourceTree = "<group>"; };
+		A00000000000000000000110 /* build-web-assets.sh */ = {isa = PBXFileReference; lastKnownFileType = text.script.sh; path = "build-web-assets.sh"; sourceTree = "<group>"; };
+		A00000000000000000000111 /* run-macos-dev.sh */ = {isa = PBXFileReference; lastKnownFileType = text.script.sh; path = "run-macos-dev.sh"; sourceTree = "<group>"; };
+		A00000000000000000000112 /* AppKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AppKit.framework; path = System/Library/Frameworks/AppKit.framework; sourceTree = SDKROOT; };
+		A00000000000000000000113 /* WebKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = WebKit.framework; path = System/Library/Frameworks/WebKit.framework; sourceTree = SDKROOT; };
+		A00000000000000000000114 /* Carbon.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Carbon.framework; path = System/Library/Frameworks/Carbon.framework; sourceTree = SDKROOT; };
+		A00000000000000000000115 /* StickIt.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = StickIt.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		A00000000000000000000116 /* main.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = main.swift; sourceTree = "<group>"; };
+		A00000000000000000000117 /* NotificationManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationManager.swift; sourceTree = "<group>"; };
+		A00000000000000000000118 /* DragPreviewWindowController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DragPreviewWindowController.swift; sourceTree = "<group>"; };
+		A00000000000000000000119 /* FloatingNoteWindowController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FloatingNoteWindowController.swift; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		A00000000000000000000014 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				A00000000000000000000209 /* AppKit.framework in Frameworks */,
+				A00000000000000000000210 /* WebKit.framework in Frameworks */,
+				A00000000000000000000211 /* Carbon.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		A00000000000000000000002 = {
+			isa = PBXGroup;
+			children = (
+				A00000000000000000000005 /* StickItMacOS */,
+				A00000000000000000000006 /* scripts */,
+				A00000000000000000000004 /* Frameworks */,
+				A00000000000000000000003 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		A00000000000000000000003 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				A00000000000000000000115 /* StickIt.app */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		A00000000000000000000004 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				A00000000000000000000112 /* AppKit.framework */,
+				A00000000000000000000113 /* WebKit.framework */,
+				A00000000000000000000114 /* Carbon.framework */,
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
+		A00000000000000000000005 /* StickItMacOS */ = {
+			isa = PBXGroup;
+			children = (
+				A00000000000000000000101 /* AppDelegate.swift */,
+				A00000000000000000000102 /* AppStorage.swift */,
+				A00000000000000000000103 /* Bridge.swift */,
+				A00000000000000000000104 /* FloatingPanel.swift */,
+				A00000000000000000000105 /* GlobalHotKey.swift */,
+				A00000000000000000000106 /* MainWindowController.swift */,
+				A00000000000000000000117 /* NotificationManager.swift */,
+				A00000000000000000000118 /* DragPreviewWindowController.swift */,
+				A00000000000000000000119 /* FloatingNoteWindowController.swift */,
+				A00000000000000000000107 /* WebViewController.swift */,
+				A00000000000000000000116 /* main.swift */,
+				A00000000000000000000108 /* Info.plist */,
+				A00000000000000000000007 /* Resources */,
+			);
+			path = StickItMacOS;
+			sourceTree = "<group>";
+		};
+		A00000000000000000000006 /* scripts */ = {
+			isa = PBXGroup;
+			children = (
+				A00000000000000000000110 /* build-web-assets.sh */,
+				A00000000000000000000111 /* run-macos-dev.sh */,
+			);
+			path = scripts;
+			sourceTree = "<group>";
+		};
+		A00000000000000000000007 /* Resources */ = {
+			isa = PBXGroup;
+			children = (
+				A00000000000000000000109 /* AppIcon.icns */,
+			);
+			path = Resources;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		A00000000000000000000010 /* StickIt */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = A00000000000000000000012 /* Build configuration list for PBXNativeTarget "StickIt" */;
+			buildPhases = (
+				A00000000000000000000013 /* Sources */,
+				A00000000000000000000014 /* Frameworks */,
+				A00000000000000000000015 /* Resources */,
+				A00000000000000000000016 /* Build Frontend */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = StickIt;
+			productName = StickIt;
+			productReference = A00000000000000000000115 /* StickIt.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		A00000000000000000000001 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = 1;
+				LastSwiftUpdateCheck = 2600;
+				LastUpgradeCheck = 2600;
+				TargetAttributes = {
+					A00000000000000000000010 = {
+						CreatedOnToolsVersion = 26.0.1;
+					};
+				};
+			};
+			buildConfigurationList = A00000000000000000000011 /* Build configuration list for PBXProject "StickIt" */;
+			compatibilityVersion = "Xcode 15.0";
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+				Base,
+			);
+			mainGroup = A00000000000000000000002;
+			productRefGroup = A00000000000000000000003 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				A00000000000000000000010 /* StickIt */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		A00000000000000000000015 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				A00000000000000000000208 /* AppIcon.icns in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXShellScriptBuildPhase section */
+		A00000000000000000000016 /* Build Frontend */ = {
+			isa = PBXShellScriptBuildPhase;
+			alwaysOutOfDate = 1;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+			);
+			name = "Build Frontend";
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/zsh;
+			shellScript = "\"$SRCROOT/../../scripts/build-web-assets.sh\"\n";
+		};
+/* End PBXShellScriptBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		A00000000000000000000013 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				A00000000000000000000201 /* AppDelegate.swift in Sources */,
+				A00000000000000000000202 /* AppStorage.swift in Sources */,
+				A00000000000000000000203 /* Bridge.swift in Sources */,
+				A00000000000000000000204 /* FloatingPanel.swift in Sources */,
+				A00000000000000000000205 /* GlobalHotKey.swift in Sources */,
+				A00000000000000000000206 /* MainWindowController.swift in Sources */,
+				A00000000000000000000213 /* NotificationManager.swift in Sources */,
+				A00000000000000000000214 /* DragPreviewWindowController.swift in Sources */,
+				A00000000000000000000215 /* FloatingNoteWindowController.swift in Sources */,
+				A00000000000000000000207 /* WebViewController.swift in Sources */,
+				A00000000000000000000212 /* main.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin XCBuildConfiguration section */
+		A00000000000000000000301 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CLANG_ENABLE_MODULES = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = macosx;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+			};
+			name = Debug;
+		};
+		A00000000000000000000302 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CLANG_ENABLE_MODULES = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				SDKROOT = macosx;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+			};
+			name = Release;
+		};
+		A00000000000000000000303 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGNING_ALLOWED = YES;
+				CODE_SIGNING_REQUIRED = YES;
+				CODE_SIGN_IDENTITY = "Apple Development";
+				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Apple Development";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 27;
+				DEVELOPMENT_TEAM = 7JXFC39YLS;
+				ENABLE_DEBUG_DYLIB = NO;
+				ENABLE_HARDENED_RUNTIME = NO;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = StickItMacOS/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				MARKETING_VERSION = 0.5.1;
+				PRODUCT_BUNDLE_IDENTIFIER = com.stickit.app;
+				PRODUCT_NAME = StickIt;
+				PROVISIONING_PROFILE_SPECIFIER = "";
+				SDKROOT = macosx;
+				SWIFT_VERSION = 5.0;
+			};
+			name = Debug;
+		};
+		A00000000000000000000304 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGNING_ALLOWED = YES;
+				CODE_SIGNING_REQUIRED = YES;
+				CODE_SIGN_IDENTITY = "Apple Development";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 27;
+				DEVELOPMENT_TEAM = 7JXFC39YLS;
+				ENABLE_DEBUG_DYLIB = NO;
+				ENABLE_HARDENED_RUNTIME = NO;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = StickItMacOS/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				MARKETING_VERSION = 0.5.1;
+				PRODUCT_BUNDLE_IDENTIFIER = com.stickit.app;
+				PRODUCT_NAME = StickIt;
+				PROVISIONING_PROFILE_SPECIFIER = "";
+				SDKROOT = macosx;
+				SWIFT_VERSION = 5.0;
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		A00000000000000000000011 /* Build configuration list for PBXProject "StickIt" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				A00000000000000000000301 /* Debug */,
+				A00000000000000000000302 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		A00000000000000000000012 /* Build configuration list for PBXNativeTarget "StickIt" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				A00000000000000000000303 /* Debug */,
+				A00000000000000000000304 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = A00000000000000000000001 /* Project object */;
+}

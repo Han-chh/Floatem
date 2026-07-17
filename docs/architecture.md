@@ -1,6 +1,6 @@
-# QuickNote Cross-Platform Architecture
+# StickIt Cross-Platform Architecture
 
-QuickNote is split into a shared React frontend and isolated native host layers.
+StickIt is split into a shared React frontend and isolated native host layers.
 
 ## Directory Layout
 
@@ -14,7 +14,7 @@ QuickNote is split into a shared React frontend and isolated native host layers.
 
 ## Boundary
 
-The frontend talks only to `window.quickNoteHost`, typed by `HostBridge` in `packages/native-bridge`.
+The frontend talks only to `window.stickItHost`, typed by `HostBridge` in `packages/native-bridge`.
 Native implementations own platform behavior:
 
 - rounded native window shape, shadow, title/drag region, resize hit testing, and window controls
@@ -25,11 +25,11 @@ Native implementations own platform behavior:
 - clipboard access
 - devtools and app lifecycle commands
 
-`apps/frontend/src/lib/nativeBridge.ts` provides a browser fallback so the UI can run in Vite without a native host. The old `window.quickNoteNative` name is kept as a compatibility alias only; new host integrations should expose `window.quickNoteHost`.
+`apps/frontend/src/lib/nativeBridge.ts` provides a browser fallback so the UI can run in Vite without a native host. The old `window.stickItNative` name is kept as a compatibility alias only; new host integrations should expose `window.stickItHost`.
 
 ## macOS Host
 
-The macOS host remains AppKit + WKWebView. `WebViewController` injects `quickNoteHost` and dispatches bridge requests to `MainWindowController`, `AppStorage`, `GlobalHotKeyManager`, and `NotificationManager`.
+The macOS host remains AppKit + WKWebView. `WebViewController` injects `stickItHost` and dispatches bridge requests to `MainWindowController`, `AppStorage`, `GlobalHotKeyManager`, and `NotificationManager`.
 
 `MainWindowController` creates the AppKit shell as the visible app window: a titled, resizable `NSPanel` with native traffic-light controls, AppKit shadow, AppKit resize handling, and movable title/background regions. `WebViewController` is only the interior content view and no longer clips or rounds the outer window surface.
 
@@ -43,8 +43,8 @@ The Windows host is C# WPF + WebView2. This keeps the shared frontend intact whi
 - The WPF host keeps window shell actions outside the shared frontend bridge; minimize, maximize, close, resize, and titlebar drag are owned by the native Windows frame.
 - `Win32HotKeyManager` uses `RegisterHotKey`.
 - `WindowInterop` uses `SetWindowPos(HWND_TOPMOST)`, foreground activation, DWM window-corner attributes, and IME-window promotion.
-- `NotificationScheduler` uses an app-managed timer scheduler and Windows desktop notification surface while QuickNote is running.
-- `AppStorage` stores the same logical JSON data under `%APPDATA%\QuickNote`.
+- `NotificationScheduler` uses an app-managed timer scheduler and Windows desktop notification surface while StickIt is running.
+- `AppStorage` stores the same logical JSON data under `%APPDATA%\StickIt`.
 
 Windows cannot guarantee that a normal desktop topmost window appears above every fullscreen-exclusive game, secure desktop, or shell-owned surface. The host implements the strongest reliable topmost behavior for regular desktop and borderless/fullscreen app scenarios.
 
@@ -52,7 +52,7 @@ Windows cannot guarantee that a normal desktop topmost window appears above ever
 
 `packages/branding/branding.json` is the shared source of truth for display name, product name, bundle/app identifiers, and icon asset references. Platform packaging still requires platform-specific icon formats:
 
-- macOS: `apps/mac-host/QuickNoteMacOS/Resources/AppIcon.icns`
+- macOS: `apps/mac-host/StickItMacOS/Resources/AppIcon.icns`
 - Windows: `apps/windows-host/Assets/AppIcon.ico`
 
-The Windows host copies `branding.json` into output and reads it at runtime. The frontend imports `quickNoteBranding` for app name display.
+The Windows host copies `branding.json` into output and reads it at runtime. The frontend imports `stickItBranding` for app name display.

@@ -4,7 +4,7 @@ import { describe, expect, it, vi } from "vitest";
 import { PanelShell } from "../../src/components/layout/PanelShell";
 
 describe("PanelShell", () => {
-  it("opens global QuickNote help from the header", async () => {
+  it("opens global StickIt help from the header", async () => {
     const user = userEvent.setup();
 
     render(
@@ -21,9 +21,9 @@ describe("PanelShell", () => {
       </PanelShell>,
     );
 
-    await user.click(screen.getByRole("button", { name: "QuickNote help" }));
+    await user.click(screen.getByRole("button", { name: "StickIt help" }));
 
-    const dialog = screen.getByRole("dialog", { name: "QuickNote guide" });
+    const dialog = screen.getByRole("dialog", { name: "StickIt guide" });
 
     expect(dialog).toBeInTheDocument();
     expect(screen.getByText("Overview")).toBeInTheDocument();

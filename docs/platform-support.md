@@ -1,4 +1,4 @@
-# Quicknote Platform Support
+# StickIt Platform Support
 
 | Feature | macOS | Windows |
 | --- | --- | --- |

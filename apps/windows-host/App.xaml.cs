@@ -3,7 +3,7 @@ using System.Runtime.InteropServices;
 using System.Windows;
 using System.Windows.Threading;
 
-namespace QuickNote.Windows;
+namespace StickIt.Windows;
 
 public partial class App : System.Windows.Application
 {
@@ -43,7 +43,7 @@ public partial class App : System.Windows.Application
         {
             var folder = Path.Combine(
                 Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-                "QuickNote");
+                "StickIt");
             Directory.CreateDirectory(folder);
             File.AppendAllText(
                 Path.Combine(folder, "startup-error.log"),

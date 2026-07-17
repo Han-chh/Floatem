@@ -5,7 +5,7 @@ using System.Windows;
 using System.Windows.Input;
 using System.Windows.Interop;
 
-namespace QuickNote.Windows.Native;
+namespace StickIt.Windows.Native;
 
 internal sealed partial class Win32HotKeyManager : IDisposable
 {
@@ -35,7 +35,7 @@ internal sealed partial class Win32HotKeyManager : IDisposable
             catch (InvalidOperationException ex)
             {
                 // Reserved or taken by another app — do not crash startup; user can pick another shortcut in Settings.
-                Debug.WriteLine($"QuickNote: initial global hotkey not registered: {ex.Message}");
+                Debug.WriteLine($"StickIt: initial global hotkey not registered: {ex.Message}");
             }
         };
     }

@@ -1,6 +1,6 @@
 import { create } from "zustand";
 import { subscribeWithSelector } from "zustand/middleware";
-import type { HotkeyRegistrationState } from "@quicknote/native-bridge";
+import type { HotkeyRegistrationState } from "@stickit/native-bridge";
 import {
   DEFAULT_SETTINGS,
   type AnimationSpeed,

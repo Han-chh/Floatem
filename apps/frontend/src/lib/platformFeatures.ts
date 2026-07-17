@@ -1,5 +1,5 @@
-import type { HostPlatform } from "@quicknote/native-bridge";
-import { getQuickNoteBridge } from "./nativeBridge";
+import type { HostPlatform } from "@stickit/native-bridge";
+import { getStickItBridge } from "./nativeBridge";
 
 export type PlatformFloatingFeatures = {
   floatingNotes: boolean;
@@ -21,7 +21,7 @@ export const platformFeatures: Record<HostPlatform, PlatformFloatingFeatures> = 
   },
 };
 
-export function getPlatformFeatures(platform: HostPlatform = getQuickNoteBridge().platform) {
+export function getPlatformFeatures(platform: HostPlatform = getStickItBridge().platform) {
   return platformFeatures[platform] ?? platformFeatures.web;
 }
 
