@@ -12,7 +12,7 @@ export default defineConfig({
     trace: "on-first-retry",
   },
   webServer: {
-    command: "pnpm exec vite --config apps/frontend/vite.config.ts --host 127.0.0.1 --port 4173 --strictPort",
+    command: "pnpm exec vite --config vite.config.ts --host 127.0.0.1 --port 4173 --strictPort",
     port: 4173,
     reuseExistingServer: true,
     timeout: 120_000,
