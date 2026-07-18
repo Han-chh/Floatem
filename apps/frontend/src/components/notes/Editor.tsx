@@ -30,6 +30,7 @@ type EditorProps = {
   content: Descendant[];
   onChange: (value: Descendant[]) => void;
   instantToolbar?: boolean;
+  attachedToolbar?: boolean;
 };
 
 type ReadOnlyNoteContentProps = {
@@ -65,7 +66,7 @@ function renderLeaf(props: RenderLeafProps) {
   );
 }
 
-export function Editor({ content, onChange, instantToolbar = false }: EditorProps) {
+export function Editor({ content, onChange, instantToolbar = false, attachedToolbar = false }: EditorProps) {
   const { t } = useI18n();
   const [editor] = useState(() => withColorMark(withHistory(withReact(createEditor()))));
   const [initialValue] = useState(() => cloneNoteContent(content));
@@ -272,12 +273,13 @@ export function Editor({ content, onChange, instantToolbar = false }: EditorProp
 
   return (
     <Slate editor={editor} initialValue={initialValue} onChange={handleChange}>
-      <div ref={rootRef} className="space-y-2">
+      <div ref={rootRef} className={attachedToolbar ? "note-editor-shell-attached" : "space-y-2"}>
         <Toolbar
           activeColor={toolbarState.activeColor ?? pendingTextColor}
           activeFormats={toolbarState.activeFormats}
           canRedo={toolbarState.canRedo}
           canUndo={toolbarState.canUndo}
+          attached={attachedToolbar}
           instant={instantToolbar}
           isColorPaletteOpen={isColorPaletteOpen}
           onApplyColor={handleApplyColor}
@@ -394,7 +396,7 @@ export function Editor({ content, onChange, instantToolbar = false }: EditorProp
               void handlePaste();
             }
           }}
-          className={NOTE_EDITOR_INPUT_CLASS}
+          className={`${NOTE_EDITOR_INPUT_CLASS} ${attachedToolbar ? "note-editor-input-attached" : ""}`}
           placeholder={t.notes.editorPlaceholder}
           renderElement={renderElement}
           renderLeaf={renderLeaf}

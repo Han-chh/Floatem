@@ -108,7 +108,7 @@ describe("NotesList", () => {
     expect(screen.queryByPlaceholderText("Untitled note")).not.toBeInTheDocument();
   });
 
-  it("collapses the formatting row into a compact toolbox and expands it again", async () => {
+  it("collapses the formatting row into an arrow control and expands it again", async () => {
     const user = userEvent.setup();
     render(<NotesList />);
 
@@ -120,10 +120,10 @@ describe("NotesList", () => {
     await user.click(collapseButton);
 
     expect(within(note).queryByRole("button", { name: "Bold" })).not.toBeInTheDocument();
-    const toolboxButton = within(note).getByRole("button", { name: "Open formatting toolbox" });
-    expect(toolboxButton).toHaveAttribute("aria-expanded", "false");
+    const expandButton = within(note).getByRole("button", { name: "Expand formatting toolbar" });
+    expect(expandButton).toHaveAttribute("aria-expanded", "false");
 
-    await user.click(toolboxButton);
+    await user.click(expandButton);
     expect(within(note).getByRole("button", { name: "Bold" })).toBeInTheDocument();
     expect(within(note).getByRole("button", { name: "Collapse formatting toolbar" })).toHaveAttribute(
       "aria-expanded",

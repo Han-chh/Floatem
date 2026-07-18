@@ -3,13 +3,14 @@ import { useRef, useState, type ComponentType } from "react";
 import { useI18n } from "../../lib/i18n";
 import {
   BoldIcon,
+  ChevronDownIcon,
+  ChevronUpIcon,
   ClearIcon,
   CopyIcon,
   ItalicIcon,
   PaletteIcon,
   PasteIcon,
   RedoIcon,
-  ToolboxIcon,
   UndoIcon,
   UnderlineIcon,
 } from "../icons/AppIcons";
@@ -33,6 +34,7 @@ type ToolbarProps = {
   activeFormats: Record<TextFormat, boolean>;
   canRedo: boolean;
   canUndo: boolean;
+  attached?: boolean;
   instant?: boolean;
   isColorPaletteOpen: boolean;
   onApplyColor: (color: string) => void;
@@ -51,6 +53,7 @@ type ToolbarProps = {
 export function Toolbar({
   activeColor,
   activeFormats,
+  attached = false,
   canRedo,
   canUndo,
   instant = false,
@@ -192,8 +195,14 @@ export function Toolbar({
 
   return (
     <motion.div
-      className={`paper-card note-toolbar-grid relative rounded-[14px] bg-[rgba(255,250,244,0.66)] px-1 py-1 transition-[width] duration-200 ease-out ${
-        isCollapsed ? "w-8" : "w-full"
+      className={`${attached ? "note-toolbar-attached" : "paper-card"} note-toolbar-grid relative transition-[width] duration-200 ease-out ${
+        isCollapsed
+          ? attached
+            ? "note-toolbar-attached--collapsed"
+            : "w-8 rounded-[14px] bg-[rgba(255,250,244,0.66)] px-1 py-1"
+          : attached
+            ? "note-toolbar-attached--expanded"
+            : "w-full rounded-[14px] bg-[rgba(255,250,244,0.66)] px-1 py-1"
       }`}
       layout
       transition={{ layout: { duration: instant ? 0 : 0.2, ease: [0.22, 1, 0.36, 1] } }}
@@ -307,7 +316,7 @@ export function Toolbar({
                 toggleCollapsed();
               }
         }
-        className={`relative inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-[8px] border shadow-[0_5px_10px_rgba(61,49,34,0.06)] transition-colors ${
+        className={`note-toolbar-toggle relative inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-[8px] border shadow-[0_5px_10px_rgba(61,49,34,0.06)] transition-colors ${
           isCollapsed
             ? "border-[rgba(123,92,250,0.38)] bg-[rgba(123,92,250,0.13)] text-[#5D44D4]"
             : "border-[rgba(213,198,180,0.86)] bg-white/72 text-[#665B50]"
@@ -315,7 +324,7 @@ export function Toolbar({
         whileHover={visualOnly ? undefined : { y: -1.5, scale: 1.03 }}
         whileTap={visualOnly ? undefined : { scale: 0.96 }}
       >
-        <ToolboxIcon size={12} />
+        {isCollapsed ? <ChevronDownIcon size={13} /> : <ChevronUpIcon size={13} />}
       </motion.button>
 
       <ColorPickerPopover

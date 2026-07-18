@@ -406,7 +406,7 @@ describe("FloatingNoteApp", () => {
     }
   });
 
-  it("pins a floating note to the desktop from the action before the group button", async () => {
+  it("uses the floating group label as the only group action and keeps pinning in the action row", async () => {
     const note = createNoteCard({ id: "floating-note-pin", title: "Pinned note" });
     const bridge = installFloatingBridge(note);
     const user = userEvent.setup();
@@ -415,10 +415,16 @@ describe("FloatingNoteApp", () => {
 
     try {
       const card = await screen.findByTestId("note-card");
-      const actions = within(card).getAllByRole("button");
       const pinButton = within(card).getByRole("button", { name: "Keep floating on desktop" });
       const groupButton = within(card).getByRole("button", { name: "Change note group" });
-      expect(actions.indexOf(pinButton)).toBeLessThan(actions.indexOf(groupButton));
+      const metadataRow = groupButton.closest(".note-card-chip-group--floating");
+      const actionRow = pinButton.closest(".note-card-actions--floating");
+
+      expect(metadataRow).not.toBeNull();
+      expect(actionRow).not.toBeNull();
+      expect(actionRow).not.toContainElement(groupButton);
+      expect(metadataRow?.querySelector(".note-secondary-chip")).toBeInTheDocument();
+      expect(within(card).getAllByRole("button", { name: "Change note group" })).toHaveLength(1);
 
       await user.click(pinButton);
       expect(bridge.setFloatingCardDesktopPinned).toHaveBeenCalledWith(

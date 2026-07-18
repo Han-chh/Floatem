@@ -34,6 +34,7 @@ type NoteCardBodyProps = {
   actionVariant?: "delete" | "dock";
   desktopPinned?: boolean;
   onToggleDesktopPinned?: () => void;
+  floatingLayout?: boolean;
 };
 
 function GroupColorGlyph({ color, size = "md" }: { color: string; size?: "sm" | "md" }) {
@@ -88,6 +89,7 @@ function NoteCardBody({
   actionVariant = "delete",
   desktopPinned = false,
   onToggleDesktopPinned,
+  floatingLayout = false,
 }: NoteCardBodyProps) {
   const { t } = useI18n();
   const isInteractive = !preview;
@@ -138,26 +140,54 @@ function NoteCardBody({
             </div>
           </div>
 
-          <div className="note-card-meta">
-            <div className="note-card-chip-group">
+          <div className={`note-card-meta ${floatingLayout ? "note-card-meta--floating" : ""}`}>
+            <div className={`note-card-chip-group ${floatingLayout ? "note-card-chip-group--floating" : ""}`}>
+              {floatingLayout ? (
+                <motion.button
+                  type="button"
+                  aria-label={t.notes.changeGroup}
+                  data-tooltip={t.notes.group}
+                  className="note-group-chip status-chip inline-flex max-w-full items-center gap-1.5"
+                  whileHover={isInteractive ? { y: -1, scale: 1.015 } : undefined}
+                  whileTap={isInteractive ? { scale: 0.98 } : undefined}
+                  onPointerDown={isInteractive ? (event) => event.stopPropagation() : undefined}
+                  onClick={isInteractive ? onOpenGroupDialog : undefined}
+                  style={{
+                    borderColor: colorWithAlpha(accentColor, "44"),
+                    color: accentColor,
+                    backgroundColor: colorWithAlpha(accentColor, "1f"),
+                    boxShadow: `0 0 0 2px ${colorWithAlpha(accentColor, "10")}`,
+                  }}
+                >
+                  <GroupColorGlyph color={accentColor} size="sm" />
+                  <span className="min-w-0 truncate">{groupLabel}</span>
+                </motion.button>
+              ) : (
+                <span
+                  className="note-group-chip status-chip inline-flex max-w-full items-center gap-1.5"
+                  style={{
+                    borderColor: colorWithAlpha(accentColor, "44"),
+                    color: accentColor,
+                    backgroundColor: colorWithAlpha(accentColor, "1f"),
+                    boxShadow: `0 0 0 2px ${colorWithAlpha(accentColor, "10")}`,
+                  }}
+                >
+                  <GroupColorGlyph color={accentColor} size="sm" />
+                  <span className="min-w-0 truncate">{groupLabel}</span>
+                </span>
+              )}
               <span
-                className="note-group-chip status-chip inline-flex max-w-full items-center gap-1.5"
+                className="note-secondary-chip status-chip"
+                data-tone="neutral"
                 style={{
-                  borderColor: colorWithAlpha(accentColor, "44"),
-                  color: accentColor,
-                  backgroundColor: colorWithAlpha(accentColor, "1f"),
-                  boxShadow: `0 0 0 2px ${colorWithAlpha(accentColor, "10")}`,
+                  whiteSpace: "nowrap",
                 }}
               >
-                <GroupColorGlyph color={accentColor} size="sm" />
-                <span className="min-w-0 truncate">{groupLabel}</span>
-              </span>
-              <span className="note-secondary-chip status-chip" data-tone="neutral">
                 {editedLabel}
               </span>
             </div>
 
-            <div className="note-card-actions">
+            <div className={`note-card-actions ${floatingLayout ? "note-card-actions--floating" : ""}`}>
               {onToggleDesktopPinned ? (
                 <motion.button
                   type="button"
@@ -175,7 +205,7 @@ function NoteCardBody({
                   <PinIcon size={13} />
                 </motion.button>
               ) : null}
-              <div className="note-card-action-anchor group">
+              {!floatingLayout ? <div className="note-card-action-anchor group">
                 <motion.button
                   type="button"
                   className="note-card-action-button paper-icon-button relative rounded-[9px]"
@@ -194,7 +224,7 @@ function NoteCardBody({
                   <GroupColorGlyph color={accentColor} size="sm" />
                   <span className="sr-only">{t.notes.changeGroup}</span>
                 </motion.button>
-              </div>
+              </div> : null}
               <motion.button
                 type="button"
                 aria-label={t.notes.collapse}
@@ -244,6 +274,7 @@ function NoteCardBody({
           ) : (
             <Editor
               content={note.content}
+              attachedToolbar={floatingLayout}
               instantToolbar={instantToolbar}
               onChange={(value) => onUpdateContent?.(value)}
             />
@@ -366,6 +397,7 @@ export function FloatingNoteCard({
           actionVariant="dock"
           desktopPinned={desktopPinned}
           onToggleDesktopPinned={onToggleDesktopPinned}
+          floatingLayout
         />
       </motion.article>
 
