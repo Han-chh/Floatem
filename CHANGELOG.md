@@ -2,6 +2,12 @@
 
 All notable repository changes are recorded here.
 
+## v0.6.1 - 2026-07-18
+
+- Replace the macOS application icon with the new glass-reflection StickIt artwork.
+- Keep both reflection and non-reflection source designs for future branding work.
+- Bump the application version to `0.6.1` and macOS build number to `29`.
+
 ## Unreleased
 
 - Allow each note's rich-text formatting row to collapse into a compact arrow control, with the floating-card toolbar attached directly to the editor field.
