@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { useRef, type ComponentType } from "react";
+import { useRef, useState, type ComponentType } from "react";
 import { useI18n } from "../../lib/i18n";
 import {
   BoldIcon,
@@ -9,6 +9,7 @@ import {
   PaletteIcon,
   PasteIcon,
   RedoIcon,
+  ToolboxIcon,
   UndoIcon,
   UnderlineIcon,
 } from "../icons/AppIcons";
@@ -68,6 +69,7 @@ export function Toolbar({
 }: ToolbarProps) {
   const { t } = useI18n();
   const colorButtonRef = useRef<HTMLButtonElement | null>(null);
+  const [isCollapsed, setIsCollapsed] = useState(false);
   const toolItems: ToolbarItem[] = [
     {
       label: t.notes.bold,
@@ -177,11 +179,26 @@ export function Toolbar({
     }
   };
 
+  const toggleCollapsed = () => {
+    if (visualOnly) {
+      return;
+    }
+
+    if (!isCollapsed) {
+      onCloseColorPalette();
+    }
+    setIsCollapsed((current) => !current);
+  };
+
   return (
-    <div
-      className="paper-card note-toolbar-grid relative rounded-[14px] bg-[rgba(255,250,244,0.66)] px-1 py-1"
+    <motion.div
+      className={`paper-card note-toolbar-grid relative rounded-[14px] bg-[rgba(255,250,244,0.66)] px-1 py-1 transition-[width] duration-200 ease-out ${
+        isCollapsed ? "w-8" : "w-full"
+      }`}
+      layout
+      transition={{ layout: { duration: instant ? 0 : 0.2, ease: [0.22, 1, 0.36, 1] } }}
     >
-      {toolItems.map(({ action, activeTone, disabled, format, label, icon: Icon, shortcut, tone, tooltipAlign }, index) => {
+      {!isCollapsed ? toolItems.map(({ action, activeTone, disabled, format, label, icon: Icon, shortcut, tone, tooltipAlign }, index) => {
         const isActive =
           format ? activeFormats[format] : action === "color" ? Boolean(activeColor) || isColorPaletteOpen : false;
 
@@ -260,7 +277,46 @@ export function Toolbar({
             ) : null}
           </motion.button>
         );
-      })}
+      }) : null}
+
+      <motion.button
+        type="button"
+        aria-label={isCollapsed ? t.notes.expandToolbar : t.notes.collapseToolbar}
+        aria-expanded={!isCollapsed}
+        data-tooltip={isCollapsed ? t.notes.expandToolbar : t.notes.collapseToolbar}
+        data-tooltip-align="left"
+        onPointerDown={
+          visualOnly
+            ? undefined
+            : (event) => {
+                event.preventDefault();
+                event.stopPropagation();
+                toggleCollapsed();
+              }
+        }
+        onClick={
+          visualOnly
+            ? undefined
+            : (event) => {
+                if (event.detail !== 0) {
+                  return;
+                }
+
+                event.preventDefault();
+                event.stopPropagation();
+                toggleCollapsed();
+              }
+        }
+        className={`relative inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-[8px] border shadow-[0_5px_10px_rgba(61,49,34,0.06)] transition-colors ${
+          isCollapsed
+            ? "border-[rgba(123,92,250,0.38)] bg-[rgba(123,92,250,0.13)] text-[#5D44D4]"
+            : "border-[rgba(213,198,180,0.86)] bg-white/72 text-[#665B50]"
+        }`}
+        whileHover={visualOnly ? undefined : { y: -1.5, scale: 1.03 }}
+        whileTap={visualOnly ? undefined : { scale: 0.96 }}
+      >
+        <ToolboxIcon size={12} />
+      </motion.button>
 
       <ColorPickerPopover
         activeColor={activeColor}
@@ -270,6 +326,6 @@ export function Toolbar({
         onClose={onCloseColorPalette}
         onPreviewColor={onPreviewColor}
       />
-    </div>
+    </motion.div>
   );
 }

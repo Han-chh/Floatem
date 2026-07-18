@@ -51,6 +51,7 @@ type MessageCatalog = {
     editGroup: (name: string) => string;
     editGroupTitle: string;
     editorPlaceholder: string;
+    expandToolbar: string;
     empty: string;
     filterDialogSubtitle: string;
     filterDialogTitle: string;
@@ -83,6 +84,7 @@ type MessageCatalog = {
     toggleGroupFilter: (name: string) => string;
     titleAria: string;
     toolbarClear: string;
+    collapseToolbar: string;
     undo: string;
     underline: string;
     untitled: string;
@@ -387,6 +389,7 @@ const messages: Record<AppLanguage, MessageCatalog> = {
       editGroup: (name) => `Edit ${name} group`,
       editGroupTitle: "Edit group",
       editorPlaceholder: "Capture the note while it is fresh...",
+      expandToolbar: "Open formatting toolbox",
       empty: "No notes yet. Tap the plus button below to start a new card.",
       filterDialogSubtitle: "Choose which groups stay visible in Notes.",
       filterDialogTitle: "Filter groups",
@@ -420,6 +423,7 @@ const messages: Record<AppLanguage, MessageCatalog> = {
       toggleGroupFilter: (name) => `Toggle ${name} filter`,
       titleAria: "Note title",
       toolbarClear: "Clear format",
+      collapseToolbar: "Collapse formatting toolbar",
       undo: "Undo",
       underline: "Underline",
       untitled: "Untitled note",
@@ -722,6 +726,7 @@ const messages: Record<AppLanguage, MessageCatalog> = {
       editGroup: (name) => `编辑分组 ${name}`,
       editGroupTitle: "编辑分组",
       editorPlaceholder: "趁灵感还在，赶紧记下来……",
+      expandToolbar: "展开富文本工具箱",
       empty: "还没有笔记。点击下方加号开始新建卡片。",
       filterDialogSubtitle: "选择在 Notes 主界面中需要显示的分组。",
       filterDialogTitle: "筛选分组",
@@ -755,6 +760,7 @@ const messages: Record<AppLanguage, MessageCatalog> = {
       toggleGroupFilter: (name) => `切换 ${name} 的筛选`,
       titleAria: "笔记标题",
       toolbarClear: "清除格式",
+      collapseToolbar: "将富文本工具栏折叠为工具箱",
       undo: "撤销",
       underline: "下划线",
       untitled: "未命名笔记",

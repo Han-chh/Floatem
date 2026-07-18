@@ -342,6 +342,18 @@ export function UnderlineIcon(props: IconProps) {
   );
 }
 
+export function ToolboxIcon(props: IconProps) {
+  return (
+    <BaseIcon {...props}>
+      <path d="M8 7V5.5A1.5 1.5 0 0 1 9.5 4h5A1.5 1.5 0 0 1 16 5.5V7" />
+      <rect x="3" y="7" width="18" height="13" rx="3" />
+      <path d="M3 12h6" />
+      <path d="M15 12h6" />
+      <path d="M9 10h6v4H9z" />
+    </BaseIcon>
+  );
+}
+
 export function KeyboardIcon(props: IconProps) {
   return (
     <BaseIcon {...props}>

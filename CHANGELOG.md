@@ -4,6 +4,7 @@ All notable repository changes are recorded here.
 
 ## Unreleased
 
+- Allow each note's rich-text formatting row to collapse into a compact toolbox button in both docked and floating card views.
 - Add desktop-pinned floating notes and todos with a dedicated pin action, a dedicated native `NSPanel` carrier, persisted position and size restoration, and bottom-corner drag resizing constrained by each card's original size.
 - Preserve rounded note and todo silhouettes in drag previews and detached floating windows by making their dedicated WebView root surfaces fully transparent.
 - Add a default-enabled launch-at-login preference to General Settings, backed by `SMAppService.mainApp` on macOS and the current-user Run key on Windows.

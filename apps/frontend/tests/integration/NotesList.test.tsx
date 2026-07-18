@@ -108,6 +108,29 @@ describe("NotesList", () => {
     expect(screen.queryByPlaceholderText("Untitled note")).not.toBeInTheDocument();
   });
 
+  it("collapses the formatting row into a compact toolbox and expands it again", async () => {
+    const user = userEvent.setup();
+    render(<NotesList />);
+
+    await user.click(screen.getByRole("button", { name: "Add note" }));
+    const note = screen.getByTestId("note-card");
+    const collapseButton = within(note).getByRole("button", { name: "Collapse formatting toolbar" });
+
+    expect(collapseButton).toHaveAttribute("aria-expanded", "true");
+    await user.click(collapseButton);
+
+    expect(within(note).queryByRole("button", { name: "Bold" })).not.toBeInTheDocument();
+    const toolboxButton = within(note).getByRole("button", { name: "Open formatting toolbox" });
+    expect(toolboxButton).toHaveAttribute("aria-expanded", "false");
+
+    await user.click(toolboxButton);
+    expect(within(note).getByRole("button", { name: "Bold" })).toBeInTheDocument();
+    expect(within(note).getByRole("button", { name: "Collapse formatting toolbar" })).toHaveAttribute(
+      "aria-expanded",
+      "true",
+    );
+  });
+
   it("manages groups from the card dialog", async () => {
     const user = userEvent.setup();
     render(<NotesList />);
