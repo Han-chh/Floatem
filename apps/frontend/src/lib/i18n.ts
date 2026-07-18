@@ -210,20 +210,13 @@ type MessageCatalog = {
     timeZoneSystemLabel: (timeZone: string) => string;
     timeZoneTitle: string;
     timeZoneUseSystem: string;
-    themeBehaviorBody: string;
-    themeBehaviorTitle: string;
+    themeAfterglowTitle: string;
     themeClassicTitle: string;
     themeChrysanthemumTitle: string;
-    themeFollowSystemBody: string;
-    themeFollowSystemTitle: string;
     themeForestTitle: string;
     themeOrchidTitle: string;
     themeManualBody: string;
     themeManualTitle: string;
-    themeNightAutomaticBody: string;
-    themeNightTitle: string;
-    themeSystemLightBody: string;
-    themeSystemLightTitle: string;
     themePlumTitle: string;
     transitionLift: string;
     transitionPage: string;
@@ -453,7 +446,7 @@ const messages: Record<AppLanguage, MessageCatalog> = {
       categoryNotificationsTitle: "Notifications",
       categoryShortcutsDescription: "Global shortcut and which section appears when StickIt opens.",
       categoryShortcutsTitle: "Shortcuts and launch",
-      categoryThemeDescription: "Background, surfaces, contrast, and automatic night appearance.",
+      categoryThemeDescription: "Background, surfaces, contrast, and ambient light.",
       categoryThemeTitle: "Theme",
       changeShortcut: "Change",
       currentShortcut: "Current shortcut",
@@ -549,20 +542,13 @@ const messages: Record<AppLanguage, MessageCatalog> = {
       timeZoneSystemLabel: (timeZone) => `System timezone: ${timeZone}`,
       timeZoneTitle: "Timezone",
       timeZoneUseSystem: "Use system timezone",
-      themeBehaviorBody: "Choose a fixed appearance or let macOS switch StickIt into Night when the system enters Dark Mode.",
-      themeBehaviorTitle: "Theme behavior",
+      themeAfterglowTitle: "Afterglow",
       themeClassicTitle: "Classic",
       themeChrysanthemumTitle: "Chrysanthemum yellow · Chrysanthemum",
-      themeFollowSystemBody: "Use your chosen light theme during the day and Night when macOS changes to Dark Mode.",
-      themeFollowSystemTitle: "Follow system appearance",
       themeForestTitle: "Ink green · Bamboo",
       themeOrchidTitle: "White green · Orchid",
-      themeManualBody: "Apply one appearance at all times until you change it again.",
-      themeManualTitle: "Manual theme",
-      themeNightAutomaticBody: "Night is applied automatically while the system uses Dark Mode. Your selected light theme returns with Light Mode.",
-      themeNightTitle: "Night",
-      themeSystemLightBody: "Choose which light theme StickIt should use before the system changes to Dark Mode.",
-      themeSystemLightTitle: "Preferred light theme",
+      themeManualBody: "Choose one fixed light theme for StickIt.",
+      themeManualTitle: "Choose theme",
       themePlumTitle: "Plum red · Plum blossom",
       transitionLift: "Lift",
       transitionPage: "Page turn",
@@ -790,7 +776,7 @@ const messages: Record<AppLanguage, MessageCatalog> = {
       categoryNotificationsTitle: "通知",
       categoryShortcutsDescription: "全局快捷键，以及 StickIt 打开时优先显示的分区。",
       categoryShortcutsTitle: "快捷键与启动",
-      categoryThemeDescription: "调整整体背景、界面层级、对比度和自动夜间外观。",
+      categoryThemeDescription: "调整整体背景、界面层级、对比度与环境光感。",
       categoryThemeTitle: "主题",
       changeShortcut: "更改",
       currentShortcut: "当前快捷键",
@@ -886,20 +872,13 @@ const messages: Record<AppLanguage, MessageCatalog> = {
       timeZoneSystemLabel: (timeZone) => `系统时区：${timeZone}`,
       timeZoneTitle: "时区",
       timeZoneUseSystem: "使用系统时区",
-      themeBehaviorBody: "选择固定外观，或让 macOS 进入深色模式时自动将 StickIt 切换为黑夜色。",
-      themeBehaviorTitle: "主题切换方式",
+      themeAfterglowTitle: "浮光",
       themeClassicTitle: "经典色",
       themeChrysanthemumTitle: "菊花黄 · 菊",
-      themeFollowSystemBody: "白天使用你选定的亮色主题，macOS 切换为深色模式时使用黑夜色。",
-      themeFollowSystemTitle: "随系统外观切换",
       themeForestTitle: "墨绿色 · 竹",
       themeOrchidTitle: "白绿色 · 兰",
-      themeManualBody: "始终使用选定主题，直到你再次手动更改。",
-      themeManualTitle: "手动主题",
-      themeNightAutomaticBody: "系统处于深色模式时会自动应用黑夜色；回到亮色模式后恢复你选定的亮色主题。",
-      themeNightTitle: "黑夜色",
-      themeSystemLightBody: "选择系统进入深色模式之前，StickIt 应使用的亮色主题。",
-      themeSystemLightTitle: "首选亮色主题",
+      themeManualBody: "为 StickIt 选择一套固定的浅色主题。",
+      themeManualTitle: "选择主题",
       themePlumTitle: "深红粉 · 梅",
       transitionLift: "抬升",
       transitionPage: "翻页",

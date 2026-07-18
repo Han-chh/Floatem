@@ -96,6 +96,7 @@ describe("NotesList", () => {
     render(<NotesList />);
 
     await user.click(screen.getByRole("button", { name: "Add note" }));
+    expect(screen.getByTestId("note-card")).toHaveClass("content-card-classic");
     expect(screen.getByPlaceholderText("Untitled note")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Copy" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Paste" })).toBeInTheDocument();
@@ -108,24 +109,32 @@ describe("NotesList", () => {
     expect(screen.queryByPlaceholderText("Untitled note")).not.toBeInTheDocument();
   });
 
-  it("collapses the formatting row into an arrow control and expands it again", async () => {
+  it("persists the formatting toolbar state and uses arrows that describe the next action", async () => {
     const user = userEvent.setup();
-    render(<NotesList />);
+    const view = render(<NotesList />);
 
     await user.click(screen.getByRole("button", { name: "Add note" }));
     const note = screen.getByTestId("note-card");
     const collapseButton = within(note).getByRole("button", { name: "Collapse formatting toolbar" });
 
     expect(collapseButton).toHaveAttribute("aria-expanded", "true");
+    expect(collapseButton.querySelector("path")).toHaveAttribute("d", "m6 9 6 6 6-6");
     await user.click(collapseButton);
 
     expect(within(note).queryByRole("button", { name: "Bold" })).not.toBeInTheDocument();
     const expandButton = within(note).getByRole("button", { name: "Expand formatting toolbar" });
     expect(expandButton).toHaveAttribute("aria-expanded", "false");
+    expect(expandButton.querySelector("path")).toHaveAttribute("d", "m6 15 6-6 6 6");
 
-    await user.click(expandButton);
-    expect(within(note).getByRole("button", { name: "Bold" })).toBeInTheDocument();
-    expect(within(note).getByRole("button", { name: "Collapse formatting toolbar" })).toHaveAttribute(
+    view.unmount();
+    render(<NotesList />);
+    const restoredNote = screen.getByTestId("note-card");
+    const restoredExpandButton = within(restoredNote).getByRole("button", { name: "Expand formatting toolbar" });
+    expect(restoredExpandButton).toHaveAttribute("aria-expanded", "false");
+
+    await user.click(restoredExpandButton);
+    expect(within(restoredNote).getByRole("button", { name: "Bold" })).toBeInTheDocument();
+    expect(within(restoredNote).getByRole("button", { name: "Collapse formatting toolbar" })).toHaveAttribute(
       "aria-expanded",
       "true",
     );
@@ -138,10 +147,17 @@ describe("NotesList", () => {
     await user.click(screen.getByRole("button", { name: "Add note" }));
 
     const note = screen.getByTestId("note-card");
+    const groupButton = within(note).getByRole("button", { name: "Change note group" });
+    const metadataRow = groupButton.closest(".note-card-chip-group");
+    const actionRow = within(note).getByRole("button", { name: "Collapse note" }).closest(".note-card-actions");
+
+    expect(within(note).getAllByRole("button", { name: "Change note group" })).toHaveLength(1);
+    expect(metadataRow?.querySelector(".note-secondary-chip")).toBeInTheDocument();
+    expect(actionRow).not.toContainElement(groupButton);
     expect(within(note).getByText("No group")).toBeInTheDocument();
     expect(screen.queryByRole("textbox", { name: "Group name" })).not.toBeInTheDocument();
 
-    await user.click(within(note).getByRole("button", { name: "Change note group" }));
+    await user.click(groupButton);
     expect(screen.getByRole("dialog", { name: "Manage groups" })).toBeInTheDocument();
     expect(screen.queryByRole("textbox", { name: "Group name" })).not.toBeInTheDocument();
 
@@ -151,6 +167,9 @@ describe("NotesList", () => {
     await user.click(within(createDialog).getByRole("button", { name: "Create group" }));
     await user.click(screen.getByRole("button", { name: "Work" }));
     expect(within(note).getByText("Work")).toBeInTheDocument();
+    expect(note).toHaveAttribute("data-note-grouped", "true");
+    expect(note.querySelector(".note-group-card-texture")).toBeInTheDocument();
+    expect(note.querySelector(".note-group-card-rail")).toBeInTheDocument();
 
     await user.click(within(note).getByRole("button", { name: "Change note group" }));
     await user.click(screen.getByRole("button", { name: "Edit Work group" }));
@@ -172,6 +191,8 @@ describe("NotesList", () => {
 
     await user.click(within(screen.getByRole("dialog", { name: "Manage groups" })).getByRole("button", { name: "Close" }));
     expect(within(note).getByText("No group")).toBeInTheDocument();
+    expect(note).toHaveAttribute("data-note-grouped", "false");
+    expect(note.querySelector(".note-group-card-texture")).not.toBeInTheDocument();
   });
 
   it("does not refresh edited time when the editor only gains focus", async () => {

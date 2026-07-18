@@ -15,6 +15,7 @@ import {
 } from "../../src/lib/models";
 import { useNotesStore } from "../../src/store/notesStore";
 import { useTodosStore } from "../../src/store/todosStore";
+import { getNoteToolbarStateKey } from "../../src/lib/noteToolbarState";
 
 function createFloatingNotePayload(note: NoteCard): DragPreviewPayload {
   return {
@@ -288,6 +289,24 @@ function installFloatingTodoBridge(todo: TodoItem) {
 }
 
 describe("FloatingNoteApp", () => {
+  it("restores the same per-note toolbar state in a floating card", async () => {
+    const note = createNoteCard({ id: "floating-note-toolbar-state", title: "Remember toolbar" });
+    const bridge = installFloatingBridge(note);
+    window.localStorage.setItem(getNoteToolbarStateKey(note.id), "true");
+
+    render(<FloatingNoteApp />);
+
+    try {
+      const card = await screen.findByTestId("note-card");
+      const expandButton = within(card).getByRole("button", { name: "Expand formatting toolbar" });
+      expect(expandButton).toHaveAttribute("aria-expanded", "false");
+      expect(expandButton.querySelector("path")).toHaveAttribute("d", "m6 15 6-6 6 6");
+      expect(within(card).queryByRole("button", { name: "Bold" })).not.toBeInTheDocument();
+    } finally {
+      bridge.restore();
+    }
+  });
+
   it("supports note text editing controls without starting a floating-window drag", async () => {
     const note = createNoteCard({
       id: "floating-note-editing",
@@ -449,6 +468,7 @@ describe("FloatingNoteApp", () => {
     try {
       await screen.findByTestId("note-card");
       const shell = screen.getByTestId("floating-card-shell");
+      const scaledContent = screen.getByTestId("floating-card-scaled-content");
       const handle = screen.getByRole("separator", { name: "Resize floating card" });
       bridge.resizeFloatingCard.mockClear();
 
@@ -456,6 +476,7 @@ describe("FloatingNoteApp", () => {
       fireEvent.pointerMove(handle, { pointerId: 1, clientX: 500, clientY: 360 });
 
       expect(shell).toHaveStyle({ width: "500px", minHeight: "360px" });
+      expect(scaledContent).toHaveAttribute("data-floating-card-content-scale", "1.190");
       expect(bridge.resizeFloatingCard).toHaveBeenLastCalledWith({
         width: 500,
         height: 360,
@@ -463,8 +484,74 @@ describe("FloatingNoteApp", () => {
         horizontalAnchor: "left",
       });
 
+      const resizeCallCount = bridge.resizeFloatingCard.mock.calls.length;
+      fireEvent.pointerMove(handle, { pointerId: 1, clientX: 420, clientY: 420 });
+      expect(shell).toHaveStyle({ width: "500px", minHeight: "360px" });
+      expect(bridge.resizeFloatingCard).toHaveBeenCalledTimes(resizeCallCount);
+
+      fireEvent.pointerMove(handle, { pointerId: 1, clientX: 540, clientY: 300 });
+      expect(shell).toHaveStyle({ width: "540px", minHeight: "300px" });
+      expect(bridge.resizeFloatingCard).toHaveBeenLastCalledWith({
+        width: 540,
+        height: 300,
+        anchor: "top",
+        horizontalAnchor: "left",
+      });
+
       fireEvent.pointerMove(handle, { pointerId: 1, clientX: 100, clientY: 100 });
       expect(shell).toHaveStyle({ width: "420px", minHeight: "300px" });
+      expect(scaledContent).toHaveAttribute("data-floating-card-content-scale", "1.000");
+    } finally {
+      bridge.restore();
+    }
+  });
+
+  it("shrinks a collapsed floating note to its header and restores its expanded size", async () => {
+    const note = createNoteCard({ id: "floating-note-collapse-size", title: "Collapsible note" });
+    const bridge = installFloatingBridge(note);
+    const user = userEvent.setup();
+
+    render(<FloatingNoteApp />);
+
+    try {
+      const card = await screen.findByTestId("note-card");
+      vi.spyOn(card, "getBoundingClientRect").mockReturnValue({
+        bottom: 104,
+        height: 104,
+        left: 0,
+        right: 420,
+        top: 0,
+        width: 420,
+        x: 0,
+        y: 0,
+        toJSON: () => ({}),
+      });
+      bridge.resizeFloatingCard.mockClear();
+
+      await user.click(within(card).getByRole("button", { name: "Collapse note" }));
+      await waitFor(() => {
+        expect(bridge.resizeFloatingCard).toHaveBeenCalledWith({
+          width: 420,
+          height: 104,
+          anchor: "top",
+          horizontalAnchor: "left",
+          allowBelowMinimum: true,
+        });
+      });
+      expect(screen.getByTestId("floating-card-shell")).toHaveStyle({ width: "420px", minHeight: "104px" });
+      expect(within(card).getByRole("textbox", { name: "Note title" })).toBeInTheDocument();
+      expect(within(card).getAllByRole("textbox")).toHaveLength(1);
+
+      await user.click(within(card).getByRole("button", { name: "Collapse note" }));
+      await waitFor(() => {
+        expect(bridge.resizeFloatingCard).toHaveBeenLastCalledWith({
+          width: 420,
+          height: 300,
+          anchor: "top",
+          horizontalAnchor: "left",
+        });
+      });
+      expect(screen.getByTestId("floating-card-shell")).toHaveStyle({ width: "420px", minHeight: "300px" });
     } finally {
       bridge.restore();
     }
@@ -670,6 +757,45 @@ describe("FloatingNoteApp", () => {
         },
         { timeout: 1200 },
       );
+    } finally {
+      bridge.restore();
+    }
+  });
+
+  it("rejects vertical-only resizing while allowing horizontal and diagonal todo resizing", async () => {
+    const todo = createTodoItem("Resize todo", { id: "floating-todo-resize" });
+    const bridge = installFloatingTodoBridge(todo);
+
+    render(<FloatingNoteApp />);
+
+    try {
+      await screen.findByTestId("todo-item");
+      const shell = screen.getByTestId("floating-card-shell");
+      const handle = screen.getByRole("separator", { name: "Resize floating card" });
+      bridge.resizeFloatingCard.mockClear();
+
+      fireEvent.pointerDown(handle, { pointerId: 2, clientX: 360, clientY: 72 });
+      fireEvent.pointerMove(handle, { pointerId: 2, clientX: 360, clientY: 160 });
+      expect(shell).toHaveStyle({ width: "360px", minHeight: "72px" });
+      expect(bridge.resizeFloatingCard).not.toHaveBeenCalled();
+
+      fireEvent.pointerMove(handle, { pointerId: 2, clientX: 440, clientY: 72 });
+      expect(shell).toHaveStyle({ width: "440px", minHeight: "72px" });
+      expect(bridge.resizeFloatingCard).toHaveBeenLastCalledWith({
+        width: 440,
+        height: 72,
+        anchor: "top",
+        horizontalAnchor: "left",
+      });
+
+      fireEvent.pointerMove(handle, { pointerId: 2, clientX: 440, clientY: 132 });
+      expect(shell).toHaveStyle({ width: "440px", minHeight: "132px" });
+      expect(bridge.resizeFloatingCard).toHaveBeenLastCalledWith({
+        width: 440,
+        height: 132,
+        anchor: "top",
+        horizontalAnchor: "left",
+      });
     } finally {
       bridge.restore();
     }

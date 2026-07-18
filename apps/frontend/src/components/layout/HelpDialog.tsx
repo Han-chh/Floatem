@@ -197,16 +197,6 @@ export function HelpDialog({ isOpen, onClose }: HelpDialogProps) {
                           {section.title}
                         </p>
                         <p className="mt-2 text-[12px] leading-6 text-[var(--muted)]">{section.summary}</p>
-                        <div className="mt-4 flex flex-wrap gap-2">
-                          {section.articles[0]?.highlights.slice(0, 3).map((highlight) => (
-                            <span
-                              key={highlight}
-                              className="inline-flex items-center rounded-full border border-[rgba(156,126,94,0.22)] bg-[rgba(255,255,255,0.82)] px-2.5 py-1 text-[10.5px] font-semibold text-[var(--brown-strong)]"
-                            >
-                              {highlight}
-                            </span>
-                          ))}
-                        </div>
                       </motion.button>
                     );
                   })}

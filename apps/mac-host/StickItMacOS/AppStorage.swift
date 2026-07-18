@@ -158,12 +158,10 @@ final class AppStorage {
     private var defaultSettings: [String: Any] {
         [
             "hotkey": GlobalHotKeyManager.defaultShortcut,
-            "language": "en",
+            "language": "zh-CN",
             "timeZone": TimeZone.current.identifier,
             "timeFormat": "24h",
             "theme": "classic",
-            "themeMode": "manual",
-            "systemLightTheme": "classic",
             "panelPosition": NSNull(),
             "activeTab": "notes",
             "lastActiveTab": "notes",

@@ -40,6 +40,7 @@ const FLOATING_DIALOG_VIEWPORT_SIZE = {
   height: 680,
 };
 const FLOATING_DIALOG_GAP_PX = 12;
+const MAX_FLOATING_CARD_CONTENT_SCALE = 1.65;
 const FLOATING_DIALOG_BACKDROP_SELECTOR = ".stickit-modal-backdrop";
 const EDITABLE_TARGET_SELECTOR = 'input,textarea,select,[contenteditable="true"],[role="textbox"]';
 type FloatingDialogSide = "left" | "right";
@@ -64,6 +65,18 @@ function getCardReference(payload: DragPreviewPayload) {
 
 function isFiniteNumber(value: unknown): value is number {
   return typeof value === "number" && Number.isFinite(value);
+}
+
+function getFloatingCardContentScale(
+  size: { width: number; height: number },
+  minimumSize: { width: number; height: number },
+  widthOnly = false,
+) {
+  const widthScale = size.width / Math.max(1, minimumSize.width);
+  const heightScale = size.height / Math.max(1, minimumSize.height);
+
+  const availableScale = widthOnly ? widthScale : Math.min(widthScale, heightScale);
+  return Math.min(MAX_FLOATING_CARD_CONTENT_SCALE, Math.max(1, availableScale));
 }
 
 function chooseFloatingDialogSideFromPlacement(
@@ -132,6 +145,17 @@ export function FloatingNoteApp() {
   const [isHydrated, setIsHydrated] = useState(false);
   const contentRef = useRef<HTMLElement | null>(null);
   const syncedFrameSizeRef = useRef(frameSize);
+  const expandedCardSizeRef = useRef<{ width: number; height: number }>((() => {
+    const minimum = initialPayload?.minimumSize ?? initialPayload?.size ?? { width: 1, height: 1 };
+    const size = initialPayload?.size ?? minimum;
+    return {
+      width: Math.max(size.width, minimum.width),
+      height: Math.max(size.height, minimum.height),
+    };
+  })());
+  const previousNoteCollapsedRef = useRef(
+    initialPayload?.kind === "note" ? initialPayload.note.collapsed : false,
+  );
   const isDialogOpenRef = useRef(false);
   const lastDialogSideRef = useRef<FloatingDialogSide>("right");
   const completeDockTimerRef = useRef<number | null>(null);
@@ -264,6 +288,12 @@ export function FloatingNoteApp() {
 
     syncedFrameSizeRef.current = payload.size;
     minimumCardSizeRef.current = payload.minimumSize ?? payload.size;
+    if (payload.kind !== "note" || !payload.note.collapsed) {
+      expandedCardSizeRef.current = {
+        width: Math.max(payload.size.width, payload.minimumSize?.width ?? payload.size.width),
+        height: Math.max(payload.size.height, payload.minimumSize?.height ?? payload.size.height),
+      };
+    }
     setCardSize((current) => ({
       width: Math.max(payload.size.width, current.width),
       height: Math.max(payload.size.height, current.height),
@@ -442,7 +472,7 @@ export function FloatingNoteApp() {
 
     const hydrateFromPayload = () => {
       useSettingsStore.getState().hydrateSettings({
-        language: payload.language === "zh-CN" ? "zh-CN" : "en",
+        language: payload.language === "en" ? "en" : "zh-CN",
         timeZone: payload.kind === "todo" ? payload.timeZone : undefined,
         timeFormat: payload.kind === "todo" ? payload.timeFormat : undefined,
         enableParticles: false,
@@ -484,7 +514,7 @@ export function FloatingNoteApp() {
 
         useSettingsStore.getState().hydrateSettings({
           ...settings,
-          language: payload.language === "zh-CN" ? "zh-CN" : "en",
+          language: payload.language === "en" ? "en" : "zh-CN",
           timeZone: payload.kind === "todo" ? payload.timeZone : settings.timeZone,
           timeFormat: payload.kind === "todo" ? payload.timeFormat : settings.timeFormat,
           enableParticles: false,
@@ -508,6 +538,56 @@ export function FloatingNoteApp() {
     };
   }, [payload]);
 
+  const currentNoteCollapsed = payload?.kind === "note"
+    ? noteCards.find((card) => card.id === payload.note.id)?.collapsed ?? payload.note.collapsed
+    : false;
+
+  useEffect(() => {
+    if (!payload || payload.kind !== "note" || currentNoteCollapsed === previousNoteCollapsedRef.current) {
+      previousNoteCollapsedRef.current = currentNoteCollapsed;
+      return;
+    }
+
+    previousNoteCollapsedRef.current = currentNoteCollapsed;
+
+    if (!currentNoteCollapsed) {
+      const restoredSize = expandedCardSizeRef.current;
+      syncedFrameSizeRef.current = restoredSize;
+      setCardSize(restoredSize);
+      setFrameSize(restoredSize);
+      void resizeFloatingCard({
+        ...restoredSize,
+        anchor: "top",
+        horizontalAnchor: "left",
+      });
+      return;
+    }
+
+    expandedCardSizeRef.current = cardSize;
+    const animationFrame = window.requestAnimationFrame(() => {
+      const collapsedCard = contentRef.current?.querySelector<HTMLElement>('[data-testid="note-card"]');
+      if (!collapsedCard) {
+        return;
+      }
+
+      const collapsedSize = {
+        width: cardSize.width,
+        height: Math.max(1, Math.ceil(collapsedCard.getBoundingClientRect().height)),
+      };
+      syncedFrameSizeRef.current = collapsedSize;
+      setCardSize(collapsedSize);
+      setFrameSize(collapsedSize);
+      void resizeFloatingCard({
+        ...collapsedSize,
+        anchor: "top",
+        horizontalAnchor: "left",
+        allowBelowMinimum: true,
+      });
+    });
+
+    return () => window.cancelAnimationFrame(animationFrame);
+  }, [currentNoteCollapsed, payload]);
+
   if (!payload) {
     return <div className="h-screen w-screen bg-transparent" />;
   }
@@ -522,6 +602,13 @@ export function FloatingNoteApp() {
       ? todoItems.find((item) => item.id === payload.todo.id) ?? payload.todo
       : null;
   const isInteractive = isHydrated && (payload.kind === "note" ? Boolean(note) : Boolean(todo));
+  const isCollapsedFloatingNote = payload.kind === "note" && Boolean(note?.collapsed);
+  const minimumCardSize = payload.minimumSize ?? payload.size;
+  const contentScale = getFloatingCardContentScale(cardSize, minimumCardSize, isCollapsedFloatingNote);
+  const contentSize = {
+    width: cardSize.width / contentScale,
+    height: cardSize.height / contentScale,
+  };
   const cardOffsetLeft =
     hasOpenDialog && dialogSide === "left"
       ? FLOATING_DIALOG_VIEWPORT_SIZE.width + FLOATING_DIALOG_GAP_PX
@@ -547,11 +634,29 @@ export function FloatingNoteApp() {
   const updateUserSize = (clientX: number, clientY: number) => {
     const session = resizeSessionRef.current;
     if (!session) return;
+    const deltaX = clientX - session.startX;
+    const deltaY = clientY - session.startY;
+    const horizontalDistance = Math.abs(deltaX);
+    const verticalDistance = Math.abs(deltaY);
+    const verticalIntent = verticalDistance >= 6 && horizontalDistance < verticalDistance * 0.35;
+    if (verticalIntent) {
+      return;
+    }
+
+    const horizontalIntent = verticalDistance < 6 || verticalDistance < horizontalDistance * 0.35;
     const minimum = minimumCardSizeRef.current;
     const nextSize = {
-      width: Math.max(minimum.width, Math.round(session.startWidth + clientX - session.startX)),
-      height: Math.max(minimum.height, Math.round(session.startHeight + clientY - session.startY)),
+      width: Math.max(minimum.width, Math.round(session.startWidth + deltaX)),
+      height: horizontalIntent
+        ? session.startHeight
+        : Math.max(minimum.height, Math.round(session.startHeight + deltaY)),
     };
+    if (currentNoteCollapsed) {
+      expandedCardSizeRef.current = {
+        ...expandedCardSizeRef.current,
+        width: nextSize.width,
+      };
+    }
     setCardSize(nextSize);
     setFrameSize(nextSize);
     syncedFrameSizeRef.current = nextSize;
@@ -598,61 +703,76 @@ export function FloatingNoteApp() {
           marginLeft: cardOffsetLeft,
         }}
       >
-        {payload.kind === "note" && note && isInteractive ? (
-          <FloatingNoteCard
-            note={note}
-            width={cardSize.width}
-            minHeight={cardSize.height}
-            onBeginDrag={() => void startFloatingCardDrag(cardReference)}
-            onDock={handleDock}
-            desktopPinned={isDesktopPinned}
-            onToggleDesktopPinned={handleDesktopPinToggle}
-          />
-        ) : payload.kind === "todo" && todo && isInteractive ? (
-          <FloatingTodoItem
-            todo={todo}
-            width={cardSize.width}
-            minHeight={cardSize.height}
-            order={payload.order}
-            onBeginDrag={() => void startFloatingCardDrag(cardReference)}
-            onDock={handleDock}
-            onToggle={handleToggleTodo}
-            desktopPinned={isDesktopPinned}
-            onToggleDesktopPinned={handleDesktopPinToggle}
-          />
-        ) : payload.kind === "note" ? (
-          <div
-            role="button"
-            tabIndex={0}
-            aria-label={t.notes.reorder}
-            className="relative cursor-grab active:cursor-grabbing"
-            style={{ width: cardSize.width, height: cardSize.height }}
-            onPointerDown={() => {
-              void startFloatingCardDrag(cardReference);
-            }}
-          >
-            <NoteCardPreview note={createPreviewNoteCard(payload)} width={cardSize.width} />
-          </div>
-        ) : (
-          <div
-            role="button"
-            tabIndex={0}
-            aria-label={t.todos.reorder}
-            className="relative cursor-grab active:cursor-grabbing"
-            style={{ width: cardSize.width, height: cardSize.height }}
-            onPointerDown={() => {
-              void startFloatingCardDrag(cardReference);
-            }}
-          >
-            <TodoItemPreview todo={payload.todo} width={cardSize.width} order={payload.order} />
-          </div>
-        )}
+        <div
+          data-testid="floating-card-scaled-content"
+          data-floating-card-content-scale={contentScale.toFixed(3)}
+          className="floating-card-scaled-content"
+          style={{
+            width: contentSize.width,
+            minHeight: isCollapsedFloatingNote ? undefined : contentSize.height,
+            zoom: contentScale,
+          }}
+        >
+          {payload.kind === "note" && note && isInteractive ? (
+            <FloatingNoteCard
+              note={note}
+              width={contentSize.width}
+              minHeight={isCollapsedFloatingNote ? undefined : contentSize.height}
+              onBeginDrag={() => void startFloatingCardDrag(cardReference)}
+              onDock={handleDock}
+              desktopPinned={isDesktopPinned}
+              onToggleDesktopPinned={handleDesktopPinToggle}
+            />
+          ) : payload.kind === "todo" && todo && isInteractive ? (
+            <FloatingTodoItem
+              todo={todo}
+              width={contentSize.width}
+              minHeight={contentSize.height}
+              order={payload.order}
+              onBeginDrag={() => void startFloatingCardDrag(cardReference)}
+              onDock={handleDock}
+              onToggle={handleToggleTodo}
+              desktopPinned={isDesktopPinned}
+              onToggleDesktopPinned={handleDesktopPinToggle}
+            />
+          ) : payload.kind === "note" ? (
+            <div
+              role="button"
+              tabIndex={0}
+              aria-label={t.notes.reorder}
+              className="relative cursor-grab active:cursor-grabbing"
+              style={{ width: contentSize.width, height: contentSize.height }}
+              onPointerDown={() => {
+                void startFloatingCardDrag(cardReference);
+              }}
+            >
+              <NoteCardPreview note={createPreviewNoteCard(payload)} width={contentSize.width} />
+            </div>
+          ) : (
+            <div
+              role="button"
+              tabIndex={0}
+              aria-label={t.todos.reorder}
+              className="relative cursor-grab active:cursor-grabbing"
+              style={{ width: contentSize.width, height: contentSize.height }}
+              onPointerDown={() => {
+                void startFloatingCardDrag(cardReference);
+              }}
+            >
+              <TodoItemPreview todo={payload.todo} width={contentSize.width} order={payload.order} />
+            </div>
+          )}
+        </div>
         {!hasOpenDialog ? (
           <div
             role="separator"
             aria-label={t.common.resizeFloatingCard}
             data-tooltip={t.common.resizeFloatingCard}
             className="absolute bottom-1.5 right-1.5 z-40 h-5 w-5 cursor-nwse-resize rounded-br-[10px] opacity-55 transition-opacity hover:opacity-100"
+            style={{
+              scale: Math.min(contentScale, 1.35),
+              transformOrigin: "bottom right",
+            }}
             onPointerDown={(event) => {
               event.preventDefault();
               event.stopPropagation();

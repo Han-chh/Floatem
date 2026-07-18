@@ -87,7 +87,7 @@ function buildColorPaletteStyle(anchorRect: DOMRect, paletteWidth: number, palet
 
   return {
     left,
-    maxHeight: `calc(100vh - ${COLOR_PALETTE_MARGIN * 2}px)`,
+    maxHeight: Math.max(1, window.innerHeight - top - COLOR_PALETTE_MARGIN),
     overflowY: "auto",
     position: "fixed",
     top,

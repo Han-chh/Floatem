@@ -32,6 +32,7 @@ type BurstTarget =
 
 type BurstOptions = {
   color?: string;
+  distribution?: "cluster" | "single";
 };
 
 function createId() {
@@ -154,6 +155,10 @@ function createBurstCluster(target: BurstTarget, bounds: DOMRect, tone: BurstTon
   const height = target.height ?? 0;
   const centerX = target.x + ((target.width ?? 0) / 2);
   const centerY = target.y + ((target.height ?? 0) / 2);
+
+  if (options.distribution === "single") {
+    return [createBurst(centerX - bounds.left, centerY - bounds.top, tone, options)];
+  }
 
   if (tone === "confetti") {
     const anchorPoints = width >= 140

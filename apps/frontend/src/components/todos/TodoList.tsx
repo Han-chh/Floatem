@@ -1333,7 +1333,7 @@ export function TodoList() {
               {baseVisibleTodos.length === 0 ? t.todos.empty : t.todos.filteredEmpty}
             </motion.div>
           ) : (
-            <div className="flex flex-col gap-2 pb-1 pt-1">
+            <div className="flex flex-col gap-2 pb-1 pt-2">
               <DndContext
                 sensors={sensors}
                 collisionDetection={closestCenter}

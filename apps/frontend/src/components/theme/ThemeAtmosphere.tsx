@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useId, useMemo, useState } from "react";
 
 type ScrollRootRef = { current: HTMLElement | null };
 
@@ -38,8 +38,18 @@ function buildMotif(seed: number, index: number): Motif {
 }
 
 function MotifGlyph({ variant }: { variant: number }) {
+  const rainbowGradientId = useId();
+
   return (
     <svg viewBox="0 0 160 160" className="theme-scroll-motif__glyph">
+      <defs>
+        <linearGradient id={rainbowGradientId} x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0%" stopColor="var(--afterglow-accent-gold)" />
+          <stop offset="34%" stopColor="var(--afterglow-accent-sunset)" />
+          <stop offset="68%" stopColor="var(--afterglow-rainbow-violet)" />
+          <stop offset="100%" stopColor="var(--afterglow-rainbow-blue)" />
+        </linearGradient>
+      </defs>
       <g className="theme-motif theme-motif--classic">
         {variant === 0 ? <path d="M-6 38Q49 8 105 31t69 3v88q-44-19-84 1T-6 116Z" /> : null}
         {variant === 1 ? <path d="M8 26q52 25 103 4 24-10 48 1v94q-35-14-70 5-42 22-81-3Z" /> : null}
@@ -71,10 +81,19 @@ function MotifGlyph({ variant }: { variant: number }) {
         <path className="theme-motif-detail" d={variant % 2 ? "M81 105q-4 31 10 58M85 128q28-15 52-5" : "M79 106q8 30-1 57M80 130q-28-13-52-1"} />
       </g>
 
-      <g className="theme-motif theme-motif--night">
-        <circle className="theme-motif-halo" cx="80" cy="72" r={variant % 2 ? 58 : 51} />
-        <path d={variant === 0 ? "M93 20c-38 11-57 53-43 89 14 35 53 51 87 34-25-4-44-21-50-45-8-31 5-62 31-79-9-2-17-2-25 1Z" : variant === 1 ? "M67 18c39 5 65 41 60 79-5 39-41 66-78 61 25-12 41-37 41-65 0-32-18-59-45-72 7-2 15-3 22-3Z" : variant === 2 ? "M104 27c-37 1-66 33-65 70 1 37 32 66 69 64-21-12-34-35-32-60 2-28 19-53 43-65-5-4-10-7-15-9Z" : "M57 29c33-13 71 3 86 36 15 34 0 74-34 89 15-19 20-45 10-69-11-26-34-43-60-45-1-4-1-7-2-11Z"} />
-        <path className="theme-motif-detail" d={variant % 2 ? "M22 37l4 9 9 4-9 4-4 9-4-9-9-4 9-4ZM135 118l3 7 7 3-7 3-3 7-3-7-7-3 7-3Z" : "M30 124l4 10 10 4-10 4-4 10-4-10-10-4 10-4ZM132 42l3 8 8 3-8 3-3 8-3-8-8-3 8-3Z"} />
+      <g className="theme-motif theme-motif--afterglow">
+        <path
+          className="theme-motif-rainbow"
+          style={{ stroke: `url(#${rainbowGradientId})` }}
+          d={variant % 2 ? "M-18 116C26 28 118 7 181 55" : "M-22 52C37 128 124 144 184 89"}
+        />
+        <path
+          className="theme-motif-rainbow-soft"
+          d={variant % 2 ? "M-8 132C39 54 116 36 170 70M13 148C55 94 112 80 158 96" : "M-10 34C43 103 116 119 174 74M8 17C55 70 114 85 161 56"}
+        />
+        <path className="theme-motif-star theme-motif-star--one" d="M39 34l2.8 7.2L49 44l-7.2 2.8L39 54l-2.8-7.2L29 44l7.2-2.8Z" />
+        <path className="theme-motif-star theme-motif-star--two" d="M118 28l1.8 4.7 4.7 1.8-4.7 1.8-1.8 4.7-1.8-4.7-4.7-1.8 4.7-1.8Z" />
+        <circle className="theme-motif-star theme-motif-star--three" cx={variant % 2 ? 139 : 23} cy={variant % 2 ? 92 : 112} r="3.2" />
       </g>
     </svg>
   );

@@ -45,6 +45,7 @@ export type DragPreviewSize = {
 export type FloatingCardResize = DragPreviewSize & {
   anchor?: "top" | "bottom";
   horizontalAnchor?: "left" | "right";
+  allowBelowMinimum?: boolean;
 };
 
 export type DragPreviewPointerOffset = {

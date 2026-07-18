@@ -35,6 +35,7 @@ describe("TodoList", () => {
     expect(
       screen.getByText((_, element) => element?.tagName === "P" && element.textContent === "Ship docs\nv2"),
     ).toBeInTheDocument();
+    expect(screen.getByTestId("todo-item")).toHaveClass("content-card-classic");
     expect(screen.getByText("1 undone")).toBeInTheDocument();
     expect(screen.getByTestId("todo-order")).toHaveTextContent("1");
 

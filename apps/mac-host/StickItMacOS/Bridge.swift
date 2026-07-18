@@ -84,10 +84,10 @@ enum StickItLanguage: String {
     case simplifiedChinese = "zh-CN"
 
     init(storedValue: Any?) {
-        if let languageCode = storedValue as? String, languageCode == Self.simplifiedChinese.rawValue {
-            self = .simplifiedChinese
-        } else {
+        if let languageCode = storedValue as? String, languageCode == Self.english.rawValue {
             self = .english
+        } else {
+            self = .simplifiedChinese
         }
     }
 

@@ -496,12 +496,16 @@ export function XIcon(props: IconProps) {
   );
 }
 
-export function PinIcon(props: IconProps) {
+export function PushPinIcon({ active = false, ...props }: IconProps & { active?: boolean }) {
   return (
     <BaseIcon {...props}>
-      <path d="M12 17v5" />
-      <path d="M5 17h14" />
-      <path d="M6 3h12l-1 7 2 3H5l2-3Z" />
+      <g transform="rotate(40 12 12)">
+        {active ? <path d="M9 4h6v4l2.5 4H6.5L9 8Z" fill="currentColor" opacity="0.2" stroke="none" /> : null}
+        <path d="M8.5 4h7" />
+        <path d="M9.5 4v4L7 12h10l-2.5-4V4" />
+        <path d="M6.5 12h11" />
+        <path d="M12 12v8" />
+      </g>
     </BaseIcon>
   );
 }

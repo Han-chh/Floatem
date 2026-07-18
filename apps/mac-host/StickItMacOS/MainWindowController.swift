@@ -124,7 +124,7 @@ final class MainWindowController: NSObject, NSWindowDelegate, StickItNativeBridg
     func setWindowThemeFromBridge(_ theme: String) {
         let color = Self.windowColor(for: theme)
         panel.backgroundColor = color
-        panel.appearance = NSAppearance(named: theme == "night" ? .darkAqua : .aqua)
+        panel.appearance = NSAppearance(named: .aqua)
         webViewController.setHostBackgroundColor(color)
     }
 
@@ -138,8 +138,8 @@ final class MainWindowController: NSObject, NSWindowDelegate, StickItNativeBridg
             return NSColor(srgbRed: 0.957, green: 0.882, blue: 0.898, alpha: 1)
         case "chrysanthemum":
             return NSColor(srgbRed: 0.961, green: 0.929, blue: 0.812, alpha: 1)
-        case "night":
-            return NSColor(srgbRed: 0.067, green: 0.082, blue: 0.063, alpha: 1)
+        case "afterglow":
+            return NSColor(srgbRed: 0.969, green: 0.945, blue: 0.910, alpha: 1)
         default:
             return NSColor(srgbRed: 0.969, green: 0.949, blue: 0.910, alpha: 1)
         }
@@ -270,7 +270,7 @@ final class MainWindowController: NSObject, NSWindowDelegate, StickItNativeBridg
 
     func openNotificationSettings() throws {
         let workspace = NSWorkspace.shared
-        let language = (try? storage.currentLanguage()) ?? .english
+        let language = (try? storage.currentLanguage()) ?? .simplifiedChinese
         let candidateURLs = [
             "x-apple.systempreferences:com.apple.Notifications-Settings.extension",
             "x-apple.systempreferences:com.apple.preference.notifications",
@@ -297,7 +297,7 @@ final class MainWindowController: NSObject, NSWindowDelegate, StickItNativeBridg
     }
 
     func sendNotification(id: String?, title: String, body: String, soundEnabled: Bool) async throws {
-        let language = (try? storage.currentLanguage()) ?? .english
+        let language = (try? storage.currentLanguage()) ?? .simplifiedChinese
         try await notificationManager.scheduleBridgeNotification(
             identifier: id,
             title: title,
@@ -315,7 +315,7 @@ final class MainWindowController: NSObject, NSWindowDelegate, StickItNativeBridg
         scheduledAt: Date?,
         soundEnabled: Bool
     ) async throws {
-        let language = (try? storage.currentLanguage()) ?? .english
+        let language = (try? storage.currentLanguage()) ?? .simplifiedChinese
         try await notificationManager.scheduleBridgeNotification(
             identifier: id,
             title: title,

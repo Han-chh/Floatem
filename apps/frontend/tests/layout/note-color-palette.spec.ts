@@ -14,6 +14,12 @@ async function boot(page: Page) {
   });
 }
 
+async function settlePopoverLayout(page: Page) {
+  await page.evaluate(() => new Promise<void>((resolve) => {
+    requestAnimationFrame(() => requestAnimationFrame(() => resolve()));
+  }));
+}
+
 test("note text color palette stays fully visible in a compact window", async ({ page }) => {
   await boot(page);
 
@@ -34,12 +40,14 @@ test("note text color palette stays fully visible in a compact window", async ({
   const moreColorsButtonBox = await moreColorsButton.boundingBox();
 
   await moreColorsButton.click();
+  await settlePopoverLayout(page);
 
   const expandedPaletteBox = await palette.boundingBox();
   const showColorsButton = palette.getByRole("button", { name: "Show Colors" });
   const showColorsButtonBox = await showColorsButton.boundingBox();
 
   await showColorsButton.click();
+  await settlePopoverLayout(page);
 
   const advancedPalette = page.getByTestId("note-text-color-palette-advanced");
   await expect(advancedPalette).toBeVisible();

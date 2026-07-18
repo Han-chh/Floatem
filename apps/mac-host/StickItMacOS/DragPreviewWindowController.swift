@@ -8,7 +8,10 @@ final class DragPreviewWindowController: NSObject, WKNavigationDelegate {
     private let panel: NSPanel
     private let webView: WKWebView
     private var isReady = false
+    private var isContentReady = false
     private var pendingPayload: Any?
+    private var pendingFrame: NSRect?
+    private var payloadRevision = 0
 
     override init() {
         let configuration = WKWebViewConfiguration()
@@ -55,16 +58,29 @@ final class DragPreviewWindowController: NSObject, WKNavigationDelegate {
     }
 
     func updatePayload(_ payload: Any) {
+        payloadRevision += 1
+        isContentReady = false
+        panel.alphaValue = 0.001
         pendingPayload = payload
+        applyCornerMask(for: payload)
         applyPendingPayloadIfPossible()
     }
 
     func showPreview(frame: NSRect) {
+        pendingFrame = frame
         panel.setFrame(frame, display: true)
+        guard isContentReady else {
+            panel.alphaValue = 0.001
+            panel.orderFrontRegardless()
+            return
+        }
+        panel.alphaValue = 1
         panel.orderFrontRegardless()
     }
 
     func hidePreview() {
+        pendingFrame = nil
+        panel.alphaValue = 0.001
         panel.orderOut(nil)
     }
 
@@ -91,9 +107,37 @@ final class DragPreviewWindowController: NSObject, WKNavigationDelegate {
             return
         }
 
-        webView.evaluateJavaScript(
-            "window.__STICKIT_DRAG_PREVIEW_STATE__ = \(json); window.dispatchEvent(new CustomEvent('\(Self.dragPreviewEventName)', { detail: \(json) }));"
+        let revision = payloadRevision
+        webView.callAsyncJavaScript(
+            """
+            window.__STICKIT_DRAG_PREVIEW_STATE__ = \(json);
+            window.dispatchEvent(new CustomEvent('\(Self.dragPreviewEventName)', { detail: \(json) }));
+            await new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+            return true;
+            """,
+            arguments: [:],
+            in: nil,
+            in: .page,
+            completionHandler: { [weak self] result in
+                guard let self, case .success = result, revision == self.payloadRevision else { return }
+                self.isContentReady = true
+                guard let frame = self.pendingFrame else { return }
+                self.panel.setFrame(frame, display: true)
+                self.panel.alphaValue = 1
+                self.panel.orderFrontRegardless()
+            }
         )
+    }
+
+    private func applyCornerMask(for payload: Any) {
+        let kind = (payload as? [String: Any])?["kind"] as? String
+        let radius: CGFloat = kind == "todo" ? 18 : 28
+
+        [panel.contentView?.layer, webView.layer].forEach { layer in
+            layer?.cornerRadius = radius
+            layer?.cornerCurve = .continuous
+            layer?.masksToBounds = true
+        }
     }
 
     private func jsonString(for value: Any) -> String? {

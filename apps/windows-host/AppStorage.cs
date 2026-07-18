@@ -119,12 +119,10 @@ internal sealed class AppStorage
         return new JsonObject
         {
             ["hotkey"] = "Shift+Space",
-            ["language"] = "en",
+            ["language"] = "zh-CN",
             ["timeZone"] = GetSystemTimeZoneId(),
             ["timeFormat"] = "24h",
             ["theme"] = "classic",
-            ["themeMode"] = "manual",
-            ["systemLightTheme"] = "classic",
             ["panelPosition"] = null,
             ["activeTab"] = "notes",
             ["lastActiveTab"] = "notes",

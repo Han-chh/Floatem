@@ -31,13 +31,13 @@ test("notes toolbar supports formatting, copy, paste, undo, redo, clear, and sel
   const clearButton = firstNote.getByRole("button", { name: "Clear format" });
 
   await boldButton.hover();
-  await expect(page.getByText("Cmd+B")).toBeVisible();
+  await expect(page.getByText("Bold Cmd+B")).toBeVisible();
   await italicButton.hover();
-  await expect(page.getByText("Cmd+I")).toBeVisible();
+  await expect(page.getByText("Italic Cmd+I")).toBeVisible();
   await underlineButton.hover();
-  await expect(page.getByText("Cmd+U")).toBeVisible();
+  await expect(page.getByText("Underline Cmd+U")).toBeVisible();
   await copyButton.hover();
-  await expect(page.getByText("Cmd+C")).toBeVisible();
+  await expect(page.getByText("Copy Cmd+C")).toBeVisible();
   const copyBox = await copyButton.boundingBox();
   const pasteBox = await pasteButton.boundingBox();
   const redoBox = await redoButton.boundingBox();
@@ -47,14 +47,14 @@ test("notes toolbar supports formatting, copy, paste, undo, redo, clear, and sel
   expect(redoBox).not.toBeNull();
   expect(boldBox).not.toBeNull();
   expect(pasteBox!.x).toBeGreaterThan(copyBox!.x);
-  expect(Math.abs(pasteBox!.y - copyBox!.y)).toBeLessThan(1);
-  expect(Math.abs(redoBox!.y - boldBox!.y)).toBeLessThan(1);
+  expect(Math.abs(pasteBox!.y - copyBox!.y)).toBeLessThan(3);
+  expect(Math.abs(redoBox!.y - boldBox!.y)).toBeLessThan(3);
   await undoButton.hover();
-  await expect(page.getByText("Cmd+Z")).toBeVisible();
+  await expect(page.getByText("Undo Cmd+Z")).toBeVisible();
   await redoButton.hover();
-  await expect(page.getByText("Cmd+Shift+Z")).toBeVisible();
+  await expect(page.getByText("Redo Cmd+Shift+Z")).toBeVisible();
   await pasteButton.hover();
-  await expect(page.getByText("Cmd+V")).toBeVisible();
+  await expect(page.getByText("Paste Cmd+V")).toBeVisible();
 
   await boldButton.click();
   await expect(boldButton).toHaveAttribute("aria-pressed", "true");

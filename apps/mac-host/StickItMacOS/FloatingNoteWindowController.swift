@@ -99,6 +99,7 @@ final class FloatingNoteWindowController: NSObject, WKNavigationDelegate, WKScri
             height: Number(size?.height ?? 0),
             anchor: String(size?.anchor ?? "top"),
             horizontalAnchor: String(size?.horizontalAnchor ?? "left"),
+            allowBelowMinimum: Boolean(size?.allowBelowMinimum),
           });
         },
         getFloatingCardScreenPlacement() {
@@ -167,11 +168,13 @@ final class FloatingNoteWindowController: NSObject, WKNavigationDelegate, WKScri
     private var panel: FloatingPanel?
     private let webView: WKWebView
     private var isReady = false
+    private var isContentReady = false
     private var isDestroyed = false
     private var isEditableInputActive = false
     private var isTextCompositionActive = false
     private var minimumContentSize = NSSize(width: 1, height: 1)
     private var pendingPayload: Any?
+    private var pendingShowFrame: NSRect?
     private(set) var isDesktopPinned = false
 
     init(cardKind: String, cardID: String) {
@@ -230,6 +233,7 @@ final class FloatingNoteWindowController: NSObject, WKNavigationDelegate, WKScri
         panel?.isReleasedWhenClosed = false
         panel?.backgroundColor = .clear
         panel?.isOpaque = false
+        panel?.alphaValue = 0.001
         panel?.hasShadow = false
         panel?.hidesOnDeactivate = false
         panel?.isFloatingPanel = true
@@ -238,6 +242,7 @@ final class FloatingNoteWindowController: NSObject, WKNavigationDelegate, WKScri
         panel?.collectionBehavior = MainWindowController.overlayCollectionBehavior
         panel?.delegate = self
         panel?.contentView = contentView
+        applyCornerMask(to: contentView)
 
         if Self.debugLifecycle {
             Self.lifecycle.info("webView created(cardId=\(cardID, privacy: .public))")
@@ -269,7 +274,14 @@ final class FloatingNoteWindowController: NSObject, WKNavigationDelegate, WKScri
         if updateMinimumSize {
             minimumContentSize = frame.size
         }
+        pendingShowFrame = frame
         panel.setFrame(frame, display: true)
+        guard isContentReady else {
+            panel.alphaValue = 0.001
+            panel.orderFrontRegardless()
+            return
+        }
+        panel.alphaValue = 1
         panel.orderFrontRegardless()
         focusWebView()
     }
@@ -453,14 +465,15 @@ final class FloatingNoteWindowController: NSObject, WKNavigationDelegate, WKScri
         width: CGFloat,
         height: CGFloat,
         anchor: String = "top",
-        horizontalAnchor: String = "left"
+        horizontalAnchor: String = "left",
+        allowBelowMinimum: Bool = false
     ) {
         guard !isDestroyed, let panel, width > 0, height > 0 else {
             return
         }
 
-        let nextWidth = max(width.rounded(.up), minimumContentSize.width)
-        let nextHeight = max(height.rounded(.up), minimumContentSize.height)
+        let nextWidth = allowBelowMinimum ? width.rounded(.up) : max(width.rounded(.up), minimumContentSize.width)
+        let nextHeight = allowBelowMinimum ? height.rounded(.up) : max(height.rounded(.up), minimumContentSize.height)
         let currentFrame = panel.frame
 
         guard abs(currentFrame.width - nextWidth) >= 1 || abs(currentFrame.height - nextHeight) >= 1 else {
@@ -487,6 +500,7 @@ final class FloatingNoteWindowController: NSObject, WKNavigationDelegate, WKScri
             nextFrame,
             display: true
         )
+        pendingShowFrame = nextFrame
         panel.orderFrontRegardless()
         onFrameChange?(nextFrame)
     }
@@ -553,7 +567,9 @@ final class FloatingNoteWindowController: NSObject, WKNavigationDelegate, WKScri
             panel.collectionBehavior = MainWindowController.overlayCollectionBehavior
             configurePanelForGlobalOverlay()
         }
-        panel.orderFrontRegardless()
+        if isContentReady {
+            panel.orderFrontRegardless()
+        }
     }
 
     private func replacePanelForDesktopMode(_ desktopPinned: Bool) {
@@ -582,6 +598,7 @@ final class FloatingNoteWindowController: NSObject, WKNavigationDelegate, WKScri
         replacement.isReleasedWhenClosed = false
         replacement.backgroundColor = .clear
         replacement.isOpaque = false
+        replacement.alphaValue = previousPanel.alphaValue
         replacement.hasShadow = false
         replacement.hidesOnDeactivate = false
         replacement.isFloatingPanel = true
@@ -598,8 +615,10 @@ final class FloatingNoteWindowController: NSObject, WKNavigationDelegate, WKScri
 
         if wasVisible {
             replacement.orderFrontRegardless()
-            replacement.makeKey()
-            replacement.makeFirstResponder(webView)
+            if isContentReady {
+                replacement.makeKey()
+                replacement.makeFirstResponder(webView)
+            }
         }
     }
 
@@ -725,7 +744,8 @@ final class FloatingNoteWindowController: NSObject, WKNavigationDelegate, WKScri
                 width: CGFloat(width),
                 height: CGFloat(height),
                 anchor: params["anchor"] as? String ?? "top",
-                horizontalAnchor: params["horizontalAnchor"] as? String ?? "left"
+                horizontalAnchor: params["horizontalAnchor"] as? String ?? "left",
+                allowBelowMinimum: params["allowBelowMinimum"] as? Bool ?? false
             )
             resolveBridgeRequest(id: requestID, ok: true, result: NSNull())
         case "getFloatingCardScreenPlacement":
@@ -771,9 +791,36 @@ final class FloatingNoteWindowController: NSObject, WKNavigationDelegate, WKScri
             return
         }
 
-        webView.evaluateJavaScript(
-            "window.__STICKIT_FLOATING_CARD_STATE__ = \(json); window.dispatchEvent(new CustomEvent('\(Self.floatingCardStateEventName)', { detail: \(json) }));"
+        webView.callAsyncJavaScript(
+            """
+            window.__STICKIT_FLOATING_CARD_STATE__ = \(json);
+            window.dispatchEvent(new CustomEvent('\(Self.floatingCardStateEventName)', { detail: \(json) }));
+            await new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+            return true;
+            """,
+            arguments: [:],
+            in: nil,
+            in: .page,
+            completionHandler: { [weak self] result in
+                guard let self, !self.isDestroyed, case .success = result else { return }
+                self.isContentReady = true
+                guard let panel = self.panel, let frame = self.pendingShowFrame else { return }
+                panel.setFrame(frame, display: true)
+                panel.alphaValue = 1
+                panel.orderFrontRegardless()
+                self.focusWebView()
+            }
         )
+    }
+
+    private func applyCornerMask(to contentView: NSView) {
+        let radius: CGFloat = cardKind == "todo" ? 18 : 28
+
+        [contentView.layer, webView.layer].forEach { layer in
+            layer?.cornerRadius = radius
+            layer?.cornerCurve = .continuous
+            layer?.masksToBounds = true
+        }
     }
 
     private func jsonString(for value: Any) -> String? {

@@ -32,7 +32,7 @@ function readInitialState() {
 
 function buildPreviewSettings(payload: DragPreviewPayload): Partial<AppSettings> {
   return {
-    language: payload.language === "zh-CN" ? "zh-CN" : "en",
+    language: payload.language === "en" ? "en" : "zh-CN",
     timeZone: payload.kind === "todo" ? payload.timeZone : undefined,
     timeFormat: payload.kind === "todo" ? payload.timeFormat : undefined,
     enableParticles: false,

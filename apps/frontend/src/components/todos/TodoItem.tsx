@@ -9,7 +9,7 @@ import { formatDateKeyInTimeZone, formatTimestampInTimeZone } from "../../lib/ti
 import type { TimeFormat } from "../../lib/models";
 import { useSettingsStore } from "../../store/settingsStore";
 import { useTodosStore } from "../../store/todosStore";
-import { CalendarDaysIcon, CheckSquareIcon, CircleCheckBigIcon, PinIcon, SquarePenIcon, Trash2Icon, XIcon } from "../icons/AppIcons";
+import { CalendarDaysIcon, CheckSquareIcon, CircleCheckBigIcon, PushPinIcon, SquarePenIcon, Trash2Icon, XIcon } from "../icons/AppIcons";
 import { TodoGroupDialog } from "./TodoGroupDialog";
 import { ReminderPicker } from "./ReminderPicker";
 
@@ -339,6 +339,7 @@ function TodoRowBody({
                   type="button"
                   aria-label={desktopPinned ? t.common.removeFromDesktop : t.common.keepOnDesktop}
                   aria-pressed={desktopPinned}
+                  data-action="desktop-pin"
                   data-tooltip={desktopPinned ? t.common.removeFromDesktop : t.common.keepOnDesktop}
                   className={`paper-icon-button todo-card-action-button inline-flex shrink-0 items-center justify-center rounded-full border p-0 ${
                     desktopPinned ? "text-[var(--accent-cobalt)]" : ""
@@ -351,7 +352,7 @@ function TodoRowBody({
                     onToggleDesktopPinned();
                   }}
                 >
-                  <PinIcon size={12.5} />
+                  <PushPinIcon active={desktopPinned} size={13.5} />
                 </motion.button>
               ) : null}
               <motion.button
@@ -456,7 +457,8 @@ export function TodoItemPreview({ todo, width, order }: { todo: TodoItemModel; w
   const groupAccentColor = resolveTodoAccentColor(todo, groups);
   return (
     <div
-      className={`paper-card cq-card relative h-full w-full overflow-hidden rounded-[18px] px-2 py-1.25 ${getStatusMeta(todo, t.todos.doneFallback, timeZone, timeFormat).cardClass}`}
+      data-todo-status={todo.done ? "done" : "active"}
+      className={`content-card-classic paper-card cq-card relative h-full w-full overflow-hidden rounded-[18px] px-2 py-1.25 ${getStatusMeta(todo, t.todos.doneFallback, timeZone, timeFormat).cardClass}`}
       style={{
         background: getTodoCardSurface(todo, groupAccentColor),
         borderColor: `${groupAccentColor}86`,
@@ -515,7 +517,7 @@ export function FloatingTodoItem({
         data-testid="todo-item"
         data-todo-item-id={todo.id}
         aria-label={t.todos.reorder}
-        className={`paper-card cq-card relative overflow-hidden rounded-[18px] px-2 py-1.25 cursor-grab active:cursor-grabbing ${status.cardClass}`}
+        className={`content-card-classic paper-card cq-card relative overflow-hidden rounded-[18px] px-2 py-1.25 cursor-grab active:cursor-grabbing ${status.cardClass}`}
         style={{
           background: getTodoCardSurface(todo, groupAccentColor),
           borderColor: `${groupAccentColor}78`,
@@ -816,8 +818,10 @@ export function TodoItem({
         data-no-window-drag="true"
         data-testid="todo-item"
         data-todo-item-id={todo.id}
+        data-todo-status={todo.done ? "done" : "active"}
+        data-dragging={isDragging}
         aria-label={t.todos.reorder}
-        className={`paper-card cq-card mx-1 relative overflow-hidden rounded-[18px] px-2 py-1.25 cursor-grab active:cursor-grabbing ${status.cardClass} ${
+        className={`content-card-classic paper-card cq-card mx-1 relative overflow-hidden rounded-[18px] px-2 py-1.25 cursor-grab active:cursor-grabbing ${status.cardClass} ${
           isDragging ? "border-transparent bg-[rgba(255,255,255,0.08)] shadow-none" : ""
         } ${selectionMode ? "cursor-pointer active:cursor-pointer" : ""}`}
         onClick={() => {
@@ -877,12 +881,13 @@ export function CompletedTodoItem({
         whileHover={{ y: -1.5, scale: 1.006 }}
         data-no-window-drag="true"
         data-testid="todo-item"
+        data-todo-status={todo.done ? "done" : "active"}
         style={{
           background: getTodoCardSurface(todo, groupAccentColor),
           borderColor: `${groupAccentColor}66`,
           boxShadow: `0 0 0 2px ${colorWithAlpha(groupAccentColor, "10")}, 0 8px 18px rgba(61,49,34,0.04)`,
         }}
-        className={`paper-card cq-card mx-1 relative overflow-hidden rounded-[18px] px-2 py-1.25 ${status.cardClass}`}
+        className={`content-card-classic paper-card cq-card mx-1 relative overflow-hidden rounded-[18px] px-2 py-1.25 ${status.cardClass}`}
         onClick={() => {
           if (selectionMode && !todo.done) {
             onSelect?.(todo.id);

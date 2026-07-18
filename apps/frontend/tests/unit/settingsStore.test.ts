@@ -7,6 +7,10 @@ describe("settingsStore", () => {
     useSettingsStore.getState().reset();
   });
 
+  it("uses Simplified Chinese as the default application language", () => {
+    expect(useSettingsStore.getState().language).toBe("zh-CN");
+  });
+
   it("hydrates persisted settings", () => {
     useSettingsStore.getState().hydrateSettings({
       activeTab: "todos",
@@ -16,8 +20,6 @@ describe("settingsStore", () => {
       timeZone: "Asia/Tokyo",
       timeFormat: "12h",
       theme: "plum",
-      themeMode: "system",
-      systemLightTheme: "forest",
       lastActiveTab: "todos",
       panelPosition: { x: 120, y: 320 },
       transitionStyle: "slide",
@@ -35,8 +37,6 @@ describe("settingsStore", () => {
     expect(state.timeZone).toBe("Asia/Tokyo");
     expect(state.timeFormat).toBe("12h");
     expect(state.theme).toBe("plum");
-    expect(state.themeMode).toBe("system");
-    expect(state.systemLightTheme).toBe("forest");
     expect(state.lastActiveTab).toBe("todos");
     expect(state.panelPosition).toEqual({ x: 120, y: 320 });
     expect(state.transitionStyle).toBe("slide");
@@ -53,9 +53,7 @@ describe("settingsStore", () => {
     useSettingsStore.getState().setLanguage("zh-CN");
     useSettingsStore.getState().setTimeZone("Europe/London");
     useSettingsStore.getState().setTimeFormat("12h");
-    useSettingsStore.getState().setTheme("forest");
-    useSettingsStore.getState().setThemeMode("system");
-    useSettingsStore.getState().setSystemLightTheme("chrysanthemum");
+    useSettingsStore.getState().setTheme("afterglow");
     useSettingsStore.getState().setPanelPosition({ x: 12, y: 16 });
     useSettingsStore.getState().setTransitionStyle("page");
     useSettingsStore.getState().setAnimationSpeed("rapid");
@@ -70,9 +68,7 @@ describe("settingsStore", () => {
     expect(state.language).toBe("zh-CN");
     expect(state.timeZone).toBe("Europe/London");
     expect(state.timeFormat).toBe("12h");
-    expect(state.theme).toBe("forest");
-    expect(state.themeMode).toBe("system");
-    expect(state.systemLightTheme).toBe("chrysanthemum");
+    expect(state.theme).toBe("afterglow");
     expect(state.lastActiveTab).toBe("todos");
     expect(state.panelPosition).toEqual({ x: 12, y: 16 });
     expect(state.transitionStyle).toBe("page");
@@ -130,12 +126,12 @@ describe("settingsStore", () => {
     expect(useSettingsStore.getState().animationSpeed).toBe("rapid");
   });
 
-  it("falls back to english for unknown language values", () => {
+  it("falls back to Simplified Chinese for unknown language values", () => {
     useSettingsStore.getState().hydrateSettings({
       language: "fr" as never,
     });
 
-    expect(useSettingsStore.getState().language).toBe("en");
+    expect(useSettingsStore.getState().language).toBe("zh-CN");
   });
 
   it("restores the configured default settings while staying loaded", () => {
@@ -160,7 +156,7 @@ describe("settingsStore", () => {
     const state = useSettingsStore.getState();
     expect(state.isLoaded).toBe(true);
     expect(state.hotkey).toBe("Shift+Space");
-    expect(state.language).toBe("en");
+    expect(state.language).toBe("zh-CN");
     expect(state.timeZone).toBe(getSystemTimeZone());
     expect(state.timeFormat).toBe("24h");
     expect(state.defaultOpenSection).toBe("last");
@@ -190,25 +186,28 @@ describe("settingsStore", () => {
     expect(useSettingsStore.getState().timeFormat).toBe("24h");
   });
 
-  it("normalizes unknown themes and keeps a valid system light theme", () => {
+  it("normalizes unknown themes", () => {
     useSettingsStore.getState().hydrateSettings({
       theme: "midnight-blue" as never,
-      themeMode: "automatic" as never,
-      systemLightTheme: "night" as never,
     });
 
     const state = useSettingsStore.getState();
     expect(state.theme).toBe("classic");
-    expect(state.themeMode).toBe("manual");
-    expect(state.systemLightTheme).toBe("classic");
   });
 
-  it("remembers the latest light theme when night is selected manually", () => {
-    useSettingsStore.getState().setTheme("plum");
-    useSettingsStore.getState().setTheme("night");
+  it("migrates the removed night theme to afterglow", () => {
+    useSettingsStore.getState().hydrateSettings({ theme: "night" } as never);
 
-    const state = useSettingsStore.getState();
-    expect(state.theme).toBe("night");
-    expect(state.systemLightTheme).toBe("plum");
+    expect(useSettingsStore.getState().theme).toBe("afterglow");
+  });
+
+  it("migrates the removed system-switching mode to its selected light theme", () => {
+    useSettingsStore.getState().hydrateSettings({
+      theme: "afterglow",
+      themeMode: "system",
+      systemLightTheme: "forest",
+    } as never);
+
+    expect(useSettingsStore.getState().theme).toBe("forest");
   });
 });

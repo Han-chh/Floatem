@@ -6,7 +6,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private let hotKeyManager = GlobalHotKeyManager()
     private let notificationManager = NotificationManager()
     private let launchAtLoginManager = LaunchAtLoginManager()
-    private var currentLanguage: StickItLanguage = .english
+    private var currentLanguage: StickItLanguage = .simplifiedChinese
 
     private lazy var mainWindowController = MainWindowController(
         storage: storage,
@@ -55,7 +55,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         NSApp.setActivationPolicy(.accessory)
-        currentLanguage = (try? storage.currentLanguage()) ?? .english
+        currentLanguage = (try? storage.currentLanguage()) ?? .simplifiedChinese
         notificationManager.configure()
         notificationManager.logCurrentAuthorizationStatus()
         launchAtLoginManager.configureOnLaunch(enabled: (try? storage.currentLaunchAtLogin()) ?? true)

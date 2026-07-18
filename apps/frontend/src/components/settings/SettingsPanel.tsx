@@ -7,9 +7,8 @@ import {
   DEFAULT_SETTINGS,
   getSelectableTimeZones,
   getSystemTimeZone,
-  type LightThemeId,
+  type AppLanguage,
   type ThemeId,
-  type ThemeMode,
   type TimeFormat,
 } from "../../lib/models";
 import { getStickItBridge, isNativeStickItHost } from "../../lib/nativeBridge";
@@ -50,6 +49,7 @@ type HotkeyFeedback = {
 type SettingsCategoryId = "general" | "theme" | "shortcuts" | "motion" | "notifications" | "about";
 
 const FEEDBACK_AUTO_DISMISS_MS = 4_000;
+export const SETTINGS_LANGUAGE_ORDER: readonly AppLanguage[] = ["zh-CN", "en"];
 
 function OptionButton({
   selected,
@@ -311,8 +311,6 @@ export function SettingsPanel({ onClose }: SettingsPanelProps) {
   const timeZone = useSettingsStore((state) => state.timeZone);
   const timeFormat = useSettingsStore((state) => state.timeFormat);
   const theme = useSettingsStore((state) => state.theme);
-  const themeMode = useSettingsStore((state) => state.themeMode);
-  const systemLightTheme = useSettingsStore((state) => state.systemLightTheme);
   const defaultOpenSection = useSettingsStore((state) => state.defaultOpenSection);
   const lastActiveTab = useSettingsStore((state) => state.lastActiveTab);
   const transitionStyle = useSettingsStore((state) => state.transitionStyle);
@@ -325,8 +323,6 @@ export function SettingsPanel({ onClose }: SettingsPanelProps) {
   const setTimeZone = useSettingsStore((state) => state.setTimeZone);
   const setTimeFormat = useSettingsStore((state) => state.setTimeFormat);
   const setTheme = useSettingsStore((state) => state.setTheme);
-  const setThemeMode = useSettingsStore((state) => state.setThemeMode);
-  const setSystemLightTheme = useSettingsStore((state) => state.setSystemLightTheme);
   const setDefaultOpenSection = useSettingsStore((state) => state.setDefaultOpenSection);
   const setTransitionStyle = useSettingsStore((state) => state.setTransitionStyle);
   const setAnimationSpeed = useSettingsStore((state) => state.setAnimationSpeed);
@@ -414,7 +410,7 @@ export function SettingsPanel({ onClose }: SettingsPanelProps) {
         icon: <PaletteIcon size={18} />,
         title: t.settings.categoryThemeTitle,
         description: t.settings.categoryThemeDescription,
-        meta: themeMode === "system" ? t.settings.themeFollowSystemTitle : getThemeLabel(theme, t),
+        meta: getThemeLabel(theme, t),
       },
       {
         id: "shortcuts" as const,
@@ -445,7 +441,7 @@ export function SettingsPanel({ onClose }: SettingsPanelProps) {
         meta: `${t.settings.appVersionTitle} ${__STICKIT_VERSION__}`,
       },
     ],
-    [enableReminderSound, hotkey, language, t, theme, themeMode, timeZone, transitionStyle],
+    [enableReminderSound, hotkey, language, t, theme, timeZone, transitionStyle],
   );
   const showHotkeyConflictWarning = hotkeyRegistrationState?.registration === "conflict";
 
@@ -741,11 +737,7 @@ export function SettingsPanel({ onClose }: SettingsPanelProps) {
                 {activeCategory === "theme" ? (
                   <ThemeSettings
                     theme={theme}
-                    themeMode={themeMode}
-                    systemLightTheme={systemLightTheme}
                     setTheme={setTheme}
-                    setThemeMode={setThemeMode}
-                    setSystemLightTheme={setSystemLightTheme}
                   />
                 ) : null}
 
@@ -981,7 +973,7 @@ const THEME_PREVIEWS: Record<ThemeId, { background: string; surface: string; acc
   orchid: { background: "#dfeadd", surface: "#fbfdf9", accent: "#73906b", text: "#1f2d20" },
   plum: { background: "#e9cbd2", surface: "#fff7f8", accent: "#a43f5c", text: "#421c26" },
   chrysanthemum: { background: "#eadca8", surface: "#fffaf0", accent: "#ad7f1d", text: "#352c16" },
-  night: { background: "#090c09", surface: "#222821", accent: "#77b892", text: "#f0eee8" },
+  afterglow: { background: "linear-gradient(135deg,#fff1dc 0%,#f1c9b4 48%,#d9b8cf 76%,#9fc4cf 100%)", surface: "rgba(255,250,243,0.9)", accent: "#e98770", text: "#403632" },
 };
 
 function getThemeLabel(theme: ThemeId, t: ReturnType<typeof useI18n>["t"]) {
@@ -991,7 +983,7 @@ function getThemeLabel(theme: ThemeId, t: ReturnType<typeof useI18n>["t"]) {
     orchid: t.settings.themeOrchidTitle,
     plum: t.settings.themePlumTitle,
     chrysanthemum: t.settings.themeChrysanthemumTitle,
-    night: t.settings.themeNightTitle,
+    afterglow: t.settings.themeAfterglowTitle,
   }[theme];
 }
 
@@ -1019,10 +1011,32 @@ function ThemeChoice({
       whileTap={{ scale: 0.985 }}
       onClick={onClick}
     >
-      <span className="block rounded-[15px] border border-white/25 p-3" style={{ background: preview.surface }}>
+      <span className="relative block overflow-hidden rounded-[15px] border border-white/40 p-3" style={{ background: preview.surface }}>
+        {theme === "afterglow" ? (
+          <>
+            <span
+              aria-hidden="true"
+              className="pointer-events-none absolute -bottom-7 -right-6 h-16 w-16 rounded-full blur-xl"
+              style={{ background: "rgba(224,101,112,0.42)" }}
+            />
+            <span
+              aria-hidden="true"
+              className="pointer-events-none absolute -bottom-7 left-2 h-12 w-24 rotate-[-12deg] rounded-full blur-lg"
+              style={{ background: "linear-gradient(90deg,rgba(237,181,79,.5),rgba(227,105,101,.42),rgba(145,105,170,.38),rgba(112,166,184,.4))" }}
+            />
+            <span aria-hidden="true" className="pointer-events-none absolute right-10 top-2 text-[13px] leading-none text-[#d99d42] drop-shadow-[0_0_5px_rgba(221,168,94,.45)]">✦</span>
+            <span aria-hidden="true" className="pointer-events-none absolute right-7 top-7 text-[8px] leading-none text-[#a57db8]">✦</span>
+          </>
+        ) : null}
         <span className="mb-5 flex items-center justify-between">
           <span className="h-2.5 w-12 rounded-full opacity-70" style={{ background: preview.text }} />
-          <span className="h-5 w-5 rounded-full" style={{ background: preview.accent }} />
+          {theme === "afterglow" ? (
+            <span className="relative inline-flex h-5 w-5 items-center justify-center rounded-full border border-white/70" style={{ background: preview.accent }}>
+              <span className="h-1.5 w-2.5 rotate-[-45deg] border-b border-l border-white" />
+            </span>
+          ) : (
+            <span className="h-5 w-5 rounded-full" style={{ background: preview.accent }} />
+          )}
         </span>
         <span className="block text-[12px] font-semibold" style={{ color: preview.text }}>
           {getThemeLabel(theme, t)}
@@ -1034,67 +1048,27 @@ function ThemeChoice({
 
 function ThemeSettings({
   theme,
-  themeMode,
-  systemLightTheme,
   setTheme,
-  setThemeMode,
-  setSystemLightTheme,
 }: {
   theme: ThemeId;
-  themeMode: ThemeMode;
-  systemLightTheme: LightThemeId;
   setTheme: (theme: ThemeId) => void;
-  setThemeMode: (mode: ThemeMode) => void;
-  setSystemLightTheme: (theme: LightThemeId) => void;
 }) {
   const { t } = useI18n();
-  const lightThemes: LightThemeId[] = ["classic", "forest", "orchid", "plum", "chrysanthemum"];
-  const manualThemes: ThemeId[] = [...lightThemes, "night"];
+  const themes: ThemeId[] = ["classic", "afterglow", "plum", "orchid", "forest", "chrysanthemum"];
 
   return (
-    <>
-      <SettingSection title={t.settings.themeBehaviorTitle} description={t.settings.themeBehaviorBody}>
-        <SettingRow
-          icon={<PaletteIcon size={15} />}
-          title={t.settings.themeFollowSystemTitle}
-          description={t.settings.themeFollowSystemBody}
-          action={
-            <ToggleButton
-              enabled={themeMode === "system"}
-              tooltip={t.settings.themeFollowSystemTitle}
-              onClick={() => setThemeMode(themeMode === "system" ? "manual" : "system")}
-            />
-          }
-        />
-      </SettingSection>
-
-      <SettingSection
-        title={themeMode === "system" ? t.settings.themeSystemLightTitle : t.settings.themeManualTitle}
-        description={themeMode === "system" ? t.settings.themeSystemLightBody : t.settings.themeManualBody}
-      >
-        <div className="grid grid-cols-2 gap-2.5">
-          {(themeMode === "system" ? lightThemes : manualThemes).map((candidate) => (
-            <ThemeChoice
-              key={candidate}
-              theme={candidate}
-              selected={themeMode === "system" ? systemLightTheme === candidate : theme === candidate}
-              onClick={() => {
-                if (themeMode === "system") {
-                  setSystemLightTheme(candidate as LightThemeId);
-                } else {
-                  setTheme(candidate);
-                }
-              }}
-            />
-          ))}
-        </div>
-        {themeMode === "system" ? (
-          <div className="surface-field mt-3 rounded-[18px] px-4 py-3 text-[12px] leading-6 text-[var(--muted)]">
-            {t.settings.themeNightAutomaticBody}
-          </div>
-        ) : null}
-      </SettingSection>
-    </>
+    <SettingSection title={t.settings.themeManualTitle} description={t.settings.themeManualBody}>
+      <div className="grid grid-cols-2 gap-2.5">
+        {themes.map((candidate) => (
+          <ThemeChoice
+            key={candidate}
+            theme={candidate}
+            selected={theme === candidate}
+            onClick={() => setTheme(candidate)}
+          />
+        ))}
+      </div>
+    </SettingSection>
   );
 }
 
@@ -1138,12 +1112,16 @@ function GeneralSettings({
 
       <SettingSection title={t.settings.languageTitle} description={t.settings.languageSectionSubtitle}>
         <div className="grid gap-2">
-          <OptionButton selected={language === "en"} icon={<EnglishLanguageIcon size={16} />} onClick={() => setLanguage("en")}>
-            {t.common.english}
-          </OptionButton>
-          <OptionButton selected={language === "zh-CN"} icon={<ChineseLanguageIcon size={16} />} onClick={() => setLanguage("zh-CN")}>
-            {t.common.simplifiedChinese}
-          </OptionButton>
+          {SETTINGS_LANGUAGE_ORDER.map((option) => (
+            <OptionButton
+              key={option}
+              selected={language === option}
+              icon={option === "zh-CN" ? <ChineseLanguageIcon size={16} /> : <EnglishLanguageIcon size={16} />}
+              onClick={() => setLanguage(option)}
+            >
+              {option === "zh-CN" ? t.common.simplifiedChinese : t.common.english}
+            </OptionButton>
+          ))}
         </div>
         <p className="mt-2 text-[11px] leading-5 text-[var(--muted)]">
           {language === "en" ? t.settings.languageEnglishBody : t.settings.languageSimplifiedChineseBody}

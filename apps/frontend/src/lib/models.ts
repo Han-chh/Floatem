@@ -6,9 +6,7 @@ export type DefaultOpenSection = "last" | TabId;
 export type TransitionStyle = "page" | "slide" | "lift";
 export type AnimationSpeed = "rapid" | "mediate" | "slow";
 export type TimeFormat = "24h" | "12h";
-export type ThemeId = "classic" | "forest" | "orchid" | "plum" | "chrysanthemum" | "night";
-export type LightThemeId = Exclude<ThemeId, "night">;
-export type ThemeMode = "manual" | "system";
+export type ThemeId = "classic" | "forest" | "orchid" | "plum" | "chrysanthemum" | "afterglow";
 
 export type PanelPosition = {
   x: number;
@@ -72,8 +70,6 @@ export type AppSettings = {
   timeZone: string;
   timeFormat: TimeFormat;
   theme: ThemeId;
-  themeMode: ThemeMode;
-  systemLightTheme: LightThemeId;
   panelPosition: PanelPosition | null;
   activeTab: TabId;
   lastActiveTab: TabId;
@@ -173,12 +169,10 @@ export function getSelectableTimeZones(systemTimeZone = getSystemTimeZone()) {
 export function createDefaultSettings(): AppSettings {
   return {
     hotkey: "Shift+Space",
-    language: "en",
+    language: "zh-CN",
     timeZone: getSystemTimeZone(),
     timeFormat: "24h",
     theme: "classic",
-    themeMode: "manual",
-    systemLightTheme: "classic",
     panelPosition: null,
     activeTab: "notes",
     lastActiveTab: "notes",
@@ -202,7 +196,7 @@ function normalizeColor(value: unknown, fallback: string) {
 }
 
 export function normalizeLanguage(value: unknown): AppLanguage {
-  return value === "zh-CN" ? "zh-CN" : "en";
+  return value === "en" ? "en" : "zh-CN";
 }
 
 export function normalizeTabId(value: unknown): TabId {
@@ -246,18 +240,13 @@ export function normalizeTimeFormat(value: unknown): TimeFormat {
 }
 
 export function normalizeTheme(value: unknown): ThemeId {
-  return value === "forest" || value === "orchid" || value === "plum" || value === "chrysanthemum" || value === "night"
+  if (value === "night") {
+    return "afterglow";
+  }
+
+  return value === "forest" || value === "orchid" || value === "plum" || value === "chrysanthemum" || value === "afterglow"
     ? value
     : "classic";
-}
-
-export function normalizeLightTheme(value: unknown): LightThemeId {
-  const theme = normalizeTheme(value);
-  return theme === "night" ? "classic" : theme;
-}
-
-export function normalizeThemeMode(value: unknown): ThemeMode {
-  return value === "system" ? "system" : "manual";
 }
 
 export function normalizePanelPosition(value: unknown): PanelPosition | null {
@@ -276,18 +265,25 @@ export function normalizePanelPosition(value: unknown): PanelPosition | null {
   return { x, y };
 }
 
-export function normalizeAppSettings(settings: Partial<AppSettings> = {}): AppSettings {
+type LegacyThemeSettings = {
+  systemLightTheme?: unknown;
+  themeMode?: unknown;
+};
+
+export function normalizeAppSettings(settings: Partial<AppSettings> & LegacyThemeSettings = {}): AppSettings {
   const activeTab = normalizeTabId(settings.activeTab);
   const defaultSettings = createDefaultSettings();
+  const theme =
+    settings.themeMode === "system"
+      ? normalizeTheme(settings.systemLightTheme ?? settings.theme)
+      : normalizeTheme(settings.theme);
 
   return {
     hotkey: typeof settings.hotkey === "string" && settings.hotkey.trim() ? settings.hotkey.trim() : defaultSettings.hotkey,
     language: normalizeLanguage(settings.language),
     timeZone: normalizeTimeZone(settings.timeZone, defaultSettings.timeZone),
     timeFormat: normalizeTimeFormat(settings.timeFormat),
-    theme: normalizeTheme(settings.theme),
-    themeMode: normalizeThemeMode(settings.themeMode),
-    systemLightTheme: normalizeLightTheme(settings.systemLightTheme ?? settings.theme),
+    theme,
     panelPosition: normalizePanelPosition(settings.panelPosition),
     activeTab,
     lastActiveTab: normalizeTabId(settings.lastActiveTab ?? activeTab),

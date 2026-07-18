@@ -1,6 +1,12 @@
 import { motion } from "framer-motion";
-import { useRef, useState, type ComponentType } from "react";
+import { useEffect, useRef, useState, type ComponentType } from "react";
 import { useI18n } from "../../lib/i18n";
+import {
+  getNoteToolbarStateKey,
+  NOTE_TOOLBAR_STATE_EVENT,
+  readNoteToolbarCollapsed,
+  writeNoteToolbarCollapsed,
+} from "../../lib/noteToolbarState";
 import {
   BoldIcon,
   ChevronDownIcon,
@@ -47,6 +53,7 @@ type ToolbarProps = {
   onToggleColorPalette: () => void;
   onToggleFormat: (format: TextFormat) => void;
   onUndo: () => void;
+  noteId?: string;
   visualOnly?: boolean;
 };
 
@@ -68,11 +75,12 @@ export function Toolbar({
   onToggleColorPalette,
   onToggleFormat,
   onUndo,
+  noteId,
   visualOnly = false,
 }: ToolbarProps) {
   const { t } = useI18n();
   const colorButtonRef = useRef<HTMLButtonElement | null>(null);
-  const [isCollapsed, setIsCollapsed] = useState(false);
+  const [isCollapsed, setIsCollapsed] = useState(() => readNoteToolbarCollapsed(noteId));
   const toolItems: ToolbarItem[] = [
     {
       label: t.notes.bold,
@@ -190,8 +198,38 @@ export function Toolbar({
     if (!isCollapsed) {
       onCloseColorPalette();
     }
-    setIsCollapsed((current) => !current);
+    const next = !isCollapsed;
+    setIsCollapsed(next);
+    writeNoteToolbarCollapsed(noteId, next);
   };
+
+  useEffect(() => {
+    setIsCollapsed(readNoteToolbarCollapsed(noteId));
+
+    if (!noteId || typeof window === "undefined") {
+      return;
+    }
+
+    const storageKey = getNoteToolbarStateKey(noteId);
+    const handleStorage = (event: StorageEvent) => {
+      if (event.key === storageKey) {
+        setIsCollapsed(event.newValue === "true");
+      }
+    };
+    const handleToolbarState = (event: Event) => {
+      const detail = (event as CustomEvent<{ collapsed: boolean; noteId: string }>).detail;
+      if (detail?.noteId === noteId) {
+        setIsCollapsed(detail.collapsed);
+      }
+    };
+
+    window.addEventListener("storage", handleStorage);
+    window.addEventListener(NOTE_TOOLBAR_STATE_EVENT, handleToolbarState);
+    return () => {
+      window.removeEventListener("storage", handleStorage);
+      window.removeEventListener(NOTE_TOOLBAR_STATE_EVENT, handleToolbarState);
+    };
+  }, [noteId]);
 
   return (
     <motion.div
@@ -324,7 +362,7 @@ export function Toolbar({
         whileHover={visualOnly ? undefined : { y: -1.5, scale: 1.03 }}
         whileTap={visualOnly ? undefined : { scale: 0.96 }}
       >
-        {isCollapsed ? <ChevronDownIcon size={13} /> : <ChevronUpIcon size={13} />}
+        {isCollapsed ? <ChevronUpIcon size={11} /> : <ChevronDownIcon size={13} />}
       </motion.button>
 
       <ColorPickerPopover

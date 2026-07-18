@@ -16,7 +16,6 @@ import { hideDragPreview, showDragPreview, showFloatingCard } from "../../hooks/
 import { useDragPointerTracking } from "../../hooks/useDragPointerTracking";
 import { buildNoteDragPreviewPayload } from "../../lib/dragPreview";
 import { useI18n } from "../../lib/i18n";
-import { resolveNoteAccentColor } from "../../lib/models";
 import { canUseFloatingNotes } from "../../lib/platformFeatures";
 import {
   centerOverlayToCursor,
@@ -167,11 +166,11 @@ export function NotesList() {
       return;
     }
 
-    const deletedCard = cards.find((card) => card.id === id) ?? null;
-    const particleColor = deletedCard ? resolveNoteAccentColor(deletedCard, groups) : undefined;
-
     if (enableParticles) {
-      spawnBurst(target, "rose", { color: particleColor });
+      spawnBurst(target, "rose", {
+        color: "#ef334f",
+        distribution: "single",
+      });
     }
     setRemovingIds((current) => [...current, id]);
     window.setTimeout(() => {

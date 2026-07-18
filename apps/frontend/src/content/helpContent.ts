@@ -101,7 +101,8 @@ function buildEnglishHelpContent(context: HelpContentContext): HelpDialogContent
                 title: "Cards",
                 items: [
                   "Add a card from the footer and edit title and body directly.",
-                  "Fold a card to keep only its title visible in the stack.",
+                  "The group control, edited time, and card actions share one compact header row.",
+                  "Fold a card to keep its title and top row visible; a floating note also shrinks its window to fit.",
                   "Drag cards vertically to reorder them.",
                 ],
               },
@@ -110,8 +111,9 @@ function buildEnglishHelpContent(context: HelpContentContext): HelpDialogContent
                 title: "Formatting and grouping",
                 items: [
                   "Toolbar actions include bold, italic, underline, color, undo, and redo.",
+                  "The formatting toolbar is attached to the editor; its expanded or folded state stays consistent between the panel and floating card.",
                   "Copy and paste stay plain-text to keep notes clean.",
-                  "Groups and filters help separate topics or projects.",
+                  "Groups and filters separate topics; assigned groups add a stronger colored border, rail, and card texture.",
                 ],
               },
             ],
@@ -135,7 +137,8 @@ function buildEnglishHelpContent(context: HelpContentContext): HelpDialogContent
                 title: "Daily flow",
                 items: [
                   "Use the date card to open the calendar and switch days.",
-                  "Press Enter to submit a todo and Shift+Enter to add a new line.",
+                  "To create a todo, switch to Todos, press Enter to focus the quick-entry field, type the todo, then press Enter again to submit it.",
+                  "Use Shift+Enter while typing when the todo needs a new line.",
                   "Open todos can be dragged to reorder within the day.",
                 ],
               },
@@ -158,7 +161,7 @@ function buildEnglishHelpContent(context: HelpContentContext): HelpDialogContent
       {
         id: "settings",
         title: "Settings",
-        summary: "Adjust launch behavior, language, motion, and reminder sound.",
+        summary: "Adjust startup, themes, language, motion, particles, and reminders.",
         articles: [
           {
             id: "settings-workflow",
@@ -171,9 +174,10 @@ function buildEnglishHelpContent(context: HelpContentContext): HelpDialogContent
                 id: "settings-general",
                 title: "General",
                 items: [
+                  "On macOS, choose whether StickIt launches automatically when you sign in.",
                   "Choose whether StickIt opens to the last section, Notes, or Todos.",
                   "Switch language, timezone, and time format independently from the system.",
-                  "Review the current summon shortcut in the shortcuts section.",
+                  "Choose Classic, Afterglow, Plum, Orchid, Forest, or Chrysanthemum; note and todo cards keep their classic initial color until grouped.",
                 ],
               },
               {
@@ -182,6 +186,7 @@ function buildEnglishHelpContent(context: HelpContentContext): HelpDialogContent
                 items: [
                   `Current motion profile: ${context.motionLabel}.`,
                   `Reminder sound: ${context.reminderSoundLabel}.`,
+                  "Particle feedback can be enabled or disabled independently.",
                   "Restore defaults when you want a clean reset.",
                 ],
               },
@@ -214,7 +219,8 @@ function buildEnglishHelpContent(context: HelpContentContext): HelpDialogContent
                 id: "shortcuts-todos",
                 title: "Todos and dialogs",
                 items: [
-                  "Enter submits the quick todo draft and Shift+Enter adds a new line.",
+                  "On the Todos page, Enter focuses quick entry; type a todo and press Enter again to submit it.",
+                  "Shift+Enter adds a new line while the quick-entry field is focused.",
                   "Escape closes todo dialogs and modal flows.",
                   `Global shortcut: ${context.hotkey}.`,
                 ],
@@ -283,7 +289,8 @@ function buildEnglishFloatingCardsSection(context: HelpContentContext): HelpSect
               id: "floating-work",
               title: "Work inside floating cards",
               items: [
-                "Floating notes support title and body editing, formatting, group changes, color, and fold state.",
+                "Floating notes support title and body editing, formatting, group changes, color, and the same toolbar state as the main panel.",
+                "Folding a floating note shrinks the window to its title and top row; expanding restores its previous custom size.",
                 "Floating todos support group changes, reminder changes, completion, and the same status colors as the main list.",
                 "Completing a floating todo saves it, then docks and closes the floating card after a short delay.",
               ],
@@ -295,6 +302,8 @@ function buildEnglishFloatingCardsSection(context: HelpContentContext): HelpSect
                 "Drag a floating card by its non-editing surface to move it around the screen.",
                 "Drag it back onto the StickIt panel; the panel highlights as a dock zone, then release inside to dock it.",
                 "Click the close control on the floating card to dock it back into the main panel without deleting it.",
+                "Use the diagonal pin control to keep a card on the desktop; pinned cards and their custom sizes are restored after relaunch.",
+                "Resize horizontally or diagonally from the lower-right handle. Vertical-only resizing is ignored, and card text and controls adapt to the new size.",
               ],
             },
           ],
@@ -387,7 +396,8 @@ function buildChineseHelpContent(context: HelpContentContext): HelpDialogContent
                 title: "卡片",
                 items: [
                   "通过底部新增按钮创建卡片，并直接编辑标题与正文。",
-                  "折叠卡片后只保留标题，方便快速浏览。",
+                  "分组入口、编辑时间与卡片操作位于同一条紧凑的顶部信息行。",
+                  "折叠后只保留标题与顶部信息行；悬浮 note 的窗口也会同步收紧。",
                   "支持垂直拖拽排序。",
                 ],
               },
@@ -396,8 +406,9 @@ function buildChineseHelpContent(context: HelpContentContext): HelpDialogContent
                 title: "格式与分组",
                 items: [
                   "工具栏支持粗体、斜体、下划线、颜色、撤销和重做。",
+                  "格式工具栏与正文输入框连为一体，其展开或折叠状态会在主面板与悬浮卡片之间保持一致。",
                   "复制和粘贴保持为纯文本，避免外部样式污染。",
-                  "通过分组和筛选整理不同主题或项目。",
+                  "通过分组和筛选整理主题；选择分组后，卡片会显示更明显的彩色边框、侧边色轨和装饰纹理。",
                 ],
               },
             ],
@@ -421,7 +432,8 @@ function buildChineseHelpContent(context: HelpContentContext): HelpDialogContent
                 title: "日常流程",
                 items: [
                   "通过日期卡片打开日历并切换日期。",
-                  "按 Enter 提交待办，Shift+Enter 换行。",
+                  "创建 todo 时，只需切换到 Todos 页面，按一次 Enter 获取快速输入焦点，输入 todo，再按一次 Enter 提交。",
+                  "输入过程中需要换行时使用 Shift+Enter。",
                   "未完成待办支持拖拽排序。",
                 ],
               },
@@ -442,7 +454,7 @@ function buildChineseHelpContent(context: HelpContentContext): HelpDialogContent
       {
         id: "settings",
         title: "设置选项",
-        summary: "调整启动方式、语言、动效和提醒声音。",
+        summary: "调整启动方式、主题、语言、动效、粒子反馈和提醒。",
         articles: [
           {
             id: "settings-workflow",
@@ -455,9 +467,10 @@ function buildChineseHelpContent(context: HelpContentContext): HelpDialogContent
                 id: "settings-general",
                 title: "基础设置",
                 items: [
+                  "macOS 可设置登录系统时自动启动 StickIt。",
                   "可以设置打开时进入上次分区、Notes 或 Todos。",
                   "可以独立切换语言、时区和时间格式。",
-                  "当前唤起快捷键可在快捷键区域查看。",
+                  "主题可选择经典、浮光、梅、兰、竹、菊；未分组的 note 与 todo 初始卡片色保持经典色。",
                 ],
               },
               {
@@ -466,6 +479,7 @@ function buildChineseHelpContent(context: HelpContentContext): HelpDialogContent
                 items: [
                   `当前动效：${context.motionLabel}。`,
                   `提醒声音：${context.reminderSoundLabel}。`,
+                  "粒子反馈可独立开启或关闭。",
                   "如果想回到初始体验，可以恢复默认设置。",
                 ],
               },
@@ -498,7 +512,8 @@ function buildChineseHelpContent(context: HelpContentContext): HelpDialogContent
                 id: "shortcuts-todos",
                 title: "Todos 与弹窗",
                 items: [
-                  "Enter 提交待办草稿，Shift+Enter 换行。",
+                  "在 Todos 页面按 Enter 聚焦快速输入框，输入 todo 后再按 Enter 提交。",
+                  "快速输入框获得焦点后，Shift+Enter 可以换行。",
                   "Escape 可关闭待办编辑弹窗与模态层。",
                   `全局快捷键：${context.hotkey}。`,
                 ],
@@ -567,7 +582,8 @@ function buildChineseFloatingCardsSection(context: HelpContentContext): HelpSect
               id: "floating-work",
               title: "在悬浮卡片中操作",
               items: [
-                "悬浮 note 支持编辑标题和正文、文字格式、分组、颜色以及折叠状态。",
+                "悬浮 note 支持编辑标题和正文、文字格式、分组与颜色，并与主面板保持相同的工具栏状态。",
+                "折叠悬浮 note 时，窗口会收紧到标题与顶部信息行；重新展开后恢复折叠前的自定义尺寸。",
                 "悬浮 todo 支持更改分组、修改提醒、切换完成状态，并保留主列表中的状态颜色。",
                 "在悬浮 todo 中标记完成后，会先保存状态，然后在短暂延迟后自动收回并关闭悬浮卡片。",
               ],
@@ -579,6 +595,8 @@ function buildChineseFloatingCardsSection(context: HelpContentContext): HelpSect
                 "按住悬浮卡片的非编辑区域可以在屏幕上移动卡片。",
                 "把悬浮卡片拖回 StickIt 主面板时，面板会显示收纳区域；在面板内松开即可收回。",
                 "点击悬浮卡片上的关闭按钮会把卡片收回主面板，不会删除对应 note 或 todo。",
+                "点击斜向图钉可把卡片固定在桌面；重新启动应用后会恢复固定卡片及其自定义尺寸。",
+                "通过右下角手柄横向或斜向调整尺寸；纯纵向拉伸会被忽略，文字、按钮和组件会随新尺寸自适应。",
               ],
             },
           ],

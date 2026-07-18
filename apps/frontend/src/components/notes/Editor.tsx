@@ -31,6 +31,7 @@ type EditorProps = {
   onChange: (value: Descendant[]) => void;
   instantToolbar?: boolean;
   attachedToolbar?: boolean;
+  noteId?: string;
 };
 
 type ReadOnlyNoteContentProps = {
@@ -66,7 +67,7 @@ function renderLeaf(props: RenderLeafProps) {
   );
 }
 
-export function Editor({ content, onChange, instantToolbar = false, attachedToolbar = false }: EditorProps) {
+export function Editor({ content, onChange, instantToolbar = false, attachedToolbar = false, noteId }: EditorProps) {
   const { t } = useI18n();
   const [editor] = useState(() => withColorMark(withHistory(withReact(createEditor()))));
   const [initialValue] = useState(() => cloneNoteContent(content));
@@ -298,6 +299,7 @@ export function Editor({ content, onChange, instantToolbar = false, attachedTool
           }}
           onToggleFormat={handleToggleFormat}
           onUndo={handleUndo}
+          noteId={noteId}
         />
         <Editable
           onDOMBeforeInput={(event) => {
@@ -428,7 +430,7 @@ export function ReadOnlyEditorPreview({ content }: { content: Descendant[] }) {
   const { t } = useI18n();
 
   return (
-    <div className="space-y-2">
+    <div className="note-editor-shell-attached">
       <Toolbar
         activeColor={null}
         activeFormats={{
@@ -438,6 +440,7 @@ export function ReadOnlyEditorPreview({ content }: { content: Descendant[] }) {
         }}
         canRedo={false}
         canUndo={false}
+        attached
         instant
         isColorPaletteOpen={false}
         onApplyColor={() => {}}
@@ -454,7 +457,7 @@ export function ReadOnlyEditorPreview({ content }: { content: Descendant[] }) {
       />
       <ReadOnlyNoteContent
         content={content}
-        className={NOTE_EDITOR_INPUT_CLASS}
+        className={`${NOTE_EDITOR_INPUT_CLASS} note-editor-input-attached`}
         placeholder={t.notes.editorPlaceholder}
       />
     </div>

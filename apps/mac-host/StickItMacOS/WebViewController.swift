@@ -58,7 +58,7 @@ final class WebViewController: NSViewController, WKNavigationDelegate {
 
     init(storage: AppStorage, bridgeDelegate: StickItNativeBridgeHandling?) {
         self.bridgeDelegate = bridgeDelegate
-        self.currentLanguage = (try? storage.currentLanguage()) ?? .english
+        self.currentLanguage = (try? storage.currentLanguage()) ?? .simplifiedChinese
 
         let userContentController = WKUserContentController()
         let configuration = WKWebViewConfiguration()

@@ -1,11 +1,46 @@
-import { render, screen } from "@testing-library/react";
+import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 import { PanelShell } from "../../src/components/layout/PanelShell";
+import { SETTINGS_LANGUAGE_ORDER, SettingsPanel } from "../../src/components/settings/SettingsPanel";
+import { useSettingsStore } from "../../src/store/settingsStore";
 
 describe("PanelShell", () => {
+  it("lists Simplified Chinese before English", () => {
+    expect(SETTINGS_LANGUAGE_ORDER).toEqual(["zh-CN", "en"]);
+  });
+
+  it("offers Afterglow without the removed Night and system-switching controls", async () => {
+    const user = userEvent.setup();
+    HTMLElement.prototype.scrollTo = vi.fn();
+    useSettingsStore.setState({ language: "en" });
+    render(<SettingsPanel onClose={vi.fn()} />);
+
+    await user.click(screen.getByRole("button", { name: /ThemeBackground/ }));
+
+    const afterglow = screen.getByRole("button", { name: "Afterglow" });
+    expect(afterglow).toBeInTheDocument();
+    expect(screen.getByText("Choose one fixed light theme for StickIt.")).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Night" })).not.toBeInTheDocument();
+    expect(screen.queryByText("Follow system appearance")).not.toBeInTheDocument();
+    expect(screen.getAllByRole("button").filter((button) => button.hasAttribute("aria-pressed"))).toEqual([
+      screen.getByRole("button", { name: "Classic" }),
+      afterglow,
+      screen.getByRole("button", { name: "Plum red · Plum blossom" }),
+      screen.getByRole("button", { name: "White green · Orchid" }),
+      screen.getByRole("button", { name: "Ink green · Bamboo" }),
+      screen.getByRole("button", { name: "Chrysanthemum yellow · Chrysanthemum" }),
+    ]);
+
+    await user.click(afterglow);
+    expect(afterglow).toHaveAttribute("aria-pressed", "true");
+    expect(useSettingsStore.getState().theme).toBe("afterglow");
+  });
+
   it("opens global StickIt help from the header", async () => {
     const user = userEvent.setup();
+    useSettingsStore.setState({ language: "en", theme: "afterglow" });
+    document.documentElement.dataset.stickitTheme = "afterglow";
 
     render(
       <PanelShell
@@ -26,12 +61,25 @@ describe("PanelShell", () => {
     const dialog = screen.getByRole("dialog", { name: "StickIt guide" });
 
     expect(dialog).toBeInTheDocument();
+    expect(dialog.parentElement).toHaveClass("stickit-modal-backdrop", "fixed", "z-[95]");
     expect(screen.getByText("Overview")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /Notes/i })).toBeInTheDocument();
+    expect(within(dialog).queryByText("Add")).not.toBeInTheDocument();
 
     await user.click(screen.getByRole("button", { name: "Notes" }));
 
-    expect(screen.getByRole("dialog", { name: "Write and organize note cards" })).toBeInTheDocument();
+    const notesGuide = screen.getByRole("dialog", { name: "Write and organize note cards" });
+    expect(notesGuide).toBeInTheDocument();
     expect(screen.getByText("Cards")).toBeInTheDocument();
+
+    await user.click(within(notesGuide).getByRole("button", { name: "Close" }));
+    await user.click(screen.getByRole("button", { name: "Todos" }));
+
+    const todosGuide = screen.getByRole("dialog", { name: "Plan tasks around a day" });
+    expect(
+      within(todosGuide).getByText(
+        "To create a todo, switch to Todos, press Enter to focus the quick-entry field, type the todo, then press Enter again to submit it.",
+      ),
+    ).toBeInTheDocument();
   });
 });

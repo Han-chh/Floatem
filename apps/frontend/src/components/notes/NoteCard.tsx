@@ -1,12 +1,12 @@
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { motion } from "framer-motion";
-import { useEffect, useRef, useState, type Ref } from "react";
+import { useEffect, useRef, useState, type CSSProperties, type Ref } from "react";
 import { formatCompactEditedLabel, useI18n } from "../../lib/i18n";
 import { resolveNoteAccentColor, resolveNoteGroup, type NoteCard as NoteCardModel } from "../../lib/models";
 import { syncTextareaHeight } from "../../lib/resizeTextarea";
 import { useNotesStore } from "../../store/notesStore";
-import { ChevronsUpDownIcon, PinIcon, Trash2Icon, XIcon } from "../icons/AppIcons";
+import { ChevronsUpDownIcon, PushPinIcon, Trash2Icon, XIcon } from "../icons/AppIcons";
 import { Editor, ReadOnlyEditorPreview } from "./Editor";
 import { NoteGroupDialog } from "./NoteGroupDialog";
 
@@ -21,6 +21,7 @@ type NoteCardBodyProps = {
   accentColor: string;
   editedLabel: string;
   groupLabel: string;
+  hasAssignedGroup: boolean;
   onDelete?: (target: DOMRect) => void;
   onOpenGroupDialog?: () => void;
   onToggleCollapsed?: () => void;
@@ -56,12 +57,20 @@ function colorWithAlpha(color: string, alpha: string) {
   return /^#[\da-f]{6}$/i.test(color) ? `${color}${alpha}` : color;
 }
 
-function getNoteCardSurface(accentColor: string) {
+function getNoteCardSurface(accentColor: string, hasAssignedGroup = false) {
+  const glowAlpha = hasAssignedGroup ? "32" : "18";
+  const washAlpha = hasAssignedGroup ? "20" : "12";
+  const edgeAlpha = hasAssignedGroup ? "18" : "0d";
+
   return [
-    `radial-gradient(circle at 8% 0%, ${colorWithAlpha(accentColor, "18")}, transparent 34%)`,
-    `linear-gradient(135deg, ${colorWithAlpha(accentColor, "12")}, rgba(255,255,255,0.7) 48%, ${colorWithAlpha(accentColor, "0d")})`,
+    `radial-gradient(circle at 8% 0%, ${colorWithAlpha(accentColor, glowAlpha)}, transparent 38%)`,
+    `linear-gradient(135deg, ${colorWithAlpha(accentColor, washAlpha)}, rgba(255,255,255,0.7) 48%, ${colorWithAlpha(accentColor, edgeAlpha)})`,
     "linear-gradient(180deg, rgba(255,252,248,0.98), rgba(255,247,239,0.95))",
   ].join(", ");
+}
+
+function getNoteGroupStyle(accentColor: string, hasAssignedGroup: boolean): CSSProperties {
+  return hasAssignedGroup ? ({ "--note-group-accent": accentColor } as CSSProperties) : {};
 }
 
 const FLOATING_NOTE_EDIT_TARGET_SELECTOR =
@@ -76,6 +85,7 @@ function NoteCardBody({
   accentColor,
   editedLabel,
   groupLabel,
+  hasAssignedGroup,
   onDelete,
   onOpenGroupDialog,
   onToggleCollapsed,
@@ -98,7 +108,7 @@ function NoteCardBody({
   return (
     <>
       <div
-        className="pointer-events-none absolute inset-0 opacity-38"
+        className={`pointer-events-none absolute inset-0 ${hasAssignedGroup ? "opacity-60" : "opacity-38"}`}
         style={{
           backgroundImage:
             `radial-gradient(${colorWithAlpha(accentColor, "18")} 0.8px, transparent 0.9px), radial-gradient(rgba(30,25,21,0.035) 0.8px, transparent 0.8px), radial-gradient(rgba(255,255,255,0.26) 0.6px, transparent 0.6px)`,
@@ -107,6 +117,26 @@ function NoteCardBody({
           maskImage: "linear-gradient(180deg, black, rgba(0,0,0,0.3))",
         }}
       />
+
+      {hasAssignedGroup && !isDraggingPlaceholder ? (
+        <>
+          <div
+            aria-hidden="true"
+            className="note-group-card-texture pointer-events-none absolute inset-0"
+            style={{
+              backgroundImage: `repeating-linear-gradient(132deg, transparent 0 13px, ${colorWithAlpha(accentColor, "14")} 13px 14px, transparent 14px 27px), radial-gradient(circle at 92% 8%, ${colorWithAlpha(accentColor, "38")}, transparent 26%)`,
+            }}
+          />
+          <div
+            aria-hidden="true"
+            className="note-group-card-rail pointer-events-none absolute inset-y-4 left-0 w-[5px] rounded-r-full"
+            style={{
+              background: `linear-gradient(180deg, ${colorWithAlpha(accentColor, "f0")}, ${colorWithAlpha(accentColor, "8f")})`,
+              boxShadow: `0 0 14px ${colorWithAlpha(accentColor, "52")}`,
+            }}
+          />
+        </>
+      ) : null}
 
       {isDraggingPlaceholder ? (
         <div className="absolute inset-0 rounded-[28px] border border-transparent bg-[rgba(255,255,255,0.08)]" />
@@ -142,40 +172,25 @@ function NoteCardBody({
 
           <div className={`note-card-meta ${floatingLayout ? "note-card-meta--floating" : ""}`}>
             <div className={`note-card-chip-group ${floatingLayout ? "note-card-chip-group--floating" : ""}`}>
-              {floatingLayout ? (
-                <motion.button
-                  type="button"
-                  aria-label={t.notes.changeGroup}
-                  data-tooltip={t.notes.group}
-                  className="note-group-chip status-chip inline-flex max-w-full items-center gap-1.5"
-                  whileHover={isInteractive ? { y: -1, scale: 1.015 } : undefined}
-                  whileTap={isInteractive ? { scale: 0.98 } : undefined}
-                  onPointerDown={isInteractive ? (event) => event.stopPropagation() : undefined}
-                  onClick={isInteractive ? onOpenGroupDialog : undefined}
-                  style={{
-                    borderColor: colorWithAlpha(accentColor, "44"),
-                    color: accentColor,
-                    backgroundColor: colorWithAlpha(accentColor, "1f"),
-                    boxShadow: `0 0 0 2px ${colorWithAlpha(accentColor, "10")}`,
-                  }}
-                >
-                  <GroupColorGlyph color={accentColor} size="sm" />
-                  <span className="min-w-0 truncate">{groupLabel}</span>
-                </motion.button>
-              ) : (
-                <span
-                  className="note-group-chip status-chip inline-flex max-w-full items-center gap-1.5"
-                  style={{
-                    borderColor: colorWithAlpha(accentColor, "44"),
-                    color: accentColor,
-                    backgroundColor: colorWithAlpha(accentColor, "1f"),
-                    boxShadow: `0 0 0 2px ${colorWithAlpha(accentColor, "10")}`,
-                  }}
-                >
-                  <GroupColorGlyph color={accentColor} size="sm" />
-                  <span className="min-w-0 truncate">{groupLabel}</span>
-                </span>
-              )}
+              <motion.button
+                type="button"
+                aria-label={t.notes.changeGroup}
+                data-tooltip={t.notes.group}
+                className="note-group-chip status-chip inline-flex max-w-full items-center gap-1.5"
+                whileHover={isInteractive ? { y: -1, scale: 1.015 } : undefined}
+                whileTap={isInteractive ? { scale: 0.98 } : undefined}
+                onPointerDown={isInteractive ? (event) => event.stopPropagation() : undefined}
+                onClick={isInteractive ? onOpenGroupDialog : undefined}
+                style={{
+                  borderColor: colorWithAlpha(accentColor, "44"),
+                  color: accentColor,
+                  backgroundColor: colorWithAlpha(accentColor, hasAssignedGroup ? "2e" : "1f"),
+                  boxShadow: `0 0 0 2px ${colorWithAlpha(accentColor, hasAssignedGroup ? "20" : "10")}`,
+                }}
+              >
+                <GroupColorGlyph color={accentColor} size="sm" />
+                <span className="min-w-0 truncate">{groupLabel}</span>
+              </motion.button>
               <span
                 className="note-secondary-chip status-chip"
                 data-tone="neutral"
@@ -193,6 +208,7 @@ function NoteCardBody({
                   type="button"
                   aria-label={desktopPinned ? t.common.removeFromDesktop : t.common.keepOnDesktop}
                   aria-pressed={desktopPinned}
+                  data-action="desktop-pin"
                   data-tooltip={desktopPinned ? t.common.removeFromDesktop : t.common.keepOnDesktop}
                   className={`note-card-action-button paper-icon-button relative rounded-[9px] ${
                     desktopPinned ? "text-[var(--accent-cobalt)]" : ""
@@ -202,29 +218,9 @@ function NoteCardBody({
                   onPointerDown={(event) => event.stopPropagation()}
                   onClick={onToggleDesktopPinned}
                 >
-                  <PinIcon size={13} />
+                  <PushPinIcon active={desktopPinned} size={14} />
                 </motion.button>
               ) : null}
-              {!floatingLayout ? <div className="note-card-action-anchor group">
-                <motion.button
-                  type="button"
-                  className="note-card-action-button paper-icon-button relative rounded-[9px]"
-                  aria-label={t.notes.changeGroup}
-                  data-tooltip={t.notes.group}
-                  whileHover={isInteractive ? { y: -1.5, scale: 1.03 } : undefined}
-                  whileTap={isInteractive ? { scale: 0.97 } : undefined}
-                  onPointerDown={isInteractive ? (event) => event.stopPropagation() : undefined}
-                  onClick={isInteractive ? onOpenGroupDialog : undefined}
-                  style={{
-                    borderColor: `${accentColor}72`,
-                    background: `linear-gradient(180deg, rgba(255,255,255,0.98), ${accentColor}14), rgba(255,255,255,0.96)`,
-                    boxShadow: `0 0 0 3px ${accentColor}14, 0 10px 18px rgba(61,49,34,0.08), inset 0 1px 0 rgba(255,255,255,0.88)`,
-                  }}
-                >
-                  <GroupColorGlyph color={accentColor} size="sm" />
-                  <span className="sr-only">{t.notes.changeGroup}</span>
-                </motion.button>
-              </div> : null}
               <motion.button
                 type="button"
                 aria-label={t.notes.collapse}
@@ -274,8 +270,9 @@ function NoteCardBody({
           ) : (
             <Editor
               content={note.content}
-              attachedToolbar={floatingLayout}
+              attachedToolbar
               instantToolbar={instantToolbar}
+              noteId={note.id}
               onChange={(value) => onUpdateContent?.(value)}
             />
           )}
@@ -290,13 +287,17 @@ export function NoteCardPreview({ note, width }: { note: NoteCardModel; width?: 
   const groups = useNotesStore((state) => state.groups);
   const editedLabel = formatCompactEditedLabel(note.updatedAt, language);
   const accentColor = resolveNoteAccentColor(note, groups);
-  const groupLabel = resolveNoteGroup(note, groups)?.name ?? t.notes.noGroup;
+  const assignedGroup = resolveNoteGroup(note, groups);
+  const hasAssignedGroup = Boolean(assignedGroup);
+  const groupLabel = assignedGroup?.name ?? t.notes.noGroup;
 
   return (
     <div
-      className="paper-card cq-card relative overflow-hidden rounded-[28px] border border-[rgba(213,198,180,0.92)] bg-[linear-gradient(180deg,rgba(255,252,248,0.98),rgba(255,247,239,0.95))]"
+      data-note-grouped={hasAssignedGroup}
+      className="content-card-classic paper-card cq-card relative overflow-hidden rounded-[28px] border border-[rgba(213,198,180,0.92)] bg-[linear-gradient(180deg,rgba(255,252,248,0.98),rgba(255,247,239,0.95))]"
       style={{
-        background: getNoteCardSurface(accentColor),
+        ...getNoteGroupStyle(accentColor, hasAssignedGroup),
+        background: getNoteCardSurface(accentColor, hasAssignedGroup),
         borderColor: colorWithAlpha(accentColor, "48"),
         width: width ?? undefined,
       }}
@@ -306,6 +307,7 @@ export function NoteCardPreview({ note, width }: { note: NoteCardModel; width?: 
         accentColor={accentColor}
         editedLabel={editedLabel}
         groupLabel={groupLabel}
+        hasAssignedGroup={hasAssignedGroup}
         preview
       />
     </div>
@@ -339,7 +341,9 @@ export function FloatingNoteCard({
   const cardRef = useRef<HTMLElement | null>(null);
   const editedLabel = formatCompactEditedLabel(note.updatedAt, language);
   const accentColor = resolveNoteAccentColor(note, groups);
-  const groupLabel = resolveNoteGroup(note, groups)?.name ?? t.notes.noGroup;
+  const assignedGroup = resolveNoteGroup(note, groups);
+  const hasAssignedGroup = Boolean(assignedGroup);
+  const groupLabel = assignedGroup?.name ?? t.notes.noGroup;
 
   useEffect(() => {
     if (titleRef.current) {
@@ -355,9 +359,11 @@ export function FloatingNoteCard({
         aria-label={t.notes.reorder}
         data-testid="note-card"
         data-note-card-id={note.id}
-        className="paper-card cq-card relative overflow-hidden rounded-[28px] border border-[rgba(213,198,180,0.92)] bg-[linear-gradient(180deg,rgba(255,252,248,0.98),rgba(255,247,239,0.95))] shadow-[0_18px_36px_rgba(61,49,34,0.10)] cursor-grab active:cursor-grabbing"
+        data-note-grouped={hasAssignedGroup}
+        className="content-card-classic paper-card cq-card relative overflow-hidden rounded-[28px] border border-[rgba(213,198,180,0.92)] bg-[linear-gradient(180deg,rgba(255,252,248,0.98),rgba(255,247,239,0.95))] shadow-[0_18px_36px_rgba(61,49,34,0.10)] cursor-grab active:cursor-grabbing"
         style={{
-          background: getNoteCardSurface(accentColor),
+          ...getNoteGroupStyle(accentColor, hasAssignedGroup),
+          background: getNoteCardSurface(accentColor, hasAssignedGroup),
           borderColor: colorWithAlpha(accentColor, "4d"),
           boxShadow: `0 0 0 2px ${colorWithAlpha(accentColor, "10")}, 0 18px 36px rgba(61,49,34,0.10)`,
           width: width ?? undefined,
@@ -384,6 +390,7 @@ export function FloatingNoteCard({
           accentColor={accentColor}
           editedLabel={editedLabel}
           groupLabel={groupLabel}
+          hasAssignedGroup={hasAssignedGroup}
           onDelete={onDock}
           onOpenGroupDialog={() => setIsGroupDialogOpen(true)}
           onToggleCollapsed={() => toggleCollapsed(note.id)}
@@ -432,13 +439,15 @@ export function NoteCard({ note, onDelete, dropPreview = false }: NoteCardProps)
 
   const editedLabel = formatCompactEditedLabel(note.updatedAt, language);
   const accentColor = resolveNoteAccentColor(note, groups);
-  const groupLabel = resolveNoteGroup(note, groups)?.name ?? t.notes.noGroup;
+  const assignedGroup = resolveNoteGroup(note, groups);
+  const hasAssignedGroup = Boolean(assignedGroup);
+  const groupLabel = assignedGroup?.name ?? t.notes.noGroup;
 
   return (
     <>
       <motion.article
         ref={setArticleRef}
-        layout
+        layout="position"
         initial={{ opacity: 0, y: 12, scale: 0.98 }}
         animate={{ opacity: 1, y: 0, scale: 1 }}
         exit={{ opacity: 0, y: -14, scale: 0.94 }}
@@ -453,7 +462,8 @@ export function NoteCard({ note, onDelete, dropPreview = false }: NoteCardProps)
         }
         transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
         style={{
-          background: isDragging ? undefined : getNoteCardSurface(accentColor),
+          ...getNoteGroupStyle(accentColor, hasAssignedGroup),
+          background: isDragging ? undefined : getNoteCardSurface(accentColor, hasAssignedGroup),
           borderColor: isDragging ? undefined : colorWithAlpha(accentColor, "4d"),
           boxShadow: isDragging
             ? undefined
@@ -467,7 +477,9 @@ export function NoteCard({ note, onDelete, dropPreview = false }: NoteCardProps)
         aria-label={t.notes.reorder}
         data-testid="note-card"
         data-note-card-id={note.id}
-        className={`paper-card cq-card mx-1 relative overflow-hidden rounded-[28px] border border-[rgba(213,198,180,0.92)] bg-[linear-gradient(180deg,rgba(255,252,248,0.98),rgba(255,247,239,0.95))] shadow-[0_18px_36px_rgba(61,49,34,0.10)] cursor-grab active:cursor-grabbing ${
+        data-note-grouped={hasAssignedGroup}
+        data-dragging={isDragging}
+        className={`content-card-classic paper-card cq-card mx-1 relative overflow-hidden rounded-[28px] border border-[rgba(213,198,180,0.92)] bg-[linear-gradient(180deg,rgba(255,252,248,0.98),rgba(255,247,239,0.95))] shadow-[0_18px_36px_rgba(61,49,34,0.10)] cursor-grab active:cursor-grabbing ${
           isDragging ? "border-transparent bg-[rgba(255,255,255,0.08)] shadow-none" : ""
         }`}
       >
@@ -476,6 +488,7 @@ export function NoteCard({ note, onDelete, dropPreview = false }: NoteCardProps)
           accentColor={accentColor}
           editedLabel={editedLabel}
           groupLabel={groupLabel}
+          hasAssignedGroup={hasAssignedGroup}
           onDelete={(target) => onDelete(note.id, cardRef.current?.getBoundingClientRect() ?? target)}
           onOpenGroupDialog={() => setIsGroupDialogOpen(true)}
           onToggleCollapsed={() => toggleCollapsed(note.id)}
