@@ -35,7 +35,7 @@ The macOS host remains AppKit + WKWebView. `WebViewController` injects `stickItH
 
 macOS uses AppKit window levels and collection behaviors such as `canJoinAllSpaces` and `fullScreenAuxiliary` for overlay behavior.
 
-Detached note and todo cards can be pinned to the desktop layer. The native host owns their desktop window level, drag lifecycle, and resize bounds, while `AppStorage` persists pinned-card payloads, positions, and sizes in `desktop-cards.json` so they can be restored on the next launch.
+Detached note and todo cards can be pinned to the desktop layer. Pinning migrates the existing WebView into a dedicated native `DesktopCardPanel` (`NSPanel`) without reloading its content; unpinning migrates it back to the regular floating panel. The native host owns their desktop window level, drag lifecycle, and resize bounds, while `AppStorage` persists pinned-card payloads, positions, and sizes in `desktop-cards.json` so they can be restored on the next launch.
 
 ## Windows Host
 

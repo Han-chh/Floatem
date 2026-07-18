@@ -541,7 +541,9 @@ final class FloatingNoteWindowController: NSObject, WKNavigationDelegate, WKScri
     }
 
     func setDesktopPinned(_ pinned: Bool) {
-        guard !isDestroyed, let panel else { return }
+        guard !isDestroyed, isDesktopPinned != pinned else { return }
+        replacePanelForDesktopMode(pinned)
+        guard let panel else { return }
         isDesktopPinned = pinned
         if pinned {
             let desktopIconLevel = Int(CGWindowLevelForKey(.desktopIconWindow)) + 1
@@ -552,6 +554,53 @@ final class FloatingNoteWindowController: NSObject, WKNavigationDelegate, WKScri
             configurePanelForGlobalOverlay()
         }
         panel.orderFrontRegardless()
+    }
+
+    private func replacePanelForDesktopMode(_ desktopPinned: Bool) {
+        guard let previousPanel = panel else { return }
+
+        let replacement: FloatingPanel
+        if desktopPinned {
+            replacement = DesktopCardPanel(
+                contentRect: previousPanel.frame,
+                styleMask: [.borderless, .nonactivatingPanel],
+                backing: .buffered,
+                defer: false
+            )
+        } else {
+            replacement = FloatingPanel(
+                contentRect: previousPanel.frame,
+                styleMask: [.borderless, .nonactivatingPanel],
+                backing: .buffered,
+                defer: false
+            )
+        }
+
+        let contentView = previousPanel.contentView
+        previousPanel.contentView = nil
+
+        replacement.isReleasedWhenClosed = false
+        replacement.backgroundColor = .clear
+        replacement.isOpaque = false
+        replacement.hasShadow = false
+        replacement.hidesOnDeactivate = false
+        replacement.isFloatingPanel = true
+        replacement.lifecycleCardID = cardID
+        replacement.delegate = self
+        replacement.contentView = contentView
+        replacement.setFrame(previousPanel.frame, display: false)
+
+        let wasVisible = previousPanel.isVisible
+        previousPanel.delegate = nil
+        previousPanel.orderOut(nil)
+        previousPanel.close()
+        panel = replacement
+
+        if wasVisible {
+            replacement.orderFrontRegardless()
+            replacement.makeKey()
+            replacement.makeFirstResponder(webView)
+        }
     }
 
     private func configurePanelForInteractiveInput() {

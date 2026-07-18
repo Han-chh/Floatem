@@ -2,7 +2,7 @@ import AppKit
 import OSLog
 
 @MainActor
-final class FloatingPanel: NSPanel {
+class FloatingPanel: NSPanel {
     private nonisolated static let lifecycle = Logger(subsystem: "com.stickit.floating", category: "Lifecycle")
     private nonisolated static let debugLifecycle: Bool = {
         DebugFlags.isEnabled("DEBUG_FLOATING_LIFECYCLE")
@@ -21,3 +21,9 @@ final class FloatingPanel: NSPanel {
         Self.lifecycle.info("deinit FloatingCardPanel(cardId=\(lifecycleCardID, privacy: .public))")
     }
 }
+
+/// A dedicated native carrier for cards that the user has placed on the desktop.
+/// Keeping this as a distinct NSPanel instance makes desktop placement a real
+/// window-mode transition instead of only changing the overlay panel's level.
+@MainActor
+final class DesktopCardPanel: FloatingPanel {}
