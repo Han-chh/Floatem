@@ -1,4 +1,5 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { readEventCoordinates } from "../lib/dnd/centerOverlayToCursor";
 
 type DragPointerCoordinates = {
   x: number;
@@ -7,10 +8,26 @@ type DragPointerCoordinates = {
 
 export function useDragPointerTracking(active: boolean) {
   const [coordinates, setCoordinates] = useState<DragPointerCoordinates | null>(null);
+  const coordinatesRef = useRef<DragPointerCoordinates | null>(null);
+
+  const updateCoordinates = useCallback((nextCoordinates: DragPointerCoordinates | null) => {
+    coordinatesRef.current = nextCoordinates;
+    setCoordinates(nextCoordinates);
+  }, []);
+
+  const syncCoordinates = useCallback((event: Event | null) => {
+    const nextCoordinates = readEventCoordinates(event);
+    if (nextCoordinates) {
+      updateCoordinates(nextCoordinates);
+    }
+    return nextCoordinates;
+  }, [updateCoordinates]);
+
+  const getLatestCoordinates = useCallback(() => coordinatesRef.current, []);
 
   useEffect(() => {
     if (!active) {
-      setCoordinates(null);
+      updateCoordinates(null);
       return;
     }
 
@@ -20,7 +37,7 @@ export function useDragPointerTracking(active: boolean) {
         y: event.clientY,
       };
 
-      setCoordinates(nextCoordinates);
+      updateCoordinates(nextCoordinates);
     };
 
     const handleTouchMove = (event: TouchEvent) => {
@@ -34,7 +51,7 @@ export function useDragPointerTracking(active: boolean) {
         y: touch.clientY,
       };
 
-      setCoordinates(nextCoordinates);
+      updateCoordinates(nextCoordinates);
     };
 
     window.addEventListener("pointermove", handlePointerMove, { passive: true });
@@ -43,9 +60,12 @@ export function useDragPointerTracking(active: boolean) {
     return () => {
       window.removeEventListener("pointermove", handlePointerMove);
       window.removeEventListener("touchmove", handleTouchMove);
-      setCoordinates(null);
     };
-  }, [active]);
+  }, [active, updateCoordinates]);
 
-  return coordinates;
+  return {
+    coordinates,
+    getLatestCoordinates,
+    syncCoordinates,
+  };
 }

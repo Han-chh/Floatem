@@ -29,6 +29,19 @@ internal sealed class NotificationScheduler : IDisposable
         ShowCore(title, body, soundEnabled, tag: null, group: null, useReminderScenario: false);
     }
 
+    public bool NotificationsEnabled()
+    {
+        try
+        {
+            EnsureProcessCanShowAppNotifications();
+            return EnsureNotificationManager().Setting == AppNotificationSetting.Enabled;
+        }
+        catch
+        {
+            return false;
+        }
+    }
+
     public async Task ShowAndConfirmAsync(string title, string body, bool soundEnabled, string tag, string group)
     {
         var manager = ShowCore(title, body, soundEnabled, tag, group, useReminderScenario: true);

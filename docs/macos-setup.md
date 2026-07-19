@@ -43,3 +43,28 @@ Then run the `StickIt` scheme.
 - Carbon hotkeys provide the global shortcut.
 - UserNotifications schedules test notifications and todo reminders.
 - WKWebView injects the shared `stickItHost` bridge into the React frontend.
+- `DesktopCardPanel` provides app-owned desktop-pinned cards. StickIt must stay running; the Login Item silently recreates saved panels after login.
+- WidgetKit and AppIntents provide Note/Todo desktop Widgets and Todo completion toggles.
+
+## Signing and App Group
+
+The `StickIt` and `StickItWidgets` targets both require App Group:
+
+```text
+group.com.stickit.app
+```
+
+The personal-development targets use `com.hankchen.stickit` and `com.hankchen.stickit.widgets`. Debug builds use the local Apple Development team and the shared App Group above. Release builds use manual local-development signing with reduced entitlements so they can be installed on the developer's Mac without a paid Developer ID or distribution profile. The extension is embedded at `StickIt.app/Contents/PlugIns/StickItWidgets.appex`, and Hardened Runtime remains enabled.
+
+The local Release configuration is not a public distribution signature. Before sending the app to other Macs, replace it with Developer ID signing, restore the provisioned App Group entitlements for Release, and notarize the resulting archive.
+
+Shared data resolves to the App Group container's `SharedData/` directory. The repository commands use `CODE_SIGNING_ALLOWED=NO` so compilation and tests work before provisioning is installed; a runnable/archive Widget still needs valid App Group signing through Xcode or an appropriately provisioned release pipeline.
+
+## Tests
+
+```bash
+pnpm test
+pnpm macos:test
+```
+
+The Xcode suite avoids initializing production services or touching the real App Group when hosted by XCTest.

@@ -168,7 +168,11 @@ describe("NotesList", () => {
     await user.click(screen.getByRole("button", { name: "Work" }));
     expect(within(note).getByText("Work")).toBeInTheDocument();
     expect(note).toHaveAttribute("data-note-grouped", "true");
-    expect(note.querySelector(".note-group-card-texture")).toBeInTheDocument();
+    expect(note).toHaveAttribute("data-card-grouped", "true");
+    expect(note.style.getPropertyValue("--card-group-accent")).not.toBe("");
+    const noteTexture = note.querySelector<HTMLElement>(".note-group-card-texture");
+    expect(noteTexture).toBeInTheDocument();
+    expect(noteTexture?.style.backgroundImage).not.toContain("linear-gradient");
     expect(note.querySelector(".note-group-card-rail")).toBeInTheDocument();
 
     await user.click(within(note).getByRole("button", { name: "Change note group" }));
@@ -192,6 +196,7 @@ describe("NotesList", () => {
     await user.click(within(screen.getByRole("dialog", { name: "Manage groups" })).getByRole("button", { name: "Close" }));
     expect(within(note).getByText("No group")).toBeInTheDocument();
     expect(note).toHaveAttribute("data-note-grouped", "false");
+    expect(note).toHaveAttribute("data-card-grouped", "false");
     expect(note.querySelector(".note-group-card-texture")).not.toBeInTheDocument();
   });
 
@@ -596,6 +601,55 @@ describe("NotesList", () => {
       expect(bridge.pickScreenColor).toHaveBeenCalledTimes(1);
       expect(bridge.openTextColorPanel).not.toHaveBeenCalled();
     } finally {
+      bridge.restore();
+    }
+  });
+
+  it("shows a green insertion line and reorders a floating note at that position", async () => {
+    const bridge = installNativeBridge();
+    const returning = createNoteCard({ id: "note-returning", title: "Returning" });
+    const first = createNoteCard({ id: "note-first", title: "First" });
+    const second = createNoteCard({ id: "note-second", title: "Second" });
+    useNotesStore.getState().initialize([returning, first, second]);
+    useNotesStore.getState().setFloatingCardIds([returning.id]);
+    const rectSpy = vi
+      .spyOn(HTMLElement.prototype, "getBoundingClientRect")
+      .mockImplementation(function (this: HTMLElement) {
+        if (this.dataset.testid === "note-card-scroll-region") {
+          return new DOMRect(0, 0, 500, 500);
+        }
+        if (this.dataset.noteCardId === first.id) {
+          return new DOMRect(20, 100, 420, 80);
+        }
+        if (this.dataset.noteCardId === second.id) {
+          return new DOMRect(20, 200, 420, 80);
+        }
+        return new DOMRect(0, 0, 1, 1);
+      });
+
+    render(
+      <NotesList
+        dockZoneTarget={{
+          kind: "note",
+          id: returning.id,
+          source: "floating",
+          clientX: 100,
+          clientY: 190,
+        }}
+      />,
+    );
+
+    try {
+      await waitFor(() => {
+        expect(screen.getByTestId("note-dock-insertion-line")).toHaveAttribute("data-edge", "after");
+      });
+      expect(useNotesStore.getState().cards.map((card) => card.id)).toEqual([
+        first.id,
+        returning.id,
+        second.id,
+      ]);
+    } finally {
+      rectSpy.mockRestore();
       bridge.restore();
     }
   });

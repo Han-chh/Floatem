@@ -3,6 +3,7 @@ import { useEffect, useId, useMemo, useRef, useState, type Ref } from "react";
 import { createPortal } from "react-dom";
 import { useI18n } from "../../lib/i18n";
 import { getSystemTimeZone, type TimeFormat } from "../../lib/models";
+import { getStickItBridge } from "../../lib/nativeBridge";
 import {
   buildReminderTimestamp,
   isFutureReminderTimestamp,
@@ -22,6 +23,7 @@ type ReminderPickerProps = {
   reminderAt: number | null;
   onChange: (nextValue: number | null) => void;
   displayValue?: string;
+  tooltip?: string;
   className?: string;
   disabled?: boolean;
   timeZone?: string;
@@ -183,20 +185,23 @@ export function ReminderPicker({
   reminderAt,
   onChange,
   displayValue,
+  tooltip,
   className = "",
   disabled = false,
   timeZone = getSystemTimeZone(),
   timeFormat = "24h",
 }: ReminderPickerProps) {
-  const { t } = useI18n();
+  const { language, t } = useI18n();
   const hourButtonRef = useRef<HTMLButtonElement | null>(null);
   const [isOpen, setIsOpen] = useState(false);
   const [draftHour, setDraftHour] = useState("09");
   const [draftMinute, setDraftMinute] = useState("00");
   const [openMenu, setOpenMenu] = useState<TimeMenu>(null);
   const [validationMessage, setValidationMessage] = useState<string | null>(null);
+  const [showPermissionWarning, setShowPermissionWarning] = useState(false);
   const [nowMs, setNowMs] = useState(() => Date.now());
   const reminderDateKey = todoDateKey ?? formatDateKeyInTimeZone(new Date(), timeZone);
+  const todayDateKey = formatDateKeyInTimeZone(new Date(nowMs), timeZone);
   const pastTooltip = t.todos.reminderPastTooltip;
 
   const quickOptions = useMemo(() => {
@@ -207,12 +212,16 @@ export function ReminderPicker({
       const hourValue = pad(parts.hour);
       const minuteValue = pad(parts.minute);
       const timestamp = buildReminderTimestamp(reminderDateKey, hourValue, minuteValue, timeZone);
+      const isPastDate = reminderDateKey < todayDateKey;
+      const isDifferentDate = shortcutDateKey !== reminderDateKey;
 
       return {
-        disabled: shortcutDateKey !== reminderDateKey || timestamp === null || !isFutureReminderTimestamp(timestamp, nowMs),
+        disabled: isPastDate || isDifferentDate || timestamp === null || !isFutureReminderTimestamp(timestamp, nowMs),
+        displayLabel: label,
         hourValue,
         label,
         minuteValue,
+        tooltip: isPastDate ? pastTooltip : isDifferentDate ? t.todos.notSameDay : label,
       };
     };
     const timeOfDayShortcut = (label: string, hourValue: string, minuteValue: string) => {
@@ -220,38 +229,50 @@ export function ReminderPicker({
 
       return {
         disabled: timestamp === null || !isFutureReminderTimestamp(timestamp, nowMs),
+        displayLabel: label,
         hourValue,
         label,
         minuteValue,
+        tooltip:
+          timestamp === null || !isFutureReminderTimestamp(timestamp, nowMs)
+            ? pastTooltip
+            : formatTimestampInTimeZone(timestamp, timeZone, "time", timeFormat),
       };
     };
 
     return [
       relativeShortcut(t.todos.inThirtyMinutes, 30 * 60 * 1000),
       relativeShortcut(t.todos.inOneHour, 60 * 60 * 1000),
+      timeOfDayShortcut(t.todos.earlyMorning, "07", "00"),
+      timeOfDayShortcut(t.todos.morning, "10", "00"),
       timeOfDayShortcut(t.todos.afternoon, "15", "00"),
-      timeOfDayShortcut(t.todos.tonight, "20", "00"),
+      timeOfDayShortcut(t.todos.evening, "20", "00"),
     ];
   }, [
     nowMs,
     reminderDateKey,
+    todayDateKey,
     t.todos.afternoon,
+    t.todos.earlyMorning,
     t.todos.inOneHour,
     t.todos.inThirtyMinutes,
-    t.todos.tonight,
+    t.todos.notSameDay,
+    t.todos.morning,
+    t.todos.evening,
+    timeFormat,
     timeZone,
   ]);
 
   const getHourOptionState = useMemo(() => {
     return (hour: string): TimeOptionState => {
-      const enabled = isReminderTimeFuture(reminderDateKey, hour, draftMinute, timeZone, nowMs);
+      const enabled = isReminderTimeFuture(reminderDateKey, hour, "59", timeZone, nowMs);
 
       return {
         disabled: !enabled,
         tooltip: enabled ? undefined : pastTooltip,
       };
     };
-  }, [draftMinute, nowMs, pastTooltip, reminderDateKey, timeZone]);
+  }, [nowMs, pastTooltip, reminderDateKey, timeZone]);
 
   const getMinuteOptionState = useMemo(() => {
     return (minute: string): TimeOptionState => {
@@ -334,7 +355,7 @@ export function ReminderPicker({
     setIsOpen(false);
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     const nextValue = buildReminderTimestamp(reminderDateKey, draftHour, draftMinute, timeZone);
 
     if (nextValue === null) {
@@ -350,6 +371,14 @@ export function ReminderPicker({
     setValidationMessage(null);
     onChange(nextValue);
     setIsOpen(false);
+
+    try {
+      const checkPermission = getStickItBridge().checkNotificationPermission;
+      const permission = checkPermission ? await checkPermission({ language }) : { allowed: false };
+      setShowPermissionWarning(!permission.allowed);
+    } catch {
+      setShowPermissionWarning(true);
+    }
   };
 
   const currentReminderLabel = reminderAt
@@ -366,7 +395,7 @@ export function ReminderPicker({
       <motion.button
         type="button"
         aria-label={reminderAt ? t.todos.changeReminder : t.todos.setReminder}
-        data-tooltip={displayValue ?? (reminderAt ? t.todos.changeReminder : t.todos.setReminder)}
+        data-tooltip={tooltip ?? displayValue ?? (reminderAt ? t.todos.changeReminder : t.todos.setReminder)}
         data-no-window-drag="true"
         className={`inline-flex max-w-full min-w-0 shrink items-center gap-1.5 rounded-full border px-2.5 py-1.25 text-[10.5px] font-semibold shadow-[0_7px_14px_rgba(61,49,34,0.08)] ${className}`}
         whileHover={disabled ? undefined : { y: -1.5, scale: 1.02 }}
@@ -492,7 +521,7 @@ export function ReminderPicker({
                               type="button"
                               aria-disabled={option.disabled}
                               aria-pressed={isSelected}
-                              data-tooltip={option.disabled ? pastTooltip : option.label}
+                              data-tooltip={option.tooltip}
                               data-no-window-drag="true"
                               className={`rounded-[11px] border px-2 py-1.75 text-[10.5px] font-semibold ${
                                 option.disabled
@@ -513,7 +542,7 @@ export function ReminderPicker({
                                 setValidationMessage(null);
                               }}
                             >
-                              {option.label}
+                              {option.displayLabel}
                             </motion.button>
                           );
                         })}
@@ -567,6 +596,59 @@ export function ReminderPicker({
                         </motion.div>
                       </div>
                     </form>
+                  </motion.div>
+                </motion.div>
+              ) : null}
+            </AnimatePresence>,
+            document.body,
+          )
+        : null}
+      {typeof document !== "undefined"
+        ? createPortal(
+            <AnimatePresence>
+              {showPermissionWarning ? (
+                <motion.div
+                  className="stickit-modal-backdrop fixed inset-0 z-[100] flex items-center justify-center bg-[rgba(30,25,21,0.24)] px-4 py-3"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  onClick={() => setShowPermissionWarning(false)}
+                >
+                  <motion.div
+                    role="alertdialog"
+                    aria-modal="true"
+                    aria-label={t.todos.notificationPermissionTitle}
+                    className="paper-panel w-full max-w-[336px] rounded-[20px] p-4 shadow-[0_26px_48px_rgba(30,25,21,0.22)]"
+                    initial={{ opacity: 0, scale: 0.96, y: 10 }}
+                    animate={{ opacity: 1, scale: 1, y: 0 }}
+                    exit={{ opacity: 0, scale: 0.98, y: 6 }}
+                    onClick={(event) => event.stopPropagation()}
+                  >
+                    <h3 className="font-display text-[17px] font-semibold text-[var(--dark-text)]">
+                      {t.todos.notificationPermissionTitle}
+                    </h3>
+                    <p className="mt-2 text-[12px] leading-5 text-[var(--muted)]">
+                      {t.todos.notificationPermissionBody}
+                    </p>
+                    <div className="mt-4 flex justify-end gap-2">
+                      <button
+                        type="button"
+                        className="paper-button rounded-[13px] px-3.5 py-2 text-[12px] font-semibold"
+                        onClick={() => setShowPermissionWarning(false)}
+                      >
+                        {t.common.close}
+                      </button>
+                      <button
+                        type="button"
+                        className="paper-button rounded-[13px] px-3.5 py-2 text-[12px] font-semibold text-[var(--accent-cobalt)]"
+                        onClick={() => {
+                          void getStickItBridge().openNotificationSettings();
+                          setShowPermissionWarning(false);
+                        }}
+                      >
+                        {t.todos.notificationPermissionOpenSettings}
+                      </button>
+                    </div>
                   </motion.div>
                 </motion.div>
               ) : null}

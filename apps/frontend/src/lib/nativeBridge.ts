@@ -5,6 +5,7 @@ import type {
   HostBridge,
   HostCapabilities,
   HotkeyRegistrationState,
+  NotificationPermissionResult,
   NotificationRequest,
   ShortcutConfig,
 } from "@stickit/native-bridge";
@@ -144,6 +145,17 @@ const browserBridge: StickItNativeBridge = {
   async openNotificationSettings() {
     // Browser preview cannot open native notification settings.
   },
+  async checkNotificationPermission(): Promise<NotificationPermissionResult> {
+    if (typeof Notification === "undefined") {
+      return { allowed: true };
+    }
+
+    if (Notification.permission === "default") {
+      return { allowed: (await Notification.requestPermission()) === "granted" };
+    }
+
+    return { allowed: Notification.permission === "granted" };
+  },
   async sendNotification(request: NotificationRequest) {
     if (typeof Notification === "undefined" || Notification.permission !== "granted") {
       return;
@@ -247,7 +259,20 @@ const browserBridge: StickItNativeBridge = {
     // Browser preview does not open separate floating card windows.
   },
   async setFloatingCardDesktopPinned(_card: FloatingCardReference, _pinned: boolean) {
-    // Browser preview does not own desktop-level card windows.
+    return {
+      pinned: _pinned,
+      launchAtLoginEnabled: false,
+      requiresLaunchAtLogin: _pinned,
+    };
+  },
+  async requestDesktopWidget() {
+    return { requested: true, requiresSystemPlacement: false };
+  },
+  async removeDesktopWidgetAssociation() {
+    // Compatibility no-op; browser preview has no desktop panels.
+  },
+  async getDesktopWidgetState() {
+    return { requested: false, systemManaged: true };
   },
   async hidePanelWindow() {
     await this.hideWindow();
@@ -475,7 +500,13 @@ export function subscribeToFloatingCardsState(listener: (state: FloatingCardsSta
   };
 }
 
-export type DockZoneEventDetail = { kind: string; id: string };
+export type DockZoneEventDetail = {
+  kind: string;
+  id: string;
+  source?: "preview" | "floating";
+  clientX?: number;
+  clientY?: number;
+};
 
 export function subscribeToFloatingDockZoneEnter(listener: (detail: DockZoneEventDetail) => void) {
   if (typeof window === "undefined") {
@@ -488,7 +519,13 @@ export function subscribeToFloatingDockZoneEnter(listener: (detail: DockZoneEven
       return;
     }
 
-    listener({ kind: detail.kind, id: detail.id });
+    listener({
+      kind: detail.kind,
+      id: detail.id,
+      source: detail.source,
+      clientX: typeof detail.clientX === "number" ? detail.clientX : undefined,
+      clientY: typeof detail.clientY === "number" ? detail.clientY : undefined,
+    });
   };
 
   window.addEventListener(FLOATING_DOCK_ZONE_ENTER_EVENT, handler as EventListener);

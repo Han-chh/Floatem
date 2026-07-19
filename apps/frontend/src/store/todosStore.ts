@@ -30,6 +30,7 @@ type TodosState = {
   toggleTodo: (id: string) => void;
   completeTodos: (ids: string[]) => void;
   moveTodo: (activeId: string, overId: string) => void;
+  moveTodoToIndex: (activeId: string, insertionIndex: number, visibleTodoIds?: string[]) => void;
   moveTodosToDate: (ids: string[], dateKey: string) => void;
   removeTodo: (id: string) => void;
   removeTodos: (ids: string[]) => void;
@@ -352,6 +353,45 @@ export const useTodosStore = create<TodosState>()(
             ...doneTodos,
           ]),
         };
+      });
+    },
+    moveTodoToIndex: (activeId, insertionIndex, visibleTodoIds) => {
+      set((state) => {
+        const activeTodo = state.todos.find((todo) => todo.id === activeId);
+        if (!activeTodo || activeTodo.done) {
+          return state;
+        }
+
+        const todosForDate = state.todos.filter((todo) => todo.dateKey === activeTodo.dateKey);
+        const { openTodos, doneTodos } = partitionTodos(todosForDate);
+        const remainingOpenTodos = openTodos.filter((todo) => todo.id !== activeId);
+        const visibleIds = visibleTodoIds?.filter(
+          (id, index) =>
+            id !== activeId &&
+            visibleTodoIds.indexOf(id) === index &&
+            remainingOpenTodos.some((todo) => todo.id === id),
+        );
+        const visibleIndex = Math.min(
+          Math.max(Math.round(insertionIndex), 0),
+          visibleIds?.length ?? remainingOpenTodos.length,
+        );
+        let targetIndex = visibleIndex;
+
+        if (visibleIds?.length) {
+          const insertBeforeFirst = visibleIndex === 0;
+          const anchorId = insertBeforeFirst ? visibleIds[0] : visibleIds[visibleIndex - 1];
+          const anchorIndex = remainingOpenTodos.findIndex((todo) => todo.id === anchorId);
+          targetIndex = insertBeforeFirst ? anchorIndex : anchorIndex + 1;
+        }
+
+        const reorderedOpenTodos = [...remainingOpenTodos];
+        reorderedOpenTodos.splice(targetIndex, 0, activeTodo);
+        const todos = replaceTodosForDate(state.todos, activeTodo.dateKey, [
+          ...reorderedOpenTodos,
+          ...doneTodos,
+        ]);
+
+        return todos.every((todo, index) => todo.id === state.todos[index]?.id) ? state : { todos };
       });
     },
     moveTodosToDate: (ids, dateKey) => {

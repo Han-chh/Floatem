@@ -40,6 +40,10 @@ export async function saveSettings(settings: Partial<AppSettings>) {
   await getStickItBridge().saveSettings(settings);
 }
 
+export async function getLaunchAtLoginStatus() {
+  return await getStickItBridge().getLaunchAtLoginStatus?.() ?? null;
+}
+
 export async function registerHotkey(shortcut: string) {
   await getStickItBridge().registerHotkey(shortcut);
 }
@@ -113,7 +117,29 @@ export async function startFloatingCardDrag(card: FloatingCardReference) {
 
 export async function setFloatingCardDesktopPinned(card: FloatingCardReference, pinned: boolean) {
   const bridge = getStickItBridge() as Partial<StickItNativeBridge>;
-  await bridge.setFloatingCardDesktopPinned?.(card, pinned);
+  return (await bridge.setFloatingCardDesktopPinned?.(card, pinned)) ?? {
+    pinned,
+    launchAtLoginEnabled: false,
+    requiresLaunchAtLogin: pinned,
+  };
+}
+
+export async function requestDesktopWidget(card: FloatingCardReference) {
+  const bridge = getStickItBridge() as Partial<StickItNativeBridge>;
+  if (bridge.requestDesktopWidget) {
+    return await bridge.requestDesktopWidget(card);
+  }
+  await bridge.setFloatingCardDesktopPinned?.(card, true);
+  return { requested: true, requiresSystemPlacement: false };
+}
+
+export async function removeDesktopWidgetAssociation(card: FloatingCardReference) {
+  const bridge = getStickItBridge() as Partial<StickItNativeBridge>;
+  if (bridge.removeDesktopWidgetAssociation) {
+    await bridge.removeDesktopWidgetAssociation(card);
+    return;
+  }
+  await bridge.setFloatingCardDesktopPinned?.(card, false);
 }
 
 function canUseFloatingPayload(payload: DragPreviewPayload) {

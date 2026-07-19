@@ -1,15 +1,39 @@
 import { act, render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { DEFAULT_SETTINGS } from "../../src/lib/models";
+import { createTodoItem, DEFAULT_SETTINGS } from "../../src/lib/models";
 import { TodoList } from "../../src/components/todos/TodoList";
 import { formatLocalDateKey } from "../../src/lib/models";
+import { formatTimestampInTimeZone } from "../../src/lib/timeZoneDate";
 import { useSettingsStore } from "../../src/store/settingsStore";
 import { useTodosStore } from "../../src/store/todosStore";
 
 describe("TodoList", () => {
   afterEach(() => {
     vi.useRealTimers();
+  });
+
+  it("renders an expired reminder in gray with an expiry tooltip", () => {
+    const dateKey = formatLocalDateKey(new Date());
+    const todo = createTodoItem("Expired reminder", {
+      dateKey,
+      reminderAt: Date.now() - 60_000,
+    });
+    useTodosStore.setState({ todos: [todo], selectedDateKey: dateKey, isLoaded: true });
+
+    render(<TodoList />);
+
+    const reminderButton = screen.getByRole("button", { name: "Change reminder" });
+    expect(reminderButton).toHaveAttribute("data-tooltip", "This reminder has expired");
+    expect(reminderButton.className).toContain("bg-[rgba(226,230,227,0.58)]");
+    const expectedTime = formatTimestampInTimeZone(
+      todo.reminderAt!,
+      useSettingsStore.getState().timeZone,
+      "time",
+      useSettingsStore.getState().timeFormat,
+    );
+    expect(reminderButton).toHaveTextContent(expectedTime);
+    expect(reminderButton.textContent?.trim()).toBe(expectedTime);
   });
 
   it("adds, completes, and deletes a todo with Enter submission while keeping Shift+Enter for new lines", async () => {
@@ -158,8 +182,14 @@ describe("TodoList", () => {
 
     const alphaCard = screen.getAllByTestId("todo-item").find((item) => within(item).queryByText("Alpha"));
     expect(alphaCard).toBeTruthy();
+    expect(alphaCard).toHaveAttribute("data-card-grouped", "false");
     await user.click(within(alphaCard!).getByRole("button", { name: "Change todo group" }));
     await user.click(within(screen.getByRole("dialog", { name: "Manage todo groups" })).getByRole("button", { name: "Work" }));
+    expect(alphaCard).toHaveAttribute("data-card-grouped", "true");
+    expect(alphaCard!.style.getPropertyValue("--card-group-accent")).not.toBe("");
+    const todoTexture = alphaCard!.querySelector<HTMLElement>(".todo-group-card-texture");
+    expect(todoTexture).toBeInTheDocument();
+    expect(todoTexture?.style.backgroundImage).not.toContain("linear-gradient");
 
     await user.click(screen.getByRole("button", { name: "Filter todo groups" }));
     const filterDialog = screen.getByRole("dialog", { name: "Filter todo groups" });
@@ -386,5 +416,53 @@ describe("TodoList", () => {
     render(<TodoList />);
 
     expect(screen.getByRole("button", { name: "Open todo calendar" })).toHaveTextContent("1:05 PM");
+  });
+
+  it("shows a green insertion line and reorders a floating todo at that position", async () => {
+    const dateKey = formatLocalDateKey(new Date());
+    const returning = createTodoItem("Returning", { id: "todo-returning", dateKey });
+    const first = createTodoItem("First", { id: "todo-first", dateKey });
+    const second = createTodoItem("Second", { id: "todo-second", dateKey });
+    useTodosStore.getState().initialize([returning, first, second]);
+    useTodosStore.getState().selectDate(dateKey);
+    const rectSpy = vi
+      .spyOn(HTMLElement.prototype, "getBoundingClientRect")
+      .mockImplementation(function (this: HTMLElement) {
+        if (this.dataset.testid === "todo-card-scroll-region") {
+          return new DOMRect(0, 0, 500, 500);
+        }
+        if (this.dataset.todoItemId === first.id) {
+          return new DOMRect(20, 100, 420, 60);
+        }
+        if (this.dataset.todoItemId === second.id) {
+          return new DOMRect(20, 180, 420, 60);
+        }
+        return new DOMRect(0, 0, 1, 1);
+      });
+
+    render(
+      <TodoList
+        dockZoneTarget={{
+          kind: "todo",
+          id: returning.id,
+          source: "floating",
+          clientX: 100,
+          clientY: 170,
+        }}
+      />,
+    );
+
+    try {
+      await waitFor(() => {
+        expect(screen.getByTestId("todo-dock-insertion-line")).toHaveAttribute("data-edge", "after");
+      });
+      expect(useTodosStore.getState().todos.map((todo) => todo.id)).toEqual([
+        first.id,
+        returning.id,
+        second.id,
+      ]);
+    } finally {
+      rectSpy.mockRestore();
+    }
   });
 });

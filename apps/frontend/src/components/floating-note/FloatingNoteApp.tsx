@@ -1,5 +1,6 @@
 import type { DragPreviewPayload, FloatingCardScreenPlacement } from "@stickit/native-bridge";
 import { useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import type { Descendant } from "slate";
 import {
   closeFloatingCard,
@@ -13,6 +14,7 @@ import {
   startFloatingCardDrag,
 } from "../../hooks/usePlatform";
 import { useAutoSave } from "../../hooks/useAutoSave";
+import { useTheme } from "../../hooks/useTheme";
 import { FLOATING_CARD_STATE_EVENT } from "../../lib/dragPreview";
 import { useI18n } from "../../lib/i18n";
 import {
@@ -135,11 +137,13 @@ function createPreviewNoteCard(payload: Extract<DragPreviewPayload, { kind: "not
 }
 
 export function FloatingNoteApp() {
+  useTheme();
   const initialPayload = readInitialState();
   const [payload, setPayload] = useState<DragPreviewPayload | null>(initialPayload);
   const [cardSize, setCardSize] = useState(() => initialPayload?.size ?? { width: 1, height: 1 });
   const [frameSize, setFrameSize] = useState(() => initialPayload?.size ?? { width: 1, height: 1 });
   const [isDesktopPinned, setIsDesktopPinned] = useState(() => Boolean(initialPayload?.desktopPinned));
+  const [showDesktopBackgroundGuide, setShowDesktopBackgroundGuide] = useState(false);
   const [hasOpenDialog, setHasOpenDialog] = useState(false);
   const [dialogSide, setDialogSide] = useState<FloatingDialogSide>("right");
   const [isHydrated, setIsHydrated] = useState(false);
@@ -159,6 +163,8 @@ export function FloatingNoteApp() {
   const isDialogOpenRef = useRef(false);
   const lastDialogSideRef = useRef<FloatingDialogSide>("right");
   const completeDockTimerRef = useRef<number | null>(null);
+  const desktopPinRequestRef = useRef(0);
+  const confirmedDesktopPinRef = useRef<boolean | null>(null);
   const dialogStateRequestRef = useRef(0);
   const hasEditableFocusRef = useRef(false);
   const isTextComposingRef = useRef(false);
@@ -299,7 +305,7 @@ export function FloatingNoteApp() {
       height: Math.max(payload.size.height, current.height),
     }));
     setFrameSize(payload.size);
-    setIsDesktopPinned(Boolean(payload.desktopPinned));
+    setIsDesktopPinned(confirmedDesktopPinRef.current ?? Boolean(payload.desktopPinned));
   }, [payload]);
 
   useEffect(() => {
@@ -623,12 +629,39 @@ export function FloatingNoteApp() {
     void closeFloatingCard(cardReference);
   };
 
-  const handleDesktopPinToggle = () => {
+  const handleDesktopPinToggle = async () => {
     const nextPinned = !isDesktopPinned;
+    const requestID = desktopPinRequestRef.current + 1;
+    desktopPinRequestRef.current = requestID;
+    if (document.activeElement instanceof HTMLElement) {
+      document.activeElement.blur();
+    }
     setIsDesktopPinned(nextPinned);
-    void setFloatingCardDesktopPinned(cardReference, nextPinned).catch(() => {
-      setIsDesktopPinned(!nextPinned);
-    });
+    try {
+      const result = await setFloatingCardDesktopPinned(cardReference, nextPinned);
+      if (desktopPinRequestRef.current !== requestID) {
+        return;
+      }
+
+      const confirmedPinned = Boolean(result.pinned);
+      confirmedDesktopPinRef.current = confirmedPinned;
+      setIsDesktopPinned(confirmedPinned);
+      if (window.__STICKIT_FLOATING_CARD_STATE__) {
+        window.__STICKIT_FLOATING_CARD_STATE__ = {
+          ...window.__STICKIT_FLOATING_CARD_STATE__,
+          desktopPinned: confirmedPinned,
+        };
+      }
+      if (result.requiresLaunchAtLogin) {
+        setShowDesktopBackgroundGuide(true);
+      }
+    } catch {
+      if (desktopPinRequestRef.current === requestID) {
+        const restoredPinned = !nextPinned;
+        confirmedDesktopPinRef.current = restoredPinned;
+        setIsDesktopPinned(restoredPinned);
+      }
+    }
   };
 
   const updateUserSize = (clientX: number, clientY: number) => {
@@ -636,20 +669,10 @@ export function FloatingNoteApp() {
     if (!session) return;
     const deltaX = clientX - session.startX;
     const deltaY = clientY - session.startY;
-    const horizontalDistance = Math.abs(deltaX);
-    const verticalDistance = Math.abs(deltaY);
-    const verticalIntent = verticalDistance >= 6 && horizontalDistance < verticalDistance * 0.35;
-    if (verticalIntent) {
-      return;
-    }
-
-    const horizontalIntent = verticalDistance < 6 || verticalDistance < horizontalDistance * 0.35;
     const minimum = minimumCardSizeRef.current;
     const nextSize = {
       width: Math.max(minimum.width, Math.round(session.startWidth + deltaX)),
-      height: horizontalIntent
-        ? session.startHeight
-        : Math.max(minimum.height, Math.round(session.startHeight + deltaY)),
+      height: Math.max(minimum.height, Math.round(session.startHeight + deltaY)),
     };
     if (currentNoteCollapsed) {
       expandedCardSizeRef.current = {
@@ -767,8 +790,7 @@ export function FloatingNoteApp() {
           <div
             role="separator"
             aria-label={t.common.resizeFloatingCard}
-            data-tooltip={t.common.resizeFloatingCard}
-            className="absolute bottom-1.5 right-1.5 z-40 h-5 w-5 cursor-nwse-resize rounded-br-[10px] opacity-55 transition-opacity hover:opacity-100"
+            className="absolute bottom-0 right-0 z-40 h-8 w-8 cursor-nwse-resize"
             style={{
               scale: Math.min(contentScale, 1.35),
               transformOrigin: "bottom right",
@@ -796,10 +818,40 @@ export function FloatingNoteApp() {
               resizeSessionRef.current = null;
               event.currentTarget.releasePointerCapture?.(event.pointerId);
             }}
-          >
-            <span className="absolute bottom-0.5 right-0.5 h-2.5 w-2.5 border-b-2 border-r-2 border-[var(--muted)]" />
-          </div>
+          />
         ) : null}
+        {showDesktopBackgroundGuide && typeof document !== "undefined"
+          ? createPortal(
+              <div
+                className="stickit-modal-backdrop fixed inset-0 z-[120] flex items-center justify-center bg-[rgba(30,25,21,0.28)] p-5"
+                role="presentation"
+              >
+                <div
+                  role="dialog"
+                  aria-modal="true"
+                  aria-label={t.common.widgetGuideAddTitle}
+                  className="paper-panel w-full max-w-[390px] rounded-[24px] p-5 shadow-[0_26px_48px_rgba(30,25,21,0.24)]"
+                >
+                  <h2 className="font-display text-[21px] font-semibold text-[var(--brown-strong)]">
+                    {t.common.widgetGuideAddTitle}
+                  </h2>
+                  <p className="mt-3 text-[12.5px] leading-6 text-[var(--muted)]">
+                    {t.common.widgetGuideAddBody}
+                  </p>
+                  <div className="mt-5 flex justify-end">
+                    <button
+                      type="button"
+                      className="paper-button paper-button-primary rounded-[14px] px-4 py-2.5 text-[12px] font-semibold"
+                      onClick={() => setShowDesktopBackgroundGuide(false)}
+                    >
+                      {t.common.widgetGuideDone}
+                    </button>
+                  </div>
+                </div>
+              </div>,
+              document.body,
+            )
+          : null}
       </article>
     </main>
   );

@@ -130,6 +130,15 @@ final class NotificationManager: NSObject, @preconcurrency UNUserNotificationCen
         }
     }
 
+    func checkAuthorization(language: StickItLanguage) async throws -> Bool {
+        let snapshot = try await requestAuthorizationIfNeeded(
+            language: language,
+            activateAppIfNeeded: true
+        )
+        logger.info("User-requested notification authorization check completed. \(snapshot.logDescription, privacy: .public)")
+        return snapshot.allowsUserVisibleNotifications
+    }
+
     func scheduleTestNotification(soundEnabled: Bool, language: StickItLanguage) async throws {
         let snapshot = try await ensureSchedulingAuthorization(
             language: language,

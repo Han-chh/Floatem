@@ -1,23 +1,28 @@
-import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
+import { act, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
-import type { DragPreviewPayload } from "@stickit/native-bridge";
+import type { DragPreviewPayload, FloatingCardReference } from "@stickit/native-bridge";
 import { FloatingNoteApp } from "../../src/components/floating-note/FloatingNoteApp";
 import {
   createEmptyNotesDocument,
   createEmptyTodosDocument,
   createNoteCard,
+  createNoteGroup,
+  createTodoGroup,
   createTodoItem,
   DEFAULT_NOTE_CONTENT,
   DEFAULT_SETTINGS,
   type NoteCard,
+  type NoteGroup,
   type TodoItem,
+  type TodoGroup,
 } from "../../src/lib/models";
 import { useNotesStore } from "../../src/store/notesStore";
 import { useTodosStore } from "../../src/store/todosStore";
 import { getNoteToolbarStateKey } from "../../src/lib/noteToolbarState";
+import { FLOATING_CARD_STATE_EVENT } from "../../src/lib/dragPreview";
 
-function createFloatingNotePayload(note: NoteCard): DragPreviewPayload {
+function createFloatingNotePayload(note: NoteCard, groups: NoteGroup[] = []): DragPreviewPayload {
   return {
     kind: "note",
     language: "en",
@@ -39,11 +44,11 @@ function createFloatingNotePayload(note: NoteCard): DragPreviewPayload {
       previewText: "",
       updatedAt: note.updatedAt,
     },
-    groups: [],
+    groups,
   };
 }
 
-function createFloatingTodoPayload(todo: TodoItem): DragPreviewPayload {
+function createFloatingTodoPayload(todo: TodoItem, groups: TodoGroup[] = []): DragPreviewPayload {
   return {
     kind: "todo",
     language: "en",
@@ -67,7 +72,7 @@ function createFloatingTodoPayload(todo: TodoItem): DragPreviewPayload {
       createdAt: todo.createdAt,
       dateKey: todo.dateKey,
     },
-    groups: [],
+    groups,
   };
 }
 
@@ -88,7 +93,7 @@ function createFloatingScreenPlacement(left: number, width: number, availableWid
   };
 }
 
-function installFloatingBridge(note: NoteCard) {
+function installFloatingBridge(note: NoteCard, groups: NoteGroup[] = []) {
   const originalBridge = window.stickItHost;
   const clipboard = { value: "" };
   const startFloatingCardDrag = vi.fn(async () => {});
@@ -97,12 +102,18 @@ function installFloatingBridge(note: NoteCard) {
   const getFloatingCardScreenPlacement = vi.fn(async () => createFloatingScreenPlacement(100, 420));
   const setEditableInputActive = vi.fn();
   const setTextCompositionActive = vi.fn();
-  const setFloatingCardDesktopPinned = vi.fn(async () => {});
+  const setFloatingCardDesktopPinned = vi.fn(async (_card: FloatingCardReference, pinned: boolean) => ({
+    pinned,
+    launchAtLoginEnabled: false,
+    requiresLaunchAtLogin: pinned,
+  }));
+  const requestDesktopWidget = vi.fn(async () => ({ requested: true, requiresSystemPlacement: true }));
+  const removeDesktopWidgetAssociation = vi.fn(async () => {});
   const writeClipboardText = vi.fn(async (text: string) => {
     clipboard.value = text;
   });
 
-  window.__STICKIT_FLOATING_CARD_STATE__ = createFloatingNotePayload(note);
+  window.__STICKIT_FLOATING_CARD_STATE__ = createFloatingNotePayload(note, groups);
   window.stickItHost = {
     platform: "macos",
     getCapabilities: vi.fn(async () => ({
@@ -129,7 +140,7 @@ function installFloatingBridge(note: NoteCard) {
     loadAllData: vi.fn(async () => ({
       notes: {
         cards: [note],
-        groups: [],
+        groups,
       },
       todos: createEmptyTodosDocument(),
       settings: DEFAULT_SETTINGS,
@@ -149,6 +160,8 @@ function installFloatingBridge(note: NoteCard) {
     getFloatingCardScreenPlacement,
     startFloatingCardDrag,
     setFloatingCardDesktopPinned,
+    requestDesktopWidget,
+    removeDesktopWidgetAssociation,
     openNotificationSettings: vi.fn(async () => {}),
     sendNotification: vi.fn(async () => {}),
     showNotification: vi.fn(async () => {}),
@@ -186,11 +199,13 @@ function installFloatingBridge(note: NoteCard) {
     setEditableInputActive,
     setTextCompositionActive,
     setFloatingCardDesktopPinned,
+    requestDesktopWidget,
+    removeDesktopWidgetAssociation,
     writeClipboardText,
   };
 }
 
-function installFloatingTodoBridge(todo: TodoItem) {
+function installFloatingTodoBridge(todo: TodoItem, groups: TodoGroup[] = []) {
   const originalBridge = window.stickItHost;
   const startFloatingCardDrag = vi.fn(async () => {});
   const closeFloatingCard = vi.fn(async () => {});
@@ -199,9 +214,15 @@ function installFloatingTodoBridge(todo: TodoItem) {
   const saveTodos = vi.fn(async () => {});
   const setEditableInputActive = vi.fn();
   const setTextCompositionActive = vi.fn();
-  const setFloatingCardDesktopPinned = vi.fn(async () => {});
+  const setFloatingCardDesktopPinned = vi.fn(async (_card: FloatingCardReference, pinned: boolean) => ({
+    pinned,
+    launchAtLoginEnabled: false,
+    requiresLaunchAtLogin: pinned,
+  }));
+  const requestDesktopWidget = vi.fn(async () => ({ requested: true, requiresSystemPlacement: true }));
+  const removeDesktopWidgetAssociation = vi.fn(async () => {});
 
-  window.__STICKIT_FLOATING_CARD_STATE__ = createFloatingTodoPayload(todo);
+  window.__STICKIT_FLOATING_CARD_STATE__ = createFloatingTodoPayload(todo, groups);
   window.stickItHost = {
     platform: "macos",
     getCapabilities: vi.fn(async () => ({
@@ -229,7 +250,7 @@ function installFloatingTodoBridge(todo: TodoItem) {
       notes: createEmptyNotesDocument(),
       todos: {
         items: [todo],
-        groups: [],
+        groups,
       },
       settings: DEFAULT_SETTINGS,
     })),
@@ -248,6 +269,8 @@ function installFloatingTodoBridge(todo: TodoItem) {
     getFloatingCardScreenPlacement,
     startFloatingCardDrag,
     setFloatingCardDesktopPinned,
+    requestDesktopWidget,
+    removeDesktopWidgetAssociation,
     openNotificationSettings: vi.fn(async () => {}),
     sendNotification: vi.fn(async () => {}),
     showNotification: vi.fn(async () => {}),
@@ -285,10 +308,44 @@ function installFloatingTodoBridge(todo: TodoItem) {
     setTextCompositionActive,
     startFloatingCardDrag,
     setFloatingCardDesktopPinned,
+    requestDesktopWidget,
+    removeDesktopWidgetAssociation,
   };
 }
 
 describe("FloatingNoteApp", () => {
+  it("keeps group rings on floating note and todo cards", async () => {
+    const noteGroup = createNoteGroup({ id: "floating-note-group", name: "Work", color: "#2F6BFF" });
+    const note = createNoteCard({ id: "floating-grouped-note", title: "Grouped note", groupId: noteGroup.id });
+    const noteBridge = installFloatingBridge(note, [noteGroup]);
+
+    const noteView = render(<FloatingNoteApp />);
+    try {
+      const noteCard = await screen.findByTestId("note-card");
+      expect(noteCard).toHaveAttribute("data-card-grouped", "true");
+      expect(noteCard.style.getPropertyValue("--card-group-accent")).toBe(noteGroup.color);
+      await waitFor(() => {
+        expect(document.documentElement).toHaveAttribute("data-stickit-theme", DEFAULT_SETTINGS.theme);
+      });
+    } finally {
+      noteView.unmount();
+      noteBridge.restore();
+    }
+
+    const todoGroup = createTodoGroup({ id: "floating-todo-group", name: "Focus", color: "#1FA87A" });
+    const todo = createTodoItem("Grouped todo", { id: "floating-grouped-todo", groupId: todoGroup.id });
+    const todoBridge = installFloatingTodoBridge(todo, [todoGroup]);
+
+    render(<FloatingNoteApp />);
+    try {
+      const todoCard = await screen.findByTestId("todo-item");
+      expect(todoCard).toHaveAttribute("data-card-grouped", "true");
+      expect(todoCard.style.getPropertyValue("--card-group-accent")).toBe(todoGroup.color);
+    } finally {
+      todoBridge.restore();
+    }
+  });
+
   it("restores the same per-note toolbar state in a floating card", async () => {
     const note = createNoteCard({ id: "floating-note-toolbar-state", title: "Remember toolbar" });
     const bridge = installFloatingBridge(note);
@@ -434,7 +491,7 @@ describe("FloatingNoteApp", () => {
 
     try {
       const card = await screen.findByTestId("note-card");
-      const pinButton = within(card).getByRole("button", { name: "Keep floating on desktop" });
+      const pinButton = within(card).getByRole("button", { name: "Keep on desktop" });
       const groupButton = within(card).getByRole("button", { name: "Change note group" });
       const metadataRow = groupButton.closest(".note-card-chip-group--floating");
       const actionRow = pinButton.closest(".note-card-actions--floating");
@@ -446,20 +503,96 @@ describe("FloatingNoteApp", () => {
       expect(within(card).getAllByRole("button", { name: "Change note group" })).toHaveLength(1);
 
       await user.click(pinButton);
-      expect(bridge.setFloatingCardDesktopPinned).toHaveBeenCalledWith(
-        { kind: "note", id: note.id },
-        true,
-      );
+      expect(bridge.setFloatingCardDesktopPinned).toHaveBeenCalledWith({ kind: "note", id: note.id }, true);
+      expect(screen.getByRole("dialog", { name: "Keep StickIt running" })).toBeInTheDocument();
       expect(within(card).getByRole("button", { name: "Remove from desktop" })).toHaveAttribute(
         "aria-pressed",
         "true",
       );
+      expect(
+        within(card).getByRole("button", { name: "Remove from desktop" })
+          .querySelector("[data-desktop-pin-indicator]"),
+      ).toHaveAttribute("data-active", "true");
+
+      act(() => {
+        window.dispatchEvent(new CustomEvent(FLOATING_CARD_STATE_EVENT, {
+          detail: { ...createFloatingNotePayload(note), desktopPinned: false },
+        }));
+      });
+      await waitFor(() => {
+        expect(within(card).getByRole("button", { name: "Remove from desktop" })).toHaveAttribute(
+          "aria-pressed",
+          "true",
+        );
+      });
+
+      await user.click(screen.getByRole("button", { name: "Got it" }));
+      const refreshedCard = await screen.findByTestId("note-card");
+      await user.click(within(refreshedCard).getByRole("button", { name: "Remove from desktop" }));
+      expect(bridge.setFloatingCardDesktopPinned).toHaveBeenCalledWith({ kind: "note", id: note.id }, false);
+      expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
     } finally {
       bridge.restore();
     }
   });
 
-  it("resizes a floating note without allowing it below its initial size", async () => {
+  it("uses the native result as the authoritative desktop pin state", async () => {
+    const note = createNoteCard({ id: "floating-note-pin-rejected", title: "Rejected pin" });
+    const bridge = installFloatingBridge(note);
+    bridge.setFloatingCardDesktopPinned.mockResolvedValue({
+      pinned: false,
+      launchAtLoginEnabled: false,
+      requiresLaunchAtLogin: false,
+    });
+    const user = userEvent.setup();
+
+    render(<FloatingNoteApp />);
+
+    try {
+      const card = await screen.findByTestId("note-card");
+      await user.click(within(card).getByRole("button", { name: "Keep on desktop" }));
+
+      await waitFor(() => {
+        expect(within(card).getByRole("button", { name: "Keep on desktop" })).toHaveAttribute(
+          "aria-pressed",
+          "false",
+        );
+      });
+      expect(
+        within(card).getByRole("button", { name: "Keep on desktop" })
+          .querySelector("[data-desktop-pin-indicator]"),
+      ).toHaveAttribute("data-active", "false");
+    } finally {
+      bridge.restore();
+    }
+  });
+
+  it("does not warn when login launch is already enabled for a desktop card", async () => {
+    const note = createNoteCard({ id: "floating-note-login-enabled", title: "Persistent note" });
+    const bridge = installFloatingBridge(note);
+    bridge.setFloatingCardDesktopPinned.mockResolvedValue({
+      pinned: true,
+      launchAtLoginEnabled: true,
+      requiresLaunchAtLogin: false,
+    });
+    const user = userEvent.setup();
+
+    render(<FloatingNoteApp />);
+
+    try {
+      const card = await screen.findByTestId("note-card");
+      await user.click(within(card).getByRole("button", { name: "Keep on desktop" }));
+      expect(bridge.setFloatingCardDesktopPinned).toHaveBeenCalledWith(
+        { kind: "note", id: note.id },
+        true,
+      );
+      expect(screen.queryByRole("dialog", { name: "Keep StickIt running" })).not.toBeInTheDocument();
+    } finally {
+      bridge.restore();
+    }
+  });
+
+  it("resizes a floating note without rendering a visible corner handle or allowing it below its initial size", async () => {
     const note = createNoteCard({ id: "floating-note-resize", title: "Resizable note" });
     const bridge = installFloatingBridge(note);
 
@@ -470,6 +603,9 @@ describe("FloatingNoteApp", () => {
       const shell = screen.getByTestId("floating-card-shell");
       const scaledContent = screen.getByTestId("floating-card-scaled-content");
       const handle = screen.getByRole("separator", { name: "Resize floating card" });
+      expect(handle).toBeEmptyDOMElement();
+      expect(handle).not.toHaveAttribute("data-tooltip");
+      expect(handle).toHaveClass("h-8", "w-8");
       bridge.resizeFloatingCard.mockClear();
 
       fireEvent.pointerDown(handle, { pointerId: 1, clientX: 420, clientY: 300 });
@@ -486,8 +622,14 @@ describe("FloatingNoteApp", () => {
 
       const resizeCallCount = bridge.resizeFloatingCard.mock.calls.length;
       fireEvent.pointerMove(handle, { pointerId: 1, clientX: 420, clientY: 420 });
-      expect(shell).toHaveStyle({ width: "500px", minHeight: "360px" });
-      expect(bridge.resizeFloatingCard).toHaveBeenCalledTimes(resizeCallCount);
+      expect(shell).toHaveStyle({ width: "420px", minHeight: "420px" });
+      expect(bridge.resizeFloatingCard).toHaveBeenCalledTimes(resizeCallCount + 1);
+      expect(bridge.resizeFloatingCard).toHaveBeenLastCalledWith({
+        width: 420,
+        height: 420,
+        anchor: "top",
+        horizontalAnchor: "left",
+      });
 
       fireEvent.pointerMove(handle, { pointerId: 1, clientX: 540, clientY: 300 });
       expect(shell).toHaveStyle({ width: "540px", minHeight: "300px" });
@@ -762,7 +904,7 @@ describe("FloatingNoteApp", () => {
     }
   });
 
-  it("rejects vertical-only resizing while allowing horizontal and diagonal todo resizing", async () => {
+  it("allows vertical, horizontal, and diagonal todo resizing", async () => {
     const todo = createTodoItem("Resize todo", { id: "floating-todo-resize" });
     const bridge = installFloatingTodoBridge(todo);
 
@@ -776,8 +918,13 @@ describe("FloatingNoteApp", () => {
 
       fireEvent.pointerDown(handle, { pointerId: 2, clientX: 360, clientY: 72 });
       fireEvent.pointerMove(handle, { pointerId: 2, clientX: 360, clientY: 160 });
-      expect(shell).toHaveStyle({ width: "360px", minHeight: "72px" });
-      expect(bridge.resizeFloatingCard).not.toHaveBeenCalled();
+      expect(shell).toHaveStyle({ width: "360px", minHeight: "160px" });
+      expect(bridge.resizeFloatingCard).toHaveBeenLastCalledWith({
+        width: 360,
+        height: 160,
+        anchor: "top",
+        horizontalAnchor: "left",
+      });
 
       fireEvent.pointerMove(handle, { pointerId: 2, clientX: 440, clientY: 72 });
       expect(shell).toHaveStyle({ width: "440px", minHeight: "72px" });
@@ -801,7 +948,7 @@ describe("FloatingNoteApp", () => {
     }
   });
 
-  it("pins a floating todo to the desktop before its group action", async () => {
+  it("pins a desktop todo panel before its group action", async () => {
     const todo = createTodoItem("Pinned todo", { id: "floating-todo-pin" });
     const bridge = installFloatingTodoBridge(todo);
     const user = userEvent.setup();
@@ -811,15 +958,45 @@ describe("FloatingNoteApp", () => {
     try {
       const card = await screen.findByTestId("todo-item");
       const actions = within(card).getAllByRole("button");
-      const pinButton = within(card).getByRole("button", { name: "Keep floating on desktop" });
+      const pinButton = within(card).getByRole("button", { name: "Keep on desktop" });
       const groupButton = within(card).getByRole("button", { name: "Change todo group" });
       expect(actions.indexOf(pinButton)).toBeLessThan(actions.indexOf(groupButton));
 
       await user.click(pinButton);
-      expect(bridge.setFloatingCardDesktopPinned).toHaveBeenCalledWith(
-        { kind: "todo", id: todo.id },
-        true,
-      );
+      expect(bridge.setFloatingCardDesktopPinned).toHaveBeenCalledWith({ kind: "todo", id: todo.id }, true);
+      expect(screen.getByRole("dialog", { name: "Keep StickIt running" })).toBeInTheDocument();
+      expect(pinButton).not.toHaveFocus();
+    } finally {
+      bridge.restore();
+    }
+  });
+
+  it("keeps desktop pin and completion visuals isolated on a pinned floating todo", async () => {
+    const todo = createTodoItem("Pinned todo completion", { id: "floating-todo-pinned-complete" });
+    const bridge = installFloatingTodoBridge(todo);
+    window.__STICKIT_FLOATING_CARD_STATE__ = {
+      ...createFloatingTodoPayload(todo),
+      desktopPinned: true,
+    };
+    const user = userEvent.setup();
+
+    render(<FloatingNoteApp />);
+
+    try {
+      const card = await screen.findByTestId("todo-item");
+      const completionButton = within(card).getByRole("button", { name: "Complete task" });
+      const pinButton = within(card).getByRole("button", { name: "Remove from desktop" });
+
+      expect(completionButton).toHaveAttribute("data-action", "todo-completion");
+      expect(pinButton).toHaveAttribute("data-action", "desktop-pin");
+
+      await user.click(completionButton);
+
+      await waitFor(() => {
+        expect(completionButton).toHaveAttribute("aria-pressed", "true");
+      });
+      expect(pinButton).toHaveAttribute("aria-pressed", "true");
+      expect(completionButton).toHaveClass("outline-none", "focus-visible:outline-none");
     } finally {
       bridge.restore();
     }

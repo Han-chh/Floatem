@@ -1,13 +1,45 @@
 import Foundation
+import OSLog
 
 @MainActor
 final class AppStorage {
     private let fileManager = FileManager.default
     private let appSupportDirectory: URL
+    private let legacyAppSupportDirectory: URL
+    private let sharedStore: SharedDataStore
+    private let logger = Logger(subsystem: "com.hankchen.stickit", category: "Storage")
 
-    init(bundleIdentifier: String = Bundle.main.bundleIdentifier ?? "com.stickit.app") {
+    init(bundleIdentifier: String = Bundle.main.bundleIdentifier ?? "com.hankchen.stickit") {
         let baseDirectory = fileManager.urls(for: .applicationSupportDirectory, in: .userDomainMask).first!
-        appSupportDirectory = baseDirectory.appendingPathComponent(bundleIdentifier, isDirectory: true)
+        legacyAppSupportDirectory = baseDirectory.appendingPathComponent(bundleIdentifier, isDirectory: true)
+        let preferredDirectory = StickItSharedContainer.sharedDataURL(fileManager: fileManager)
+            ?? legacyAppSupportDirectory
+        appSupportDirectory = preferredDirectory
+        sharedStore = SharedDataStore(directoryURL: preferredDirectory, fileManager: fileManager)
+
+        let previousAppSupportDirectory = baseDirectory.appendingPathComponent("com.stickit.app", isDirectory: true)
+        let previousSharedDirectory = fileManager.homeDirectoryForCurrentUser
+            .appendingPathComponent("Library/Group Containers/group.com.stickit.app/SharedData", isDirectory: true)
+        let migrationSources = [previousSharedDirectory, previousAppSupportDirectory, legacyAppSupportDirectory]
+            .filter { $0.standardizedFileURL != preferredDirectory.standardizedFileURL }
+
+        for migrationSource in migrationSources where fileManager.fileExists(atPath: migrationSource.path) {
+            do {
+                try LegacyDataMigrator(
+                    legacyDirectoryURL: migrationSource,
+                    sharedStore: sharedStore,
+                    fileManager: fileManager
+                ).migrateIfNeeded()
+            } catch {
+                logger.error(
+                    "Shared data migration failed; source data remains untouched. source=\(migrationSource.path, privacy: .private) error=\(error.localizedDescription, privacy: .public)"
+                )
+            }
+        }
+
+        if preferredDirectory == legacyAppSupportDirectory {
+            logger.warning("App Group container is unavailable; using the legacy application-support directory.")
+        }
     }
 
     func loadAllData() throws -> [String: Any] {
@@ -130,6 +162,92 @@ final class AppStorage {
         try saveJSONObject(cards, to: desktopCardsURL)
     }
 
+    func loadWidgetPreferences() throws -> [DesktopWidgetPreference] {
+        try sharedStore.widgetPreferences()
+    }
+
+    func setWidgetPreference(kind: StickItEntityKind, id: String, requested: Bool) throws {
+        try sharedStore.setWidgetPreference(
+            WidgetEntityReference(entityKind: kind, entityID: id),
+            requested: requested
+        )
+    }
+
+    func desktopPanelStates() throws -> [DesktopPanelState] {
+        try sharedStore.desktopPanelStates()
+    }
+
+    func saveDesktopPanelState(_ state: DesktopPanelState) throws {
+        try sharedStore.saveDesktopPanelState(state)
+    }
+
+    func removeDesktopPanelState(kind: StickItEntityKind, id: String) throws {
+        try sharedStore.removeDesktopPanelState(
+            WidgetEntityReference(entityKind: kind, entityID: id)
+        )
+    }
+
+    func noteSnapshots() throws -> [NoteWidgetSnapshot] {
+        try sharedStore.noteSnapshots()
+    }
+
+    func todoSnapshots() throws -> [TodoWidgetSnapshot] {
+        try sharedStore.todoSnapshots()
+    }
+
+    func floatingCardPayload(kind: StickItEntityKind, id: String) throws -> [String: Any]? {
+        let settings = try loadSettings()
+        let desktopRequested = try desktopPanelStates().contains {
+            $0.entityKind == kind && $0.entityID == id
+        }
+        switch kind {
+        case .note:
+            let root = try loadNotes()
+            let cards = Self.documentItems(root, key: "cards")
+            guard let note = cards.first(where: { $0["id"] as? String == id }) else { return nil }
+            let groups = (root as? [String: Any])?["groups"] as? [[String: Any]] ?? []
+            return [
+                "kind": kind.rawValue,
+                "language": settings["language"] as? String ?? "zh-CN",
+                "size": ["width": 420.0, "height": 300.0] as [String: Any],
+                "minimumSize": ["width": 420.0, "height": 300.0] as [String: Any],
+                "pointerOffset": ["x": 24.0, "y": 24.0] as [String: Any],
+                "note": note,
+                "groups": groups,
+                "desktopPinned": desktopRequested,
+            ]
+        case .todo:
+            let root = try readJSONObject(at: todosURL) ?? []
+            let items = Self.documentItems(root, key: "items")
+            guard let todo = items.first(where: { $0["id"] as? String == id }) else { return nil }
+            let groups = (root as? [String: Any])?["groups"] as? [[String: Any]] ?? []
+            return [
+                "kind": kind.rawValue,
+                "language": settings["language"] as? String ?? "zh-CN",
+                "timeZone": settings["timeZone"] as? String ?? TimeZone.current.identifier,
+                "timeFormat": settings["timeFormat"] as? String ?? "24h",
+                "size": ["width": 360.0, "height": 72.0] as [String: Any],
+                "minimumSize": ["width": 360.0, "height": 72.0] as [String: Any],
+                "pointerOffset": ["x": 24.0, "y": 24.0] as [String: Any],
+                "todo": todo,
+                "groups": groups,
+                "desktopPinned": desktopRequested,
+            ]
+        }
+    }
+
+    func floatingWindowStates() throws -> [FloatingCardWindowState] {
+        try sharedStore.floatingWindowStates()
+    }
+
+    func saveFloatingWindowState(_ state: FloatingCardWindowState) throws {
+        try sharedStore.saveFloatingWindowState(state)
+    }
+
+    func removeFloatingWindowState(kind: StickItEntityKind, id: String) throws {
+        try sharedStore.removeFloatingWindowState(WidgetEntityReference(entityKind: kind, entityID: id))
+    }
+
     func savePanelPosition(origin: CGPoint) throws {
         var settings = try loadSettings()
         settings["panelPosition"] = [
@@ -208,5 +326,12 @@ final class AppStorage {
 
         let data = try JSONSerialization.data(withJSONObject: object, options: [.prettyPrinted, .sortedKeys])
         try data.write(to: url, options: [.atomic])
+    }
+
+    private static func documentItems(_ root: Any, key: String) -> [[String: Any]] {
+        if let items = root as? [[String: Any]] {
+            return items
+        }
+        return (root as? [String: Any])?[key] as? [[String: Any]] ?? []
     }
 }

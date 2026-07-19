@@ -24,6 +24,11 @@ type MessageCatalog = {
     keepOnDesktop: string;
     removeFromDesktop: string;
     resizeFloatingCard: string;
+    widgetGuideAddBody: string;
+    widgetGuideAddTitle: string;
+    widgetGuideDone: string;
+    widgetGuideRemoveBody: string;
+    widgetGuideRemoveTitle: string;
     save: string;
     scrollToBottom: string;
     scrollToTop: string;
@@ -232,6 +237,8 @@ type MessageCatalog = {
     add: string;
     addGroup: string;
     afternoon: string;
+    earlyMorning: string;
+    morning: string;
     allDone: string;
     allGroups: string;
     bulkComplete: string;
@@ -304,6 +311,11 @@ type MessageCatalog = {
     reminder: string;
     reminderPastError: string;
     reminderPastTooltip: string;
+    reminderExpiredTooltip: string;
+    notificationPermissionTitle: string;
+    notificationPermissionBody: string;
+    notificationPermissionOpenSettings: string;
+    notSameDay: string;
     reorder: string;
     restoreTask: string;
     save: string;
@@ -319,7 +331,7 @@ type MessageCatalog = {
     tomorrow: string;
     tomorrowMorning: string;
     tomorrowTimePrompt: string;
-    tonight: string;
+    evening: string;
     titleLabel: string;
     titlePlaceholder: string;
     toolbarLabel: string;
@@ -351,9 +363,14 @@ const messages: Record<AppLanguage, MessageCatalog> = {
       close: "Close",
       english: "English",
       language: "Language",
-      keepOnDesktop: "Keep floating on desktop",
+      keepOnDesktop: "Keep on desktop",
       removeFromDesktop: "Remove from desktop",
       resizeFloatingCard: "Resize floating card",
+      widgetGuideAddBody: "Desktop cards are StickIt windows. StickIt must be running in the background to display them. Turn on “Open StickIt at login” to restore them automatically after restarting your Mac.",
+      widgetGuideAddTitle: "Keep StickIt running",
+      widgetGuideDone: "Got it",
+      widgetGuideRemoveBody: "StickIt removed this card from the desktop.",
+      widgetGuideRemoveTitle: "Removed from desktop",
       save: "Save",
       scrollToBottom: "Scroll to bottom",
       scrollToTop: "Scroll to top",
@@ -473,7 +490,7 @@ const messages: Record<AppLanguage, MessageCatalog> = {
       languageSectionSubtitle: "Switch the app interface language instantly.",
       languageSimplifiedChineseBody: "Switch the interface to Simplified Chinese.",
       languageTitle: "Language",
-      launchAtLoginBody: "Automatically start StickIt after you sign in to this computer. You can also manage it in System Settings > General > Login Items.",
+      launchAtLoginBody: "Start StickIt in the background after login and restore desktop-pinned cards. Desktop cards require StickIt to keep running. You can also manage this in System Settings > General > Login Items.",
       launchAtLoginTitle: "Open StickIt at login",
       lastSavedPosition: "Last saved position",
       lastStoredSection: (section) => `Last stored section: ${section}.`,
@@ -578,6 +595,8 @@ const messages: Record<AppLanguage, MessageCatalog> = {
       bulkDeleteDialogTitle: "Delete selected todos",
       bulkSetDate: "Set date",
       afternoon: "Afternoon",
+      earlyMorning: "Early morning",
+      morning: "Morning",
       calendarHint: "Use the calendar to choose the day, then fine-tune the time below.",
       changeTodoDate: "Change todo date",
       changeReminder: "Change reminder",
@@ -638,6 +657,11 @@ const messages: Record<AppLanguage, MessageCatalog> = {
       reminder: "Reminder",
       reminderPastError: "Reminder time must be later than the current time.",
       reminderPastTooltip: "Already passed",
+      reminderExpiredTooltip: "This reminder has expired",
+      notificationPermissionTitle: "Notifications are turned off",
+      notificationPermissionBody: "The reminder was saved, but StickIt cannot notify you until notifications are enabled in system settings.",
+      notificationPermissionOpenSettings: "Open settings",
+      notSameDay: "Not same day",
       reorder: "Reorder todo",
       restoreTask: "Restore task",
       save: "Save",
@@ -653,7 +677,7 @@ const messages: Record<AppLanguage, MessageCatalog> = {
       tomorrow: "Tomorrow",
       tomorrowMorning: "Tomorrow 09:00",
       tomorrowTimePrompt: "Tomorrow selected. Choose the hour and minute below.",
-      tonight: "Tonight",
+      evening: "Evening",
       titleLabel: "Todo title",
       titlePlaceholder: "Update task title",
       toolbarLabel: "Todo actions",
@@ -681,9 +705,14 @@ const messages: Record<AppLanguage, MessageCatalog> = {
       close: "关闭",
       english: "English",
       language: "语言",
-      keepOnDesktop: "保持悬浮在桌面",
+      keepOnDesktop: "固定到桌面",
       removeFromDesktop: "取消桌面固定",
       resizeFloatingCard: "调整悬浮卡片大小",
+      widgetGuideAddBody: "桌面置顶卡片是 StickIt 创建的窗口，必须让 StickIt 在后台运行才能显示。请开启“登录时打开 StickIt”，这样重新启动 Mac 后会自动恢复桌面卡片。",
+      widgetGuideAddTitle: "需要让 StickIt 保持运行",
+      widgetGuideDone: "知道了",
+      widgetGuideRemoveBody: "StickIt 已从桌面移除这张卡片。",
+      widgetGuideRemoveTitle: "已取消桌面固定",
       save: "保存",
       scrollToBottom: "滚动到底部",
       scrollToTop: "滚动到顶部",
@@ -803,7 +832,7 @@ const messages: Record<AppLanguage, MessageCatalog> = {
       languageSectionSubtitle: "立即切换应用界面语言。",
       languageSimplifiedChineseBody: "将界面切换为简体中文。",
       languageTitle: "语言",
-      launchAtLoginBody: "登录这台电脑后自动启动 StickIt。你也可以在“系统设置 > 通用 > 登录项”中管理它。",
+      launchAtLoginBody: "登录这台电脑后自动在后台启动 StickIt，并恢复桌面置顶卡片。桌面置顶卡片需要 StickIt 保持运行。你也可以在“系统设置 > 通用 > 登录项”中管理它。",
       launchAtLoginTitle: "登录时打开 StickIt",
       lastSavedPosition: "上次保存的位置",
       lastStoredSection: (section) => `上次停留分区：${section}。`,
@@ -893,6 +922,8 @@ const messages: Record<AppLanguage, MessageCatalog> = {
     todos: {
       add: "添加任务",
       afternoon: "\u4e0b\u5348",
+      earlyMorning: "早上",
+      morning: "上午",
       calendarHint: "先在日历里选日期，再在下方微调时间。",
       changeReminder: "修改提醒",
       clear: "清除",
@@ -971,6 +1002,11 @@ const messages: Record<AppLanguage, MessageCatalog> = {
       reminder: "提醒",
       reminderPastError: "提醒时间必须晚于当前时间。",
       reminderPastTooltip: "已过时",
+      reminderExpiredTooltip: "该提醒已经过时",
+      notificationPermissionTitle: "通知权限未开启",
+      notificationPermissionBody: "提醒已保存，但 StickIt 暂时无法发送通知。请在系统设置中开启通知权限。",
+      notificationPermissionOpenSettings: "打开系统设置",
+      notSameDay: "非当日",
       reorder: "重新排序待办",
       restoreTask: "恢复任务",
       save: "保存",
@@ -984,7 +1020,7 @@ const messages: Record<AppLanguage, MessageCatalog> = {
       tomorrow: "明天",
       tomorrowMorning: "明天 09:00",
       tomorrowTimePrompt: "已选择明天，请继续选择具体时分。",
-      tonight: "今晚",
+      evening: "晚上",
       titleLabel: "待办标题",
       titlePlaceholder: "更新任务标题",
       undoneCount: (count) => `${count} 项未完成`,

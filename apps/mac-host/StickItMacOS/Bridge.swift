@@ -48,8 +48,10 @@ protocol StickItNativeBridgeHandling: AnyObject {
     func saveNotes(_ notes: Any) throws
     func saveTodos(_ todos: Any) throws
     func saveSettings(_ settings: Any) throws
+    func currentLaunchAtLoginStatus() -> [String: Any]
     func showMainWindowFromBridge()
     func openNotificationSettings() throws
+    func checkNotificationPermission(language: StickItLanguage) async throws -> Bool
     func sendNotification(id: String?, title: String, body: String, soundEnabled: Bool) async throws
     func scheduleNotification(id: String?, title: String, body: String, scheduledAt: Date?, soundEnabled: Bool) async throws
     func openTextColorPanel(requestID: String, colorHex: String?) throws
@@ -74,7 +76,10 @@ protocol StickItNativeBridgeHandling: AnyObject {
     func showFloatingCardFromBridge(_ payload: Any) throws
     func closeFloatingCardFromBridge(kind: String, id: String)
     func startFloatingCardDragFromBridge(kind: String, id: String) throws
-    func setFloatingCardDesktopPinnedFromBridge(kind: String, id: String, pinned: Bool) throws
+    func setFloatingCardDesktopPinnedFromBridge(kind: String, id: String, pinned: Bool) throws -> [String: Any]
+    func requestDesktopWidgetFromBridge(kind: String, id: String) throws -> [String: Any]
+    func removeDesktopWidgetAssociationFromBridge(kind: String, id: String) throws
+    func getDesktopWidgetStateFromBridge(kind: String, id: String) throws -> [String: Any]
     func quitApplicationFromBridge()
     func startWindowDragFromBridge() throws
 }

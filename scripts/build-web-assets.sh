@@ -29,11 +29,12 @@ needs_frontend_build=0
 FRONTEND_DIR="$REPO_ROOT/apps/frontend"
 FRONTEND_DIST_DIR="$FRONTEND_DIR/dist"
 
-if [ ! -f "$FRONTEND_DIST_DIR/index.html" ]; then
+if [ ! -f "$FRONTEND_DIST_DIR/index.html" ] || [ ! -f "$FRONTEND_DIST_DIR/floating.html" ]; then
   needs_frontend_build=1
 elif find \
   "$FRONTEND_DIR/src" \
   "$FRONTEND_DIR/index.html" \
+  "$FRONTEND_DIR/floating.html" \
   "$FRONTEND_DIR/vite.config.ts" \
   "$FRONTEND_DIR/tsconfig.json" \
   "$FRONTEND_DIR/tsconfig.node.json" \

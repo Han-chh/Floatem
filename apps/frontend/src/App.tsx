@@ -127,8 +127,8 @@ function StickItApp() {
   const transitionStyle = useSettingsStore((state) => state.transitionStyle);
   const animationSpeed = useSettingsStore((state) => state.animationSpeed);
   const setActiveTab = useSettingsStore((state) => state.setActiveTab);
-  const floatingCardIds = useNotesStore((state) => state.floatingCardIds);
-  const floatingTodoIds = useTodosStore((state) => state.floatingTodoIds);
+  const noteCards = useNotesStore((state) => state.cards);
+  const todoItems = useTodosStore((state) => state.todos);
   const [isBooting, setIsBooting] = useState(true);
   const [showSettings, setShowSettings] = useState(false);
   const [activeDockZoneTarget, setActiveDockZoneTarget] = useState<DockZoneEventDetail | null>(null);
@@ -248,8 +248,8 @@ function StickItApp() {
     }
 
     return subscribeToFloatingDockZoneEnter((detail) => {
-      const noteIds = useNotesStore.getState().floatingCardIds;
-      const todoIds = useTodosStore.getState().floatingTodoIds;
+      const noteIds = useNotesStore.getState().cards.map((card) => card.id);
+      const todoIds = useTodosStore.getState().todos.map((todo) => todo.id);
 
       if (!isFloatingDockZoneTarget(detail, { noteIds, todoIds })) {
         return;
@@ -257,9 +257,20 @@ function StickItApp() {
 
       // Instant visual feedback — startTransition would defer the green
       // dock-zone highlight, defeating the purpose of real-time feedback.
+      setShowSettings(false);
+      const targetTab = detail.kind === "note" ? "notes" : "todos";
+      if (useSettingsStore.getState().activeTab !== targetTab) {
+        setActiveTab(targetTab);
+      }
+      if (detail.kind === "todo") {
+        const todo = useTodosStore.getState().todos.find((item) => item.id === detail.id);
+        if (todo && useTodosStore.getState().selectedDateKey !== todo.dateKey) {
+          useTodosStore.getState().selectDate(todo.dateKey);
+        }
+      }
       setActiveDockZoneTarget(detail);
     });
-  }, []);
+  }, [setActiveTab]);
 
   useEffect(() => {
     const features = getPlatformFeatures();
@@ -277,12 +288,15 @@ function StickItApp() {
       return;
     }
 
-    if (isFloatingDockZoneTarget(activeDockZoneTarget, { noteIds: floatingCardIds, todoIds: floatingTodoIds })) {
+    if (isFloatingDockZoneTarget(activeDockZoneTarget, {
+      noteIds: noteCards.map((card) => card.id),
+      todoIds: todoItems.map((todo) => todo.id),
+    })) {
       return;
     }
 
     setActiveDockZoneTarget(null);
-  }, [activeDockZoneTarget, floatingCardIds, floatingTodoIds]);
+  }, [activeDockZoneTarget, noteCards, todoItems]);
 
   useEffect(() => {
     if (typeof document === "undefined") {
@@ -483,7 +497,11 @@ function StickItApp() {
                     : ""
                 }`}
               >
-                {activeTab === "notes" ? <NotesList /> : <TodoList />}
+                {activeTab === "notes" ? (
+                  <NotesList dockZoneTarget={activeDockZoneTarget} />
+                ) : (
+                  <TodoList dockZoneTarget={activeDockZoneTarget} />
+                )}
               </div>
             </motion.div>
           </AnimatePresence>

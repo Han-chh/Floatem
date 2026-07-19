@@ -33,6 +33,10 @@ export type NotificationRequest = {
   data?: Record<string, unknown>;
 };
 
+export type NotificationPermissionResult = {
+  allowed: boolean;
+};
+
 export type ShortcutConfig = {
   shortcut: string;
 };
@@ -133,6 +137,27 @@ export type FloatingCardReference = {
   id: string;
 };
 
+export type DesktopWidgetRequestResult = {
+  requested: boolean;
+  requiresSystemPlacement: boolean;
+  message?: string;
+};
+
+export type DesktopWidgetState = {
+  requested: boolean;
+  systemManaged: boolean;
+};
+
+export type DesktopPinResult = {
+  pinned: boolean;
+  launchAtLoginEnabled: boolean;
+  requiresLaunchAtLogin: boolean;
+};
+
+export type LaunchAtLoginStatus = {
+  enabled: boolean;
+};
+
 export type ScreenColorPickResult = {
   sRGBHex: string;
 };
@@ -148,7 +173,13 @@ export type HostEventMap = {
   "todos-updated": unknown;
   "floating-cards-state": FloatingCardsState;
   "shortcut-invoked": { shortcut: string };
-  "floating-dock-zone-enter": { kind: string; id: string };
+  "floating-dock-zone-enter": {
+    kind: string;
+    id: string;
+    source?: "preview" | "floating";
+    clientX?: number;
+    clientY?: number;
+  };
   "floating-dock-zone-leave": { kind: string; id: string };
 };
 
@@ -163,6 +194,7 @@ export type HostBridge<TLoadAllResult, TNotes, TTodos, TSettings> = {
   saveNotes: (notes: TNotes) => Promise<void>;
   saveTodos: (todos: TTodos) => Promise<void>;
   saveSettings: (settings: TSettings) => Promise<void>;
+  getLaunchAtLoginStatus?: () => Promise<LaunchAtLoginStatus>;
   showWindow: () => Promise<void>;
   hideWindow: () => Promise<void>;
   toggleWindow: () => Promise<void>;
@@ -174,8 +206,12 @@ export type HostBridge<TLoadAllResult, TNotes, TTodos, TSettings> = {
   resizeFloatingCard: (size: FloatingCardResize) => Promise<void>;
   getFloatingCardScreenPlacement: () => Promise<FloatingCardScreenPlacement | null>;
   startFloatingCardDrag: (card: FloatingCardReference) => Promise<void>;
-  setFloatingCardDesktopPinned?: (card: FloatingCardReference, pinned: boolean) => Promise<void>;
+  setFloatingCardDesktopPinned?: (card: FloatingCardReference, pinned: boolean) => Promise<DesktopPinResult>;
+  requestDesktopWidget?: (card: FloatingCardReference) => Promise<DesktopWidgetRequestResult>;
+  removeDesktopWidgetAssociation?: (card: FloatingCardReference) => Promise<void>;
+  getDesktopWidgetState?: (card: FloatingCardReference) => Promise<DesktopWidgetState>;
   openNotificationSettings: () => Promise<void>;
+  checkNotificationPermission?: (options?: { language?: string }) => Promise<NotificationPermissionResult>;
   sendNotification: (request: NotificationRequest) => Promise<void>;
   showNotification: (request: NotificationRequest) => Promise<void>;
   scheduleNotification: (request: NotificationRequest) => Promise<void>;

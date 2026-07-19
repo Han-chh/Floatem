@@ -33,10 +33,6 @@ export function readEventCoordinates(event: Event | null) {
   return null;
 }
 
-export function syncLatestDragPointerCoordinates(event: Event | null) {
-  return readEventCoordinates(event);
-}
-
 export const centerOverlayToCursor: Modifier = ({
   activatorEvent,
   activeNodeRect,

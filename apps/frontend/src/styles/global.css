@@ -762,7 +762,7 @@
     border-color: color-mix(in srgb, var(--afterglow-todo-completed) 24%, var(--afterglow-card-border)) !important;
   }
 
-  html[data-stickit-theme="afterglow"] [data-todo-status="done"] button[aria-pressed="true"] {
+  html[data-stickit-theme="afterglow"] [data-todo-status="done"] [data-action="todo-completion"][aria-pressed="true"] {
     color: white !important;
     border-color: color-mix(in srgb, var(--afterglow-todo-completed) 54%, transparent) !important;
     background: var(--afterglow-todo-completed) !important;
@@ -974,25 +974,101 @@
     max-width: 100%;
   }
 
-  [data-note-grouped="true"]:not([data-dragging="true"]) {
+  html .content-card-classic[data-card-grouped="false"]:not([data-dragging="true"]) {
+    --cream: #fff9f0;
+    --cream-strong: #fffdf8;
+    --border: #d5c6b4;
+    --border-strong: #c79a75;
+    --muted: #5e554d;
+    --brown: #8e5b44;
+    --brown-strong: #1e1915;
+    --dark-text: #1e1915;
+    --theme-card-start: rgba(255, 252, 248, 0.98);
+    --theme-card-end: rgba(255, 247, 238, 0.94);
+    --theme-button-start: rgba(255, 255, 255, 0.96);
+    --theme-button-end: rgba(250, 245, 237, 0.94);
+    --theme-field-start: rgba(255, 255, 255, 0.94);
+    --theme-field-end: rgba(248, 243, 235, 0.92);
+    --theme-border: rgba(213, 198, 180, 0.9);
+    --theme-action-strong: #7a513c;
+    --theme-action-soft: rgba(142, 91, 68, 0.12);
+    --theme-action-border: rgba(142, 91, 68, 0.34);
+    --theme-action-text: #6d432f;
+    background:
+      linear-gradient(180deg, rgba(255, 252, 248, 0.98), rgba(255, 247, 239, 0.95)) !important;
+    border-color: rgba(213, 198, 180, 0.92) !important;
+    box-shadow:
+      0 0 0 2px rgba(200, 192, 181, 0.1),
+      0 18px 36px rgba(61, 49, 34, 0.1) !important;
+  }
+
+  html .content-card-classic[data-card-grouped="true"]:not([data-dragging="true"]) {
+    isolation: isolate;
+    background:
+      radial-gradient(
+        circle at 10% -12%,
+        color-mix(in srgb, var(--card-group-accent) 38%, transparent),
+        transparent 42%
+      ),
+      linear-gradient(
+        135deg,
+        color-mix(in srgb, var(--card-group-accent) 24%, var(--theme-card-start)) 0%,
+        color-mix(in srgb, var(--card-group-accent) 8%, var(--theme-card-start)) 48%,
+        color-mix(in srgb, var(--card-group-accent) 18%, var(--theme-card-end)) 100%
+      ) !important;
     border-width: 2px !important;
-    border-color: color-mix(in srgb, var(--note-group-accent) 84%, var(--theme-border)) !important;
+    border-color: color-mix(in srgb, var(--card-group-accent) 78%, white 22%) !important;
     box-shadow:
-      0 0 0 3px color-mix(in srgb, var(--note-group-accent) 22%, transparent),
-      0 20px 42px color-mix(in srgb, var(--note-group-accent) 18%, rgba(61, 49, 34, 0.12)) !important;
+      inset 0 0 0 1px color-mix(in srgb, var(--card-group-accent) 22%, transparent),
+      inset 0 0 18px color-mix(in srgb, var(--card-group-accent) 12%, transparent) !important;
   }
 
-  [data-note-grouped="true"]:not([data-dragging="true"]):hover {
-    border-color: color-mix(in srgb, var(--note-group-accent) 94%, white 6%) !important;
+  html .content-card-classic[data-card-grouped="true"]:not([data-dragging="true"]):hover {
+    border-color: color-mix(in srgb, var(--card-group-accent) 88%, white 12%) !important;
     box-shadow:
-      0 0 0 4px color-mix(in srgb, var(--note-group-accent) 28%, transparent),
-      0 25px 52px color-mix(in srgb, var(--note-group-accent) 24%, rgba(61, 49, 34, 0.14)) !important;
+      inset 0 0 0 1px color-mix(in srgb, var(--card-group-accent) 30%, transparent),
+      inset 0 0 20px color-mix(in srgb, var(--card-group-accent) 15%, transparent) !important;
   }
 
-  [data-note-grouped="true"]:not([data-dragging="true"]):focus-within {
+  html .content-card-classic[data-card-grouped="true"]:not([data-dragging="true"]):focus-within {
     box-shadow:
-      0 0 0 4px color-mix(in srgb, var(--note-group-accent) 34%, transparent),
-      0 26px 56px color-mix(in srgb, var(--note-group-accent) 25%, rgba(61, 49, 34, 0.16)) !important;
+      inset 0 0 0 1px color-mix(in srgb, var(--card-group-accent) 36%, transparent),
+      inset 0 0 22px color-mix(in srgb, var(--card-group-accent) 17%, transparent) !important;
+  }
+
+  html .content-card-classic[data-card-grouped="true"]:not([data-dragging="true"])::before {
+    position: absolute;
+    inset: 0;
+    z-index: 24;
+    border: 1px solid color-mix(in srgb, white 70%, var(--card-group-accent) 30%);
+    border-radius: inherit;
+    background:
+      radial-gradient(color-mix(in srgb, var(--card-group-accent) 10%, transparent) 0.7px, transparent 0.8px),
+      radial-gradient(
+        ellipse at 18% 4%,
+        color-mix(in srgb, var(--card-group-accent) 14%, transparent),
+        transparent 46%
+      );
+    background-size: 19px 19px, 100% 100%;
+    box-shadow:
+      inset 0 0 0 1px color-mix(in srgb, white 42%, transparent),
+      inset 0 0 14px color-mix(in srgb, var(--card-group-accent) 12%, transparent);
+    content: "";
+    opacity: 0.72;
+    pointer-events: none;
+  }
+
+  html .content-card-classic[data-card-grouped="true"]:not([data-dragging="true"])::after {
+    position: absolute;
+    inset: 2px;
+    z-index: 25;
+    border-radius: inherit;
+    background:
+      radial-gradient(ellipse at 18% -8%, rgba(255, 255, 255, 0.52), transparent 44%),
+      radial-gradient(ellipse at 78% 0%, rgba(255, 255, 255, 0.28), transparent 38%);
+    content: "";
+    opacity: 0.58;
+    pointer-events: none;
   }
 
   .note-group-card-texture {
@@ -1048,6 +1124,25 @@
     width: 26px;
     min-width: 26px;
     min-height: 26px;
+  }
+
+  .desktop-pin-indicator {
+    display: inline-flex;
+    width: 20px;
+    height: 20px;
+    flex: 0 0 20px;
+    align-items: center;
+    justify-content: center;
+    border-radius: 999px;
+    color: inherit;
+    background: transparent;
+    transition: background-color 120ms ease, color 120ms ease, box-shadow 120ms ease;
+  }
+
+  [data-action="desktop-pin"][aria-pressed="true"] .desktop-pin-indicator {
+    color: #fff;
+    background: #171717;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.28);
   }
 
   .note-group-chip {

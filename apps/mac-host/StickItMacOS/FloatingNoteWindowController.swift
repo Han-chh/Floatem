@@ -115,6 +115,15 @@ final class FloatingNoteWindowController: NSObject, WKNavigationDelegate, WKScri
             pinned: Boolean(pinned),
           });
         },
+        requestDesktopWidget(card) {
+          return send("requestDesktopWidget", { kind: String(card?.kind ?? ""), id: String(card?.id ?? "") });
+        },
+        removeDesktopWidgetAssociation(card) {
+          return send("removeDesktopWidgetAssociation", { kind: String(card?.kind ?? ""), id: String(card?.id ?? "") });
+        },
+        getDesktopWidgetState(card) {
+          return send("getDesktopWidgetState", { kind: String(card?.kind ?? ""), id: String(card?.id ?? "") });
+        },
         showWindow() { return Promise.resolve(); },
         hideWindow() { return Promise.resolve(); },
         toggleWindow() { return Promise.resolve(); },
@@ -122,7 +131,8 @@ final class FloatingNoteWindowController: NSObject, WKNavigationDelegate, WKScri
         showDragPreview() { return Promise.resolve(); },
         hideDragPreview() { return Promise.resolve(); },
         showFloatingCard() { return Promise.resolve(); },
-        openNotificationSettings() { return Promise.resolve(); },
+        openNotificationSettings() { return send("openNotificationSettings"); },
+        checkNotificationPermission(options = {}) { return send("checkNotificationPermission", options); },
         sendNotification() { return Promise.resolve(); },
         showNotification() { return Promise.resolve(); },
         scheduleNotification() { return Promise.resolve(); },
@@ -149,12 +159,20 @@ final class FloatingNoteWindowController: NSObject, WKNavigationDelegate, WKScri
       window.stickItNative = window.stickItFloatingHost;
     })();
     """
+    private static let bridgeBootstrapUserScript = WKUserScript(
+        source: bridgeBootstrapScript,
+        injectionTime: .atDocumentStart,
+        forMainFrameOnly: true
+    )
 
     let cardKind: String
     let cardID: String
     var onClose: ((String, String) -> Void)?
     var onRequestDrag: ((String, String) -> Void)?
-    var onSetDesktopPinned: ((String, String, Bool) -> Void)?
+    var onSetDesktopPinned: ((String, String, Bool) throws -> [String: Any])?
+    var onRequestDesktopWidget: ((String, String) throws -> [String: Any])?
+    var onRemoveDesktopWidgetAssociation: ((String, String) throws -> Void)?
+    var onGetDesktopWidgetState: ((String, String) throws -> [String: Any])?
     var onFrameChange: ((NSRect) -> Void)?
     var onMove: ((NSRect) -> Void)?
     var onLoadAllData: (() throws -> [String: Any])?
@@ -164,12 +182,15 @@ final class FloatingNoteWindowController: NSObject, WKNavigationDelegate, WKScri
     var onReadClipboardText: (() -> String)?
     var onWriteClipboardText: ((String) -> Void)?
     var onPickScreenColor: (() async throws -> String?)?
+    var onOpenNotificationSettings: (() throws -> Void)?
+    var onCheckNotificationPermission: ((StickItLanguage) async throws -> Bool)?
 
     private var panel: FloatingPanel?
     private let webView: WKWebView
     private var isReady = false
     private var isContentReady = false
     private var isDestroyed = false
+    private var didRecordWebViewDestruction = false
     private var isEditableInputActive = false
     private var isTextCompositionActive = false
     private var minimumContentSize = NSSize(width: 1, height: 1)
@@ -181,10 +202,9 @@ final class FloatingNoteWindowController: NSObject, WKNavigationDelegate, WKScri
         self.cardKind = cardKind
         self.cardID = cardID
 
-        let userContentController = WKUserContentController()
-        let configuration = WKWebViewConfiguration()
-        configuration.userContentController = userContentController
-        webView = WKWebView(frame: .zero, configuration: configuration)
+        webView = FloatingWebViewResourcePool.shared.makeWebView(
+            bootstrapScript: Self.bridgeBootstrapUserScript
+        )
         panel = FloatingPanel(
             contentRect: NSRect(x: 0, y: 0, width: 420, height: 260),
             styleMask: [.borderless, .nonactivatingPanel],
@@ -198,14 +218,7 @@ final class FloatingNoteWindowController: NSObject, WKNavigationDelegate, WKScri
             Self.lifecycle.info("createPanel(cardId=\(cardID, privacy: .public)) kind=\(cardKind, privacy: .public)")
         }
 
-        userContentController.add(self, name: Self.bridgeName)
-        userContentController.addUserScript(
-            WKUserScript(
-                source: Self.bridgeBootstrapScript,
-                injectionTime: .atDocumentStart,
-                forMainFrameOnly: true
-            )
-        )
+        webView.configuration.userContentController.add(self, name: Self.bridgeName)
 
         webView.navigationDelegate = self
         webView.translatesAutoresizingMaskIntoConstraints = false
@@ -252,6 +265,9 @@ final class FloatingNoteWindowController: NSObject, WKNavigationDelegate, WKScri
     }
 
     deinit {
+        if !didRecordWebViewDestruction {
+            FloatingWebViewResourcePool.shared.recordDestruction()
+        }
         guard Self.debugLifecycle else {
             return
         }
@@ -266,6 +282,13 @@ final class FloatingNoteWindowController: NSObject, WKNavigationDelegate, WKScri
 
     var currentFrame: NSRect {
         panel?.frame ?? .zero
+    }
+
+    func focusWindow() {
+        guard !isDestroyed, let panel else { return }
+        panel.orderFrontRegardless()
+        panel.makeKey()
+        focusWebView()
     }
 
     func showWindow(frame: NSRect, updateMinimumSize: Bool = true) {
@@ -300,6 +323,9 @@ final class FloatingNoteWindowController: NSObject, WKNavigationDelegate, WKScri
         onClose = nil
         onRequestDrag = nil
         onSetDesktopPinned = nil
+        onRequestDesktopWidget = nil
+        onRemoveDesktopWidgetAssociation = nil
+        onGetDesktopWidgetState = nil
         onFrameChange = nil
         onLoadAllData = nil
         onSaveNotes = nil
@@ -308,6 +334,8 @@ final class FloatingNoteWindowController: NSObject, WKNavigationDelegate, WKScri
         onReadClipboardText = nil
         onWriteClipboardText = nil
         onPickScreenColor = nil
+        onOpenNotificationSettings = nil
+        onCheckNotificationPermission = nil
 
         guard let panel else {
             pendingPayload = nil
@@ -339,6 +367,10 @@ final class FloatingNoteWindowController: NSObject, WKNavigationDelegate, WKScri
         }
 
         webView.loadHTMLString("<html><body></body></html>", baseURL: nil)
+        if !didRecordWebViewDestruction {
+            didRecordWebViewDestruction = true
+            FloatingWebViewResourcePool.shared.recordDestruction()
+        }
 
         // 4. Fully tear down the view hierarchy — remove the WebView
         //    from its superview before releasing the contentView.
@@ -685,8 +717,31 @@ final class FloatingNoteWindowController: NSObject, WKNavigationDelegate, WKScri
             let kind = params["kind"] as? String ?? cardKind
             let requestedCardID = params["id"] as? String ?? cardID
             let pinned = params["pinned"] as? Bool ?? false
-            onSetDesktopPinned?(kind, requestedCardID, pinned)
-            resolveBridgeRequest(id: requestID, ok: true, result: NSNull())
+            do {
+                let result = try onSetDesktopPinned?(kind, requestedCardID, pinned) ?? [:]
+                resolveBridgeRequest(id: requestID, ok: true, result: result)
+            } catch {
+                resolveBridgeRequest(id: requestID, ok: false, result: error.localizedDescription)
+            }
+        case "requestDesktopWidget":
+            do {
+                resolveBridgeRequest(id: requestID, ok: true, result: try onRequestDesktopWidget?(cardKind, cardID) ?? [:])
+            } catch {
+                resolveBridgeRequest(id: requestID, ok: false, result: error.localizedDescription)
+            }
+        case "removeDesktopWidgetAssociation":
+            do {
+                try onRemoveDesktopWidgetAssociation?(cardKind, cardID)
+                resolveBridgeRequest(id: requestID, ok: true, result: NSNull())
+            } catch {
+                resolveBridgeRequest(id: requestID, ok: false, result: error.localizedDescription)
+            }
+        case "getDesktopWidgetState":
+            do {
+                resolveBridgeRequest(id: requestID, ok: true, result: try onGetDesktopWidgetState?(cardKind, cardID) ?? [:])
+            } catch {
+                resolveBridgeRequest(id: requestID, ok: false, result: error.localizedDescription)
+            }
         case "getCapabilities":
             resolveBridgeRequest(id: requestID, ok: true, result: floatingCapabilities())
         case "loadAllData":
@@ -737,6 +792,27 @@ final class FloatingNoteWindowController: NSObject, WKNavigationDelegate, WKScri
                     self.resolveBridgeRequest(id: requestID, ok: false, result: error.localizedDescription)
                 }
             }
+        case "openNotificationSettings":
+            do {
+                try onOpenNotificationSettings?()
+                resolveBridgeRequest(id: requestID, ok: true, result: NSNull())
+            } catch {
+                resolveBridgeRequest(id: requestID, ok: false, result: error.localizedDescription)
+            }
+        case "checkNotificationPermission":
+            let language = StickItLanguage(storedValue: params["language"])
+            Task { @MainActor [weak self] in
+                guard let self else {
+                    return
+                }
+
+                do {
+                    let allowed = try await self.onCheckNotificationPermission?(language) ?? false
+                    self.resolveBridgeRequest(id: requestID, ok: true, result: ["allowed": allowed])
+                } catch {
+                    self.resolveBridgeRequest(id: requestID, ok: false, result: error.localizedDescription)
+                }
+            }
         case "resizeFloatingCard":
             let width = params["width"] as? Double ?? 0
             let height = params["height"] as? Double ?? 0
@@ -770,15 +846,15 @@ final class FloatingNoteWindowController: NSObject, WKNavigationDelegate, WKScri
         let f = panel.frame
         Self.diagnostics.info("windowDidMove frame=(\(Int(f.origin.x)),\(Int(f.origin.y)),\(Int(f.size.width))x\(Int(f.size.height))) onMove=\(self.onMove != nil)")
         onMove?(panel.frame)
+        onFrameChange?(panel.frame)
     }
 
     private func loadFrontend() {
-        guard let indexURL = Bundle.main.url(forResource: "index", withExtension: "html", subdirectory: "web") else {
+        guard let indexURL = Bundle.main.url(forResource: "floating", withExtension: "html", subdirectory: "web") else {
             return
         }
 
-        let previewURL = URL(string: "\(indexURL.absoluteString)?mode=floating-note") ?? indexURL
-        webView.loadFileURL(previewURL, allowingReadAccessTo: indexURL.deletingLastPathComponent())
+        webView.loadFileURL(indexURL, allowingReadAccessTo: indexURL.deletingLastPathComponent())
     }
 
     private func applyPendingPayloadIfPossible() {

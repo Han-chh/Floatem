@@ -1,4 +1,4 @@
-import { render, screen, within } from "@testing-library/react";
+import { render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 import { PanelShell } from "../../src/components/layout/PanelShell";
@@ -37,6 +37,29 @@ describe("PanelShell", () => {
     expect(useSettingsStore.getState().theme).toBe("afterglow");
   });
 
+  it("shows launch at login as disabled when macOS reports that the login item was turned off", async () => {
+    const originalBridge = window.stickItHost;
+    const getLaunchAtLoginStatus = vi.fn(async () => ({ enabled: false }));
+    window.stickItHost = { getLaunchAtLoginStatus } as unknown as NonNullable<typeof window.stickItHost>;
+    HTMLElement.prototype.scrollTo = vi.fn();
+    useSettingsStore.setState({ language: "en", launchAtLogin: true });
+    const user = userEvent.setup();
+
+    render(<SettingsPanel onClose={vi.fn()} />);
+
+    try {
+      await user.click(screen.getByRole("button", { name: /General/ }));
+
+      await waitFor(() => {
+        expect(getLaunchAtLoginStatus).toHaveBeenCalled();
+        expect(screen.getByRole("button", { pressed: false })).toBeInTheDocument();
+      });
+      expect(useSettingsStore.getState().launchAtLogin).toBe(false);
+    } finally {
+      window.stickItHost = originalBridge;
+    }
+  });
+
   it("opens global StickIt help from the header", async () => {
     const user = userEvent.setup();
     useSettingsStore.setState({ language: "en", theme: "afterglow" });
@@ -56,7 +79,9 @@ describe("PanelShell", () => {
       </PanelShell>,
     );
 
-    await user.click(screen.getByRole("button", { name: "StickIt help" }));
+    const helpButton = screen.getByRole("button", { name: "StickIt help" });
+    expect(helpButton).toHaveClass("outline-none", "focus-visible:outline-none");
+    await user.click(helpButton);
 
     const dialog = screen.getByRole("dialog", { name: "StickIt guide" });
 

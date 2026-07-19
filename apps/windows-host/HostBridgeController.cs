@@ -174,6 +174,8 @@ internal sealed class HostBridgeController
                     UseShellExecute = true,
                 });
                 return null;
+            case "checkNotificationPermission":
+                return new JsonObject { ["allowed"] = notifications.NotificationsEnabled() };
             case "openDevTools":
                 webView.CoreWebView2.OpenDevToolsWindow();
                 return null;
@@ -656,6 +658,7 @@ internal sealed class HostBridgeController
     toggleWindow: () => send("toggleWindow"),
     setAlwaysOnTop: (enabled) => send("setAlwaysOnTop", { enabled: Boolean(enabled) }),
     openNotificationSettings: () => send("openNotificationSettings"),
+    checkNotificationPermission: (options = {}) => send("checkNotificationPermission", options),
     sendNotification: (request = {}) => send("sendNotification", request),
     showNotification: (request = {}) => send("showNotification", request),
     scheduleNotification: (request = {}) => send("scheduleNotification", request),

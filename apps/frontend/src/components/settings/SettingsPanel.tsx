@@ -1,6 +1,6 @@
 import { AnimatePresence, motion } from "framer-motion";
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
-import { registerHotkey } from "../../hooks/usePlatform";
+import { getLaunchAtLoginStatus, registerHotkey } from "../../hooks/usePlatform";
 import { captureShortcutFromKeyEvent, getShortcutDisplayLabel } from "../../lib/hotkeyCapture";
 import { useI18n } from "../../lib/i18n";
 import {
@@ -355,6 +355,39 @@ export function SettingsPanel({ onClose }: SettingsPanelProps) {
   useEffect(() => {
     scrollRegionRef.current?.scrollTo({ top: 0 });
   }, [activeCategory]);
+
+  useEffect(() => {
+    if (activeCategory !== "general" || typeof window === "undefined") {
+      return;
+    }
+
+    let cancelled = false;
+    const refreshLaunchAtLogin = async () => {
+      try {
+        const status = await getLaunchAtLoginStatus();
+        if (!cancelled && status) {
+          setLaunchAtLogin(status.enabled);
+        }
+      } catch {
+        // Keep the last known value when the native status cannot be queried.
+      }
+    };
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === "visible") {
+        void refreshLaunchAtLogin();
+      }
+    };
+
+    void refreshLaunchAtLogin();
+    window.addEventListener("focus", refreshLaunchAtLogin);
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+
+    return () => {
+      cancelled = true;
+      window.removeEventListener("focus", refreshLaunchAtLogin);
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+    };
+  }, [activeCategory, setLaunchAtLogin]);
 
   useEffect(() => {
     if (!hotkeyDialogOpen || typeof window === "undefined") {

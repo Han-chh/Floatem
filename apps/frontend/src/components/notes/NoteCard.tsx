@@ -14,6 +14,7 @@ type NoteCardProps = {
   note: NoteCardModel;
   onDelete: (id: string, target: DOMRect) => void;
   dropPreview?: boolean;
+  dockInsertionEdge?: "before" | "after" | null;
 };
 
 type NoteCardBodyProps = {
@@ -70,7 +71,9 @@ function getNoteCardSurface(accentColor: string, hasAssignedGroup = false) {
 }
 
 function getNoteGroupStyle(accentColor: string, hasAssignedGroup: boolean): CSSProperties {
-  return hasAssignedGroup ? ({ "--note-group-accent": accentColor } as CSSProperties) : {};
+  return hasAssignedGroup
+    ? ({ "--card-group-accent": accentColor, "--note-group-accent": accentColor } as CSSProperties)
+    : {};
 }
 
 const FLOATING_NOTE_EDIT_TARGET_SELECTOR =
@@ -124,7 +127,8 @@ function NoteCardBody({
             aria-hidden="true"
             className="note-group-card-texture pointer-events-none absolute inset-0"
             style={{
-              backgroundImage: `repeating-linear-gradient(132deg, transparent 0 13px, ${colorWithAlpha(accentColor, "14")} 13px 14px, transparent 14px 27px), radial-gradient(circle at 92% 8%, ${colorWithAlpha(accentColor, "38")}, transparent 26%)`,
+              backgroundImage: `radial-gradient(${colorWithAlpha(accentColor, "16")} 0.7px, transparent 0.8px), radial-gradient(circle at 92% 8%, ${colorWithAlpha(accentColor, "32")}, transparent 26%)`,
+              backgroundSize: "18px 18px, 100% 100%",
             }}
           />
           <div
@@ -218,7 +222,14 @@ function NoteCardBody({
                   onPointerDown={(event) => event.stopPropagation()}
                   onClick={onToggleDesktopPinned}
                 >
-                  <PushPinIcon active={desktopPinned} size={14} />
+                  <span
+                    aria-hidden="true"
+                    data-desktop-pin-indicator
+                    data-active={desktopPinned}
+                    className="desktop-pin-indicator"
+                  >
+                    <PushPinIcon active={desktopPinned} size={14} />
+                  </span>
                 </motion.button>
               ) : null}
               <motion.button
@@ -293,6 +304,7 @@ export function NoteCardPreview({ note, width }: { note: NoteCardModel; width?: 
 
   return (
     <div
+      data-card-grouped={hasAssignedGroup}
       data-note-grouped={hasAssignedGroup}
       className="content-card-classic paper-card cq-card relative overflow-hidden rounded-[28px] border border-[rgba(213,198,180,0.92)] bg-[linear-gradient(180deg,rgba(255,252,248,0.98),rgba(255,247,239,0.95))]"
       style={{
@@ -359,6 +371,7 @@ export function FloatingNoteCard({
         aria-label={t.notes.reorder}
         data-testid="note-card"
         data-note-card-id={note.id}
+        data-card-grouped={hasAssignedGroup}
         data-note-grouped={hasAssignedGroup}
         className="content-card-classic paper-card cq-card relative overflow-hidden rounded-[28px] border border-[rgba(213,198,180,0.92)] bg-[linear-gradient(180deg,rgba(255,252,248,0.98),rgba(255,247,239,0.95))] shadow-[0_18px_36px_rgba(61,49,34,0.10)] cursor-grab active:cursor-grabbing"
         style={{
@@ -413,7 +426,7 @@ export function FloatingNoteCard({
   );
 }
 
-export function NoteCard({ note, onDelete, dropPreview = false }: NoteCardProps) {
+export function NoteCard({ note, onDelete, dropPreview = false, dockInsertionEdge = null }: NoteCardProps) {
   const { language, t } = useI18n();
   const groups = useNotesStore((state) => state.groups);
   const toggleCollapsed = useNotesStore((state) => state.toggleCollapsed);
@@ -477,6 +490,8 @@ export function NoteCard({ note, onDelete, dropPreview = false }: NoteCardProps)
         aria-label={t.notes.reorder}
         data-testid="note-card"
         data-note-card-id={note.id}
+        data-dock-entity-id={note.id}
+        data-card-grouped={hasAssignedGroup}
         data-note-grouped={hasAssignedGroup}
         data-dragging={isDragging}
         className={`content-card-classic paper-card cq-card mx-1 relative overflow-hidden rounded-[28px] border border-[rgba(213,198,180,0.92)] bg-[linear-gradient(180deg,rgba(255,252,248,0.98),rgba(255,247,239,0.95))] shadow-[0_18px_36px_rgba(61,49,34,0.10)] cursor-grab active:cursor-grabbing ${
@@ -501,6 +516,16 @@ export function NoteCard({ note, onDelete, dropPreview = false }: NoteCardProps)
           isDraggingPlaceholder={isDragging}
           isDropTargetPreview={dropPreview}
         />
+        {dockInsertionEdge ? (
+          <div
+            aria-hidden="true"
+            data-testid="note-dock-insertion-line"
+            data-edge={dockInsertionEdge}
+            className={`pointer-events-none absolute left-3 right-3 z-30 h-[3px] rounded-full bg-[rgb(31,168,122)] shadow-[0_0_0_3px_rgba(31,168,122,0.16)] ${
+              dockInsertionEdge === "before" ? "top-[1px]" : "bottom-[1px]"
+            }`}
+          />
+        ) : null}
       </motion.article>
 
       <NoteGroupDialog noteId={note.id} isOpen={isGroupDialogOpen} onClose={() => setIsGroupDialogOpen(false)} />

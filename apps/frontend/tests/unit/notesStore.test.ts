@@ -1,8 +1,20 @@
 import { describe, expect, it, vi } from "vitest";
-import { createNoteCard, createNoteGroup, DEFAULT_NOTE_CONTENT, DEFAULT_UNGROUPED_NOTE_COLOR } from "../../src/lib/models";
+import {
+  createNoteCard,
+  createNoteGroup,
+  DEFAULT_NOTE_CONTENT,
+  DEFAULT_UNGROUPED_NOTE_COLOR,
+  resolveNoteAccentColor,
+} from "../../src/lib/models";
 import { useNotesStore } from "../../src/store/notesStore";
 
 describe("notesStore", () => {
+  it("uses the fixed neutral accent for ungrouped notes", () => {
+    const legacyColoredNote = createNoteCard({ dotColor: "#2F6BFF", groupId: null });
+
+    expect(resolveNoteAccentColor(legacyColoredNote, [])).toBe(DEFAULT_UNGROUPED_NOTE_COLOR);
+  });
+
   it("adds and removes cards", () => {
     const created = useNotesStore.getState().addCard();
     expect(useNotesStore.getState().cards).toHaveLength(1);
@@ -21,6 +33,38 @@ describe("notesStore", () => {
 
     expect(useNotesStore.getState().cards[0]?.id).toBe("note-b");
     expect(useNotesStore.getState().cards[1]?.title).toBe("Updated");
+  });
+
+  it("inserts a returning floating note at an exact list position", () => {
+    useNotesStore.getState().initialize([
+      createNoteCard({ id: "note-a", title: "A" }),
+      createNoteCard({ id: "note-b", title: "B" }),
+      createNoteCard({ id: "note-c", title: "C" }),
+    ]);
+
+    useNotesStore.getState().moveCardToIndex("note-c", 1);
+
+    expect(useNotesStore.getState().cards.map((card) => card.id)).toEqual(["note-a", "note-c", "note-b"]);
+  });
+
+  it("uses visible notes as insertion anchors when a group filter hides cards", () => {
+    useNotesStore.getState().initialize([
+      createNoteCard({ id: "note-visible-a", title: "Visible A" }),
+      createNoteCard({ id: "note-hidden", title: "Hidden" }),
+      createNoteCard({ id: "note-returning", title: "Returning" }),
+      createNoteCard({ id: "note-visible-b", title: "Visible B" }),
+    ]);
+
+    useNotesStore
+      .getState()
+      .moveCardToIndex("note-returning", 1, ["note-visible-a", "note-visible-b"]);
+
+    expect(useNotesStore.getState().cards.map((card) => card.id)).toEqual([
+      "note-visible-a",
+      "note-returning",
+      "note-hidden",
+      "note-visible-b",
+    ]);
   });
 
   it("creates, assigns, updates, and deletes groups", () => {

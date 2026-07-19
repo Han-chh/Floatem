@@ -13,6 +13,7 @@ xcodebuild \
   -scheme StickIt \
   -configuration Debug \
   -derivedDataPath build/DerivedData \
+  CODE_SIGNING_ALLOWED=NO \
   build
 
 open "$REPO_ROOT/build/DerivedData/Build/Products/Debug/StickIt.app"

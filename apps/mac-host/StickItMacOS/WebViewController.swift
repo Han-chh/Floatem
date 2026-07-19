@@ -226,11 +226,17 @@ final class WebViewController: NSViewController, WKNavigationDelegate {
         )
     }
 
-    func emitFloatingDockZoneEnter(kind: String, cardID: String) {
-        let payload: [String: Any] = [
+    func emitFloatingDockZoneEnter(kind: String, cardID: String, source: String, screenPoint: CGPoint) {
+        var payload: [String: Any] = [
             "kind": kind,
             "id": cardID,
+            "source": source,
         ]
+
+        if let clientPoint = clientPoint(forScreenPoint: screenPoint) {
+            payload["clientX"] = Double(clientPoint.x)
+            payload["clientY"] = Double(clientPoint.y)
+        }
 
         guard let json = jsonString(for: payload) else {
             logger.error("[FLT:DOCK] emitFloatingDockZoneEnter FAILED: json serialization")
@@ -272,6 +278,15 @@ final class WebViewController: NSViewController, WKNavigationDelegate {
                 }
             }
         )
+    }
+
+    private func clientPoint(forScreenPoint screenPoint: CGPoint) -> CGPoint? {
+        guard let window = webView.window else {
+            return nil
+        }
+
+        let windowPoint = window.convertPoint(fromScreen: screenPoint)
+        return webView.convert(windowPoint, from: nil)
     }
 
     private func loadFrontend() {
@@ -406,6 +421,25 @@ final class WebViewController: NSViewController, WKNavigationDelegate {
             return
         }
 
+        if method == "checkNotificationPermission" {
+            let language = StickItLanguage(storedValue: params["language"])
+
+            Task { @MainActor [weak self] in
+                guard let self else {
+                    return
+                }
+
+                do {
+                    let allowed = try await self.bridgeDelegate?.checkNotificationPermission(language: language) ?? false
+                    self.sendResponse(id: id, ok: true, payload: ["allowed": allowed])
+                } catch {
+                    let errorMessage = (error as? LocalizedError)?.errorDescription ?? error.localizedDescription
+                    self.sendResponse(id: id, ok: false, payload: errorMessage)
+                }
+            }
+            return
+        }
+
         if method == "testReminderNotification" {
             let soundEnabled = params["soundEnabled"] as? Bool ?? true
             let language = StickItLanguage(storedValue: params["language"])
@@ -481,6 +515,8 @@ final class WebViewController: NSViewController, WKNavigationDelegate {
                 result = try bridgeDelegate?.loadAllData() ?? [:]
             case "getHotkeyRegistrationState":
                 result = bridgeDelegate?.currentHotKeyRegistrationState() ?? [:]
+            case "getLaunchAtLoginStatus":
+                result = bridgeDelegate?.currentLaunchAtLoginStatus() ?? ["enabled": false]
             case "saveNotes":
                 guard let cards = params["cards"] else {
                     throw StickItBridgeError.invalidParameters("StickIt expected notes data from JavaScript.")
@@ -581,12 +617,27 @@ final class WebViewController: NSViewController, WKNavigationDelegate {
                 else {
                     throw StickItBridgeError.invalidParameters("StickIt expected a floating card reference from JavaScript.")
                 }
-                try bridgeDelegate?.setFloatingCardDesktopPinnedFromBridge(
+                result = try bridgeDelegate?.setFloatingCardDesktopPinnedFromBridge(
                     kind: kind,
                     id: cardID,
                     pinned: params["pinned"] as? Bool ?? false
-                )
+                ) ?? [:]
+            case "requestDesktopWidget":
+                guard let kind = params["kind"] as? String, let cardID = params["id"] as? String else {
+                    throw StickItBridgeError.invalidParameters("StickIt expected a Widget entity reference.")
+                }
+                result = try bridgeDelegate?.requestDesktopWidgetFromBridge(kind: kind, id: cardID) ?? [:]
+            case "removeDesktopWidgetAssociation":
+                guard let kind = params["kind"] as? String, let cardID = params["id"] as? String else {
+                    throw StickItBridgeError.invalidParameters("StickIt expected a Widget entity reference.")
+                }
+                try bridgeDelegate?.removeDesktopWidgetAssociationFromBridge(kind: kind, id: cardID)
                 result = NSNull()
+            case "getDesktopWidgetState":
+                guard let kind = params["kind"] as? String, let cardID = params["id"] as? String else {
+                    throw StickItBridgeError.invalidParameters("StickIt expected a Widget entity reference.")
+                }
+                result = try bridgeDelegate?.getDesktopWidgetStateFromBridge(kind: kind, id: cardID) ?? [:]
             case "quitApplication":
                 bridgeDelegate?.quitApplicationFromBridge()
                 result = NSNull()
@@ -896,6 +947,9 @@ final class WebViewController: NSViewController, WKNavigationDelegate {
         loadAllData() {
           return send("loadAllData");
         },
+        getLaunchAtLoginStatus() {
+          return send("getLaunchAtLoginStatus");
+        },
         saveNotes(cards) {
           return send("saveNotes", { cards });
         },
@@ -907,6 +961,9 @@ final class WebViewController: NSViewController, WKNavigationDelegate {
         },
         openNotificationSettings() {
           return send("openNotificationSettings");
+        },
+        checkNotificationPermission(options = {}) {
+          return send("checkNotificationPermission", options);
         },
         sendNotification(request = {}) {
           return send("sendNotification", request);
@@ -988,6 +1045,15 @@ final class WebViewController: NSViewController, WKNavigationDelegate {
             id: String(card?.id ?? ""),
             pinned: Boolean(pinned),
           });
+        },
+        requestDesktopWidget(card) {
+          return send("requestDesktopWidget", { kind: String(card?.kind ?? ""), id: String(card?.id ?? "") });
+        },
+        removeDesktopWidgetAssociation(card) {
+          return send("removeDesktopWidgetAssociation", { kind: String(card?.kind ?? ""), id: String(card?.id ?? "") });
+        },
+        getDesktopWidgetState(card) {
+          return send("getDesktopWidgetState", { kind: String(card?.kind ?? ""), id: String(card?.id ?? "") });
         },
         hidePanelWindow() {
           return send("hideWindow");

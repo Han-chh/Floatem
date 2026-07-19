@@ -2,7 +2,7 @@ import AppKit
 
 @MainActor
 final class AppDelegate: NSObject, NSApplicationDelegate {
-    private let storage = AppStorage()
+    private lazy var storage = AppStorage()
     private let hotKeyManager = GlobalHotKeyManager()
     private let notificationManager = NotificationManager()
     private let launchAtLoginManager = LaunchAtLoginManager()
@@ -27,6 +27,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private weak var mainMenuPasteItem: NSMenuItem?
     private weak var mainMenuSelectAllItem: NSMenuItem?
     private var languageObserver: NSObjectProtocol?
+    private var launchContextResolver = LaunchContextResolver()
 
     private var localization: StickItLocalization {
         currentLanguage.localization
@@ -54,6 +55,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private var statusItem: NSStatusItem?
 
     func applicationDidFinishLaunching(_ notification: Notification) {
+        // Unit tests load the app binary as a host. Do not initialize services or
+        // touch the real App Group while XCTest is exercising pure core logic.
+        if ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] != nil {
+            return
+        }
         NSApp.setActivationPolicy(.accessory)
         currentLanguage = (try? storage.currentLanguage()) ?? .simplifiedChinese
         notificationManager.configure()
@@ -82,14 +88,45 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
             self.mainWindowController.installSavedHotKey()
             self.mainWindowController.syncSavedTodoReminders()
+            // Desktop-pinned cards are application-owned NSPanel instances, so
+            // restore them before presenting the main window on every launch.
             self.mainWindowController.restorePinnedDesktopCards()
-            self.mainWindowController.showMainWindow()
+            // Present the main window for both direct and login-item launches.
+            // Deep links remain responsible for presenting their own destination.
+            if self.launchContextResolver.shouldShowAtDidFinish(isApplicationActive: NSApp.isActive) {
+                self.mainWindowController.showMainWindow()
+            }
+        }
+    }
+
+    func applicationDidBecomeActive(_ notification: Notification) {
+        if launchContextResolver.shouldShowForActivation() {
+            mainWindowController.showMainWindow()
         }
     }
 
     func applicationShouldHandleReopen(_ sender: NSApplication, hasVisibleWindows flag: Bool) -> Bool {
         mainWindowController.showMainWindow()
         return true
+    }
+
+    func application(_ application: NSApplication, open urls: [URL]) {
+        launchContextResolver.markDeepLinkReceived()
+        for url in urls {
+            guard let deepLink = StickItDeepLink(url: url) else { continue }
+            switch deepLink.destination {
+            case .mainWindow:
+                mainWindowController.showMainWindow()
+            case let .floatingCard(reference):
+                do {
+                    if try !mainWindowController.openFloatingCard(reference: reference) {
+                        mainWindowController.showMainWindow()
+                    }
+                } catch {
+                    mainWindowController.showMainWindow()
+                }
+            }
+        }
     }
 
     func applicationShouldTerminateAfterLastWindowClosed(_ sender: NSApplication) -> Bool {

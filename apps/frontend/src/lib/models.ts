@@ -518,7 +518,7 @@ export function resolveNoteGroup(note: Pick<NoteCard, "groupId">, groups: NoteGr
 }
 
 export function resolveNoteAccentColor(note: Pick<NoteCard, "dotColor" | "groupId">, groups: NoteGroup[]) {
-  return resolveNoteGroup(note, groups)?.color ?? note.dotColor ?? DEFAULT_UNGROUPED_NOTE_COLOR;
+  return resolveNoteGroup(note, groups)?.color ?? DEFAULT_UNGROUPED_NOTE_COLOR;
 }
 
 export function resolveTodoGroup(todo: Pick<TodoItem, "groupId">, groups: TodoGroup[]) {

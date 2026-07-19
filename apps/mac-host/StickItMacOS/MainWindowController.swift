@@ -26,6 +26,7 @@ final class MainWindowController: NSObject, NSWindowDelegate, StickItNativeBridg
     private let hotKeyManager: GlobalHotKeyManager
     private let notificationManager: NotificationManager
     private let launchAtLoginManager: LaunchAtLoginManager
+    private let widgetRefreshCoordinator = WidgetRefreshCoordinator()
     private let panel: FloatingPanel
     private let webViewController: WebViewController
     private let dragPreviewWindowController = DragPreviewWindowController()
@@ -231,15 +232,26 @@ final class MainWindowController: NSObject, NSWindowDelegate, StickItNativeBridg
     }
 
     func loadAllData() throws -> [String: Any] {
-        try storage.loadAllData()
+        var data = try storage.loadAllData()
+        if var settings = data["settings"] as? [String: Any] {
+            settings["launchAtLogin"] = launchAtLoginManager.isEnabled
+            data["settings"] = settings
+        }
+        return data
+    }
+
+    func currentLaunchAtLoginStatus() -> [String: Any] {
+        ["enabled": launchAtLoginManager.isEnabled]
     }
 
     func saveNotes(_ notes: Any) throws {
         try storage.saveNotes(notes)
+        widgetRefreshCoordinator.requestReload()
     }
 
     func saveTodos(_ todos: Any) throws {
         try storage.saveTodos(todos)
+        widgetRefreshCoordinator.requestReload()
         let settings = try storage.loadSettings()
         syncTodoReminderNotifications(todos: todos, settings: settings, requestAuthorizationIfNeeded: true)
     }
@@ -260,9 +272,10 @@ final class MainWindowController: NSObject, NSWindowDelegate, StickItNativeBridg
             ?? (try? storage.currentLaunchAtLogin())
             ?? true
         try launchAtLoginManager.setEnabled(launchAtLogin)
-        settingsDictionary["launchAtLogin"] = launchAtLogin
+        settingsDictionary["launchAtLogin"] = launchAtLoginManager.isEnabled
 
         try storage.saveSettings(settingsDictionary)
+        widgetRefreshCoordinator.requestReload()
         let todos = try storage.loadTodos()
         let savedSettings = try storage.loadSettings()
         syncTodoReminderNotifications(todos: todos, settings: savedSettings, requestAuthorizationIfNeeded: false)
@@ -294,6 +307,10 @@ final class MainWindowController: NSObject, NSWindowDelegate, StickItNativeBridg
         }
 
         throw StickItBridgeError.invalidParameters(language.localization.notificationOpenSettingsFailedMessage)
+    }
+
+    func checkNotificationPermission(language: StickItLanguage) async throws -> Bool {
+        try await notificationManager.checkAuthorization(language: language)
     }
 
     func sendNotification(id: String?, title: String, body: String, soundEnabled: Bool) async throws {
@@ -461,6 +478,29 @@ final class MainWindowController: NSObject, NSWindowDelegate, StickItNativeBridg
     }
 
     func showFloatingCardFromBridge(_ payload: Any) throws {
+        try presentFloatingCard(payload, ignoreMainPanelDropZone: false)
+    }
+
+    @discardableResult
+    func openFloatingCard(reference: WidgetEntityReference) throws -> Bool {
+        let key = Self.floatingCardKey(kind: reference.entityKind.rawValue, id: reference.entityID)
+        if let existingController = floatingCardWindowControllers[key] {
+            existingController.focusWindow()
+            return true
+        }
+
+        guard let payload = try storage.floatingCardPayload(kind: reference.entityKind, id: reference.entityID) else {
+            return false
+        }
+        try presentFloatingCard(payload, ignoreMainPanelDropZone: true)
+        return true
+    }
+
+    static func requiresNewFloatingCard(existingKeys: Set<String>, reference: WidgetEntityReference) -> Bool {
+        !existingKeys.contains(floatingCardKey(kind: reference.entityKind.rawValue, id: reference.entityID))
+    }
+
+    private func presentFloatingCard(_ payload: Any, ignoreMainPanelDropZone: Bool) throws {
         guard
             let payloadDictionary = payload as? [String: Any],
             let kind = payloadDictionary["kind"] as? String,
@@ -472,7 +512,7 @@ final class MainWindowController: NSObject, NSWindowDelegate, StickItNativeBridg
         }
 
         let mouseLocation = NSEvent.mouseLocation
-        if panel.isVisible && panel.frame.contains(mouseLocation) {
+        if !ignoreMainPanelDropZone && panel.isVisible && panel.frame.contains(mouseLocation) {
             return
         }
 
@@ -493,11 +533,31 @@ final class MainWindowController: NSObject, NSWindowDelegate, StickItNativeBridg
             }
         }
         controller.onSetDesktopPinned = { [weak self] itemKind, id, pinned in
-            try? self?.setFloatingCardDesktopPinnedFromBridge(kind: itemKind, id: id, pinned: pinned)
+            guard let self else { return [:] }
+            return try self.setFloatingCardDesktopPinnedFromBridge(kind: itemKind, id: id, pinned: pinned)
+        }
+        controller.onRequestDesktopWidget = { [weak self] itemKind, id in
+            guard let self else { return [:] }
+            return try self.requestDesktopWidgetFromBridge(kind: itemKind, id: id)
+        }
+        controller.onRemoveDesktopWidgetAssociation = { [weak self] itemKind, id in
+            try self?.removeDesktopWidgetAssociationFromBridge(kind: itemKind, id: id)
+        }
+        controller.onGetDesktopWidgetState = { [weak self] itemKind, id in
+            guard let self else { return [:] }
+            return try self.getDesktopWidgetStateFromBridge(kind: itemKind, id: id)
         }
         controller.onFrameChange = { [weak self, weak controller] frame in
-            guard let self, controller?.isDesktopPinned == true else { return }
-            self.persistDesktopCard(kind: kind, id: cardID, frame: frame)
+            guard let self, let entityKind = StickItEntityKind(rawValue: kind) else { return }
+            let state = ScreenPlacementResolver.state(
+                for: WidgetEntityReference(entityKind: entityKind, entityID: cardID),
+                frame: frame,
+                isAlwaysOnTop: true
+            )
+            try? self.storage.saveFloatingWindowState(state)
+            if controller?.isDesktopPinned == true {
+                try? self.storage.saveDesktopPanelState(DesktopPanelState(windowState: state))
+            }
         }
         controller.onLoadAllData = { [weak self] in
             guard let self else {
@@ -512,6 +572,7 @@ final class MainWindowController: NSObject, NSWindowDelegate, StickItNativeBridg
             }
 
             try self.storage.saveNotes(notes)
+            self.widgetRefreshCoordinator.requestReload()
             self.webViewController.emitNotesUpdated(notes)
         }
         controller.onSaveTodos = { [weak self] todos in
@@ -542,13 +603,34 @@ final class MainWindowController: NSObject, NSWindowDelegate, StickItNativeBridg
 
             return try await self.pickScreenColor()
         }
+        controller.onOpenNotificationSettings = { [weak self] in
+            try self?.openNotificationSettings()
+        }
+        controller.onCheckNotificationPermission = { [weak self] language in
+            guard let self else {
+                return false
+            }
+
+            return try await self.checkNotificationPermission(language: language)
+        }
         floatingCardWindowControllers[key] = controller
         floatingCardPayloads[key] = payloadDictionary
         if Self.debugLifecycle {
             Self.lifecycle.info("panelCreated(cardId=\(cardID, privacy: .public)) kind=\(kind, privacy: .public)")
             logRemainingFloatingPanelCount()
         }
-        let cardFrame = floatingCardFrame(for: mouseLocation, session: session)
+        let defaultCardFrame = floatingCardFrame(for: mouseLocation, session: session)
+        let savedState = ignoreMainPanelDropZone
+            ? (try? storage.floatingWindowStates())?.first {
+                $0.entityKind.rawValue == kind && $0.entityID == cardID
+            }
+            : nil
+        let cardFrame = ScreenPlacementResolver.initialFloatingFrame(
+            dragFrame: defaultCardFrame,
+            savedState: savedState,
+            restoreSavedPlacement: ignoreMainPanelDropZone,
+            screens: ScreenPlacementResolver.currentScreens()
+        )
         controller.updatePayload(payloadDictionary)
         controller.showWindow(frame: cardFrame)
         emitFloatingCardsState()
@@ -558,9 +640,12 @@ final class MainWindowController: NSObject, NSWindowDelegate, StickItNativeBridg
         destroyFloatingCardPanel(kind: kind, id: id, restoreDockedState: true)
     }
 
-    func setFloatingCardDesktopPinnedFromBridge(kind: String, id: String, pinned: Bool) throws {
-        let key = Self.floatingCardKey(kind: kind, id: id)
-        guard let controller = floatingCardWindowControllers[key] else {
+    func setFloatingCardDesktopPinnedFromBridge(kind: String, id: String, pinned: Bool) throws -> [String: Any] {
+        guard
+            StickItEntityKind(rawValue: kind) != nil,
+            !id.isEmpty,
+            let controller = floatingCardWindowControllers[Self.floatingCardKey(kind: kind, id: id)]
+        else {
             throw StickItBridgeError.invalidParameters("StickIt could not find the requested floating card.")
         }
 
@@ -570,38 +655,76 @@ final class MainWindowController: NSObject, NSWindowDelegate, StickItNativeBridg
         } else {
             removePersistedDesktopCard(kind: kind, id: id)
         }
+
+        // Keep the cached payload authoritative after replacing the underlying
+        // panel. The bridge result updates the UI without reloading the complete
+        // card payload, which could otherwise disturb an in-progress edit.
+        let key = Self.floatingCardKey(kind: kind, id: id)
+        if var payload = floatingCardPayloads[key] {
+            payload["desktopPinned"] = pinned
+            floatingCardPayloads[key] = payload
+        }
+
+        let launchAtLoginEnabled = launchAtLoginManager.isEnabled
+        return [
+            "pinned": pinned,
+            "launchAtLoginEnabled": launchAtLoginEnabled,
+            "requiresLaunchAtLogin": pinned && !launchAtLoginEnabled,
+        ]
+    }
+
+    // Compatibility adapters for frontend builds from the short-lived Widget
+    // desktop implementation. Desktop pinning is now backed by DesktopCardPanel.
+    func requestDesktopWidgetFromBridge(kind: String, id: String) throws -> [String: Any] {
+        let result = try setFloatingCardDesktopPinnedFromBridge(kind: kind, id: id, pinned: true)
+        return result.merging(["requested": true, "requiresSystemPlacement": false]) { current, _ in current }
+    }
+
+    func removeDesktopWidgetAssociationFromBridge(kind: String, id: String) throws {
+        _ = try setFloatingCardDesktopPinnedFromBridge(kind: kind, id: id, pinned: false)
+    }
+
+    func getDesktopWidgetStateFromBridge(kind: String, id: String) throws -> [String: Any] {
+        guard let entityKind = StickItEntityKind(rawValue: kind), !id.isEmpty else {
+            throw StickItBridgeError.invalidParameters("StickIt expected a valid desktop card reference.")
+        }
+        let requested = try storage.desktopPanelStates().contains {
+            $0.entityKind == entityKind && $0.entityID == id
+        }
+        return ["requested": requested, "systemManaged": false]
     }
 
     func restorePinnedDesktopCards() {
-        guard let records = try? storage.loadDesktopCards() else { return }
+        var states = (try? storage.desktopPanelStates()) ?? []
+        if states.isEmpty {
+            states = migrateLegacyDesktopPanelStates()
+        }
 
-        for record in records {
-            guard
-                let payload = record["payload"] as? [String: Any],
-                let frameValue = record["frame"] as? [String: Any],
-                let x = frameValue["x"] as? Double,
-                let y = frameValue["y"] as? Double,
-                let width = frameValue["width"] as? Double,
-                let height = frameValue["height"] as? Double
-            else { continue }
-
-            var restoredPayload = payload
-            restoredPayload["desktopPinned"] = true
-            restoredPayload["minimumSize"] = payload["size"]
-            restoredPayload["size"] = ["width": width, "height": height]
+        for state in states {
+            let reference = WidgetEntityReference(entityKind: state.entityKind, entityID: state.entityID)
             do {
-                try showFloatingCardFromBridge(restoredPayload)
-                let kind = restoredPayload["kind"] as? String ?? ""
-                let id = Self.floatingCardID(from: restoredPayload, kind: kind) ?? ""
-                let key = Self.floatingCardKey(kind: kind, id: id)
+                guard var payload = try storage.floatingCardPayload(kind: state.entityKind, id: state.entityID) else {
+                    try storage.removeDesktopPanelState(kind: state.entityKind, id: state.entityID)
+                    continue
+                }
+                payload["desktopPinned"] = true
+                try presentFloatingCard(payload, ignoreMainPanelDropZone: true)
+                let key = Self.floatingCardKey(kind: state.entityKind.rawValue, id: state.entityID)
                 guard let controller = floatingCardWindowControllers[key] else { continue }
                 controller.setDesktopPinned(true)
-                controller.showWindow(
-                    frame: NSRect(x: x, y: y, width: width, height: height),
-                    updateMinimumSize: false
+                let frame = ScreenPlacementResolver.resolve(
+                    state.windowState,
+                    screens: ScreenPlacementResolver.currentScreens()
+                ) ?? NSRect(
+                    x: state.frame.x,
+                    y: state.frame.y,
+                    width: state.frame.width,
+                    height: state.frame.height
                 )
+                controller.showWindow(frame: frame, updateMinimumSize: false)
+                persistDesktopCard(kind: reference.entityKind.rawValue, id: reference.entityID, frame: frame)
             } catch {
-                logger.error("Failed to restore a desktop card. error=\(error.localizedDescription, privacy: .public)")
+                logger.error("Failed to restore desktop panel kind=\(state.entityKind.rawValue, privacy: .public) id=\(state.entityID, privacy: .public). error=\(error.localizedDescription, privacy: .public)")
             }
         }
     }
@@ -650,10 +773,17 @@ final class MainWindowController: NSObject, NSWindowDelegate, StickItNativeBridg
                 self.logger.info("[FLT:DOCK] onMove #\(moveCount) floatingFrame=(\(Int(floatingFrame.origin.x)),\(Int(floatingFrame.origin.y)),\(Int(floatingFrame.size.width))x\(Int(floatingFrame.size.height))) panelFrame=(\(Int(panelFrame.origin.x)),\(Int(panelFrame.origin.y)),\(Int(panelFrame.size.width))x\(Int(panelFrame.size.height))) mouse=(\(Int(mouseLoc.x)),\(Int(mouseLoc.y))) panelVisible=\(panelVisible) cursorIn=\(cursorInPanel) overlap=\(windowOverlapsPanel) dockZone=\(isInDockZone)")
             }
 
-            if isInDockZone, !previousInDockZone {
-                self.logger.info("[FLT:DOCK] emitFloatingDockZoneEnter kind=\(kind, privacy: .public) cardID=\(id, privacy: .public)")
-                self.webViewController.emitFloatingDockZoneEnter(kind: kind, cardID: id)
-            } else if !isInDockZone, previousInDockZone {
+            if isInDockZone {
+                if !previousInDockZone {
+                    self.logger.info("[FLT:DOCK] emitFloatingDockZoneEnter kind=\(kind, privacy: .public) cardID=\(id, privacy: .public)")
+                }
+                self.webViewController.emitFloatingDockZoneEnter(
+                    kind: kind,
+                    cardID: id,
+                    source: "floating",
+                    screenPoint: mouseLoc
+                )
+            } else if previousInDockZone {
                 self.logger.info("[FLT:DOCK] emitFloatingDockZoneLeave kind=\(kind, privacy: .public) cardID=\(id, privacy: .public)")
                 self.webViewController.emitFloatingDockZoneLeave(kind: kind, cardID: id)
             }
@@ -813,7 +943,7 @@ final class MainWindowController: NSObject, NSWindowDelegate, StickItNativeBridg
 
         let mouseLocation = NSEvent.mouseLocation
         let isInDockZone = panel.isVisible && panel.frame.contains(mouseLocation)
-        setDragPreviewDockZoneActive(isInDockZone, session: session)
+        setDragPreviewDockZoneActive(isInDockZone, session: session, mouseLocation: mouseLocation)
 
         if isInDockZone {
             dragPreviewWindowController.hidePreview()
@@ -823,20 +953,26 @@ final class MainWindowController: NSObject, NSWindowDelegate, StickItNativeBridg
         dragPreviewWindowController.showPreview(frame: dragPreviewFrame(for: mouseLocation, session: session))
     }
 
-    private func setDragPreviewDockZoneActive(_ active: Bool, session: DragPreviewSession?) {
-        guard active != isDragPreviewDockZoneActive else {
-            return
-        }
-
-        isDragPreviewDockZoneActive = active
-
+    private func setDragPreviewDockZoneActive(
+        _ active: Bool,
+        session: DragPreviewSession?,
+        mouseLocation: CGPoint = NSEvent.mouseLocation
+    ) {
         guard let session, !session.cardKind.isEmpty, !session.cardID.isEmpty else {
+            isDragPreviewDockZoneActive = active
             return
         }
 
         if active {
-            webViewController.emitFloatingDockZoneEnter(kind: session.cardKind, cardID: session.cardID)
-        } else {
+            isDragPreviewDockZoneActive = true
+            webViewController.emitFloatingDockZoneEnter(
+                kind: session.cardKind,
+                cardID: session.cardID,
+                source: "preview",
+                screenPoint: mouseLocation
+            )
+        } else if isDragPreviewDockZoneActive {
+            isDragPreviewDockZoneActive = false
             webViewController.emitFloatingDockZoneLeave(kind: session.cardKind, cardID: session.cardID)
         }
     }
@@ -900,6 +1036,9 @@ final class MainWindowController: NSObject, NSWindowDelegate, StickItNativeBridg
         controller.closeWindow()
         floatingCardPayloads.removeValue(forKey: key)
         removePersistedDesktopCard(kind: kind, id: id)
+        if let entityKind = StickItEntityKind(rawValue: kind) {
+            try? storage.removeFloatingWindowState(kind: entityKind, id: id)
+        }
 
         if restoreDockedState {
             DispatchQueue.main.async { [weak self] in
@@ -922,29 +1061,25 @@ final class MainWindowController: NSObject, NSWindowDelegate, StickItNativeBridg
     }
 
     private func persistDesktopCard(kind: String, id: String, frame: NSRect) {
-        let key = Self.floatingCardKey(kind: kind, id: id)
-        guard var payload = floatingCardPayloads[key] else { return }
-        payload["desktopPinned"] = true
-
-        var records = (try? storage.loadDesktopCards()) ?? []
-        records.removeAll { record in
-            record["kind"] as? String == kind && record["id"] as? String == id
+        guard let entityKind = StickItEntityKind(rawValue: kind) else { return }
+        let windowState = ScreenPlacementResolver.state(
+            for: WidgetEntityReference(entityKind: entityKind, entityID: id),
+            frame: frame,
+            isAlwaysOnTop: false
+        )
+        do {
+            try storage.saveDesktopPanelState(DesktopPanelState(windowState: windowState))
+        } catch {
+            logger.error("Failed to persist desktop panel state. error=\(error.localizedDescription, privacy: .public)")
         }
-        records.append([
-            "kind": kind,
-            "id": id,
-            "payload": payload,
-            "frame": [
-                "x": frame.origin.x,
-                "y": frame.origin.y,
-                "width": frame.width,
-                "height": frame.height,
-            ],
-        ])
-        try? storage.saveDesktopCards(records)
     }
 
     private func removePersistedDesktopCard(kind: String, id: String) {
+        if let entityKind = StickItEntityKind(rawValue: kind) {
+            try? storage.removeDesktopPanelState(kind: entityKind, id: id)
+        }
+
+        // Remove a matching legacy record after the typed state has taken over.
         var records = (try? storage.loadDesktopCards()) ?? []
         let originalCount = records.count
         records.removeAll { record in
@@ -953,6 +1088,80 @@ final class MainWindowController: NSObject, NSWindowDelegate, StickItNativeBridg
         if records.count != originalCount {
             try? storage.saveDesktopCards(records)
         }
+    }
+
+    private func migrateLegacyDesktopPanelStates() -> [DesktopPanelState] {
+        var statesByKey: [String: DesktopPanelState] = [:]
+
+        for record in (try? storage.loadDesktopCards()) ?? [] {
+            guard
+                let kindValue = record["kind"] as? String,
+                let kind = StickItEntityKind(rawValue: kindValue),
+                let id = record["id"] as? String,
+                !id.isEmpty
+            else { continue }
+
+            let frameValue = record["frame"] as? [String: Any]
+            let defaultFrame = defaultDesktopPanelFrame(for: kind)
+            let frame = NSRect(
+                x: Self.doubleValue(frameValue?["x"]) ?? Double(defaultFrame.minX),
+                y: Self.doubleValue(frameValue?["y"]) ?? Double(defaultFrame.minY),
+                width: Self.doubleValue(frameValue?["width"]) ?? Double(defaultFrame.width),
+                height: Self.doubleValue(frameValue?["height"]) ?? Double(defaultFrame.height)
+            )
+            let windowState = ScreenPlacementResolver.state(
+                for: WidgetEntityReference(entityKind: kind, entityID: id),
+                frame: frame,
+                isAlwaysOnTop: false
+            )
+            statesByKey[Self.floatingCardKey(kind: kind.rawValue, id: id)] = DesktopPanelState(windowState: windowState)
+        }
+
+        let legacyWidgetPreferences = (try? storage.loadWidgetPreferences()) ?? []
+        for preference in legacyWidgetPreferences {
+            let key = Self.floatingCardKey(kind: preference.entityKind.rawValue, id: preference.entityID)
+            guard statesByKey[key] == nil else { continue }
+            let windowState = ScreenPlacementResolver.state(
+                for: WidgetEntityReference(entityKind: preference.entityKind, entityID: preference.entityID),
+                frame: defaultDesktopPanelFrame(for: preference.entityKind),
+                isAlwaysOnTop: false
+            )
+            statesByKey[key] = DesktopPanelState(windowState: windowState)
+        }
+
+        let states = Array(statesByKey.values)
+        for state in states {
+            try? storage.saveDesktopPanelState(state)
+        }
+        // The Widget preference file was used by the superseded desktop-pin
+        // implementation. Clear migrated references so an intentionally
+        // unpinned panel is not recreated on a later launch.
+        for preference in legacyWidgetPreferences {
+            try? storage.setWidgetPreference(
+                kind: preference.entityKind,
+                id: preference.entityID,
+                requested: false
+            )
+        }
+        if !states.isEmpty {
+            logger.info("Migrated \(states.count, privacy: .public) desktop pin references to typed DesktopCardPanel state.")
+        }
+        return states
+    }
+
+    private func defaultDesktopPanelFrame(for kind: StickItEntityKind) -> NSRect {
+        let size = kind == .note ? NSSize(width: 420, height: 300) : NSSize(width: 360, height: 120)
+        let visibleFrame = activeScreen()?.visibleFrame ?? NSRect(x: 0, y: 0, width: 1_440, height: 900)
+        return NSRect(
+            x: visibleFrame.midX - size.width / 2,
+            y: visibleFrame.midY - size.height / 2,
+            width: size.width,
+            height: size.height
+        )
+    }
+
+    private static func doubleValue(_ value: Any?) -> Double? {
+        (value as? NSNumber)?.doubleValue
     }
 
     private func logRemainingFloatingPanelCount() {
@@ -1082,13 +1291,11 @@ final class MainWindowController: NSObject, NSWindowDelegate, StickItNativeBridg
     }
 
     private func clampedPanelOrigin(_ origin: CGPoint, in visibleFrame: NSRect) -> CGPoint {
-        let maxX = max(visibleFrame.minX, visibleFrame.maxX - panel.frame.width)
-        let maxY = max(visibleFrame.minY, visibleFrame.maxY - panel.frame.height)
-
-        return CGPoint(
-            x: min(max(origin.x, visibleFrame.minX), maxX),
-            y: min(max(origin.y, visibleFrame.minY), maxY)
-        )
+        WindowFrameClamper.clamp(
+            CGRect(origin: origin, size: panel.frame.size),
+            to: visibleFrame,
+            maximumScreenFraction: 1
+        ).origin
     }
 
     private func logPanelState(context: String) {

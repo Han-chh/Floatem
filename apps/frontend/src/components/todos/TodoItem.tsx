@@ -1,7 +1,7 @@
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { AnimatePresence, motion } from "framer-motion";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type CSSProperties } from "react";
 import { createPortal } from "react-dom";
 import { useI18n } from "../../lib/i18n";
 import { resolveTodoAccentColor, resolveTodoGroup, type TodoItem as TodoItemModel } from "../../lib/models";
@@ -21,6 +21,7 @@ type TodoItemProps = {
   onSelect?: (id: string) => void;
   onToggle: (id: string, target: DOMRect, nextDone: boolean) => void;
   dropPreview?: boolean;
+  dockInsertionEdge?: "before" | "after" | null;
   isSelected?: boolean;
   selectionMode?: boolean;
 };
@@ -81,6 +82,7 @@ function GroupColorGlyph({ color, size = "md" }: { color: string; size?: "sm" | 
 
 type TodoRowBodyProps = {
   todo: TodoItemModel;
+  hasAssignedGroup: boolean;
   order?: number;
   onDelete?: (target: DOMRect) => void;
   onOpenGroupDialog?: () => void;
@@ -124,6 +126,21 @@ function getStatusMeta(todo: TodoItemModel, doneFallbackLabel: string, timeZone:
       cardClass:
         "border-[rgba(213,198,180,0.92)] bg-[linear-gradient(180deg,rgba(255,252,248,0.98),rgba(255,247,239,0.95))]",
       accent: "rgba(156,126,94,0.86)",
+    };
+  }
+
+  if (todo.reminderAt <= Date.now()) {
+    return {
+      label: "expired",
+      reminderLabel: formatTimestampInTimeZone(todo.reminderAt, timeZone, "time", timeFormat),
+      reminderClass:
+        "border-[rgba(150,154,151,0.24)] bg-[rgba(226,230,227,0.58)] text-[rgba(105,111,107,0.76)]",
+      toggleClass:
+        "border-[rgba(150,154,151,0.22)] bg-[rgba(255,255,255,0.82)] text-[rgba(105,111,107,0.78)]",
+      strikeClass: "bg-[rgba(132,136,133,0.52)]",
+      cardClass:
+        "border-[rgba(213,198,180,0.92)] bg-[linear-gradient(180deg,rgba(255,252,248,0.98),rgba(255,247,239,0.95))]",
+      accent: "rgba(132,136,133,0.72)",
     };
   }
 
@@ -206,8 +223,13 @@ function getTodoCardSurface(todo: TodoItemModel, groupAccentColor: string) {
   ].join(", ");
 }
 
+function getTodoGroupStyle(groupAccentColor: string, hasAssignedGroup: boolean): CSSProperties {
+  return hasAssignedGroup ? ({ "--card-group-accent": groupAccentColor } as CSSProperties) : {};
+}
+
 function TodoRowBody({
   todo,
+  hasAssignedGroup,
   order,
   onDelete,
   onOpenGroupDialog,
@@ -223,6 +245,7 @@ function TodoRowBody({
   onToggleDesktopPinned,
 }: TodoRowBodyProps) {
   const { t } = useI18n();
+  const [, refreshReminderStatus] = useState(0);
   const setReminder = useTodosStore((state) => state.setReminder);
   const groups = useTodosStore((state) => state.groups);
   const timeZone = useSettingsStore((state) => state.timeZone);
@@ -238,22 +261,40 @@ function TodoRowBody({
   const selectionLabel = t.todos.selectTodo(todo.text);
   const canSelectTodo = selectionMode && !todo.done;
 
+  useEffect(() => {
+    if (todo.done || !todo.reminderAt) {
+      return;
+    }
+
+    const delay = todo.reminderAt - Date.now();
+    if (delay <= 0 || typeof window === "undefined") {
+      return;
+    }
+
+    const timer = window.setTimeout(() => refreshReminderStatus((value) => value + 1), delay + 50);
+    return () => window.clearTimeout(timer);
+  }, [todo.done, todo.reminderAt]);
+
   return (
     <>
-      <div
-        className={`pointer-events-none absolute inset-0 ${todo.done ? "opacity-[0.35]" : "opacity-[0.65]"}`}
-        style={{
-          backgroundImage:
-            `radial-gradient(${colorWithAlpha(groupAccentColor, "38")} 0.7px, transparent 0.8px), linear-gradient(120deg, transparent 0 38%, ${colorWithAlpha(groupAccentColor, "1e")} 38% 41%, transparent 41% 100%), linear-gradient(140deg, ${colorWithAlpha(groupAccentColor, "20")}, rgba(255,255,255,0.34) 42%, transparent 70%)`,
-          backgroundSize: "15px 15px, 22px 22px, 100% 100%",
-        }}
-      />
-      <div
-        className="pointer-events-none absolute inset-y-2 left-2 w-2 rounded-full opacity-90 shadow-[0_5px_12px_rgba(61,49,34,0.08)]"
-        style={{
-          background: `linear-gradient(180deg, ${groupAccentColor}, ${colorWithAlpha(groupAccentColor, "9c")} 54%, rgba(255,255,255,0.24))`,
-        }}
-      />
+      {hasAssignedGroup ? (
+        <>
+          <div
+            className={`todo-group-card-texture pointer-events-none absolute inset-0 ${todo.done ? "opacity-[0.35]" : "opacity-[0.65]"}`}
+            style={{
+              backgroundImage:
+                `radial-gradient(${colorWithAlpha(groupAccentColor, "2e")} 0.7px, transparent 0.8px), radial-gradient(circle at 12% 0%, ${colorWithAlpha(groupAccentColor, "20")}, transparent 42%)`,
+              backgroundSize: "17px 17px, 100% 100%",
+            }}
+          />
+          <div
+            className="pointer-events-none absolute inset-y-2 left-2 w-2 rounded-full opacity-90 shadow-[0_5px_12px_rgba(61,49,34,0.08)]"
+            style={{
+              background: `linear-gradient(180deg, ${groupAccentColor}, ${colorWithAlpha(groupAccentColor, "9c")} 54%, rgba(255,255,255,0.24))`,
+            }}
+          />
+        </>
+      ) : null}
       {isDraggingPlaceholder ? (
         <div className="absolute inset-0 rounded-[22px] border border-transparent bg-[rgba(255,255,255,0.08)]" />
       ) : null}
@@ -290,9 +331,10 @@ function TodoRowBody({
               type="button"
               aria-label={todo.done ? t.todos.restoreTask : t.todos.completeTask}
               aria-pressed={todo.done}
+              data-action="todo-completion"
               data-tooltip={todo.done ? t.todos.restoreTask : t.todos.completeTask}
               disabled={preview}
-              className={`relative inline-flex h-6.5 w-6.5 shrink-0 items-center justify-center rounded-full border text-[9.5px] font-bold shadow-[0_6px_12px_rgba(61,49,34,0.08)] ${status.toggleClass}`}
+              className={`relative inline-flex h-6.5 w-6.5 shrink-0 items-center justify-center rounded-full border text-[9.5px] font-bold outline-none shadow-[0_6px_12px_rgba(61,49,34,0.08)] focus-visible:outline-none ${status.toggleClass}`}
               whileHover={canUseItemActions ? { scale: 1.06 } : undefined}
               whileTap={canUseItemActions ? { scale: 0.93 } : undefined}
               onPointerDown={canUseItemActions ? (event) => event.stopPropagation() : undefined}
@@ -352,7 +394,14 @@ function TodoRowBody({
                     onToggleDesktopPinned();
                   }}
                 >
-                  <PushPinIcon active={desktopPinned} size={13.5} />
+                  <span
+                    aria-hidden="true"
+                    data-desktop-pin-indicator
+                    data-active={desktopPinned}
+                    className="desktop-pin-indicator"
+                  >
+                    <PushPinIcon active={desktopPinned} size={13.5} />
+                  </span>
                 </motion.button>
               ) : null}
               <motion.button
@@ -398,6 +447,7 @@ function TodoRowBody({
                   timeZone={timeZone}
                   timeFormat={timeFormat}
                   displayValue={reminderButtonLabel}
+                  tooltip={status.label === "expired" ? t.todos.reminderExpiredTooltip : undefined}
                   className={status.reminderClass}
                   disabled={preview}
                   onChange={(value) => setReminder(todo.id, value)}
@@ -455,17 +505,20 @@ export function TodoItemPreview({ todo, width, order }: { todo: TodoItemModel; w
   const timeZone = useSettingsStore((state) => state.timeZone);
   const timeFormat = useSettingsStore((state) => state.timeFormat);
   const groupAccentColor = resolveTodoAccentColor(todo, groups);
+  const hasAssignedGroup = Boolean(resolveTodoGroup(todo, groups));
   return (
     <div
+      data-card-grouped={hasAssignedGroup}
       data-todo-status={todo.done ? "done" : "active"}
       className={`content-card-classic paper-card cq-card relative h-full w-full overflow-hidden rounded-[18px] px-2 py-1.25 ${getStatusMeta(todo, t.todos.doneFallback, timeZone, timeFormat).cardClass}`}
       style={{
+        ...getTodoGroupStyle(groupAccentColor, hasAssignedGroup),
         background: getTodoCardSurface(todo, groupAccentColor),
         borderColor: `${groupAccentColor}86`,
         width: width ? `${width}px` : "100%",
       }}
     >
-      <TodoRowBody todo={todo} order={order} preview />
+      <TodoRowBody todo={todo} order={order} hasAssignedGroup={hasAssignedGroup} preview />
     </div>
   );
 }
@@ -501,6 +554,7 @@ export function FloatingTodoItem({
   const pendingPointerRef = useRef<{ pointerId: number; x: number; y: number } | null>(null);
   const status = getStatusMeta(todo, t.todos.doneFallback, timeZone, timeFormat);
   const groupAccentColor = resolveTodoAccentColor(todo, groups);
+  const hasAssignedGroup = Boolean(resolveTodoGroup(todo, groups));
 
   const clearPendingPointer = (element: HTMLElement, pointerId: number) => {
     pendingPointerRef.current = null;
@@ -516,9 +570,11 @@ export function FloatingTodoItem({
         data-no-window-drag="true"
         data-testid="todo-item"
         data-todo-item-id={todo.id}
+        data-card-grouped={hasAssignedGroup}
         aria-label={t.todos.reorder}
         className={`content-card-classic paper-card cq-card relative overflow-hidden rounded-[18px] px-2 py-1.25 cursor-grab active:cursor-grabbing ${status.cardClass}`}
         style={{
+          ...getTodoGroupStyle(groupAccentColor, hasAssignedGroup),
           background: getTodoCardSurface(todo, groupAccentColor),
           borderColor: `${groupAccentColor}78`,
           boxShadow: `0 0 0 2px ${colorWithAlpha(groupAccentColor, "14")}, 0 12px 24px ${colorWithAlpha(groupAccentColor, "12")}, 0 10px 22px rgba(61,49,34,0.08)`,
@@ -583,6 +639,7 @@ export function FloatingTodoItem({
       >
         <TodoRowBody
           todo={todo}
+          hasAssignedGroup={hasAssignedGroup}
           order={order}
           onDelete={onDock}
           onOpenGroupDialog={() => setIsGroupDialogOpen(true)}
@@ -774,6 +831,7 @@ export function TodoItem({
   onSelect,
   onToggle,
   dropPreview = false,
+  dockInsertionEdge = null,
   isSelected = false,
   selectionMode = false,
 }: TodoItemProps) {
@@ -789,6 +847,7 @@ export function TodoItem({
   });
   const status = getStatusMeta(todo, t.todos.doneFallback, timeZone, timeFormat);
   const groupAccentColor = resolveTodoAccentColor(todo, groups);
+  const hasAssignedGroup = Boolean(resolveTodoGroup(todo, groups));
   const setArticleRef = (node: HTMLElement | null) => {
     cardRef.current = node;
     setNodeRef(node);
@@ -805,6 +864,7 @@ export function TodoItem({
         transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
         whileHover={!isDragging ? { y: -1.5, scale: 1.006 } : undefined}
         style={{
+          ...getTodoGroupStyle(groupAccentColor, hasAssignedGroup),
           background: isDragging ? undefined : getTodoCardSurface(todo, groupAccentColor),
           borderColor: isDragging ? undefined : `${groupAccentColor}78`,
           boxShadow: isDragging
@@ -818,6 +878,8 @@ export function TodoItem({
         data-no-window-drag="true"
         data-testid="todo-item"
         data-todo-item-id={todo.id}
+        data-dock-entity-id={todo.id}
+        data-card-grouped={hasAssignedGroup}
         data-todo-status={todo.done ? "done" : "active"}
         data-dragging={isDragging}
         aria-label={t.todos.reorder}
@@ -835,6 +897,7 @@ export function TodoItem({
       >
         <TodoRowBody
           todo={todo}
+          hasAssignedGroup={hasAssignedGroup}
           order={order}
           onDelete={(target) => onDelete(todo.id, cardRef.current?.getBoundingClientRect() ?? target)}
           onOpenGroupDialog={() => setIsGroupDialogOpen(true)}
@@ -845,6 +908,16 @@ export function TodoItem({
           isSelected={isSelected}
           selectionMode={selectionMode}
         />
+        {dockInsertionEdge ? (
+          <div
+            aria-hidden="true"
+            data-testid="todo-dock-insertion-line"
+            data-edge={dockInsertionEdge}
+            className={`pointer-events-none absolute left-3 right-3 z-30 h-[3px] rounded-full bg-[rgb(31,168,122)] shadow-[0_0_0_3px_rgba(31,168,122,0.16)] ${
+              dockInsertionEdge === "before" ? "top-[1px]" : "bottom-[1px]"
+            }`}
+          />
+        ) : null}
       </motion.article>
       <TodoGroupDialog todoId={todo.id} isOpen={isGroupDialogOpen} onClose={() => setIsGroupDialogOpen(false)} />
     </>
@@ -866,6 +939,7 @@ export function CompletedTodoItem({
   const timeFormat = useSettingsStore((state) => state.timeFormat);
   const status = getStatusMeta(todo, t.todos.doneFallback, timeZone, timeFormat);
   const groupAccentColor = resolveTodoAccentColor(todo, groups);
+  const hasAssignedGroup = Boolean(resolveTodoGroup(todo, groups));
   const [isGroupDialogOpen, setIsGroupDialogOpen] = useState(false);
   const cardRef = useRef<HTMLElement | null>(null);
 
@@ -881,8 +955,10 @@ export function CompletedTodoItem({
         whileHover={{ y: -1.5, scale: 1.006 }}
         data-no-window-drag="true"
         data-testid="todo-item"
+        data-card-grouped={hasAssignedGroup}
         data-todo-status={todo.done ? "done" : "active"}
         style={{
+          ...getTodoGroupStyle(groupAccentColor, hasAssignedGroup),
           background: getTodoCardSurface(todo, groupAccentColor),
           borderColor: `${groupAccentColor}66`,
           boxShadow: `0 0 0 2px ${colorWithAlpha(groupAccentColor, "10")}, 0 8px 18px rgba(61,49,34,0.04)`,
@@ -899,6 +975,7 @@ export function CompletedTodoItem({
       >
         <TodoRowBody
           todo={todo}
+          hasAssignedGroup={hasAssignedGroup}
           onDelete={(target) => onDelete(todo.id, cardRef.current?.getBoundingClientRect() ?? target)}
           onOpenGroupDialog={() => setIsGroupDialogOpen(true)}
           onSelect={() => onSelect?.(todo.id)}
