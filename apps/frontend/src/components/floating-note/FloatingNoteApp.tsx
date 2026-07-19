@@ -636,20 +636,10 @@ export function FloatingNoteApp() {
     if (!session) return;
     const deltaX = clientX - session.startX;
     const deltaY = clientY - session.startY;
-    const horizontalDistance = Math.abs(deltaX);
-    const verticalDistance = Math.abs(deltaY);
-    const verticalIntent = verticalDistance >= 6 && horizontalDistance < verticalDistance * 0.35;
-    if (verticalIntent) {
-      return;
-    }
-
-    const horizontalIntent = verticalDistance < 6 || verticalDistance < horizontalDistance * 0.35;
     const minimum = minimumCardSizeRef.current;
     const nextSize = {
       width: Math.max(minimum.width, Math.round(session.startWidth + deltaX)),
-      height: horizontalIntent
-        ? session.startHeight
-        : Math.max(minimum.height, Math.round(session.startHeight + deltaY)),
+      height: Math.max(minimum.height, Math.round(session.startHeight + deltaY)),
     };
     if (currentNoteCollapsed) {
       expandedCardSizeRef.current = {
@@ -767,7 +757,7 @@ export function FloatingNoteApp() {
           <div
             role="separator"
             aria-label={t.common.resizeFloatingCard}
-            className="absolute bottom-0 right-0 z-40 h-5 w-5 cursor-nwse-resize"
+            className="absolute bottom-0 right-0 z-40 h-8 w-8 cursor-nwse-resize"
             style={{
               scale: Math.min(contentScale, 1.35),
               transformOrigin: "bottom right",

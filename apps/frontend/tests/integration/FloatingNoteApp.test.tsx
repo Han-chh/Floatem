@@ -472,6 +472,7 @@ describe("FloatingNoteApp", () => {
       const handle = screen.getByRole("separator", { name: "Resize floating card" });
       expect(handle).toBeEmptyDOMElement();
       expect(handle).not.toHaveAttribute("data-tooltip");
+      expect(handle).toHaveClass("h-8", "w-8");
       bridge.resizeFloatingCard.mockClear();
 
       fireEvent.pointerDown(handle, { pointerId: 1, clientX: 420, clientY: 300 });
@@ -488,8 +489,14 @@ describe("FloatingNoteApp", () => {
 
       const resizeCallCount = bridge.resizeFloatingCard.mock.calls.length;
       fireEvent.pointerMove(handle, { pointerId: 1, clientX: 420, clientY: 420 });
-      expect(shell).toHaveStyle({ width: "500px", minHeight: "360px" });
-      expect(bridge.resizeFloatingCard).toHaveBeenCalledTimes(resizeCallCount);
+      expect(shell).toHaveStyle({ width: "420px", minHeight: "420px" });
+      expect(bridge.resizeFloatingCard).toHaveBeenCalledTimes(resizeCallCount + 1);
+      expect(bridge.resizeFloatingCard).toHaveBeenLastCalledWith({
+        width: 420,
+        height: 420,
+        anchor: "top",
+        horizontalAnchor: "left",
+      });
 
       fireEvent.pointerMove(handle, { pointerId: 1, clientX: 540, clientY: 300 });
       expect(shell).toHaveStyle({ width: "540px", minHeight: "300px" });
@@ -764,7 +771,7 @@ describe("FloatingNoteApp", () => {
     }
   });
 
-  it("rejects vertical-only resizing while allowing horizontal and diagonal todo resizing", async () => {
+  it("allows vertical, horizontal, and diagonal todo resizing", async () => {
     const todo = createTodoItem("Resize todo", { id: "floating-todo-resize" });
     const bridge = installFloatingTodoBridge(todo);
 
@@ -778,8 +785,13 @@ describe("FloatingNoteApp", () => {
 
       fireEvent.pointerDown(handle, { pointerId: 2, clientX: 360, clientY: 72 });
       fireEvent.pointerMove(handle, { pointerId: 2, clientX: 360, clientY: 160 });
-      expect(shell).toHaveStyle({ width: "360px", minHeight: "72px" });
-      expect(bridge.resizeFloatingCard).not.toHaveBeenCalled();
+      expect(shell).toHaveStyle({ width: "360px", minHeight: "160px" });
+      expect(bridge.resizeFloatingCard).toHaveBeenLastCalledWith({
+        width: 360,
+        height: 160,
+        anchor: "top",
+        horizontalAnchor: "left",
+      });
 
       fireEvent.pointerMove(handle, { pointerId: 2, clientX: 440, clientY: 72 });
       expect(shell).toHaveStyle({ width: "440px", minHeight: "72px" });
