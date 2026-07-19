@@ -48,6 +48,7 @@ protocol StickItNativeBridgeHandling: AnyObject {
     func saveNotes(_ notes: Any) throws
     func saveTodos(_ todos: Any) throws
     func saveSettings(_ settings: Any) throws
+    func currentLaunchAtLoginStatus() -> [String: Any]
     func showMainWindowFromBridge()
     func openNotificationSettings() throws
     func sendNotification(id: String?, title: String, body: String, soundEnabled: Bool) async throws

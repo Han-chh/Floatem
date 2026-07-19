@@ -481,6 +481,8 @@ final class WebViewController: NSViewController, WKNavigationDelegate {
                 result = try bridgeDelegate?.loadAllData() ?? [:]
             case "getHotkeyRegistrationState":
                 result = bridgeDelegate?.currentHotKeyRegistrationState() ?? [:]
+            case "getLaunchAtLoginStatus":
+                result = bridgeDelegate?.currentLaunchAtLoginStatus() ?? ["enabled": false]
             case "saveNotes":
                 guard let cards = params["cards"] else {
                     throw StickItBridgeError.invalidParameters("StickIt expected notes data from JavaScript.")
@@ -910,6 +912,9 @@ final class WebViewController: NSViewController, WKNavigationDelegate {
         },
         loadAllData() {
           return send("loadAllData");
+        },
+        getLaunchAtLoginStatus() {
+          return send("getLaunchAtLoginStatus");
         },
         saveNotes(cards) {
           return send("saveNotes", { cards });

@@ -150,6 +150,10 @@ export type DesktopPinResult = {
   requiresLaunchAtLogin: boolean;
 };
 
+export type LaunchAtLoginStatus = {
+  enabled: boolean;
+};
+
 export type ScreenColorPickResult = {
   sRGBHex: string;
 };
@@ -180,6 +184,7 @@ export type HostBridge<TLoadAllResult, TNotes, TTodos, TSettings> = {
   saveNotes: (notes: TNotes) => Promise<void>;
   saveTodos: (todos: TTodos) => Promise<void>;
   saveSettings: (settings: TSettings) => Promise<void>;
+  getLaunchAtLoginStatus?: () => Promise<LaunchAtLoginStatus>;
   showWindow: () => Promise<void>;
   hideWindow: () => Promise<void>;
   toggleWindow: () => Promise<void>;

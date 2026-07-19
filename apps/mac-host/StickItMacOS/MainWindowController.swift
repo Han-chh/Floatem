@@ -232,7 +232,16 @@ final class MainWindowController: NSObject, NSWindowDelegate, StickItNativeBridg
     }
 
     func loadAllData() throws -> [String: Any] {
-        try storage.loadAllData()
+        var data = try storage.loadAllData()
+        if var settings = data["settings"] as? [String: Any] {
+            settings["launchAtLogin"] = launchAtLoginManager.isEnabled
+            data["settings"] = settings
+        }
+        return data
+    }
+
+    func currentLaunchAtLoginStatus() -> [String: Any] {
+        ["enabled": launchAtLoginManager.isEnabled]
     }
 
     func saveNotes(_ notes: Any) throws {
@@ -263,7 +272,7 @@ final class MainWindowController: NSObject, NSWindowDelegate, StickItNativeBridg
             ?? (try? storage.currentLaunchAtLogin())
             ?? true
         try launchAtLoginManager.setEnabled(launchAtLogin)
-        settingsDictionary["launchAtLogin"] = launchAtLogin
+        settingsDictionary["launchAtLogin"] = launchAtLoginManager.isEnabled
 
         try storage.saveSettings(settingsDictionary)
         widgetRefreshCoordinator.requestReload()

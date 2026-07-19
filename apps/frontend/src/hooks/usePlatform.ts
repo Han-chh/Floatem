@@ -40,6 +40,10 @@ export async function saveSettings(settings: Partial<AppSettings>) {
   await getStickItBridge().saveSettings(settings);
 }
 
+export async function getLaunchAtLoginStatus() {
+  return await getStickItBridge().getLaunchAtLoginStatus?.() ?? null;
+}
+
 export async function registerHotkey(shortcut: string) {
   await getStickItBridge().registerHotkey(shortcut);
 }
