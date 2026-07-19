@@ -25,6 +25,7 @@
 		A00000000000000000000216 /* LaunchAtLoginManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = A00000000000000000000120 /* LaunchAtLoginManager.swift */; };
 		A00000000000000000000217 /* SharedModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = A00000000000000000000121 /* SharedModels.swift */; };
 		A00000000000000000000218 /* SharedDataStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = A00000000000000000000122 /* SharedDataStore.swift */; };
+		A00000000000000000000219 /* StickItDeepLink.swift in Sources */ = {isa = PBXBuildFile; fileRef = A00000000000000000000124 /* StickItDeepLink.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -51,6 +52,7 @@
 		A00000000000000000000121 /* SharedModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SharedModels.swift; sourceTree = "<group>"; };
 		A00000000000000000000122 /* SharedDataStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SharedDataStore.swift; sourceTree = "<group>"; };
 		A00000000000000000000123 /* StickIt.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = StickIt.entitlements; sourceTree = "<group>"; };
+		A00000000000000000000124 /* StickItDeepLink.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StickItDeepLink.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -110,6 +112,7 @@
 				A00000000000000000000120 /* LaunchAtLoginManager.swift */,
 				A00000000000000000000121 /* SharedModels.swift */,
 				A00000000000000000000122 /* SharedDataStore.swift */,
+				A00000000000000000000124 /* StickItDeepLink.swift */,
 				A00000000000000000000107 /* WebViewController.swift */,
 				A00000000000000000000116 /* main.swift */,
 				A00000000000000000000108 /* Info.plist */,
@@ -236,6 +239,7 @@
 				A00000000000000000000216 /* LaunchAtLoginManager.swift in Sources */,
 				A00000000000000000000217 /* SharedModels.swift in Sources */,
 				A00000000000000000000218 /* SharedDataStore.swift in Sources */,
+				A00000000000000000000219 /* StickItDeepLink.swift in Sources */,
 				A00000000000000000000207 /* WebViewController.swift in Sources */,
 				A00000000000000000000212 /* main.swift in Sources */,
 			);

@@ -461,6 +461,25 @@ final class MainWindowController: NSObject, NSWindowDelegate, StickItNativeBridg
     }
 
     func showFloatingCardFromBridge(_ payload: Any) throws {
+        try presentFloatingCard(payload, ignoreMainPanelDropZone: false)
+    }
+
+    @discardableResult
+    func openFloatingCard(reference: WidgetEntityReference) throws -> Bool {
+        let key = Self.floatingCardKey(kind: reference.entityKind.rawValue, id: reference.entityID)
+        if let existingController = floatingCardWindowControllers[key] {
+            existingController.focusWindow()
+            return true
+        }
+
+        guard let payload = try storage.floatingCardPayload(kind: reference.entityKind, id: reference.entityID) else {
+            return false
+        }
+        try presentFloatingCard(payload, ignoreMainPanelDropZone: true)
+        return true
+    }
+
+    private func presentFloatingCard(_ payload: Any, ignoreMainPanelDropZone: Bool) throws {
         guard
             let payloadDictionary = payload as? [String: Any],
             let kind = payloadDictionary["kind"] as? String,
@@ -472,7 +491,7 @@ final class MainWindowController: NSObject, NSWindowDelegate, StickItNativeBridg
         }
 
         let mouseLocation = NSEvent.mouseLocation
-        if panel.isVisible && panel.frame.contains(mouseLocation) {
+        if !ignoreMainPanelDropZone && panel.isVisible && panel.frame.contains(mouseLocation) {
             return
         }
 

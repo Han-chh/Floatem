@@ -92,6 +92,22 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         return true
     }
 
+    func application(_ application: NSApplication, open urls: [URL]) {
+        for url in urls {
+            guard let deepLink = StickItDeepLink(url: url) else { continue }
+            switch deepLink.destination {
+            case let .floatingCard(reference):
+                do {
+                    if try !mainWindowController.openFloatingCard(reference: reference) {
+                        mainWindowController.showMainWindow()
+                    }
+                } catch {
+                    mainWindowController.showMainWindow()
+                }
+            }
+        }
+    }
+
     func applicationShouldTerminateAfterLastWindowClosed(_ sender: NSApplication) -> Bool {
         false
     }

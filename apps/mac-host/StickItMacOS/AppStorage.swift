@@ -171,6 +171,44 @@ final class AppStorage {
         try sharedStore.todoSnapshots()
     }
 
+    func floatingCardPayload(kind: StickItEntityKind, id: String) throws -> [String: Any]? {
+        let settings = try loadSettings()
+        switch kind {
+        case .note:
+            let root = try loadNotes()
+            let cards = Self.documentItems(root, key: "cards")
+            guard let note = cards.first(where: { $0["id"] as? String == id }) else { return nil }
+            let groups = (root as? [String: Any])?["groups"] as? [[String: Any]] ?? []
+            return [
+                "kind": kind.rawValue,
+                "language": settings["language"] as? String ?? "zh-CN",
+                "size": ["width": 420, "height": 300],
+                "minimumSize": ["width": 420, "height": 300],
+                "pointerOffset": ["x": 24, "y": 24],
+                "note": note,
+                "groups": groups,
+                "desktopPinned": false,
+            ]
+        case .todo:
+            let root = try readJSONObject(at: todosURL) ?? []
+            let items = Self.documentItems(root, key: "items")
+            guard let todo = items.first(where: { $0["id"] as? String == id }) else { return nil }
+            let groups = (root as? [String: Any])?["groups"] as? [[String: Any]] ?? []
+            return [
+                "kind": kind.rawValue,
+                "language": settings["language"] as? String ?? "zh-CN",
+                "timeZone": settings["timeZone"] as? String ?? TimeZone.current.identifier,
+                "timeFormat": settings["timeFormat"] as? String ?? "24h",
+                "size": ["width": 360, "height": 72],
+                "minimumSize": ["width": 360, "height": 72],
+                "pointerOffset": ["x": 24, "y": 24],
+                "todo": todo,
+                "groups": groups,
+                "desktopPinned": false,
+            ]
+        }
+    }
+
     func floatingWindowStates() throws -> [FloatingCardWindowState] {
         try sharedStore.floatingWindowStates()
     }
@@ -261,5 +299,12 @@ final class AppStorage {
 
         let data = try JSONSerialization.data(withJSONObject: object, options: [.prettyPrinted, .sortedKeys])
         try data.write(to: url, options: [.atomic])
+    }
+
+    private static func documentItems(_ root: Any, key: String) -> [[String: Any]] {
+        if let items = root as? [[String: Any]] {
+            return items
+        }
+        return (root as? [String: Any])?[key] as? [[String: Any]] ?? []
     }
 }

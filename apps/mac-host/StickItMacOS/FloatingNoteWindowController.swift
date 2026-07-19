@@ -268,6 +268,13 @@ final class FloatingNoteWindowController: NSObject, WKNavigationDelegate, WKScri
         panel?.frame ?? .zero
     }
 
+    func focusWindow() {
+        guard !isDestroyed, let panel else { return }
+        panel.orderFrontRegardless()
+        panel.makeKey()
+        focusWebView()
+    }
+
     func showWindow(frame: NSRect, updateMinimumSize: Bool = true) {
         guard !isDestroyed else { return }
         guard let panel else { return }
