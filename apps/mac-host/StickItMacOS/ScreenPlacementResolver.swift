@@ -33,10 +33,13 @@ enum ScreenPlacementResolver {
         let matchedByIdentifier = state.screenIdentifier.flatMap { identifier in
             screens.first(where: { $0.identifier == identifier })
         }
-        let target = matchedByIdentifier
-            ?? screens.max(by: {
+        let bestIntersectingScreen = screens.max(by: {
                 $0.visibleFrame.intersection(savedFrame).area < $1.visibleFrame.intersection(savedFrame).area
             })
+        let target = matchedByIdentifier
+            ?? bestIntersectingScreen.flatMap {
+                $0.visibleFrame.intersection(savedFrame).area > 0 ? $0 : nil
+            }
             ?? screens.first(where: \.isPrimary)
             ?? screens[0]
 

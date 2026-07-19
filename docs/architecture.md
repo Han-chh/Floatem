@@ -35,7 +35,27 @@ The macOS host remains AppKit + WKWebView. `WebViewController` injects `stickItH
 
 macOS uses AppKit window levels and collection behaviors such as `canJoinAllSpaces` and `fullScreenAuxiliary` for overlay behavior.
 
-Detached note and todo cards can be pinned to the desktop layer. Pinning migrates the existing WebView into a dedicated native `DesktopCardPanel` (`NSPanel`) without reloading its content; unpinning migrates it back to the regular floating panel. The native host owns their desktop window level, drag lifecycle, and resize bounds, while `AppStorage` persists pinned-card payloads, positions, and sizes in `desktop-cards.json` so they can be restored on the next launch.
+The macOS product has three deliberately separate surfaces:
+
+1. **Main Window** — AppKit `NSPanel` containing the full React application.
+2. **Floating Editing Card** — a borderless AppKit `NSPanel` containing the lightweight `floating.html` entry. It keeps full editing, formatting, clipboard, IME, resize, drag-back, always-on-top, and cross-Space behavior.
+3. **Desktop Widget** — the `StickItWidgets` WidgetKit extension. It reads App Group snapshots, is positioned/restored by macOS, and opens the matching Floating Editing Card through `stickit://open?kind=…&id=…&mode=floating`.
+
+Desktop presentation no longer creates or restores a desktop-level `NSPanel`. The compatibility bridge method `setFloatingCardDesktopPinned` maps to an entity-only Widget request. WidgetKit does not expose a public API for silently placing a Widget, so the frontend explains the system Widget Gallery step.
+
+### Shared data and migration
+
+The authoritative macOS data lives in App Group `group.com.stickit.app`, under `SharedData/`. The main app and Widget extension share `notes.json`, `todos.json`, settings, Widget preferences, and typed floating-window state. On first use, `LegacyDataMigrator` atomically copies missing valid JSON from `~/Library/Application Support/com.stickit.app/`; source files remain untouched. Legacy `desktop-cards.json` records are reduced to unique `kind + entityID` preferences (schema version 1), with payload and absolute desktop frame discarded.
+
+### WebKit and window lifecycle
+
+Floating WebViews use a single `WKProcessPool`, `WKWebsiteDataStore`, shared bootstrap `WKUserScript`, and a dedicated Vite entry. Closing removes delegates, scripts, message handlers, and view hierarchy before the panel/controller is released. Diagnostics log created, destroyed, and active WebView counts. WebView reuse is intentionally not implemented because editor selection, undo, IME, and entity isolation are safer with on-demand instances.
+
+Floating window state records display UUID, previous visible frame, normalized position, size, and schema version. The shared placement resolver prefers the original display, otherwise selects the largest frame intersection or primary display, then clamps and shrinks against the current `visibleFrame`. The same clamper is used for the main window.
+
+### Launch behavior
+
+`SMAppService.mainApp` login launches initialize services without showing or activating the Main Window. Finder/Dock/Spotlight launches show on the first actual app activation, reopen always shows, and Widget/deep-link launches open only the target Floating Editing Card. Because `SMAppService.mainApp` does not expose a launch-reason API, managed builds can use `--stickit-login-item`; the normal fallback is activation-state based and contains no timing delay.
 
 ## Windows Host
 

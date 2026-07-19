@@ -2,7 +2,7 @@ import AppKit
 
 @MainActor
 final class AppDelegate: NSObject, NSApplicationDelegate {
-    private let storage = AppStorage()
+    private lazy var storage = AppStorage()
     private let hotKeyManager = GlobalHotKeyManager()
     private let notificationManager = NotificationManager()
     private let launchAtLoginManager = LaunchAtLoginManager()
@@ -55,6 +55,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private var statusItem: NSStatusItem?
 
     func applicationDidFinishLaunching(_ notification: Notification) {
+        // Unit tests load the app binary as a host. Do not initialize services or
+        // touch the real App Group while XCTest is exercising pure core logic.
+        if ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] != nil {
+            return
+        }
         NSApp.setActivationPolicy(.accessory)
         currentLanguage = (try? storage.currentLanguage()) ?? .simplifiedChinese
         notificationManager.configure()
@@ -109,6 +114,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         for url in urls {
             guard let deepLink = StickItDeepLink(url: url) else { continue }
             switch deepLink.destination {
+            case .mainWindow:
+                mainWindowController.showMainWindow()
             case let .floatingCard(reference):
                 do {
                     if try !mainWindowController.openFloatingCard(reference: reference) {

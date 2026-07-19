@@ -483,6 +483,10 @@ final class MainWindowController: NSObject, NSWindowDelegate, StickItNativeBridg
         return true
     }
 
+    static func requiresNewFloatingCard(existingKeys: Set<String>, reference: WidgetEntityReference) -> Bool {
+        !existingKeys.contains(floatingCardKey(kind: reference.entityKind.rawValue, id: reference.entityID))
+    }
+
     private func presentFloatingCard(_ payload: Any, ignoreMainPanelDropZone: Bool) throws {
         guard
             let payloadDictionary = payload as? [String: Any],

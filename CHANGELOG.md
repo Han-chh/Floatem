@@ -10,9 +10,15 @@ All notable repository changes are recorded here.
 
 ## Unreleased
 
+- Replace simulated desktop `NSPanel` cards with a signed macOS 14 WidgetKit extension containing configurable Note and Todo Widgets, AppEntity queries, deep links, deletion placeholders, and interactive Todo completion.
+- Move macOS authoritative data into App Group `group.com.stickit.app`, add atomic/idempotent legacy migration, and reduce old `desktop-cards.json` entries to schema-v1 entity-only Widget preferences.
+- Keep full editing in floating AppKit/Web cards while sharing their WebKit process pool/data store/bootstrap, loading a dedicated floating Vite entry, and logging active lifecycle counts.
+- Restore floating frames with display UUIDs, normalized positions, and shared visible-frame clamping; keep login-item launches silent while preserving user launch, reopen, shortcut, and deep-link behavior.
+- Add native XCTest coverage and a macOS Widget/manual regression guide.
+
 - Allow each note's rich-text formatting row to collapse into a compact arrow control, with the floating-card toolbar attached directly to the editor field.
 - Consolidate floating-note group selection into the group label and place its edited-time label on the same compact metadata row.
-- Add desktop-pinned floating notes and todos with a dedicated pin action, a dedicated native `NSPanel` carrier, persisted position and size restoration, and bottom-corner drag resizing constrained by each card's original size.
+- Add the original desktop-pin entry point; the current implementation now maps it to the system WidgetKit flow rather than a desktop-level `NSPanel`.
 - Preserve rounded note and todo silhouettes in drag previews and detached floating windows by making their dedicated WebView root surfaces fully transparent.
 - Add a default-enabled launch-at-login preference to General Settings, backed by `SMAppService.mainApp` on macOS and the current-user Run key on Windows.
 - Register the macOS login item during first launch, request alert and sound notification authorization when the system has not decided yet, and open Login Items once when macOS reports that startup requires user approval.

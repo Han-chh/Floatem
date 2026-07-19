@@ -76,10 +76,18 @@ final class SharedDataStore: @unchecked Sendable {
         return cards.compactMap(Self.noteSnapshot)
     }
 
+    func noteSnapshot(entityID: String) throws -> NoteWidgetSnapshot? {
+        try noteSnapshots().first { $0.entityID == entityID }
+    }
+
     func todoSnapshots() throws -> [TodoWidgetSnapshot] {
         let root = try readJSONObject(filename: Self.todosFilename)
         let items = Self.items(from: root, documentKey: "items")
         return items.compactMap(Self.todoSnapshot)
+    }
+
+    func todoSnapshot(entityID: String) throws -> TodoWidgetSnapshot? {
+        try todoSnapshots().first { $0.entityID == entityID }
     }
 
     func widgetPreferences() throws -> [DesktopWidgetPreference] {

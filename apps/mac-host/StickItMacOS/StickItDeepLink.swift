@@ -2,6 +2,7 @@ import Foundation
 
 struct StickItDeepLink: Equatable, Sendable {
     enum Destination: Equatable, Sendable {
+        case mainWindow
         case floatingCard(WidgetEntityReference)
     }
 
@@ -20,6 +21,10 @@ struct StickItDeepLink: Equatable, Sendable {
             } ?? [],
             uniquingKeysWith: { first, _ in first }
         )
+        if values.isEmpty {
+            destination = .mainWindow
+            return
+        }
         guard
             values["mode"] == nil || values["mode"] == "floating",
             let kindValue = values["kind"],
