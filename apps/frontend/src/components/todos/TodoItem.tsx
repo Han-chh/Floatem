@@ -132,7 +132,7 @@ function getStatusMeta(todo: TodoItemModel, doneFallbackLabel: string, timeZone:
   if (todo.reminderAt <= Date.now()) {
     return {
       label: "expired",
-      reminderLabel: formatTimestampInTimeZone(todo.reminderAt, timeZone, "compact", timeFormat),
+      reminderLabel: formatTimestampInTimeZone(todo.reminderAt, timeZone, "time", timeFormat),
       reminderClass:
         "border-[rgba(150,154,151,0.24)] bg-[rgba(226,230,227,0.58)] text-[rgba(105,111,107,0.76)]",
       toggleClass:

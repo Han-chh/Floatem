@@ -4,6 +4,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { createTodoItem, DEFAULT_SETTINGS } from "../../src/lib/models";
 import { TodoList } from "../../src/components/todos/TodoList";
 import { formatLocalDateKey } from "../../src/lib/models";
+import { formatTimestampInTimeZone } from "../../src/lib/timeZoneDate";
 import { useSettingsStore } from "../../src/store/settingsStore";
 import { useTodosStore } from "../../src/store/todosStore";
 
@@ -25,6 +26,14 @@ describe("TodoList", () => {
     const reminderButton = screen.getByRole("button", { name: "Change reminder" });
     expect(reminderButton).toHaveAttribute("data-tooltip", "This reminder has expired");
     expect(reminderButton.className).toContain("bg-[rgba(226,230,227,0.58)]");
+    const expectedTime = formatTimestampInTimeZone(
+      todo.reminderAt!,
+      useSettingsStore.getState().timeZone,
+      "time",
+      useSettingsStore.getState().timeFormat,
+    );
+    expect(reminderButton).toHaveTextContent(expectedTime);
+    expect(reminderButton.textContent?.trim()).toBe(expectedTime);
   });
 
   it("adds, completes, and deletes a todo with Enter submission while keeping Shift+Enter for new lines", async () => {
