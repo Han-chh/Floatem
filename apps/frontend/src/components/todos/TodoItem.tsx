@@ -291,9 +291,10 @@ function TodoRowBody({
               type="button"
               aria-label={todo.done ? t.todos.restoreTask : t.todos.completeTask}
               aria-pressed={todo.done}
+              data-action="todo-completion"
               data-tooltip={todo.done ? t.todos.restoreTask : t.todos.completeTask}
               disabled={preview}
-              className={`relative inline-flex h-6.5 w-6.5 shrink-0 items-center justify-center rounded-full border text-[9.5px] font-bold shadow-[0_6px_12px_rgba(61,49,34,0.08)] ${status.toggleClass}`}
+              className={`relative inline-flex h-6.5 w-6.5 shrink-0 items-center justify-center rounded-full border text-[9.5px] font-bold outline-none shadow-[0_6px_12px_rgba(61,49,34,0.08)] focus-visible:outline-none ${status.toggleClass}`}
               whileHover={canUseItemActions ? { scale: 1.06 } : undefined}
               whileTap={canUseItemActions ? { scale: 0.93 } : undefined}
               onPointerDown={canUseItemActions ? (event) => event.stopPropagation() : undefined}

@@ -762,7 +762,7 @@
     border-color: color-mix(in srgb, var(--afterglow-todo-completed) 24%, var(--afterglow-card-border)) !important;
   }
 
-  html[data-stickit-theme="afterglow"] [data-todo-status="done"] button[aria-pressed="true"] {
+  html[data-stickit-theme="afterglow"] [data-todo-status="done"] [data-action="todo-completion"][aria-pressed="true"] {
     color: white !important;
     border-color: color-mix(in srgb, var(--afterglow-todo-completed) 54%, transparent) !important;
     background: var(--afterglow-todo-completed) !important;

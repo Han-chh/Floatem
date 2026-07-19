@@ -631,6 +631,9 @@ export function FloatingNoteApp() {
     const nextPinned = !isDesktopPinned;
     const requestID = desktopPinRequestRef.current + 1;
     desktopPinRequestRef.current = requestID;
+    if (document.activeElement instanceof HTMLElement) {
+      document.activeElement.blur();
+    }
     setIsDesktopPinned(nextPinned);
     try {
       const result = await setFloatingCardDesktopPinned(cardReference, nextPinned);

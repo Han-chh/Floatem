@@ -929,6 +929,38 @@ describe("FloatingNoteApp", () => {
       await user.click(pinButton);
       expect(bridge.setFloatingCardDesktopPinned).toHaveBeenCalledWith({ kind: "todo", id: todo.id }, true);
       expect(screen.getByRole("dialog", { name: "Keep StickIt running" })).toBeInTheDocument();
+      expect(pinButton).not.toHaveFocus();
+    } finally {
+      bridge.restore();
+    }
+  });
+
+  it("keeps desktop pin and completion visuals isolated on a pinned floating todo", async () => {
+    const todo = createTodoItem("Pinned todo completion", { id: "floating-todo-pinned-complete" });
+    const bridge = installFloatingTodoBridge(todo);
+    window.__STICKIT_FLOATING_CARD_STATE__ = {
+      ...createFloatingTodoPayload(todo),
+      desktopPinned: true,
+    };
+    const user = userEvent.setup();
+
+    render(<FloatingNoteApp />);
+
+    try {
+      const card = await screen.findByTestId("todo-item");
+      const completionButton = within(card).getByRole("button", { name: "Complete task" });
+      const pinButton = within(card).getByRole("button", { name: "Remove from desktop" });
+
+      expect(completionButton).toHaveAttribute("data-action", "todo-completion");
+      expect(pinButton).toHaveAttribute("data-action", "desktop-pin");
+
+      await user.click(completionButton);
+
+      await waitFor(() => {
+        expect(completionButton).toHaveAttribute("aria-pressed", "true");
+      });
+      expect(pinButton).toHaveAttribute("aria-pressed", "true");
+      expect(completionButton).toHaveClass("outline-none", "focus-visible:outline-none");
     } finally {
       bridge.restore();
     }
