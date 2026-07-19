@@ -201,6 +201,7 @@ export function ReminderPicker({
   const [showPermissionWarning, setShowPermissionWarning] = useState(false);
   const [nowMs, setNowMs] = useState(() => Date.now());
   const reminderDateKey = todoDateKey ?? formatDateKeyInTimeZone(new Date(), timeZone);
+  const todayDateKey = formatDateKeyInTimeZone(new Date(nowMs), timeZone);
   const pastTooltip = t.todos.reminderPastTooltip;
 
   const quickOptions = useMemo(() => {
@@ -211,13 +212,16 @@ export function ReminderPicker({
       const hourValue = pad(parts.hour);
       const minuteValue = pad(parts.minute);
       const timestamp = buildReminderTimestamp(reminderDateKey, hourValue, minuteValue, timeZone);
+      const isPastDate = reminderDateKey < todayDateKey;
+      const isDifferentDate = shortcutDateKey !== reminderDateKey;
 
       return {
-        disabled: shortcutDateKey !== reminderDateKey || timestamp === null || !isFutureReminderTimestamp(timestamp, nowMs),
-        displayLabel: shortcutDateKey === reminderDateKey ? label : t.todos.notSameDay,
+        disabled: isPastDate || isDifferentDate || timestamp === null || !isFutureReminderTimestamp(timestamp, nowMs),
+        displayLabel: label,
         hourValue,
         label,
         minuteValue,
+        tooltip: isPastDate ? pastTooltip : isDifferentDate ? t.todos.notSameDay : label,
       };
     };
     const timeOfDayShortcut = (label: string, hourValue: string, minuteValue: string) => {
@@ -229,23 +233,33 @@ export function ReminderPicker({
         hourValue,
         label,
         minuteValue,
+        tooltip:
+          timestamp === null || !isFutureReminderTimestamp(timestamp, nowMs)
+            ? pastTooltip
+            : formatTimestampInTimeZone(timestamp, timeZone, "time", timeFormat),
       };
     };
 
     return [
       relativeShortcut(t.todos.inThirtyMinutes, 30 * 60 * 1000),
       relativeShortcut(t.todos.inOneHour, 60 * 60 * 1000),
+      timeOfDayShortcut(t.todos.earlyMorning, "07", "00"),
+      timeOfDayShortcut(t.todos.morning, "10", "00"),
       timeOfDayShortcut(t.todos.afternoon, "15", "00"),
       timeOfDayShortcut(t.todos.evening, "20", "00"),
     ];
   }, [
     nowMs,
     reminderDateKey,
+    todayDateKey,
     t.todos.afternoon,
+    t.todos.earlyMorning,
     t.todos.inOneHour,
     t.todos.inThirtyMinutes,
     t.todos.notSameDay,
+    t.todos.morning,
     t.todos.evening,
+    timeFormat,
     timeZone,
   ]);
 
@@ -507,7 +521,7 @@ export function ReminderPicker({
                               type="button"
                               aria-disabled={option.disabled}
                               aria-pressed={isSelected}
-                              data-tooltip={option.disabled ? option.displayLabel : option.label}
+                              data-tooltip={option.tooltip}
                               data-no-window-drag="true"
                               className={`rounded-[11px] border px-2 py-1.75 text-[10.5px] font-semibold ${
                                 option.disabled

@@ -193,8 +193,28 @@ describe("ReminderPicker", () => {
     );
 
     openDialog();
-    expect(screen.getAllByRole("button", { name: "Not same day" })).toHaveLength(2);
-    expect(screen.queryByRole("button", { name: "In 30m" })).not.toBeInTheDocument();
+    const thirtyMinutes = screen.getByRole("button", { name: "In 30m" });
+    const oneHour = screen.getByRole("button", { name: "In 1h" });
+    expect(thirtyMinutes).toHaveAttribute("aria-disabled", "true");
+    expect(oneHour).toHaveAttribute("aria-disabled", "true");
+    expect(thirtyMinutes).toHaveAttribute("data-tooltip", "Not same day");
+    expect(oneHour).toHaveAttribute("data-tooltip", "Not same day");
+    expect(screen.getByRole("button", { name: "Early morning" })).toHaveAttribute("data-tooltip", "07:00");
+    expect(screen.getByRole("button", { name: "Morning" })).toHaveAttribute("data-tooltip", "10:00");
+  });
+
+  it("marks every shortcut as passed for a past todo date", () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date("2026-04-05T12:00:00"));
+
+    render(<ReminderPicker todoTitle="Missed yesterday" todoDateKey="2026-04-04" reminderAt={null} onChange={vi.fn()} />);
+    openDialog();
+
+    ["In 30m", "In 1h", "Early morning", "Morning", "Afternoon", "Evening"].forEach((label) => {
+      const shortcut = screen.getByRole("button", { name: label });
+      expect(shortcut).toHaveAttribute("aria-disabled", "true");
+      expect(shortcut).toHaveAttribute("data-tooltip", "Already passed");
+    });
   });
 
   it("warns after saving when notification permission is unavailable", async () => {
@@ -239,6 +259,8 @@ describe("ReminderPicker", () => {
     expect(screen.getByRole("button", { name: "In 30m" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "In 1h" })).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "In 2h" })).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Early morning" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Morning" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Afternoon" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Evening" })).toBeInTheDocument();
 

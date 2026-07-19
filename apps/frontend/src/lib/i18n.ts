@@ -237,6 +237,8 @@ type MessageCatalog = {
     add: string;
     addGroup: string;
     afternoon: string;
+    earlyMorning: string;
+    morning: string;
     allDone: string;
     allGroups: string;
     bulkComplete: string;
@@ -593,6 +595,8 @@ const messages: Record<AppLanguage, MessageCatalog> = {
       bulkDeleteDialogTitle: "Delete selected todos",
       bulkSetDate: "Set date",
       afternoon: "Afternoon",
+      earlyMorning: "Early morning",
+      morning: "Morning",
       calendarHint: "Use the calendar to choose the day, then fine-tune the time below.",
       changeTodoDate: "Change todo date",
       changeReminder: "Change reminder",
@@ -918,6 +922,8 @@ const messages: Record<AppLanguage, MessageCatalog> = {
     todos: {
       add: "添加任务",
       afternoon: "\u4e0b\u5348",
+      earlyMorning: "早上",
+      morning: "上午",
       calendarHint: "先在日历里选日期，再在下方微调时间。",
       changeReminder: "修改提醒",
       clear: "清除",
