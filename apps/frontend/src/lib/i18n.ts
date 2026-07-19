@@ -24,6 +24,11 @@ type MessageCatalog = {
     keepOnDesktop: string;
     removeFromDesktop: string;
     resizeFloatingCard: string;
+    widgetGuideAddBody: string;
+    widgetGuideAddTitle: string;
+    widgetGuideDone: string;
+    widgetGuideRemoveBody: string;
+    widgetGuideRemoveTitle: string;
     save: string;
     scrollToBottom: string;
     scrollToTop: string;
@@ -351,9 +356,14 @@ const messages: Record<AppLanguage, MessageCatalog> = {
       close: "Close",
       english: "English",
       language: "Language",
-      keepOnDesktop: "Keep floating on desktop",
-      removeFromDesktop: "Remove from desktop",
+      keepOnDesktop: "Add desktop Widget",
+      removeFromDesktop: "Remove Widget request",
       resizeFloatingCard: "Resize floating card",
+      widgetGuideAddBody: "macOS manages desktop Widgets. Open the Widget Gallery, add StickIt, then choose this item. Apps cannot place a Widget silently.",
+      widgetGuideAddTitle: "Add to the desktop with WidgetKit",
+      widgetGuideDone: "Got it",
+      widgetGuideRemoveBody: "StickIt cleared this item’s Widget association. If the Widget is already on your desktop, remove it there using the macOS Widget menu.",
+      widgetGuideRemoveTitle: "Widget association removed",
       save: "Save",
       scrollToBottom: "Scroll to bottom",
       scrollToTop: "Scroll to top",
@@ -681,9 +691,14 @@ const messages: Record<AppLanguage, MessageCatalog> = {
       close: "关闭",
       english: "English",
       language: "语言",
-      keepOnDesktop: "保持悬浮在桌面",
-      removeFromDesktop: "取消桌面固定",
+      keepOnDesktop: "添加桌面小组件",
+      removeFromDesktop: "取消小组件关联",
       resizeFloatingCard: "调整悬浮卡片大小",
+      widgetGuideAddBody: "桌面小组件由 macOS 管理。请打开系统小组件库，添加 StickIt，然后选择当前内容。应用无法静默替你把小组件放到桌面。",
+      widgetGuideAddTitle: "通过 WidgetKit 添加到桌面",
+      widgetGuideDone: "知道了",
+      widgetGuideRemoveBody: "StickIt 已清除这项内容的小组件关联。如果小组件已经在桌面上，仍需通过 macOS 小组件菜单手动移除。",
+      widgetGuideRemoveTitle: "已取消小组件关联",
       save: "保存",
       scrollToBottom: "滚动到底部",
       scrollToTop: "滚动到顶部",

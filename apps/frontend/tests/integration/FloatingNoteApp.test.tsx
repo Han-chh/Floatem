@@ -98,6 +98,8 @@ function installFloatingBridge(note: NoteCard) {
   const setEditableInputActive = vi.fn();
   const setTextCompositionActive = vi.fn();
   const setFloatingCardDesktopPinned = vi.fn(async () => {});
+  const requestDesktopWidget = vi.fn(async () => ({ requested: true, requiresSystemPlacement: true }));
+  const removeDesktopWidgetAssociation = vi.fn(async () => {});
   const writeClipboardText = vi.fn(async (text: string) => {
     clipboard.value = text;
   });
@@ -149,6 +151,8 @@ function installFloatingBridge(note: NoteCard) {
     getFloatingCardScreenPlacement,
     startFloatingCardDrag,
     setFloatingCardDesktopPinned,
+    requestDesktopWidget,
+    removeDesktopWidgetAssociation,
     openNotificationSettings: vi.fn(async () => {}),
     sendNotification: vi.fn(async () => {}),
     showNotification: vi.fn(async () => {}),
@@ -186,6 +190,8 @@ function installFloatingBridge(note: NoteCard) {
     setEditableInputActive,
     setTextCompositionActive,
     setFloatingCardDesktopPinned,
+    requestDesktopWidget,
+    removeDesktopWidgetAssociation,
     writeClipboardText,
   };
 }
@@ -200,6 +206,8 @@ function installFloatingTodoBridge(todo: TodoItem) {
   const setEditableInputActive = vi.fn();
   const setTextCompositionActive = vi.fn();
   const setFloatingCardDesktopPinned = vi.fn(async () => {});
+  const requestDesktopWidget = vi.fn(async () => ({ requested: true, requiresSystemPlacement: true }));
+  const removeDesktopWidgetAssociation = vi.fn(async () => {});
 
   window.__STICKIT_FLOATING_CARD_STATE__ = createFloatingTodoPayload(todo);
   window.stickItHost = {
@@ -248,6 +256,8 @@ function installFloatingTodoBridge(todo: TodoItem) {
     getFloatingCardScreenPlacement,
     startFloatingCardDrag,
     setFloatingCardDesktopPinned,
+    requestDesktopWidget,
+    removeDesktopWidgetAssociation,
     openNotificationSettings: vi.fn(async () => {}),
     sendNotification: vi.fn(async () => {}),
     showNotification: vi.fn(async () => {}),
@@ -285,6 +295,8 @@ function installFloatingTodoBridge(todo: TodoItem) {
     setTextCompositionActive,
     startFloatingCardDrag,
     setFloatingCardDesktopPinned,
+    requestDesktopWidget,
+    removeDesktopWidgetAssociation,
   };
 }
 
@@ -434,7 +446,7 @@ describe("FloatingNoteApp", () => {
 
     try {
       const card = await screen.findByTestId("note-card");
-      const pinButton = within(card).getByRole("button", { name: "Keep floating on desktop" });
+      const pinButton = within(card).getByRole("button", { name: "Add desktop Widget" });
       const groupButton = within(card).getByRole("button", { name: "Change note group" });
       const metadataRow = groupButton.closest(".note-card-chip-group--floating");
       const actionRow = pinButton.closest(".note-card-actions--floating");
@@ -446,14 +458,17 @@ describe("FloatingNoteApp", () => {
       expect(within(card).getAllByRole("button", { name: "Change note group" })).toHaveLength(1);
 
       await user.click(pinButton);
-      expect(bridge.setFloatingCardDesktopPinned).toHaveBeenCalledWith(
-        { kind: "note", id: note.id },
-        true,
-      );
-      expect(within(card).getByRole("button", { name: "Remove from desktop" })).toHaveAttribute(
+      expect(bridge.requestDesktopWidget).toHaveBeenCalledWith({ kind: "note", id: note.id });
+      expect(screen.getByRole("dialog", { name: "Add to the desktop with WidgetKit" })).toBeInTheDocument();
+      expect(within(card).getByRole("button", { name: "Remove Widget request" })).toHaveAttribute(
         "aria-pressed",
         "true",
       );
+
+      await user.click(screen.getByRole("button", { name: "Got it" }));
+      await user.click(within(card).getByRole("button", { name: "Remove Widget request" }));
+      expect(bridge.removeDesktopWidgetAssociation).toHaveBeenCalledWith({ kind: "note", id: note.id });
+      expect(screen.getByRole("dialog", { name: "Widget association removed" })).toBeInTheDocument();
     } finally {
       bridge.restore();
     }
@@ -815,7 +830,7 @@ describe("FloatingNoteApp", () => {
     }
   });
 
-  it("pins a floating todo to the desktop before its group action", async () => {
+  it("requests a desktop todo Widget before its group action", async () => {
     const todo = createTodoItem("Pinned todo", { id: "floating-todo-pin" });
     const bridge = installFloatingTodoBridge(todo);
     const user = userEvent.setup();
@@ -825,15 +840,13 @@ describe("FloatingNoteApp", () => {
     try {
       const card = await screen.findByTestId("todo-item");
       const actions = within(card).getAllByRole("button");
-      const pinButton = within(card).getByRole("button", { name: "Keep floating on desktop" });
+      const pinButton = within(card).getByRole("button", { name: "Add desktop Widget" });
       const groupButton = within(card).getByRole("button", { name: "Change todo group" });
       expect(actions.indexOf(pinButton)).toBeLessThan(actions.indexOf(groupButton));
 
       await user.click(pinButton);
-      expect(bridge.setFloatingCardDesktopPinned).toHaveBeenCalledWith(
-        { kind: "todo", id: todo.id },
-        true,
-      );
+      expect(bridge.requestDesktopWidget).toHaveBeenCalledWith({ kind: "todo", id: todo.id });
+      expect(screen.getByRole("dialog", { name: "Add to the desktop with WidgetKit" })).toBeInTheDocument();
     } finally {
       bridge.restore();
     }

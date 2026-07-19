@@ -249,6 +249,15 @@ const browserBridge: StickItNativeBridge = {
   async setFloatingCardDesktopPinned(_card: FloatingCardReference, _pinned: boolean) {
     // Browser preview does not own desktop-level card windows.
   },
+  async requestDesktopWidget() {
+    return { requested: true, requiresSystemPlacement: true };
+  },
+  async removeDesktopWidgetAssociation() {
+    // Browser preview has no system Widget association.
+  },
+  async getDesktopWidgetState() {
+    return { requested: false, systemManaged: true };
+  },
   async hidePanelWindow() {
     await this.hideWindow();
   },

@@ -115,6 +115,15 @@ final class FloatingNoteWindowController: NSObject, WKNavigationDelegate, WKScri
             pinned: Boolean(pinned),
           });
         },
+        requestDesktopWidget(card) {
+          return send("requestDesktopWidget", { kind: String(card?.kind ?? ""), id: String(card?.id ?? "") });
+        },
+        removeDesktopWidgetAssociation(card) {
+          return send("removeDesktopWidgetAssociation", { kind: String(card?.kind ?? ""), id: String(card?.id ?? "") });
+        },
+        getDesktopWidgetState(card) {
+          return send("getDesktopWidgetState", { kind: String(card?.kind ?? ""), id: String(card?.id ?? "") });
+        },
         showWindow() { return Promise.resolve(); },
         hideWindow() { return Promise.resolve(); },
         toggleWindow() { return Promise.resolve(); },
@@ -155,6 +164,9 @@ final class FloatingNoteWindowController: NSObject, WKNavigationDelegate, WKScri
     var onClose: ((String, String) -> Void)?
     var onRequestDrag: ((String, String) -> Void)?
     var onSetDesktopPinned: ((String, String, Bool) -> Void)?
+    var onRequestDesktopWidget: ((String, String) throws -> [String: Any])?
+    var onRemoveDesktopWidgetAssociation: ((String, String) throws -> Void)?
+    var onGetDesktopWidgetState: ((String, String) throws -> [String: Any])?
     var onFrameChange: ((NSRect) -> Void)?
     var onMove: ((NSRect) -> Void)?
     var onLoadAllData: (() throws -> [String: Any])?
@@ -307,6 +319,9 @@ final class FloatingNoteWindowController: NSObject, WKNavigationDelegate, WKScri
         onClose = nil
         onRequestDrag = nil
         onSetDesktopPinned = nil
+        onRequestDesktopWidget = nil
+        onRemoveDesktopWidgetAssociation = nil
+        onGetDesktopWidgetState = nil
         onFrameChange = nil
         onLoadAllData = nil
         onSaveNotes = nil
@@ -694,6 +709,25 @@ final class FloatingNoteWindowController: NSObject, WKNavigationDelegate, WKScri
             let pinned = params["pinned"] as? Bool ?? false
             onSetDesktopPinned?(kind, requestedCardID, pinned)
             resolveBridgeRequest(id: requestID, ok: true, result: NSNull())
+        case "requestDesktopWidget":
+            do {
+                resolveBridgeRequest(id: requestID, ok: true, result: try onRequestDesktopWidget?(cardKind, cardID) ?? [:])
+            } catch {
+                resolveBridgeRequest(id: requestID, ok: false, result: error.localizedDescription)
+            }
+        case "removeDesktopWidgetAssociation":
+            do {
+                try onRemoveDesktopWidgetAssociation?(cardKind, cardID)
+                resolveBridgeRequest(id: requestID, ok: true, result: NSNull())
+            } catch {
+                resolveBridgeRequest(id: requestID, ok: false, result: error.localizedDescription)
+            }
+        case "getDesktopWidgetState":
+            do {
+                resolveBridgeRequest(id: requestID, ok: true, result: try onGetDesktopWidgetState?(cardKind, cardID) ?? [:])
+            } catch {
+                resolveBridgeRequest(id: requestID, ok: false, result: error.localizedDescription)
+            }
         case "getCapabilities":
             resolveBridgeRequest(id: requestID, ok: true, result: floatingCapabilities())
         case "loadAllData":

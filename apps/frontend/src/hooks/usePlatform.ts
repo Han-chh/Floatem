@@ -116,6 +116,24 @@ export async function setFloatingCardDesktopPinned(card: FloatingCardReference, 
   await bridge.setFloatingCardDesktopPinned?.(card, pinned);
 }
 
+export async function requestDesktopWidget(card: FloatingCardReference) {
+  const bridge = getStickItBridge() as Partial<StickItNativeBridge>;
+  if (bridge.requestDesktopWidget) {
+    return await bridge.requestDesktopWidget(card);
+  }
+  await bridge.setFloatingCardDesktopPinned?.(card, true);
+  return { requested: true, requiresSystemPlacement: true };
+}
+
+export async function removeDesktopWidgetAssociation(card: FloatingCardReference) {
+  const bridge = getStickItBridge() as Partial<StickItNativeBridge>;
+  if (bridge.removeDesktopWidgetAssociation) {
+    await bridge.removeDesktopWidgetAssociation(card);
+    return;
+  }
+  await bridge.setFloatingCardDesktopPinned?.(card, false);
+}
+
 function canUseFloatingPayload(payload: DragPreviewPayload) {
   return payload.kind === "note" ? canUseFloatingNotes() : canUseFloatingTodos();
 }

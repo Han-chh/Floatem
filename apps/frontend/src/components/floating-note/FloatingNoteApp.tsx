@@ -1,5 +1,6 @@
 import type { DragPreviewPayload, FloatingCardScreenPlacement } from "@stickit/native-bridge";
 import { useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import type { Descendant } from "slate";
 import {
   closeFloatingCard,
@@ -8,7 +9,8 @@ import {
   resizeFloatingCard,
   saveTodos,
   setEditableInputActive,
-  setFloatingCardDesktopPinned,
+  removeDesktopWidgetAssociation,
+  requestDesktopWidget,
   setTextCompositionActive,
   startFloatingCardDrag,
 } from "../../hooks/usePlatform";
@@ -140,6 +142,7 @@ export function FloatingNoteApp() {
   const [cardSize, setCardSize] = useState(() => initialPayload?.size ?? { width: 1, height: 1 });
   const [frameSize, setFrameSize] = useState(() => initialPayload?.size ?? { width: 1, height: 1 });
   const [isDesktopPinned, setIsDesktopPinned] = useState(() => Boolean(initialPayload?.desktopPinned));
+  const [widgetGuide, setWidgetGuide] = useState<"add" | "remove" | null>(null);
   const [hasOpenDialog, setHasOpenDialog] = useState(false);
   const [dialogSide, setDialogSide] = useState<FloatingDialogSide>("right");
   const [isHydrated, setIsHydrated] = useState(false);
@@ -623,12 +626,22 @@ export function FloatingNoteApp() {
     void closeFloatingCard(cardReference);
   };
 
-  const handleDesktopPinToggle = () => {
+  const handleDesktopPinToggle = async () => {
     const nextPinned = !isDesktopPinned;
     setIsDesktopPinned(nextPinned);
-    void setFloatingCardDesktopPinned(cardReference, nextPinned).catch(() => {
+    try {
+      if (nextPinned) {
+        const result = await requestDesktopWidget(cardReference);
+        if (result.requiresSystemPlacement) {
+          setWidgetGuide("add");
+        }
+      } else {
+        await removeDesktopWidgetAssociation(cardReference);
+        setWidgetGuide("remove");
+      }
+    } catch {
       setIsDesktopPinned(!nextPinned);
-    });
+    }
   };
 
   const updateUserSize = (clientX: number, clientY: number) => {
@@ -787,6 +800,38 @@ export function FloatingNoteApp() {
             }}
           />
         ) : null}
+        {widgetGuide && typeof document !== "undefined"
+          ? createPortal(
+              <div
+                className="stickit-modal-backdrop fixed inset-0 z-[120] flex items-center justify-center bg-[rgba(30,25,21,0.28)] p-5"
+                role="presentation"
+              >
+                <div
+                  role="dialog"
+                  aria-modal="true"
+                  aria-label={widgetGuide === "add" ? t.common.widgetGuideAddTitle : t.common.widgetGuideRemoveTitle}
+                  className="paper-panel w-full max-w-[390px] rounded-[24px] p-5 shadow-[0_26px_48px_rgba(30,25,21,0.24)]"
+                >
+                  <h2 className="font-display text-[21px] font-semibold text-[var(--brown-strong)]">
+                    {widgetGuide === "add" ? t.common.widgetGuideAddTitle : t.common.widgetGuideRemoveTitle}
+                  </h2>
+                  <p className="mt-3 text-[12.5px] leading-6 text-[var(--muted)]">
+                    {widgetGuide === "add" ? t.common.widgetGuideAddBody : t.common.widgetGuideRemoveBody}
+                  </p>
+                  <div className="mt-5 flex justify-end">
+                    <button
+                      type="button"
+                      className="paper-button paper-button-primary rounded-[14px] px-4 py-2.5 text-[12px] font-semibold"
+                      onClick={() => setWidgetGuide(null)}
+                    >
+                      {t.common.widgetGuideDone}
+                    </button>
+                  </div>
+                </div>
+              </div>,
+              document.body,
+            )
+          : null}
       </article>
     </main>
   );

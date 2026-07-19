@@ -173,6 +173,9 @@ final class AppStorage {
 
     func floatingCardPayload(kind: StickItEntityKind, id: String) throws -> [String: Any]? {
         let settings = try loadSettings()
+        let desktopRequested = try loadWidgetPreferences().contains {
+            $0.entityKind == kind && $0.entityID == id
+        }
         switch kind {
         case .note:
             let root = try loadNotes()
@@ -187,7 +190,7 @@ final class AppStorage {
                 "pointerOffset": ["x": 24, "y": 24],
                 "note": note,
                 "groups": groups,
-                "desktopPinned": false,
+                "desktopPinned": desktopRequested,
             ]
         case .todo:
             let root = try readJSONObject(at: todosURL) ?? []
@@ -204,7 +207,7 @@ final class AppStorage {
                 "pointerOffset": ["x": 24, "y": 24],
                 "todo": todo,
                 "groups": groups,
-                "desktopPinned": false,
+                "desktopPinned": desktopRequested,
             ]
         }
     }

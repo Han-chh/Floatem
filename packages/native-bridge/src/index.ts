@@ -133,6 +133,17 @@ export type FloatingCardReference = {
   id: string;
 };
 
+export type DesktopWidgetRequestResult = {
+  requested: boolean;
+  requiresSystemPlacement: boolean;
+  message?: string;
+};
+
+export type DesktopWidgetState = {
+  requested: boolean;
+  systemManaged: boolean;
+};
+
 export type ScreenColorPickResult = {
   sRGBHex: string;
 };
@@ -175,6 +186,9 @@ export type HostBridge<TLoadAllResult, TNotes, TTodos, TSettings> = {
   getFloatingCardScreenPlacement: () => Promise<FloatingCardScreenPlacement | null>;
   startFloatingCardDrag: (card: FloatingCardReference) => Promise<void>;
   setFloatingCardDesktopPinned?: (card: FloatingCardReference, pinned: boolean) => Promise<void>;
+  requestDesktopWidget?: (card: FloatingCardReference) => Promise<DesktopWidgetRequestResult>;
+  removeDesktopWidgetAssociation?: (card: FloatingCardReference) => Promise<void>;
+  getDesktopWidgetState?: (card: FloatingCardReference) => Promise<DesktopWidgetState>;
   openNotificationSettings: () => Promise<void>;
   sendNotification: (request: NotificationRequest) => Promise<void>;
   showNotification: (request: NotificationRequest) => Promise<void>;

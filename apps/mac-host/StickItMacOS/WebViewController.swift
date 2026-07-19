@@ -587,6 +587,22 @@ final class WebViewController: NSViewController, WKNavigationDelegate {
                     pinned: params["pinned"] as? Bool ?? false
                 )
                 result = NSNull()
+            case "requestDesktopWidget":
+                guard let kind = params["kind"] as? String, let cardID = params["id"] as? String else {
+                    throw StickItBridgeError.invalidParameters("StickIt expected a Widget entity reference.")
+                }
+                result = try bridgeDelegate?.requestDesktopWidgetFromBridge(kind: kind, id: cardID) ?? [:]
+            case "removeDesktopWidgetAssociation":
+                guard let kind = params["kind"] as? String, let cardID = params["id"] as? String else {
+                    throw StickItBridgeError.invalidParameters("StickIt expected a Widget entity reference.")
+                }
+                try bridgeDelegate?.removeDesktopWidgetAssociationFromBridge(kind: kind, id: cardID)
+                result = NSNull()
+            case "getDesktopWidgetState":
+                guard let kind = params["kind"] as? String, let cardID = params["id"] as? String else {
+                    throw StickItBridgeError.invalidParameters("StickIt expected a Widget entity reference.")
+                }
+                result = try bridgeDelegate?.getDesktopWidgetStateFromBridge(kind: kind, id: cardID) ?? [:]
             case "quitApplication":
                 bridgeDelegate?.quitApplicationFromBridge()
                 result = NSNull()
@@ -988,6 +1004,15 @@ final class WebViewController: NSViewController, WKNavigationDelegate {
             id: String(card?.id ?? ""),
             pinned: Boolean(pinned),
           });
+        },
+        requestDesktopWidget(card) {
+          return send("requestDesktopWidget", { kind: String(card?.kind ?? ""), id: String(card?.id ?? "") });
+        },
+        removeDesktopWidgetAssociation(card) {
+          return send("removeDesktopWidgetAssociation", { kind: String(card?.kind ?? ""), id: String(card?.id ?? "") });
+        },
+        getDesktopWidgetState(card) {
+          return send("getDesktopWidgetState", { kind: String(card?.kind ?? ""), id: String(card?.id ?? "") });
         },
         hidePanelWindow() {
           return send("hideWindow");

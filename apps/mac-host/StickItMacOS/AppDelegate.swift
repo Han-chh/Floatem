@@ -82,7 +82,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
             self.mainWindowController.installSavedHotKey()
             self.mainWindowController.syncSavedTodoReminders()
-            self.mainWindowController.restorePinnedDesktopCards()
             self.mainWindowController.showMainWindow()
         }
     }
