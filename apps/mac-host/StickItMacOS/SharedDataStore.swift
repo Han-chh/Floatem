@@ -1,6 +1,14 @@
 import Foundation
 import OSLog
 
+enum SharedDataStoreError: LocalizedError {
+    case invalidJSON
+
+    var errorDescription: String? {
+        "StickIt shared data is not valid JSON."
+    }
+}
+
 final class SharedDataStore: @unchecked Sendable {
     static let notesFilename = "notes.json"
     static let todosFilename = "todos.json"
@@ -40,7 +48,7 @@ final class SharedDataStore: @unchecked Sendable {
 
     func writeJSONObject(_ object: Any, filename: String) throws {
         guard JSONSerialization.isValidJSONObject(object) else {
-            throw StickItBridgeError.invalidJSON("StickIt received data that cannot be encoded to JSON.")
+            throw SharedDataStoreError.invalidJSON
         }
         try ensureDirectoryExists()
         let data = try JSONSerialization.data(withJSONObject: object, options: [.prettyPrinted, .sortedKeys])
@@ -272,4 +280,3 @@ struct LegacyDataMigrator {
         logger.info("Migrated legacy desktop cards to entity-only Widget preferences. count=\(references.count)")
     }
 }
-
