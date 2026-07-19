@@ -61,17 +61,25 @@ if (!distDirArg || !outputDirArg) {
 
 const distDir = path.resolve(distDirArg);
 const outputDir = path.resolve(outputDirArg);
-const htmlPath = path.join(distDir, "index.html");
-
-if (!existsSync(htmlPath)) {
-  throw new Error(`Missing Vite build output at "${htmlPath}". Run the frontend build first.`);
+const requiredHTMLPath = path.join(distDir, "index.html");
+if (!existsSync(requiredHTMLPath)) {
+  throw new Error(`Missing Vite build output at "${requiredHTMLPath}". Run the frontend build first.`);
 }
 
-let html = readFileSync(htmlPath, "utf8");
-const inlineStyles = [];
-const inlineScripts = [];
+const htmlFilenames = ["index.html", "floating.html"].filter((filename) =>
+  existsSync(path.join(distDir, filename)),
+);
 
-html = html.replace(/<link\b[^>]*>/gi, (tag) => {
+rmSync(outputDir, { recursive: true, force: true });
+mkdirSync(outputDir, { recursive: true });
+cpSync(distDir, outputDir, { recursive: true });
+
+for (const filename of htmlFilenames) {
+  let html = readFileSync(path.join(distDir, filename), "utf8");
+  const inlineStyles = [];
+  const inlineScripts = [];
+
+  html = html.replace(/<link\b[^>]*>/gi, (tag) => {
   const rel = getAttribute(tag, "rel")?.toLowerCase();
   const href = getAttribute(tag, "href");
 
@@ -86,9 +94,9 @@ html = html.replace(/<link\b[^>]*>/gi, (tag) => {
   });
 
   return "";
-});
+  });
 
-html = html.replace(/<script\b[^>]*>\s*<\/script>/gi, (tag) => {
+  html = html.replace(/<script\b[^>]*>\s*<\/script>/gi, (tag) => {
   const type = getAttribute(tag, "type")?.toLowerCase();
   const src = getAttribute(tag, "src");
 
@@ -103,31 +111,29 @@ html = html.replace(/<script\b[^>]*>\s*<\/script>/gi, (tag) => {
   });
 
   return "";
-});
+  });
 
-const styleTags = inlineStyles
+  const styleTags = inlineStyles
   .map(
     ({ href, content }) =>
       `    <style data-stickit-inline="${href}">\n${sanitizeInlineStyle(content)}\n    </style>`,
   )
   .join("\n");
 
-const scriptTags = inlineScripts
+  const scriptTags = inlineScripts
   .map(
     ({ src, content }) =>
       `    <script type="module" data-stickit-inline="${src}">\n${sanitizeInlineScript(content)}\n    </script>`,
   )
   .join("\n");
 
-if (styleTags) {
-  html = injectBeforeClosingTag(html, "head", styleTags);
-}
+  if (styleTags) {
+    html = injectBeforeClosingTag(html, "head", styleTags);
+  }
 
-if (scriptTags) {
-  html = injectBeforeClosingTag(html, "body", scriptTags);
-}
+  if (scriptTags) {
+    html = injectBeforeClosingTag(html, "body", scriptTags);
+  }
 
-rmSync(outputDir, { recursive: true, force: true });
-mkdirSync(outputDir, { recursive: true });
-cpSync(distDir, outputDir, { recursive: true });
-writeFileSync(path.join(outputDir, "index.html"), html);
+  writeFileSync(path.join(outputDir, filename), html);
+}

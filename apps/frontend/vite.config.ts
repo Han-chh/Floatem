@@ -2,6 +2,7 @@ import tailwindcss from "@tailwindcss/vite";
 import react from "@vitejs/plugin-react";
 import { fileURLToPath, URL } from "node:url";
 import { defineConfig } from "vitest/config";
+import { resolve } from "node:path";
 import rootPackage from "../../package.json";
 
 export default defineConfig({
@@ -21,6 +22,12 @@ export default defineConfig({
   build: {
     outDir: "dist",
     emptyOutDir: true,
+    rollupOptions: {
+      input: {
+        main: resolve(fileURLToPath(new URL(".", import.meta.url)), "index.html"),
+        floating: resolve(fileURLToPath(new URL(".", import.meta.url)), "floating.html"),
+      },
+    },
   },
   server: {
     port: 1420,
