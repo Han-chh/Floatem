@@ -23,6 +23,8 @@
 		A00000000000000000000214 /* DragPreviewWindowController.swift in Sources */ = {isa = PBXBuildFile; fileRef = A00000000000000000000118 /* DragPreviewWindowController.swift */; };
 		A00000000000000000000215 /* FloatingNoteWindowController.swift in Sources */ = {isa = PBXBuildFile; fileRef = A00000000000000000000119 /* FloatingNoteWindowController.swift */; };
 		A00000000000000000000216 /* LaunchAtLoginManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = A00000000000000000000120 /* LaunchAtLoginManager.swift */; };
+		A00000000000000000000217 /* SharedModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = A00000000000000000000121 /* SharedModels.swift */; };
+		A00000000000000000000218 /* SharedDataStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = A00000000000000000000122 /* SharedDataStore.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -46,6 +48,9 @@
 		A00000000000000000000118 /* DragPreviewWindowController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DragPreviewWindowController.swift; sourceTree = "<group>"; };
 		A00000000000000000000119 /* FloatingNoteWindowController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FloatingNoteWindowController.swift; sourceTree = "<group>"; };
 		A00000000000000000000120 /* LaunchAtLoginManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LaunchAtLoginManager.swift; sourceTree = "<group>"; };
+		A00000000000000000000121 /* SharedModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SharedModels.swift; sourceTree = "<group>"; };
+		A00000000000000000000122 /* SharedDataStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SharedDataStore.swift; sourceTree = "<group>"; };
+		A00000000000000000000123 /* StickIt.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = StickIt.entitlements; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -103,9 +108,12 @@
 				A00000000000000000000118 /* DragPreviewWindowController.swift */,
 				A00000000000000000000119 /* FloatingNoteWindowController.swift */,
 				A00000000000000000000120 /* LaunchAtLoginManager.swift */,
+				A00000000000000000000121 /* SharedModels.swift */,
+				A00000000000000000000122 /* SharedDataStore.swift */,
 				A00000000000000000000107 /* WebViewController.swift */,
 				A00000000000000000000116 /* main.swift */,
 				A00000000000000000000108 /* Info.plist */,
+				A00000000000000000000123 /* StickIt.entitlements */,
 				A00000000000000000000007 /* Resources */,
 			);
 			path = StickItMacOS;
@@ -226,6 +234,8 @@
 				A00000000000000000000214 /* DragPreviewWindowController.swift in Sources */,
 				A00000000000000000000215 /* FloatingNoteWindowController.swift in Sources */,
 				A00000000000000000000216 /* LaunchAtLoginManager.swift in Sources */,
+				A00000000000000000000217 /* SharedModels.swift in Sources */,
+				A00000000000000000000218 /* SharedDataStore.swift in Sources */,
 				A00000000000000000000207 /* WebViewController.swift in Sources */,
 				A00000000000000000000212 /* main.swift in Sources */,
 			);
@@ -265,6 +275,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CODE_SIGNING_ALLOWED = YES;
+				CODE_SIGN_ENTITLEMENTS = StickItMacOS/StickIt.entitlements;
 				CODE_SIGNING_REQUIRED = YES;
 				CODE_SIGN_IDENTITY = "Apple Development";
 				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Apple Development";
@@ -272,7 +283,7 @@
 				CURRENT_PROJECT_VERSION = 29;
 				DEVELOPMENT_TEAM = 7JXFC39YLS;
 				ENABLE_DEBUG_DYLIB = NO;
-				ENABLE_HARDENED_RUNTIME = NO;
+				ENABLE_HARDENED_RUNTIME = YES;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = StickItMacOS/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -293,13 +304,14 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CODE_SIGNING_ALLOWED = YES;
+				CODE_SIGN_ENTITLEMENTS = StickItMacOS/StickIt.entitlements;
 				CODE_SIGNING_REQUIRED = YES;
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 29;
 				DEVELOPMENT_TEAM = 7JXFC39YLS;
 				ENABLE_DEBUG_DYLIB = NO;
-				ENABLE_HARDENED_RUNTIME = NO;
+				ENABLE_HARDENED_RUNTIME = YES;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = StickItMacOS/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (

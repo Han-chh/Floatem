@@ -1,13 +1,35 @@
 import Foundation
+import OSLog
 
 @MainActor
 final class AppStorage {
     private let fileManager = FileManager.default
     private let appSupportDirectory: URL
+    private let legacyAppSupportDirectory: URL
+    private let sharedStore: SharedDataStore
+    private let logger = Logger(subsystem: "com.stickit.app", category: "Storage")
 
     init(bundleIdentifier: String = Bundle.main.bundleIdentifier ?? "com.stickit.app") {
         let baseDirectory = fileManager.urls(for: .applicationSupportDirectory, in: .userDomainMask).first!
-        appSupportDirectory = baseDirectory.appendingPathComponent(bundleIdentifier, isDirectory: true)
+        legacyAppSupportDirectory = baseDirectory.appendingPathComponent(bundleIdentifier, isDirectory: true)
+        let preferredDirectory = StickItSharedContainer.sharedDataURL(fileManager: fileManager)
+            ?? legacyAppSupportDirectory
+        appSupportDirectory = preferredDirectory
+        sharedStore = SharedDataStore(directoryURL: preferredDirectory, fileManager: fileManager)
+
+        if preferredDirectory != legacyAppSupportDirectory {
+            do {
+                try LegacyDataMigrator(
+                    legacyDirectoryURL: legacyAppSupportDirectory,
+                    sharedStore: sharedStore,
+                    fileManager: fileManager
+                ).migrateIfNeeded()
+            } catch {
+                logger.error("Shared data migration failed; legacy data remains untouched. error=\(error.localizedDescription, privacy: .public)")
+            }
+        } else {
+            logger.warning("App Group container is unavailable; using the legacy application-support directory.")
+        }
     }
 
     func loadAllData() throws -> [String: Any] {
@@ -128,6 +150,37 @@ final class AppStorage {
 
     func saveDesktopCards(_ cards: [[String: Any]]) throws {
         try saveJSONObject(cards, to: desktopCardsURL)
+    }
+
+    func loadWidgetPreferences() throws -> [DesktopWidgetPreference] {
+        try sharedStore.widgetPreferences()
+    }
+
+    func setWidgetPreference(kind: StickItEntityKind, id: String, requested: Bool) throws {
+        try sharedStore.setWidgetPreference(
+            WidgetEntityReference(entityKind: kind, entityID: id),
+            requested: requested
+        )
+    }
+
+    func noteSnapshots() throws -> [NoteWidgetSnapshot] {
+        try sharedStore.noteSnapshots()
+    }
+
+    func todoSnapshots() throws -> [TodoWidgetSnapshot] {
+        try sharedStore.todoSnapshots()
+    }
+
+    func floatingWindowStates() throws -> [FloatingCardWindowState] {
+        try sharedStore.floatingWindowStates()
+    }
+
+    func saveFloatingWindowState(_ state: FloatingCardWindowState) throws {
+        try sharedStore.saveFloatingWindowState(state)
+    }
+
+    func removeFloatingWindowState(kind: StickItEntityKind, id: String) throws {
+        try sharedStore.removeFloatingWindowState(WidgetEntityReference(entityKind: kind, entityID: id))
     }
 
     func savePanelPosition(origin: CGPoint) throws {

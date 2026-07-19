@@ -1,0 +1,100 @@
+import Foundation
+
+enum StickItSharedContainer {
+    static let appGroupIdentifier = "group.com.stickit.app"
+    static let sharedDataDirectoryName = "SharedData"
+    static let currentSchemaVersion = 1
+
+    static func containerURL(fileManager: FileManager = .default) -> URL? {
+        fileManager.containerURL(forSecurityApplicationGroupIdentifier: appGroupIdentifier)
+    }
+
+    static func sharedDataURL(fileManager: FileManager = .default) -> URL? {
+        containerURL(fileManager: fileManager)?
+            .appendingPathComponent(sharedDataDirectoryName, isDirectory: true)
+    }
+}
+
+enum StickItEntityKind: String, Codable, CaseIterable, Sendable {
+    case note
+    case todo
+}
+
+struct WidgetEntityReference: Codable, Hashable, Sendable {
+    var entityKind: StickItEntityKind
+    var entityID: String
+}
+
+struct NoteWidgetSnapshot: Codable, Hashable, Sendable {
+    var entityID: String
+    var title: String
+    var summary: String
+    var colorHex: String
+    var updatedAt: Date
+    var schemaVersion: Int = StickItSharedContainer.currentSchemaVersion
+}
+
+struct TodoWidgetSnapshot: Codable, Hashable, Sendable {
+    var entityID: String
+    var title: String
+    var isCompleted: Bool
+    var dueDateKey: String?
+    var reminderAt: Date?
+    var updatedAt: Date
+    var schemaVersion: Int = StickItSharedContainer.currentSchemaVersion
+}
+
+struct DesktopWidgetPreference: Codable, Hashable, Sendable {
+    var entityKind: StickItEntityKind
+    var entityID: String
+    var requestedAt: Date
+    var lastKnownWidgetFamily: String?
+    var schemaVersion: Int = StickItSharedContainer.currentSchemaVersion
+}
+
+struct DesktopPinStateMigrationRecord: Codable, Sendable {
+    var migratedEntityCount: Int
+    var migratedAt: Date
+    var sourceFilename: String
+    var schemaVersion: Int = StickItSharedContainer.currentSchemaVersion
+}
+
+struct CodablePoint: Codable, Hashable, Sendable {
+    var x: Double
+    var y: Double
+}
+
+struct CodableRect: Codable, Hashable, Sendable {
+    var x: Double
+    var y: Double
+    var width: Double
+    var height: Double
+}
+
+struct FloatingCardWindowState: Codable, Hashable, Sendable {
+    var entityKind: StickItEntityKind
+    var entityID: String
+    var frame: CodableRect
+    var screenIdentifier: String?
+    var screenVisibleFrame: CodableRect?
+    var normalizedPosition: CodablePoint?
+    var isAlwaysOnTop: Bool
+    var updatedAt: Date
+    var schemaVersion: Int = StickItSharedContainer.currentSchemaVersion
+}
+
+struct ScreenPlacementState: Codable, Hashable, Sendable {
+    var frame: CodableRect
+    var screenIdentifier: String?
+    var screenVisibleFrame: CodableRect?
+    var normalizedPosition: CodablePoint?
+    var schemaVersion: Int = StickItSharedContainer.currentSchemaVersion
+}
+
+struct SharedThemeSettings: Codable, Hashable, Sendable {
+    var theme: String
+    var language: String
+    var updatedAt: Date
+    var schemaVersion: Int = StickItSharedContainer.currentSchemaVersion
+}
+
