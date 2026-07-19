@@ -372,7 +372,7 @@ function buildChineseHelpContent(context: HelpContentContext): HelpDialogContent
                 items: [
                   `默认分区：${context.defaultSectionLabel}。`,
                   `时区：${context.timeZoneLabel}。`,
-                  `时间格式：${context.timeFormatLabel}。`,
+                  `时间格式：${context.timeFormatLabel}`,
                 ],
               },
             ],
