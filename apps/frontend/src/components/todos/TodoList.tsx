@@ -67,7 +67,6 @@ import { useParticleField } from "../../hooks/useParticleField";
 import {
   centerOverlayToCursor,
   readEventCoordinates,
-  syncLatestDragPointerCoordinates,
 } from "../../lib/dnd/centerOverlayToCursor";
 import { resolveDragReorderTarget } from "../../lib/dnd/resolveDragReorderTarget";
 import { readDockInsertionIndex } from "../../lib/dnd/dockInsertion";
@@ -489,7 +488,11 @@ export function TodoList({ dockZoneTarget = null }: { dockZoneTarget?: DockZoneE
     (dateChangeDialog.mode === "single"
       ? !editingTodo || activeDateDialogDateKey === editingTodo.dateKey
       : selectedTodoCount === 0 || activeDateDialogDateKey === selectedDateKey);
-  const dragPointerCoordinates = useDragPointerTracking(Boolean(activeDragId));
+  const {
+    coordinates: dragPointerCoordinates,
+    getLatestCoordinates: getLatestDragPointerCoordinates,
+    syncCoordinates: syncDragPointerCoordinates,
+  } = useDragPointerTracking(Boolean(activeDragId));
   const isFilterActive = !allGroupsSelected;
 
   useEffect(() => {
@@ -908,7 +911,7 @@ export function TodoList({ dockZoneTarget = null }: { dockZoneTarget?: DockZoneE
     setActiveDragId(activeId);
     setActiveDragOverId(null);
     setActiveDragWidth(event.active.rect.current.initial?.width ?? null);
-    syncLatestDragPointerCoordinates(event.activatorEvent);
+    syncDragPointerCoordinates(event.activatorEvent);
 
     if (!floatingTodosEnabled) {
       return;
@@ -949,10 +952,11 @@ export function TodoList({ dockZoneTarget = null }: { dockZoneTarget?: DockZoneE
     setActiveDragOverId(null);
     setActiveDragWidth(null);
 
-    const insertionIndex = dragPointerCoordinates
+    const latestDragPointerCoordinates = getLatestDragPointerCoordinates();
+    const insertionIndex = latestDragPointerCoordinates
       ? readDockInsertionIndex({
-          clientX: dragPointerCoordinates.x,
-          clientY: dragPointerCoordinates.y,
+          clientX: latestDragPointerCoordinates.x,
+          clientY: latestDragPointerCoordinates.y,
           container: cardScrollRegionRef.current,
           itemSelector: '[data-todo-item-id][data-todo-status="active"]',
           excludedID: activeId,
@@ -977,7 +981,7 @@ export function TodoList({ dockZoneTarget = null }: { dockZoneTarget?: DockZoneE
       }
 
       const rect = document.querySelector<HTMLElement>(`[data-todo-item-id="${activeId}"]`)?.getBoundingClientRect();
-      const coordinates = dragPointerCoordinates;
+      const coordinates = latestDragPointerCoordinates;
 
       if (activeTodo && rect && coordinates) {
         void showFloatingCard(

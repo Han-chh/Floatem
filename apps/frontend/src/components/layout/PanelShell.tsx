@@ -139,7 +139,7 @@ export function PanelShell({
                                     aria-label={t.app.help}
                                     data-tooltip={t.app.help}
                                     data-tooltip-placement="bottom"
-                                    className="paper-icon-button mt-1.5 h-[30px] w-[30px] min-h-0 min-w-0 shrink-0 rounded-[11px] text-[#7A5E39]"
+                                    className="paper-icon-button mt-1.5 h-[30px] w-[30px] min-h-0 min-w-0 shrink-0 rounded-[11px] text-[#7A5E39] outline-none focus-visible:outline-none focus-visible:border-[rgba(122,94,57,0.48)]"
                                     whileHover={{ y: -1.5, scale: 1.02 }}
                                     whileTap={{ scale: 0.985 }}
                                     onClick={() => setIsHelpOpen(true)}

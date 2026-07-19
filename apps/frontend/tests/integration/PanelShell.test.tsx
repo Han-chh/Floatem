@@ -79,7 +79,9 @@ describe("PanelShell", () => {
       </PanelShell>,
     );
 
-    await user.click(screen.getByRole("button", { name: "StickIt help" }));
+    const helpButton = screen.getByRole("button", { name: "StickIt help" });
+    expect(helpButton).toHaveClass("outline-none", "focus-visible:outline-none");
+    await user.click(helpButton);
 
     const dialog = screen.getByRole("dialog", { name: "StickIt guide" });
 

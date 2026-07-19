@@ -20,7 +20,6 @@ import { canUseFloatingNotes } from "../../lib/platformFeatures";
 import {
   centerOverlayToCursor,
   readEventCoordinates,
-  syncLatestDragPointerCoordinates,
 } from "../../lib/dnd/centerOverlayToCursor";
 import { resolveDragReorderTarget } from "../../lib/dnd/resolveDragReorderTarget";
 import { readDockInsertionIndex } from "../../lib/dnd/dockInsertion";
@@ -102,7 +101,11 @@ export function NotesList({ dockZoneTarget = null }: { dockZoneTarget?: DockZone
     () => visibleCards.filter((card) => card.id !== dockZoneTarget?.id),
     [dockZoneTarget?.id, visibleCards],
   );
-  const dragPointerCoordinates = useDragPointerTracking(Boolean(activeDragId));
+  const {
+    coordinates: dragPointerCoordinates,
+    getLatestCoordinates: getLatestDragPointerCoordinates,
+    syncCoordinates: syncDragPointerCoordinates,
+  } = useDragPointerTracking(Boolean(activeDragId));
   const isFilterActive = !allGroupsSelected;
 
   const resetInteractiveSelectionBeforeFloatingCard = () => {
@@ -220,7 +223,7 @@ export function NotesList({ dockZoneTarget = null }: { dockZoneTarget?: DockZone
     setActiveDragId(activeId);
     setActiveDragOverId(null);
     setActiveDragWidth(event.active.rect.current.initial?.width ?? null);
-    syncLatestDragPointerCoordinates(event.activatorEvent);
+    syncDragPointerCoordinates(event.activatorEvent);
 
     if (!floatingNotesEnabled) {
       return;
@@ -258,10 +261,11 @@ export function NotesList({ dockZoneTarget = null }: { dockZoneTarget?: DockZone
     setActiveDragOverId(null);
     setActiveDragWidth(null);
 
-    const insertionIndex = dragPointerCoordinates
+    const latestDragPointerCoordinates = getLatestDragPointerCoordinates();
+    const insertionIndex = latestDragPointerCoordinates
       ? readDockInsertionIndex({
-          clientX: dragPointerCoordinates.x,
-          clientY: dragPointerCoordinates.y,
+          clientX: latestDragPointerCoordinates.x,
+          clientY: latestDragPointerCoordinates.y,
           container: cardScrollRegionRef.current,
           itemSelector: "[data-note-card-id]",
           excludedID: activeId,
@@ -286,7 +290,7 @@ export function NotesList({ dockZoneTarget = null }: { dockZoneTarget?: DockZone
       }
 
       const rect = document.querySelector<HTMLElement>(`[data-note-card-id="${activeId}"]`)?.getBoundingClientRect();
-      const coordinates = dragPointerCoordinates;
+      const coordinates = latestDragPointerCoordinates;
 
       if (activeCard && rect && coordinates) {
         resetInteractiveSelectionBeforeFloatingCard();
