@@ -767,8 +767,7 @@ export function FloatingNoteApp() {
           <div
             role="separator"
             aria-label={t.common.resizeFloatingCard}
-            data-tooltip={t.common.resizeFloatingCard}
-            className="absolute bottom-1.5 right-1.5 z-40 h-5 w-5 cursor-nwse-resize rounded-br-[10px] opacity-55 transition-opacity hover:opacity-100"
+            className="absolute bottom-0 right-0 z-40 h-5 w-5 cursor-nwse-resize"
             style={{
               scale: Math.min(contentScale, 1.35),
               transformOrigin: "bottom right",
@@ -796,9 +795,7 @@ export function FloatingNoteApp() {
               resizeSessionRef.current = null;
               event.currentTarget.releasePointerCapture?.(event.pointerId);
             }}
-          >
-            <span className="absolute bottom-0.5 right-0.5 h-2.5 w-2.5 border-b-2 border-r-2 border-[var(--muted)]" />
-          </div>
+          />
         ) : null}
       </article>
     </main>

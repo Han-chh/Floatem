@@ -459,7 +459,7 @@ describe("FloatingNoteApp", () => {
     }
   });
 
-  it("resizes a floating note without allowing it below its initial size", async () => {
+  it("resizes a floating note without rendering a visible corner handle or allowing it below its initial size", async () => {
     const note = createNoteCard({ id: "floating-note-resize", title: "Resizable note" });
     const bridge = installFloatingBridge(note);
 
@@ -470,6 +470,8 @@ describe("FloatingNoteApp", () => {
       const shell = screen.getByTestId("floating-card-shell");
       const scaledContent = screen.getByTestId("floating-card-scaled-content");
       const handle = screen.getByRole("separator", { name: "Resize floating card" });
+      expect(handle).toBeEmptyDOMElement();
+      expect(handle).not.toHaveAttribute("data-tooltip");
       bridge.resizeFloatingCard.mockClear();
 
       fireEvent.pointerDown(handle, { pointerId: 1, clientX: 420, clientY: 300 });
