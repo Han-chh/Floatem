@@ -53,6 +53,31 @@ function sanitizeInlineStyle(source) {
   return source.replace(/<\/style/gi, "<\\/style");
 }
 
+function rebaseModuleSpecifier(specifier, entryReference) {
+  if (!specifier.startsWith("./") && !specifier.startsWith("../")) {
+    return specifier;
+  }
+
+  const cleanEntryReference = entryReference.split("#")[0].split("?")[0].replace(/^\/+/, "");
+  const rebased = path.posix.normalize(
+    path.posix.join(path.posix.dirname(cleanEntryReference), specifier),
+  );
+  return rebased.startsWith(".") ? rebased : `./${rebased}`;
+}
+
+function rebaseInlineModuleReferences(source, entryReference) {
+  const moduleReferencePattern = /(\b(?:from|import)\s*(?:\(\s*)?)(["'])(\.{1,2}\/[^"']+)\2/g;
+  const urlReferencePattern = /(\bnew\s+URL\s*\(\s*)(["'])(\.{1,2}\/[^"']+)\2/g;
+
+  return source
+    .replace(moduleReferencePattern, (match, prefix, quote, specifier) =>
+      `${prefix}${quote}${rebaseModuleSpecifier(specifier, entryReference)}${quote}`,
+    )
+    .replace(urlReferencePattern, (match, prefix, quote, specifier) =>
+      `${prefix}${quote}${rebaseModuleSpecifier(specifier, entryReference)}${quote}`,
+    );
+}
+
 const [, , distDirArg, outputDirArg] = process.argv;
 
 if (!distDirArg || !outputDirArg) {
@@ -107,7 +132,7 @@ for (const filename of htmlFilenames) {
   const assetPath = resolveAssetPath(distDir, src);
   inlineScripts.push({
     src,
-    content: readFileSync(assetPath, "utf8"),
+    content: rebaseInlineModuleReferences(readFileSync(assetPath, "utf8"), src),
   });
 
   return "";
