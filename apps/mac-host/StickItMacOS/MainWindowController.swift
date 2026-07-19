@@ -529,7 +529,15 @@ final class MainWindowController: NSObject, NSWindowDelegate, StickItNativeBridg
             guard let self else { return [:] }
             return try self.getDesktopWidgetStateFromBridge(kind: itemKind, id: id)
         }
-        controller.onFrameChange = nil
+        controller.onFrameChange = { [weak self] frame in
+            guard let self, let entityKind = StickItEntityKind(rawValue: kind) else { return }
+            let state = ScreenPlacementResolver.state(
+                for: WidgetEntityReference(entityKind: entityKind, entityID: cardID),
+                frame: frame,
+                isAlwaysOnTop: true
+            )
+            try? self.storage.saveFloatingWindowState(state)
+        }
         controller.onLoadAllData = { [weak self] in
             guard let self else {
                 return [:]
@@ -580,7 +588,13 @@ final class MainWindowController: NSObject, NSWindowDelegate, StickItNativeBridg
             Self.lifecycle.info("panelCreated(cardId=\(cardID, privacy: .public)) kind=\(kind, privacy: .public)")
             logRemainingFloatingPanelCount()
         }
-        let cardFrame = floatingCardFrame(for: mouseLocation, session: session)
+        let defaultCardFrame = floatingCardFrame(for: mouseLocation, session: session)
+        let savedState = (try? storage.floatingWindowStates())?.first {
+            $0.entityKind.rawValue == kind && $0.entityID == cardID
+        }
+        let cardFrame = savedState
+            .flatMap { ScreenPlacementResolver.resolve($0, screens: ScreenPlacementResolver.currentScreens()) }
+            ?? defaultCardFrame
         controller.updatePayload(payloadDictionary)
         controller.showWindow(frame: cardFrame)
         emitFloatingCardsState()
@@ -1103,13 +1117,11 @@ final class MainWindowController: NSObject, NSWindowDelegate, StickItNativeBridg
     }
 
     private func clampedPanelOrigin(_ origin: CGPoint, in visibleFrame: NSRect) -> CGPoint {
-        let maxX = max(visibleFrame.minX, visibleFrame.maxX - panel.frame.width)
-        let maxY = max(visibleFrame.minY, visibleFrame.maxY - panel.frame.height)
-
-        return CGPoint(
-            x: min(max(origin.x, visibleFrame.minX), maxX),
-            y: min(max(origin.y, visibleFrame.minY), maxY)
-        )
+        WindowFrameClamper.clamp(
+            CGRect(origin: origin, size: panel.frame.size),
+            to: visibleFrame,
+            maximumScreenFraction: 1
+        ).origin
     }
 
     private func logPanelState(context: String) {

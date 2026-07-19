@@ -27,6 +27,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private weak var mainMenuPasteItem: NSMenuItem?
     private weak var mainMenuSelectAllItem: NSMenuItem?
     private var languageObserver: NSObjectProtocol?
+    private var launchContextResolver = LaunchContextResolver()
 
     private var localization: StickItLocalization {
         currentLanguage.localization
@@ -82,7 +83,19 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
             self.mainWindowController.installSavedHotKey()
             self.mainWindowController.syncSavedTodoReminders()
-            self.mainWindowController.showMainWindow()
+            // SMAppService.mainApp does not expose a launch-reason API. Explicit
+            // launch arguments are supported for managed deployments; otherwise
+            // a user launch is identified by the app's first real activation.
+            // A login-item launch remains an inactive accessory and stays silent.
+            if self.launchContextResolver.shouldShowAtDidFinish(isApplicationActive: NSApp.isActive) {
+                self.mainWindowController.showMainWindow()
+            }
+        }
+    }
+
+    func applicationDidBecomeActive(_ notification: Notification) {
+        if launchContextResolver.shouldShowForActivation() {
+            mainWindowController.showMainWindow()
         }
     }
 
@@ -92,6 +105,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     func application(_ application: NSApplication, open urls: [URL]) {
+        launchContextResolver.markDeepLinkReceived()
         for url in urls {
             guard let deepLink = StickItDeepLink(url: url) else { continue }
             switch deepLink.destination {

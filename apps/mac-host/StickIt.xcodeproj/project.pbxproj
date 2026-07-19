@@ -28,6 +28,8 @@
 		A00000000000000000000219 /* StickItDeepLink.swift in Sources */ = {isa = PBXBuildFile; fileRef = A00000000000000000000124 /* StickItDeepLink.swift */; };
 		A00000000000000000000227 /* WidgetRefreshCoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = A00000000000000000000132 /* WidgetRefreshCoordinator.swift */; };
 		A00000000000000000000228 /* FloatingWebViewFactory.swift in Sources */ = {isa = PBXBuildFile; fileRef = A00000000000000000000133 /* FloatingWebViewFactory.swift */; };
+		A00000000000000000000229 /* LaunchContextResolver.swift in Sources */ = {isa = PBXBuildFile; fileRef = A00000000000000000000134 /* LaunchContextResolver.swift */; };
+		A00000000000000000000230 /* ScreenPlacementResolver.swift in Sources */ = {isa = PBXBuildFile; fileRef = A00000000000000000000135 /* ScreenPlacementResolver.swift */; };
 		A00000000000000000000220 /* StickItWidgets.swift in Sources */ = {isa = PBXBuildFile; fileRef = A00000000000000000000125 /* StickItWidgets.swift */; };
 		A00000000000000000000221 /* SharedModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = A00000000000000000000121 /* SharedModels.swift */; };
 		A00000000000000000000222 /* SharedDataStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = A00000000000000000000122 /* SharedDataStore.swift */; };
@@ -95,6 +97,8 @@
 		A00000000000000000000131 /* AppIntents.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AppIntents.framework; path = System/Library/Frameworks/AppIntents.framework; sourceTree = SDKROOT; };
 		A00000000000000000000132 /* WidgetRefreshCoordinator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WidgetRefreshCoordinator.swift; sourceTree = "<group>"; };
 		A00000000000000000000133 /* FloatingWebViewFactory.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FloatingWebViewFactory.swift; sourceTree = "<group>"; };
+		A00000000000000000000134 /* LaunchContextResolver.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LaunchContextResolver.swift; sourceTree = "<group>"; };
+		A00000000000000000000135 /* ScreenPlacementResolver.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScreenPlacementResolver.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -172,6 +176,8 @@
 				A00000000000000000000124 /* StickItDeepLink.swift */,
 				A00000000000000000000132 /* WidgetRefreshCoordinator.swift */,
 				A00000000000000000000133 /* FloatingWebViewFactory.swift */,
+				A00000000000000000000134 /* LaunchContextResolver.swift */,
+				A00000000000000000000135 /* ScreenPlacementResolver.swift */,
 				A00000000000000000000107 /* WebViewController.swift */,
 				A00000000000000000000116 /* main.swift */,
 				A00000000000000000000108 /* Info.plist */,
@@ -341,6 +347,8 @@
 				A00000000000000000000219 /* StickItDeepLink.swift in Sources */,
 				A00000000000000000000227 /* WidgetRefreshCoordinator.swift in Sources */,
 				A00000000000000000000228 /* FloatingWebViewFactory.swift in Sources */,
+				A00000000000000000000229 /* LaunchContextResolver.swift in Sources */,
+				A00000000000000000000230 /* ScreenPlacementResolver.swift in Sources */,
 				A00000000000000000000207 /* WebViewController.swift in Sources */,
 				A00000000000000000000212 /* main.swift in Sources */,
 			);

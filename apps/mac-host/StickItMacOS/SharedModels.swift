@@ -81,6 +81,25 @@ struct FloatingCardWindowState: Codable, Hashable, Sendable {
     var isAlwaysOnTop: Bool
     var updatedAt: Date
     var schemaVersion: Int = StickItSharedContainer.currentSchemaVersion
+
+    static func migratingLegacyFrame(
+        entityKind: StickItEntityKind,
+        entityID: String,
+        frame: CodableRect,
+        isAlwaysOnTop: Bool = true
+    ) -> FloatingCardWindowState {
+        FloatingCardWindowState(
+            entityKind: entityKind,
+            entityID: entityID,
+            frame: frame,
+            screenIdentifier: nil,
+            screenVisibleFrame: nil,
+            normalizedPosition: nil,
+            isAlwaysOnTop: isAlwaysOnTop,
+            updatedAt: Date(),
+            schemaVersion: StickItSharedContainer.currentSchemaVersion
+        )
+    }
 }
 
 struct ScreenPlacementState: Codable, Hashable, Sendable {
@@ -97,4 +116,3 @@ struct SharedThemeSettings: Codable, Hashable, Sendable {
     var updatedAt: Date
     var schemaVersion: Int = StickItSharedContainer.currentSchemaVersion
 }
-

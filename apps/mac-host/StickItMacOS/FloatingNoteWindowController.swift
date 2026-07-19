@@ -816,6 +816,7 @@ final class FloatingNoteWindowController: NSObject, WKNavigationDelegate, WKScri
         let f = panel.frame
         Self.diagnostics.info("windowDidMove frame=(\(Int(f.origin.x)),\(Int(f.origin.y)),\(Int(f.size.width))x\(Int(f.size.height))) onMove=\(self.onMove != nil)")
         onMove?(panel.frame)
+        onFrameChange?(panel.frame)
     }
 
     private func loadFrontend() {
