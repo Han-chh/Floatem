@@ -250,11 +250,11 @@ function TodoRowBody({
       {hasAssignedGroup ? (
         <>
           <div
-            className={`pointer-events-none absolute inset-0 ${todo.done ? "opacity-[0.35]" : "opacity-[0.65]"}`}
+            className={`todo-group-card-texture pointer-events-none absolute inset-0 ${todo.done ? "opacity-[0.35]" : "opacity-[0.65]"}`}
             style={{
               backgroundImage:
-                `radial-gradient(${colorWithAlpha(groupAccentColor, "38")} 0.7px, transparent 0.8px), linear-gradient(120deg, transparent 0 38%, ${colorWithAlpha(groupAccentColor, "1e")} 38% 41%, transparent 41% 100%), linear-gradient(140deg, ${colorWithAlpha(groupAccentColor, "20")}, rgba(255,255,255,0.34) 42%, transparent 70%)`,
-              backgroundSize: "15px 15px, 22px 22px, 100% 100%",
+                `radial-gradient(${colorWithAlpha(groupAccentColor, "2e")} 0.7px, transparent 0.8px), radial-gradient(circle at 12% 0%, ${colorWithAlpha(groupAccentColor, "20")}, transparent 42%)`,
+              backgroundSize: "17px 17px, 100% 100%",
             }}
           />
           <div

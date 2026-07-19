@@ -170,7 +170,9 @@ describe("NotesList", () => {
     expect(note).toHaveAttribute("data-note-grouped", "true");
     expect(note).toHaveAttribute("data-card-grouped", "true");
     expect(note.style.getPropertyValue("--card-group-accent")).not.toBe("");
-    expect(note.querySelector(".note-group-card-texture")).toBeInTheDocument();
+    const noteTexture = note.querySelector<HTMLElement>(".note-group-card-texture");
+    expect(noteTexture).toBeInTheDocument();
+    expect(noteTexture?.style.backgroundImage).not.toContain("linear-gradient");
     expect(note.querySelector(".note-group-card-rail")).toBeInTheDocument();
 
     await user.click(within(note).getByRole("button", { name: "Change note group" }));

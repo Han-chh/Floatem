@@ -163,6 +163,9 @@ describe("TodoList", () => {
     await user.click(within(screen.getByRole("dialog", { name: "Manage todo groups" })).getByRole("button", { name: "Work" }));
     expect(alphaCard).toHaveAttribute("data-card-grouped", "true");
     expect(alphaCard!.style.getPropertyValue("--card-group-accent")).not.toBe("");
+    const todoTexture = alphaCard!.querySelector<HTMLElement>(".todo-group-card-texture");
+    expect(todoTexture).toBeInTheDocument();
+    expect(todoTexture?.style.backgroundImage).not.toContain("linear-gradient");
 
     await user.click(screen.getByRole("button", { name: "Filter todo groups" }));
     const filterDialog = screen.getByRole("dialog", { name: "Filter todo groups" });

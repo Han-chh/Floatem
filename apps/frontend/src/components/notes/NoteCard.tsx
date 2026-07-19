@@ -127,7 +127,8 @@ function NoteCardBody({
             aria-hidden="true"
             className="note-group-card-texture pointer-events-none absolute inset-0"
             style={{
-              backgroundImage: `repeating-linear-gradient(132deg, transparent 0 13px, ${colorWithAlpha(accentColor, "14")} 13px 14px, transparent 14px 27px), radial-gradient(circle at 92% 8%, ${colorWithAlpha(accentColor, "38")}, transparent 26%)`,
+              backgroundImage: `radial-gradient(${colorWithAlpha(accentColor, "16")} 0.7px, transparent 0.8px), radial-gradient(circle at 92% 8%, ${colorWithAlpha(accentColor, "32")}, transparent 26%)`,
+              backgroundSize: "18px 18px, 100% 100%",
             }}
           />
           <div
