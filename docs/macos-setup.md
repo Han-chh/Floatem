@@ -54,7 +54,9 @@ The `StickIt` and `StickItWidgets` targets both require App Group:
 group.com.stickit.app
 ```
 
-Select a development team that owns `com.stickit.app` and `com.stickit.app.widgets`, then enable the same App Group for both identifiers in Apple Developer/Xcode. The extension is embedded at `StickIt.app/Contents/PlugIns/StickItWidgets.appex`. Hardened Runtime remains enabled.
+The personal-development targets use `com.hankchen.stickit` and `com.hankchen.stickit.widgets`. Debug builds use the local Apple Development team and the shared App Group above. Release builds use manual local-development signing with reduced entitlements so they can be installed on the developer's Mac without a paid Developer ID or distribution profile. The extension is embedded at `StickIt.app/Contents/PlugIns/StickItWidgets.appex`, and Hardened Runtime remains enabled.
+
+The local Release configuration is not a public distribution signature. Before sending the app to other Macs, replace it with Developer ID signing, restore the provisioned App Group entitlements for Release, and notarize the resulting archive.
 
 Shared data resolves to the App Group container's `SharedData/` directory. The repository commands use `CODE_SIGNING_ALLOWED=NO` so compilation and tests work before provisioning is installed; a runnable/archive Widget still needs valid App Group signing through Xcode or an appropriately provisioned release pipeline.
 

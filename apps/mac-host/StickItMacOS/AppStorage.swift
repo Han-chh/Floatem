@@ -7,9 +7,9 @@ final class AppStorage {
     private let appSupportDirectory: URL
     private let legacyAppSupportDirectory: URL
     private let sharedStore: SharedDataStore
-    private let logger = Logger(subsystem: "com.stickit.app", category: "Storage")
+    private let logger = Logger(subsystem: "com.hankchen.stickit", category: "Storage")
 
-    init(bundleIdentifier: String = Bundle.main.bundleIdentifier ?? "com.stickit.app") {
+    init(bundleIdentifier: String = Bundle.main.bundleIdentifier ?? "com.hankchen.stickit") {
         let baseDirectory = fileManager.urls(for: .applicationSupportDirectory, in: .userDomainMask).first!
         legacyAppSupportDirectory = baseDirectory.appendingPathComponent(bundleIdentifier, isDirectory: true)
         let preferredDirectory = StickItSharedContainer.sharedDataURL(fileManager: fileManager)
@@ -17,17 +17,27 @@ final class AppStorage {
         appSupportDirectory = preferredDirectory
         sharedStore = SharedDataStore(directoryURL: preferredDirectory, fileManager: fileManager)
 
-        if preferredDirectory != legacyAppSupportDirectory {
+        let previousAppSupportDirectory = baseDirectory.appendingPathComponent("com.stickit.app", isDirectory: true)
+        let previousSharedDirectory = fileManager.homeDirectoryForCurrentUser
+            .appendingPathComponent("Library/Group Containers/group.com.stickit.app/SharedData", isDirectory: true)
+        let migrationSources = [previousSharedDirectory, previousAppSupportDirectory, legacyAppSupportDirectory]
+            .filter { $0.standardizedFileURL != preferredDirectory.standardizedFileURL }
+
+        for migrationSource in migrationSources where fileManager.fileExists(atPath: migrationSource.path) {
             do {
                 try LegacyDataMigrator(
-                    legacyDirectoryURL: legacyAppSupportDirectory,
+                    legacyDirectoryURL: migrationSource,
                     sharedStore: sharedStore,
                     fileManager: fileManager
                 ).migrateIfNeeded()
             } catch {
-                logger.error("Shared data migration failed; legacy data remains untouched. error=\(error.localizedDescription, privacy: .public)")
+                logger.error(
+                    "Shared data migration failed; source data remains untouched. source=\(migrationSource.path, privacy: .private) error=\(error.localizedDescription, privacy: .public)"
+                )
             }
-        } else {
+        }
+
+        if preferredDirectory == legacyAppSupportDirectory {
             logger.warning("App Group container is unavailable; using the legacy application-support directory.")
         }
     }

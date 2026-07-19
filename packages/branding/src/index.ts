@@ -1,7 +1,7 @@
 export const stickItBranding = {
   displayName: "StickIt",
   productName: "StickIt",
-  bundleIdentifier: "com.stickit.app",
+  bundleIdentifier: "com.hankchen.stickit",
   windowsAppUserModelId: "com.stickit.app",
   icons: {
     sourceSvg: "packages/branding/assets/stickit-icon.svg",

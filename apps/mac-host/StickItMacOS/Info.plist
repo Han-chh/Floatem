@@ -26,7 +26,7 @@
 	<array>
 		<dict>
 			<key>CFBundleURLName</key>
-			<string>com.stickit.app.entity</string>
+			<string>com.hankchen.stickit.entity</string>
 			<key>CFBundleURLSchemes</key>
 			<array>
 				<string>stickit</string>
