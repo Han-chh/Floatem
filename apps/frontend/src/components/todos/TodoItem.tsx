@@ -21,6 +21,7 @@ type TodoItemProps = {
   onSelect?: (id: string) => void;
   onToggle: (id: string, target: DOMRect, nextDone: boolean) => void;
   dropPreview?: boolean;
+  dockInsertionEdge?: "before" | "after" | null;
   isSelected?: boolean;
   selectionMode?: boolean;
 };
@@ -781,6 +782,7 @@ export function TodoItem({
   onSelect,
   onToggle,
   dropPreview = false,
+  dockInsertionEdge = null,
   isSelected = false,
   selectionMode = false,
 }: TodoItemProps) {
@@ -825,6 +827,7 @@ export function TodoItem({
         data-no-window-drag="true"
         data-testid="todo-item"
         data-todo-item-id={todo.id}
+        data-dock-entity-id={todo.id}
         data-todo-status={todo.done ? "done" : "active"}
         data-dragging={isDragging}
         aria-label={t.todos.reorder}
@@ -852,6 +855,16 @@ export function TodoItem({
           isSelected={isSelected}
           selectionMode={selectionMode}
         />
+        {dockInsertionEdge ? (
+          <div
+            aria-hidden="true"
+            data-testid="todo-dock-insertion-line"
+            data-edge={dockInsertionEdge}
+            className={`pointer-events-none absolute left-3 right-3 z-30 h-[3px] rounded-full bg-[rgb(31,168,122)] shadow-[0_0_0_3px_rgba(31,168,122,0.16)] ${
+              dockInsertionEdge === "before" ? "top-[1px]" : "bottom-[1px]"
+            }`}
+          />
+        ) : null}
       </motion.article>
       <TodoGroupDialog todoId={todo.id} isOpen={isGroupDialogOpen} onClose={() => setIsGroupDialogOpen(false)} />
     </>

@@ -109,6 +109,40 @@ describe("todosStore", () => {
     ]);
   });
 
+  it("inserts a returning floating todo at an exact open-list position", () => {
+    useTodosStore.getState().initialize([]);
+    const first = useTodosStore.getState().addTodo("Alpha");
+    const second = useTodosStore.getState().addTodo("Beta");
+    const third = useTodosStore.getState().addTodo("Gamma");
+
+    useTodosStore.getState().moveTodoToIndex(third!.id, 1);
+
+    expect(useTodosStore.getState().todos.map((todo) => todo.id)).toEqual([
+      first!.id,
+      third!.id,
+      second!.id,
+    ]);
+  });
+
+  it("uses visible todos as insertion anchors when a group filter hides items", () => {
+    useTodosStore.getState().initialize([]);
+    const visibleA = useTodosStore.getState().addTodo("Visible A");
+    const hidden = useTodosStore.getState().addTodo("Hidden");
+    const returning = useTodosStore.getState().addTodo("Returning");
+    const visibleB = useTodosStore.getState().addTodo("Visible B");
+
+    useTodosStore
+      .getState()
+      .moveTodoToIndex(returning!.id, 1, [visibleA!.id, visibleB!.id]);
+
+    expect(useTodosStore.getState().todos.map((todo) => todo.id)).toEqual([
+      visibleA!.id,
+      returning!.id,
+      hidden!.id,
+      visibleB!.id,
+    ]);
+  });
+
   it("keeps separate todo card records for each selected date", () => {
     useTodosStore.getState().initialize([]);
     useTodosStore.getState().selectDate("2026-05-12");

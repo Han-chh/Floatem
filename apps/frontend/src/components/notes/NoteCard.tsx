@@ -14,6 +14,7 @@ type NoteCardProps = {
   note: NoteCardModel;
   onDelete: (id: string, target: DOMRect) => void;
   dropPreview?: boolean;
+  dockInsertionEdge?: "before" | "after" | null;
 };
 
 type NoteCardBodyProps = {
@@ -420,7 +421,7 @@ export function FloatingNoteCard({
   );
 }
 
-export function NoteCard({ note, onDelete, dropPreview = false }: NoteCardProps) {
+export function NoteCard({ note, onDelete, dropPreview = false, dockInsertionEdge = null }: NoteCardProps) {
   const { language, t } = useI18n();
   const groups = useNotesStore((state) => state.groups);
   const toggleCollapsed = useNotesStore((state) => state.toggleCollapsed);
@@ -484,6 +485,7 @@ export function NoteCard({ note, onDelete, dropPreview = false }: NoteCardProps)
         aria-label={t.notes.reorder}
         data-testid="note-card"
         data-note-card-id={note.id}
+        data-dock-entity-id={note.id}
         data-note-grouped={hasAssignedGroup}
         data-dragging={isDragging}
         className={`content-card-classic paper-card cq-card mx-1 relative overflow-hidden rounded-[28px] border border-[rgba(213,198,180,0.92)] bg-[linear-gradient(180deg,rgba(255,252,248,0.98),rgba(255,247,239,0.95))] shadow-[0_18px_36px_rgba(61,49,34,0.10)] cursor-grab active:cursor-grabbing ${
@@ -508,6 +510,16 @@ export function NoteCard({ note, onDelete, dropPreview = false }: NoteCardProps)
           isDraggingPlaceholder={isDragging}
           isDropTargetPreview={dropPreview}
         />
+        {dockInsertionEdge ? (
+          <div
+            aria-hidden="true"
+            data-testid="note-dock-insertion-line"
+            data-edge={dockInsertionEdge}
+            className={`pointer-events-none absolute left-3 right-3 z-30 h-[3px] rounded-full bg-[rgb(31,168,122)] shadow-[0_0_0_3px_rgba(31,168,122,0.16)] ${
+              dockInsertionEdge === "before" ? "top-[1px]" : "bottom-[1px]"
+            }`}
+          />
+        ) : null}
       </motion.article>
 
       <NoteGroupDialog noteId={note.id} isOpen={isGroupDialogOpen} onClose={() => setIsGroupDialogOpen(false)} />

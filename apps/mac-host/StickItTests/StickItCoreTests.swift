@@ -175,6 +175,46 @@ final class StickItCoreTests: XCTestCase {
         XCTAssertEqual(frame.maxY, screen.visibleFrame.maxY, accuracy: 0.001)
     }
 
+    func testDraggingOutUsesPreviewFrameInsteadOfAStaleSavedFrame() {
+        let dragFrame = CGRect(x: 420, y: 260, width: 400, height: 280)
+        let savedState = FloatingCardWindowState(
+            entityKind: .note,
+            entityID: "note-placement",
+            frame: CodableRect(x: 20, y: 30, width: 400, height: 280),
+            screenIdentifier: "main",
+            screenVisibleFrame: nil,
+            normalizedPosition: nil,
+            isAlwaysOnTop: true,
+            updatedAt: Date()
+        )
+        let screens = [
+            ScreenGeometry(
+                identifier: "main",
+                visibleFrame: CGRect(x: 0, y: 0, width: 1_440, height: 900),
+                isPrimary: true
+            ),
+        ]
+
+        XCTAssertEqual(
+            ScreenPlacementResolver.initialFloatingFrame(
+                dragFrame: dragFrame,
+                savedState: savedState,
+                restoreSavedPlacement: false,
+                screens: screens
+            ),
+            dragFrame
+        )
+        XCTAssertEqual(
+            ScreenPlacementResolver.initialFloatingFrame(
+                dragFrame: dragFrame,
+                savedState: savedState,
+                restoreSavedPlacement: true,
+                screens: screens
+            ).origin,
+            CGPoint(x: 20, y: 30)
+        )
+    }
+
     func testLegacyFrameMigrationAddsCurrentSchema() {
         let state = FloatingCardWindowState.migratingLegacyFrame(
             entityKind: .note,

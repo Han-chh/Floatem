@@ -606,12 +606,17 @@ final class MainWindowController: NSObject, NSWindowDelegate, StickItNativeBridg
             logRemainingFloatingPanelCount()
         }
         let defaultCardFrame = floatingCardFrame(for: mouseLocation, session: session)
-        let savedState = (try? storage.floatingWindowStates())?.first {
-            $0.entityKind.rawValue == kind && $0.entityID == cardID
-        }
-        let cardFrame = savedState
-            .flatMap { ScreenPlacementResolver.resolve($0, screens: ScreenPlacementResolver.currentScreens()) }
-            ?? defaultCardFrame
+        let savedState = ignoreMainPanelDropZone
+            ? (try? storage.floatingWindowStates())?.first {
+                $0.entityKind.rawValue == kind && $0.entityID == cardID
+            }
+            : nil
+        let cardFrame = ScreenPlacementResolver.initialFloatingFrame(
+            dragFrame: defaultCardFrame,
+            savedState: savedState,
+            restoreSavedPlacement: ignoreMainPanelDropZone,
+            screens: ScreenPlacementResolver.currentScreens()
+        )
         controller.updatePayload(payloadDictionary)
         controller.showWindow(frame: cardFrame)
         emitFloatingCardsState()
@@ -754,10 +759,17 @@ final class MainWindowController: NSObject, NSWindowDelegate, StickItNativeBridg
                 self.logger.info("[FLT:DOCK] onMove #\(moveCount) floatingFrame=(\(Int(floatingFrame.origin.x)),\(Int(floatingFrame.origin.y)),\(Int(floatingFrame.size.width))x\(Int(floatingFrame.size.height))) panelFrame=(\(Int(panelFrame.origin.x)),\(Int(panelFrame.origin.y)),\(Int(panelFrame.size.width))x\(Int(panelFrame.size.height))) mouse=(\(Int(mouseLoc.x)),\(Int(mouseLoc.y))) panelVisible=\(panelVisible) cursorIn=\(cursorInPanel) overlap=\(windowOverlapsPanel) dockZone=\(isInDockZone)")
             }
 
-            if isInDockZone, !previousInDockZone {
-                self.logger.info("[FLT:DOCK] emitFloatingDockZoneEnter kind=\(kind, privacy: .public) cardID=\(id, privacy: .public)")
-                self.webViewController.emitFloatingDockZoneEnter(kind: kind, cardID: id)
-            } else if !isInDockZone, previousInDockZone {
+            if isInDockZone {
+                if !previousInDockZone {
+                    self.logger.info("[FLT:DOCK] emitFloatingDockZoneEnter kind=\(kind, privacy: .public) cardID=\(id, privacy: .public)")
+                }
+                self.webViewController.emitFloatingDockZoneEnter(
+                    kind: kind,
+                    cardID: id,
+                    source: "floating",
+                    screenPoint: mouseLoc
+                )
+            } else if previousInDockZone {
                 self.logger.info("[FLT:DOCK] emitFloatingDockZoneLeave kind=\(kind, privacy: .public) cardID=\(id, privacy: .public)")
                 self.webViewController.emitFloatingDockZoneLeave(kind: kind, cardID: id)
             }
@@ -917,7 +929,7 @@ final class MainWindowController: NSObject, NSWindowDelegate, StickItNativeBridg
 
         let mouseLocation = NSEvent.mouseLocation
         let isInDockZone = panel.isVisible && panel.frame.contains(mouseLocation)
-        setDragPreviewDockZoneActive(isInDockZone, session: session)
+        setDragPreviewDockZoneActive(isInDockZone, session: session, mouseLocation: mouseLocation)
 
         if isInDockZone {
             dragPreviewWindowController.hidePreview()
@@ -927,20 +939,26 @@ final class MainWindowController: NSObject, NSWindowDelegate, StickItNativeBridg
         dragPreviewWindowController.showPreview(frame: dragPreviewFrame(for: mouseLocation, session: session))
     }
 
-    private func setDragPreviewDockZoneActive(_ active: Bool, session: DragPreviewSession?) {
-        guard active != isDragPreviewDockZoneActive else {
-            return
-        }
-
-        isDragPreviewDockZoneActive = active
-
+    private func setDragPreviewDockZoneActive(
+        _ active: Bool,
+        session: DragPreviewSession?,
+        mouseLocation: CGPoint = NSEvent.mouseLocation
+    ) {
         guard let session, !session.cardKind.isEmpty, !session.cardID.isEmpty else {
+            isDragPreviewDockZoneActive = active
             return
         }
 
         if active {
-            webViewController.emitFloatingDockZoneEnter(kind: session.cardKind, cardID: session.cardID)
-        } else {
+            isDragPreviewDockZoneActive = true
+            webViewController.emitFloatingDockZoneEnter(
+                kind: session.cardKind,
+                cardID: session.cardID,
+                source: "preview",
+                screenPoint: mouseLocation
+            )
+        } else if isDragPreviewDockZoneActive {
+            isDragPreviewDockZoneActive = false
             webViewController.emitFloatingDockZoneLeave(kind: session.cardKind, cardID: session.cardID)
         }
     }
@@ -1004,6 +1022,9 @@ final class MainWindowController: NSObject, NSWindowDelegate, StickItNativeBridg
         controller.closeWindow()
         floatingCardPayloads.removeValue(forKey: key)
         removePersistedDesktopCard(kind: kind, id: id)
+        if let entityKind = StickItEntityKind(rawValue: kind) {
+            try? storage.removeFloatingWindowState(kind: entityKind, id: id)
+        }
 
         if restoreDockedState {
             DispatchQueue.main.async { [weak self] in

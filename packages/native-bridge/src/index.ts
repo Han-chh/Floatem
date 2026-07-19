@@ -169,7 +169,13 @@ export type HostEventMap = {
   "todos-updated": unknown;
   "floating-cards-state": FloatingCardsState;
   "shortcut-invoked": { shortcut: string };
-  "floating-dock-zone-enter": { kind: string; id: string };
+  "floating-dock-zone-enter": {
+    kind: string;
+    id: string;
+    source?: "preview" | "floating";
+    clientX?: number;
+    clientY?: number;
+  };
   "floating-dock-zone-leave": { kind: string; id: string };
 };
 

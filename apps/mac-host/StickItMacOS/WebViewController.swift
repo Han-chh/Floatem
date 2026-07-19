@@ -226,11 +226,17 @@ final class WebViewController: NSViewController, WKNavigationDelegate {
         )
     }
 
-    func emitFloatingDockZoneEnter(kind: String, cardID: String) {
-        let payload: [String: Any] = [
+    func emitFloatingDockZoneEnter(kind: String, cardID: String, source: String, screenPoint: CGPoint) {
+        var payload: [String: Any] = [
             "kind": kind,
             "id": cardID,
+            "source": source,
         ]
+
+        if let clientPoint = clientPoint(forScreenPoint: screenPoint) {
+            payload["clientX"] = Double(clientPoint.x)
+            payload["clientY"] = Double(clientPoint.y)
+        }
 
         guard let json = jsonString(for: payload) else {
             logger.error("[FLT:DOCK] emitFloatingDockZoneEnter FAILED: json serialization")
@@ -272,6 +278,15 @@ final class WebViewController: NSViewController, WKNavigationDelegate {
                 }
             }
         )
+    }
+
+    private func clientPoint(forScreenPoint screenPoint: CGPoint) -> CGPoint? {
+        guard let window = webView.window else {
+            return nil
+        }
+
+        let windowPoint = window.convertPoint(fromScreen: screenPoint)
+        return webView.convert(windowPoint, from: nil)
     }
 
     private func loadFrontend() {

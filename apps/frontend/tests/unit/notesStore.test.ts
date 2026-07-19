@@ -23,6 +23,38 @@ describe("notesStore", () => {
     expect(useNotesStore.getState().cards[1]?.title).toBe("Updated");
   });
 
+  it("inserts a returning floating note at an exact list position", () => {
+    useNotesStore.getState().initialize([
+      createNoteCard({ id: "note-a", title: "A" }),
+      createNoteCard({ id: "note-b", title: "B" }),
+      createNoteCard({ id: "note-c", title: "C" }),
+    ]);
+
+    useNotesStore.getState().moveCardToIndex("note-c", 1);
+
+    expect(useNotesStore.getState().cards.map((card) => card.id)).toEqual(["note-a", "note-c", "note-b"]);
+  });
+
+  it("uses visible notes as insertion anchors when a group filter hides cards", () => {
+    useNotesStore.getState().initialize([
+      createNoteCard({ id: "note-visible-a", title: "Visible A" }),
+      createNoteCard({ id: "note-hidden", title: "Hidden" }),
+      createNoteCard({ id: "note-returning", title: "Returning" }),
+      createNoteCard({ id: "note-visible-b", title: "Visible B" }),
+    ]);
+
+    useNotesStore
+      .getState()
+      .moveCardToIndex("note-returning", 1, ["note-visible-a", "note-visible-b"]);
+
+    expect(useNotesStore.getState().cards.map((card) => card.id)).toEqual([
+      "note-visible-a",
+      "note-returning",
+      "note-hidden",
+      "note-visible-b",
+    ]);
+  });
+
   it("creates, assigns, updates, and deletes groups", () => {
     const card = createNoteCard({ id: "note-a", title: "A" });
     const group = createNoteGroup({

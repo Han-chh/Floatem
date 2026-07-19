@@ -488,7 +488,13 @@ export function subscribeToFloatingCardsState(listener: (state: FloatingCardsSta
   };
 }
 
-export type DockZoneEventDetail = { kind: string; id: string };
+export type DockZoneEventDetail = {
+  kind: string;
+  id: string;
+  source?: "preview" | "floating";
+  clientX?: number;
+  clientY?: number;
+};
 
 export function subscribeToFloatingDockZoneEnter(listener: (detail: DockZoneEventDetail) => void) {
   if (typeof window === "undefined") {
@@ -501,7 +507,13 @@ export function subscribeToFloatingDockZoneEnter(listener: (detail: DockZoneEven
       return;
     }
 
-    listener({ kind: detail.kind, id: detail.id });
+    listener({
+      kind: detail.kind,
+      id: detail.id,
+      source: detail.source,
+      clientX: typeof detail.clientX === "number" ? detail.clientX : undefined,
+      clientY: typeof detail.clientY === "number" ? detail.clientY : undefined,
+    });
   };
 
   window.addEventListener(FLOATING_DOCK_ZONE_ENTER_EVENT, handler as EventListener);

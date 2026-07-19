@@ -70,6 +70,8 @@ import {
   syncLatestDragPointerCoordinates,
 } from "../../lib/dnd/centerOverlayToCursor";
 import { resolveDragReorderTarget } from "../../lib/dnd/resolveDragReorderTarget";
+import { readDockInsertionIndex } from "../../lib/dnd/dockInsertion";
+import type { DockZoneEventDetail } from "../../lib/nativeBridge";
 import { syncTextareaHeight } from "../../lib/resizeTextarea";
 import { useSettingsStore } from "../../store/settingsStore";
 import { useTodosStore } from "../../store/todosStore";
@@ -354,7 +356,7 @@ function TodoCalendarView({
   );
 }
 
-export function TodoList() {
+export function TodoList({ dockZoneTarget = null }: { dockZoneTarget?: DockZoneEventDetail | null }) {
   const { t, language } = useI18n();
   const todos = useTodosStore((state) => state.todos);
   const groups = useTodosStore((state) => state.groups);
@@ -364,6 +366,7 @@ export function TodoList() {
   const selectDate = useTodosStore((state) => state.selectDate);
   const updateTodoText = useTodosStore((state) => state.updateTodoText);
   const moveTodo = useTodosStore((state) => state.moveTodo);
+  const moveTodoToIndex = useTodosStore((state) => state.moveTodoToIndex);
   const toggleTodo = useTodosStore((state) => state.toggleTodo);
   const completeTodos = useTodosStore((state) => state.completeTodos);
   const removeTodo = useTodosStore((state) => state.removeTodo);
@@ -380,6 +383,7 @@ export function TodoList() {
   const [activeDragId, setActiveDragId] = useState<string | null>(null);
   const [activeDragOverId, setActiveDragOverId] = useState<string | null>(null);
   const [activeDragWidth, setActiveDragWidth] = useState<number | null>(null);
+  const [dockInsertionIndex, setDockInsertionIndex] = useState<number | null>(null);
   const [clock, setClock] = useState(() => new Date());
   const [isCalendarOpen, setIsCalendarOpen] = useState(false);
   const [calendarMonth, setCalendarMonth] = useState(() => startOfMonth(parseLocalDateKey(selectedDateKey)));
@@ -457,6 +461,10 @@ export function TodoList() {
   const hasMixedTodoStatus = hasOpenTodos && hasDoneTodos;
   const isAllDoneForSelectedDate = hasDoneTodos && !hasOpenTodos;
   const activeDragTodo = openTodos.find((todo) => todo.id === activeDragId) ?? null;
+  const dockVisibleOpenTodos = useMemo(
+    () => openTodos.filter((todo) => todo.id !== dockZoneTarget?.id),
+    [dockZoneTarget?.id, openTodos],
+  );
   const activeDragIndex = activeDragId ? openTodos.findIndex((todo) => todo.id === activeDragId) : -1;
   const activeDragOrder = activeDragIndex >= 0 ? activeDragIndex + 1 : undefined;
   const editingTodo = editingTodoId ? (todos.find((todo) => todo.id === editingTodoId) ?? null) : null;
@@ -657,6 +665,34 @@ export function TodoList() {
 
     setActiveDragOverId(nextTarget);
   }, [activeDragId, dragPointerCoordinates]);
+
+  useEffect(() => {
+    if (
+      dockZoneTarget?.kind !== "todo" ||
+      typeof dockZoneTarget.clientX !== "number" ||
+      typeof dockZoneTarget.clientY !== "number"
+    ) {
+      setDockInsertionIndex(null);
+      return;
+    }
+
+    const insertionIndex = readDockInsertionIndex({
+      clientX: dockZoneTarget.clientX,
+      clientY: dockZoneTarget.clientY,
+      container: cardScrollRegionRef.current,
+      itemSelector: '[data-todo-item-id][data-todo-status="active"]',
+      excludedID: dockZoneTarget.id,
+    });
+    setDockInsertionIndex(insertionIndex);
+
+    if (insertionIndex !== null && dockZoneTarget.source === "floating") {
+      moveTodoToIndex(
+        dockZoneTarget.id,
+        insertionIndex,
+        dockVisibleOpenTodos.map((todo) => todo.id),
+      );
+    }
+  }, [dockVisibleOpenTodos, dockZoneTarget, moveTodoToIndex]);
 
   const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -912,6 +948,28 @@ export function TodoList() {
     setActiveDragId(null);
     setActiveDragOverId(null);
     setActiveDragWidth(null);
+
+    const insertionIndex = dragPointerCoordinates
+      ? readDockInsertionIndex({
+          clientX: dragPointerCoordinates.x,
+          clientY: dragPointerCoordinates.y,
+          container: cardScrollRegionRef.current,
+          itemSelector: '[data-todo-item-id][data-todo-status="active"]',
+          excludedID: activeId,
+        })
+      : null;
+
+    if (insertionIndex !== null) {
+      if (floatingTodosEnabled) {
+        void hideDragPreview();
+      }
+      moveTodoToIndex(
+        activeId,
+        insertionIndex,
+        openTodos.filter((todo) => todo.id !== activeId).map((todo) => todo.id),
+      );
+      return;
+    }
 
     if (!overId) {
       if (!floatingTodosEnabled) {
@@ -1328,8 +1386,16 @@ export function TodoList() {
             <motion.div
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
-              className="flex h-full items-center justify-center rounded-[24px] border border-dashed border-[rgba(213,198,180,0.88)] bg-[rgba(255,255,255,0.34)] px-6 text-center text-[12.5px] leading-6 text-[var(--muted)]"
+              className="relative flex h-full items-center justify-center rounded-[24px] border border-dashed border-[rgba(213,198,180,0.88)] bg-[rgba(255,255,255,0.34)] px-6 text-center text-[12.5px] leading-6 text-[var(--muted)]"
             >
+              {dockInsertionIndex === 0 ? (
+                <div
+                  aria-hidden="true"
+                  data-testid="todo-dock-insertion-line"
+                  data-edge="before"
+                  className="pointer-events-none absolute left-4 right-4 top-4 h-[3px] rounded-full bg-[rgb(31,168,122)] shadow-[0_0_0_3px_rgba(31,168,122,0.16)]"
+                />
+              ) : null}
               {baseVisibleTodos.length === 0 ? t.todos.empty : t.todos.filteredEmpty}
             </motion.div>
           ) : (
@@ -1360,7 +1426,16 @@ export function TodoList() {
                           onEdit={openEditDialog}
                           onSelect={toggleSelectedTodo}
                           onToggle={handleToggleTodo}
-                          dropPreview={activeDragOverId === todo.id && activeDragId !== todo.id}
+                          dropPreview={false}
+                          dockInsertionEdge={
+                            dockInsertionIndex === 0 && todo.id === dockVisibleOpenTodos[0]?.id
+                              ? "before"
+                              : dockInsertionIndex !== null &&
+                                  dockInsertionIndex > 0 &&
+                                  todo.id === dockVisibleOpenTodos[dockInsertionIndex - 1]?.id
+                                ? "after"
+                                : null
+                          }
                           isSelected={selectedVisibleTodoIds.includes(todo.id)}
                           selectionMode={isSelectionMode}
                         />

@@ -1,7 +1,7 @@
 import { act, render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { DEFAULT_SETTINGS } from "../../src/lib/models";
+import { createTodoItem, DEFAULT_SETTINGS } from "../../src/lib/models";
 import { TodoList } from "../../src/components/todos/TodoList";
 import { formatLocalDateKey } from "../../src/lib/models";
 import { useSettingsStore } from "../../src/store/settingsStore";
@@ -386,5 +386,53 @@ describe("TodoList", () => {
     render(<TodoList />);
 
     expect(screen.getByRole("button", { name: "Open todo calendar" })).toHaveTextContent("1:05 PM");
+  });
+
+  it("shows a green insertion line and reorders a floating todo at that position", async () => {
+    const dateKey = formatLocalDateKey(new Date());
+    const returning = createTodoItem("Returning", { id: "todo-returning", dateKey });
+    const first = createTodoItem("First", { id: "todo-first", dateKey });
+    const second = createTodoItem("Second", { id: "todo-second", dateKey });
+    useTodosStore.getState().initialize([returning, first, second]);
+    useTodosStore.getState().selectDate(dateKey);
+    const rectSpy = vi
+      .spyOn(HTMLElement.prototype, "getBoundingClientRect")
+      .mockImplementation(function (this: HTMLElement) {
+        if (this.dataset.testid === "todo-card-scroll-region") {
+          return new DOMRect(0, 0, 500, 500);
+        }
+        if (this.dataset.todoItemId === first.id) {
+          return new DOMRect(20, 100, 420, 60);
+        }
+        if (this.dataset.todoItemId === second.id) {
+          return new DOMRect(20, 180, 420, 60);
+        }
+        return new DOMRect(0, 0, 1, 1);
+      });
+
+    render(
+      <TodoList
+        dockZoneTarget={{
+          kind: "todo",
+          id: returning.id,
+          source: "floating",
+          clientX: 100,
+          clientY: 170,
+        }}
+      />,
+    );
+
+    try {
+      await waitFor(() => {
+        expect(screen.getByTestId("todo-dock-insertion-line")).toHaveAttribute("data-edge", "after");
+      });
+      expect(useTodosStore.getState().todos.map((todo) => todo.id)).toEqual([
+        first.id,
+        returning.id,
+        second.id,
+      ]);
+    } finally {
+      rectSpy.mockRestore();
+    }
   });
 });

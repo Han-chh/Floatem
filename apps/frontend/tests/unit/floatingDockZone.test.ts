@@ -2,11 +2,18 @@ import { describe, expect, it } from "vitest";
 import { isFloatingDockZoneTarget, isSameDockZoneTarget } from "../../src/lib/dnd/floatingDockZone";
 
 describe("floating dock zone guards", () => {
-  it("only treats note dock-zone events as active when the note is floating", () => {
+  it("accepts note dock-zone events for preview and floating states", () => {
     expect(
       isFloatingDockZoneTarget(
-        { kind: "note", id: "note-floating" },
+        { kind: "note", id: "note-floating", source: "floating", clientX: 40, clientY: 80 },
         { noteIds: ["note-floating"], todoIds: [] },
+      ),
+    ).toBe(true);
+
+    expect(
+      isFloatingDockZoneTarget(
+        { kind: "note", id: "note-docked", source: "preview" },
+        { noteIds: ["note-docked"], todoIds: [] },
       ),
     ).toBe(true);
 
@@ -18,7 +25,7 @@ describe("floating dock zone guards", () => {
     ).toBe(false);
   });
 
-  it("only treats todo dock-zone events as active when the todo is floating", () => {
+  it("accepts todo dock-zone events for preview and floating states", () => {
     expect(
       isFloatingDockZoneTarget(
         { kind: "todo", id: "todo-floating" },

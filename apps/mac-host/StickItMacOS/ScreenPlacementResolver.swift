@@ -27,6 +27,19 @@ enum WindowFrameClamper {
 }
 
 enum ScreenPlacementResolver {
+    static func initialFloatingFrame(
+        dragFrame: CGRect,
+        savedState: FloatingCardWindowState?,
+        restoreSavedPlacement: Bool,
+        screens: [ScreenGeometry]
+    ) -> CGRect {
+        guard restoreSavedPlacement, let savedState else {
+            return dragFrame
+        }
+
+        return resolve(savedState, screens: screens) ?? dragFrame
+    }
+
     static func resolve(_ state: FloatingCardWindowState, screens: [ScreenGeometry]) -> CGRect? {
         guard !screens.isEmpty else { return nil }
         let savedFrame = state.frame.cgRect

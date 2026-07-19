@@ -29,6 +29,7 @@ type NotesState = {
   deleteGroup: (id: string) => void;
   toggleCollapsed: (id: string) => void;
   moveCard: (activeId: string, overId: string) => void;
+  moveCardToIndex: (activeId: string, insertionIndex: number, visibleCardIds?: string[]) => void;
   setFloatingCardIds: (ids: string[]) => void;
   reset: () => void;
 };
@@ -277,6 +278,39 @@ export const useNotesStore = create<NotesState>()(
         return {
           cards: arrayMove(state.cards, oldIndex, newIndex),
         };
+      });
+    },
+    moveCardToIndex: (activeId, insertionIndex, visibleCardIds) => {
+      set((state) => {
+        const activeCard = state.cards.find((card) => card.id === activeId);
+        if (!activeCard) {
+          return state;
+        }
+
+        const remainingCards = state.cards.filter((card) => card.id !== activeId);
+        const visibleIds = visibleCardIds?.filter(
+          (id, index) =>
+            id !== activeId &&
+            visibleCardIds.indexOf(id) === index &&
+            remainingCards.some((card) => card.id === id),
+        );
+        const visibleIndex = Math.min(
+          Math.max(Math.round(insertionIndex), 0),
+          visibleIds?.length ?? remainingCards.length,
+        );
+        let targetIndex = visibleIndex;
+
+        if (visibleIds?.length) {
+          const insertBeforeFirst = visibleIndex === 0;
+          const anchorId = insertBeforeFirst ? visibleIds[0] : visibleIds[visibleIndex - 1];
+          const anchorIndex = remainingCards.findIndex((card) => card.id === anchorId);
+          targetIndex = insertBeforeFirst ? anchorIndex : anchorIndex + 1;
+        }
+
+        const cards = [...remainingCards];
+        cards.splice(targetIndex, 0, activeCard);
+
+        return cards.every((card, index) => card.id === state.cards[index]?.id) ? state : { cards };
       });
     },
     setFloatingCardIds: (ids) => {

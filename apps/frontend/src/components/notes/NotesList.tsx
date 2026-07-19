@@ -23,6 +23,8 @@ import {
   syncLatestDragPointerCoordinates,
 } from "../../lib/dnd/centerOverlayToCursor";
 import { resolveDragReorderTarget } from "../../lib/dnd/resolveDragReorderTarget";
+import { readDockInsertionIndex } from "../../lib/dnd/dockInsertion";
+import type { DockZoneEventDetail } from "../../lib/nativeBridge";
 import { useParticleField } from "../../hooks/useParticleField";
 import { useNotesStore } from "../../store/notesStore";
 import { useSettingsStore } from "../../store/settingsStore";
@@ -36,7 +38,7 @@ type NoteGroupFilterState =
   | { mode: "all" }
   | { mode: "custom"; keys: string[] };
 
-export function NotesList() {
+export function NotesList({ dockZoneTarget = null }: { dockZoneTarget?: DockZoneEventDetail | null }) {
   const cardScrollRegionRef = useRef<HTMLDivElement>(null);
   const { t, language } = useI18n();
   const cards = useNotesStore((state) => state.cards);
@@ -44,12 +46,14 @@ export function NotesList() {
   const floatingCardIds = useNotesStore((state) => state.floatingCardIds);
   const addCard = useNotesStore((state) => state.addCard);
   const moveCard = useNotesStore((state) => state.moveCard);
+  const moveCardToIndex = useNotesStore((state) => state.moveCardToIndex);
   const removeCard = useNotesStore((state) => state.removeCard);
   const enableParticles = useSettingsStore((state) => state.enableParticles);
   const [removingIds, setRemovingIds] = useState<string[]>([]);
   const [activeDragId, setActiveDragId] = useState<string | null>(null);
   const [activeDragOverId, setActiveDragOverId] = useState<string | null>(null);
   const [activeDragWidth, setActiveDragWidth] = useState<number | null>(null);
+  const [dockInsertionIndex, setDockInsertionIndex] = useState<number | null>(null);
   const [isFilterDialogOpen, setIsFilterDialogOpen] = useState(false);
   const [groupFilterState, setGroupFilterState] = useState<NoteGroupFilterState>({ mode: "all" });
   const { bursts, fieldRef, spawnBurst } = useParticleField();
@@ -94,6 +98,10 @@ export function NotesList() {
     visibleCards.find((card) => card.id === activeDragId) ??
     baseVisibleCards.find((card) => card.id === activeDragId) ??
     null;
+  const dockVisibleCards = useMemo(
+    () => visibleCards.filter((card) => card.id !== dockZoneTarget?.id),
+    [dockZoneTarget?.id, visibleCards],
+  );
   const dragPointerCoordinates = useDragPointerTracking(Boolean(activeDragId));
   const isFilterActive = !allGroupsSelected;
 
@@ -132,6 +140,34 @@ export function NotesList() {
 
     setActiveDragOverId(nextTarget);
   }, [activeDragId, dragPointerCoordinates]);
+
+  useEffect(() => {
+    if (
+      dockZoneTarget?.kind !== "note" ||
+      typeof dockZoneTarget.clientX !== "number" ||
+      typeof dockZoneTarget.clientY !== "number"
+    ) {
+      setDockInsertionIndex(null);
+      return;
+    }
+
+    const insertionIndex = readDockInsertionIndex({
+      clientX: dockZoneTarget.clientX,
+      clientY: dockZoneTarget.clientY,
+      container: cardScrollRegionRef.current,
+      itemSelector: "[data-note-card-id]",
+      excludedID: dockZoneTarget.id,
+    });
+    setDockInsertionIndex(insertionIndex);
+
+    if (insertionIndex !== null && dockZoneTarget.source === "floating") {
+      moveCardToIndex(
+        dockZoneTarget.id,
+        insertionIndex,
+        dockVisibleCards.map((card) => card.id),
+      );
+    }
+  }, [dockVisibleCards, dockZoneTarget, moveCardToIndex]);
 
   useEffect(() => {
     setGroupFilterState((current) => {
@@ -222,6 +258,28 @@ export function NotesList() {
     setActiveDragOverId(null);
     setActiveDragWidth(null);
 
+    const insertionIndex = dragPointerCoordinates
+      ? readDockInsertionIndex({
+          clientX: dragPointerCoordinates.x,
+          clientY: dragPointerCoordinates.y,
+          container: cardScrollRegionRef.current,
+          itemSelector: "[data-note-card-id]",
+          excludedID: activeId,
+        })
+      : null;
+
+    if (insertionIndex !== null) {
+      if (floatingNotesEnabled) {
+        void hideDragPreview();
+      }
+      moveCardToIndex(
+        activeId,
+        insertionIndex,
+        visibleCards.filter((card) => card.id !== activeId).map((card) => card.id),
+      );
+      return;
+    }
+
     if (!overId) {
       if (!floatingNotesEnabled) {
         return;
@@ -275,8 +333,16 @@ export function NotesList() {
           <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
-            className="flex h-full items-center justify-center rounded-[24px] border border-dashed border-[rgba(213,198,180,0.88)] bg-[rgba(255,255,255,0.34)] px-6 text-center text-[13px] leading-6 text-[var(--muted)]"
+            className="relative flex h-full items-center justify-center rounded-[24px] border border-dashed border-[rgba(213,198,180,0.88)] bg-[rgba(255,255,255,0.34)] px-6 text-center text-[13px] leading-6 text-[var(--muted)]"
           >
+            {dockInsertionIndex === 0 ? (
+              <div
+                aria-hidden="true"
+                data-testid="note-dock-insertion-line"
+                data-edge="before"
+                className="pointer-events-none absolute left-4 right-4 top-4 h-[3px] rounded-full bg-[rgb(31,168,122)] shadow-[0_0_0_3px_rgba(31,168,122,0.16)]"
+              />
+            ) : null}
             {baseVisibleCards.length === 0 ? t.notes.empty : t.notes.filteredEmpty}
           </motion.div>
         ) : (
@@ -308,7 +374,16 @@ export function NotesList() {
                         key={card.id}
                         note={card}
                         onDelete={handleDeleteCard}
-                        dropPreview={activeDragOverId === card.id && activeDragId !== card.id}
+                        dropPreview={false}
+                        dockInsertionEdge={
+                          dockInsertionIndex === 0 && card.id === dockVisibleCards[0]?.id
+                            ? "before"
+                            : dockInsertionIndex !== null &&
+                                dockInsertionIndex > 0 &&
+                                card.id === dockVisibleCards[dockInsertionIndex - 1]?.id
+                              ? "after"
+                              : null
+                        }
                       />
                     ))}
                   </AnimatePresence>
