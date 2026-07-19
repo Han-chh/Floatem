@@ -974,7 +974,7 @@
     max-width: 100%;
   }
 
-  html[data-stickit-theme] .content-card-classic[data-card-grouped="false"]:not([data-dragging="true"]) {
+  html .content-card-classic[data-card-grouped="false"]:not([data-dragging="true"]) {
     --cream: #fff9f0;
     --cream-strong: #fffdf8;
     --border: #d5c6b4;
@@ -1002,7 +1002,7 @@
       0 18px 36px rgba(61, 49, 34, 0.1) !important;
   }
 
-  html[data-stickit-theme] .content-card-classic[data-card-grouped="true"]:not([data-dragging="true"]) {
+  html .content-card-classic[data-card-grouped="true"]:not([data-dragging="true"]) {
     isolation: isolate;
     background:
       radial-gradient(
@@ -1023,20 +1023,20 @@
       inset 0 0 18px color-mix(in srgb, var(--card-group-accent) 12%, transparent) !important;
   }
 
-  html[data-stickit-theme] .content-card-classic[data-card-grouped="true"]:not([data-dragging="true"]):hover {
+  html .content-card-classic[data-card-grouped="true"]:not([data-dragging="true"]):hover {
     border-color: color-mix(in srgb, var(--card-group-accent) 88%, white 12%) !important;
     box-shadow:
       inset 0 0 0 1px color-mix(in srgb, var(--card-group-accent) 30%, transparent),
       inset 0 0 20px color-mix(in srgb, var(--card-group-accent) 15%, transparent) !important;
   }
 
-  html[data-stickit-theme] .content-card-classic[data-card-grouped="true"]:not([data-dragging="true"]):focus-within {
+  html .content-card-classic[data-card-grouped="true"]:not([data-dragging="true"]):focus-within {
     box-shadow:
       inset 0 0 0 1px color-mix(in srgb, var(--card-group-accent) 36%, transparent),
       inset 0 0 22px color-mix(in srgb, var(--card-group-accent) 17%, transparent) !important;
   }
 
-  html[data-stickit-theme] .content-card-classic[data-card-grouped="true"]:not([data-dragging="true"])::before {
+  html .content-card-classic[data-card-grouped="true"]:not([data-dragging="true"])::before {
     position: absolute;
     inset: 0;
     z-index: 24;
@@ -1058,7 +1058,7 @@
     pointer-events: none;
   }
 
-  html[data-stickit-theme] .content-card-classic[data-card-grouped="true"]:not([data-dragging="true"])::after {
+  html .content-card-classic[data-card-grouped="true"]:not([data-dragging="true"])::after {
     position: absolute;
     inset: 2px;
     z-index: 25;

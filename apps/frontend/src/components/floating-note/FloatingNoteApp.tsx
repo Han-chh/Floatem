@@ -14,6 +14,7 @@ import {
   startFloatingCardDrag,
 } from "../../hooks/usePlatform";
 import { useAutoSave } from "../../hooks/useAutoSave";
+import { useTheme } from "../../hooks/useTheme";
 import { FLOATING_CARD_STATE_EVENT } from "../../lib/dragPreview";
 import { useI18n } from "../../lib/i18n";
 import {
@@ -136,6 +137,7 @@ function createPreviewNoteCard(payload: Extract<DragPreviewPayload, { kind: "not
 }
 
 export function FloatingNoteApp() {
+  useTheme();
   const initialPayload = readInitialState();
   const [payload, setPayload] = useState<DragPreviewPayload | null>(initialPayload);
   const [cardSize, setCardSize] = useState(() => initialPayload?.size ?? { width: 1, height: 1 });

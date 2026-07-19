@@ -324,6 +324,9 @@ describe("FloatingNoteApp", () => {
       const noteCard = await screen.findByTestId("note-card");
       expect(noteCard).toHaveAttribute("data-card-grouped", "true");
       expect(noteCard.style.getPropertyValue("--card-group-accent")).toBe(noteGroup.color);
+      await waitFor(() => {
+        expect(document.documentElement).toHaveAttribute("data-stickit-theme", DEFAULT_SETTINGS.theme);
+      });
     } finally {
       noteView.unmount();
       noteBridge.restore();
