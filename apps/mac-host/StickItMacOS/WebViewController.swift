@@ -421,6 +421,25 @@ final class WebViewController: NSViewController, WKNavigationDelegate {
             return
         }
 
+        if method == "checkNotificationPermission" {
+            let language = StickItLanguage(storedValue: params["language"])
+
+            Task { @MainActor [weak self] in
+                guard let self else {
+                    return
+                }
+
+                do {
+                    let allowed = try await self.bridgeDelegate?.checkNotificationPermission(language: language) ?? false
+                    self.sendResponse(id: id, ok: true, payload: ["allowed": allowed])
+                } catch {
+                    let errorMessage = (error as? LocalizedError)?.errorDescription ?? error.localizedDescription
+                    self.sendResponse(id: id, ok: false, payload: errorMessage)
+                }
+            }
+            return
+        }
+
         if method == "testReminderNotification" {
             let soundEnabled = params["soundEnabled"] as? Bool ?? true
             let language = StickItLanguage(storedValue: params["language"])
@@ -942,6 +961,9 @@ final class WebViewController: NSViewController, WKNavigationDelegate {
         },
         openNotificationSettings() {
           return send("openNotificationSettings");
+        },
+        checkNotificationPermission(options = {}) {
+          return send("checkNotificationPermission", options);
         },
         sendNotification(request = {}) {
           return send("sendNotification", request);

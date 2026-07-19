@@ -5,6 +5,7 @@ import type {
   HostBridge,
   HostCapabilities,
   HotkeyRegistrationState,
+  NotificationPermissionResult,
   NotificationRequest,
   ShortcutConfig,
 } from "@stickit/native-bridge";
@@ -143,6 +144,17 @@ const browserBridge: StickItNativeBridge = {
   },
   async openNotificationSettings() {
     // Browser preview cannot open native notification settings.
+  },
+  async checkNotificationPermission(): Promise<NotificationPermissionResult> {
+    if (typeof Notification === "undefined") {
+      return { allowed: true };
+    }
+
+    if (Notification.permission === "default") {
+      return { allowed: (await Notification.requestPermission()) === "granted" };
+    }
+
+    return { allowed: Notification.permission === "granted" };
   },
   async sendNotification(request: NotificationRequest) {
     if (typeof Notification === "undefined" || Notification.permission !== "granted") {

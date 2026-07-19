@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
+import { act, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { ReminderPicker } from "../../src/components/todos/ReminderPicker";
 
@@ -25,6 +25,8 @@ function selectMinute(label: string) {
 
 describe("ReminderPicker", () => {
   afterEach(() => {
+    delete window.stickItHost;
+    delete window.stickItNative;
     vi.useRealTimers();
     vi.restoreAllMocks();
   });
@@ -164,6 +166,57 @@ describe("ReminderPicker", () => {
     expect(within(hourListbox).getByRole("option", { name: "13" })).toHaveAttribute("aria-disabled", "false");
   });
 
+  it("keeps the current hour available and disables only elapsed minutes", () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date("2026-04-05T12:35:00"));
+
+    render(<ReminderPicker todoTitle="Ship this hour" reminderAt={null} onChange={vi.fn()} />);
+
+    openDialog();
+    fireEvent.click(screen.getByRole("button", { name: "Hour" }));
+    const hourListbox = screen.getByRole("listbox", { name: "Hour" });
+    expect(within(hourListbox).getByRole("option", { name: "12" })).toHaveAttribute("aria-disabled", "false");
+
+    fireEvent.click(within(hourListbox).getByRole("option", { name: "12" }));
+    fireEvent.click(screen.getByRole("button", { name: "Minute" }));
+    const minuteListbox = screen.getByRole("listbox", { name: "Minute" });
+    expect(within(minuteListbox).getByRole("option", { name: "34" })).toHaveAttribute("aria-disabled", "true");
+    expect(within(minuteListbox).getByRole("option", { name: "36" })).toHaveAttribute("aria-disabled", "false");
+  });
+
+  it("marks relative shortcuts as not same day for a different todo date", () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date("2026-04-05T12:00:00"));
+
+    render(
+      <ReminderPicker todoTitle="Ship tomorrow" todoDateKey="2026-04-06" reminderAt={null} onChange={vi.fn()} />,
+    );
+
+    openDialog();
+    expect(screen.getAllByRole("button", { name: "Not same day" })).toHaveLength(2);
+    expect(screen.queryByRole("button", { name: "In 30m" })).not.toBeInTheDocument();
+  });
+
+  it("warns after saving when notification permission is unavailable", async () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date("2026-04-05T12:00:00"));
+    const checkNotificationPermission = vi.fn(async () => ({ allowed: false }));
+    window.stickItHost = {
+      platform: "macos",
+      checkNotificationPermission,
+    } as unknown as NonNullable<typeof window.stickItHost>;
+
+    render(<ReminderPicker todoTitle="Permission check" reminderAt={null} onChange={vi.fn()} />);
+    openDialog();
+    fireEvent.click(screen.getByRole("button", { name: "Save" }));
+
+    await act(async () => {
+      await Promise.resolve();
+    });
+    expect(screen.getByRole("alertdialog", { name: "Notifications are turned off" })).toBeInTheDocument();
+    expect(checkNotificationPermission).toHaveBeenCalledWith({ language: "en" });
+  });
+
   it("does not expose calendar controls in the reminder dialog", () => {
     render(<ReminderPicker todoTitle="Ship calendar-free" reminderAt={null} onChange={vi.fn()} />);
 
@@ -187,7 +240,7 @@ describe("ReminderPicker", () => {
     expect(screen.getByRole("button", { name: "In 1h" })).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "In 2h" })).not.toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Afternoon" })).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Tonight" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Evening" })).toBeInTheDocument();
 
     fireEvent.click(closeButtons[0]!);
 

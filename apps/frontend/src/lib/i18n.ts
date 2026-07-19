@@ -309,6 +309,11 @@ type MessageCatalog = {
     reminder: string;
     reminderPastError: string;
     reminderPastTooltip: string;
+    reminderExpiredTooltip: string;
+    notificationPermissionTitle: string;
+    notificationPermissionBody: string;
+    notificationPermissionOpenSettings: string;
+    notSameDay: string;
     reorder: string;
     restoreTask: string;
     save: string;
@@ -324,7 +329,7 @@ type MessageCatalog = {
     tomorrow: string;
     tomorrowMorning: string;
     tomorrowTimePrompt: string;
-    tonight: string;
+    evening: string;
     titleLabel: string;
     titlePlaceholder: string;
     toolbarLabel: string;
@@ -648,6 +653,11 @@ const messages: Record<AppLanguage, MessageCatalog> = {
       reminder: "Reminder",
       reminderPastError: "Reminder time must be later than the current time.",
       reminderPastTooltip: "Already passed",
+      reminderExpiredTooltip: "This reminder has expired",
+      notificationPermissionTitle: "Notifications are turned off",
+      notificationPermissionBody: "The reminder was saved, but StickIt cannot notify you until notifications are enabled in system settings.",
+      notificationPermissionOpenSettings: "Open settings",
+      notSameDay: "Not same day",
       reorder: "Reorder todo",
       restoreTask: "Restore task",
       save: "Save",
@@ -663,7 +673,7 @@ const messages: Record<AppLanguage, MessageCatalog> = {
       tomorrow: "Tomorrow",
       tomorrowMorning: "Tomorrow 09:00",
       tomorrowTimePrompt: "Tomorrow selected. Choose the hour and minute below.",
-      tonight: "Tonight",
+      evening: "Evening",
       titleLabel: "Todo title",
       titlePlaceholder: "Update task title",
       toolbarLabel: "Todo actions",
@@ -986,6 +996,11 @@ const messages: Record<AppLanguage, MessageCatalog> = {
       reminder: "提醒",
       reminderPastError: "提醒时间必须晚于当前时间。",
       reminderPastTooltip: "已过时",
+      reminderExpiredTooltip: "该提醒已经过时",
+      notificationPermissionTitle: "通知权限未开启",
+      notificationPermissionBody: "提醒已保存，但 StickIt 暂时无法发送通知。请在系统设置中开启通知权限。",
+      notificationPermissionOpenSettings: "打开系统设置",
+      notSameDay: "非当日",
       reorder: "重新排序待办",
       restoreTask: "恢复任务",
       save: "保存",
@@ -999,7 +1014,7 @@ const messages: Record<AppLanguage, MessageCatalog> = {
       tomorrow: "明天",
       tomorrowMorning: "明天 09:00",
       tomorrowTimePrompt: "已选择明天，请继续选择具体时分。",
-      tonight: "今晚",
+      evening: "晚上",
       titleLabel: "待办标题",
       titlePlaceholder: "更新任务标题",
       undoneCount: (count) => `${count} 项未完成`,

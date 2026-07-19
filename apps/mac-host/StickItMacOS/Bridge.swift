@@ -51,6 +51,7 @@ protocol StickItNativeBridgeHandling: AnyObject {
     func currentLaunchAtLoginStatus() -> [String: Any]
     func showMainWindowFromBridge()
     func openNotificationSettings() throws
+    func checkNotificationPermission(language: StickItLanguage) async throws -> Bool
     func sendNotification(id: String?, title: String, body: String, soundEnabled: Bool) async throws
     func scheduleNotification(id: String?, title: String, body: String, scheduledAt: Date?, soundEnabled: Bool) async throws
     func openTextColorPanel(requestID: String, colorHex: String?) throws

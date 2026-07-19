@@ -131,7 +131,8 @@ final class FloatingNoteWindowController: NSObject, WKNavigationDelegate, WKScri
         showDragPreview() { return Promise.resolve(); },
         hideDragPreview() { return Promise.resolve(); },
         showFloatingCard() { return Promise.resolve(); },
-        openNotificationSettings() { return Promise.resolve(); },
+        openNotificationSettings() { return send("openNotificationSettings"); },
+        checkNotificationPermission(options = {}) { return send("checkNotificationPermission", options); },
         sendNotification() { return Promise.resolve(); },
         showNotification() { return Promise.resolve(); },
         scheduleNotification() { return Promise.resolve(); },
@@ -181,6 +182,8 @@ final class FloatingNoteWindowController: NSObject, WKNavigationDelegate, WKScri
     var onReadClipboardText: (() -> String)?
     var onWriteClipboardText: ((String) -> Void)?
     var onPickScreenColor: (() async throws -> String?)?
+    var onOpenNotificationSettings: (() throws -> Void)?
+    var onCheckNotificationPermission: ((StickItLanguage) async throws -> Bool)?
 
     private var panel: FloatingPanel?
     private let webView: WKWebView
@@ -331,6 +334,8 @@ final class FloatingNoteWindowController: NSObject, WKNavigationDelegate, WKScri
         onReadClipboardText = nil
         onWriteClipboardText = nil
         onPickScreenColor = nil
+        onOpenNotificationSettings = nil
+        onCheckNotificationPermission = nil
 
         guard let panel else {
             pendingPayload = nil
@@ -783,6 +788,27 @@ final class FloatingNoteWindowController: NSObject, WKNavigationDelegate, WKScri
                     } else {
                         self.resolveBridgeRequest(id: requestID, ok: true, result: NSNull())
                     }
+                } catch {
+                    self.resolveBridgeRequest(id: requestID, ok: false, result: error.localizedDescription)
+                }
+            }
+        case "openNotificationSettings":
+            do {
+                try onOpenNotificationSettings?()
+                resolveBridgeRequest(id: requestID, ok: true, result: NSNull())
+            } catch {
+                resolveBridgeRequest(id: requestID, ok: false, result: error.localizedDescription)
+            }
+        case "checkNotificationPermission":
+            let language = StickItLanguage(storedValue: params["language"])
+            Task { @MainActor [weak self] in
+                guard let self else {
+                    return
+                }
+
+                do {
+                    let allowed = try await self.onCheckNotificationPermission?(language) ?? false
+                    self.resolveBridgeRequest(id: requestID, ok: true, result: ["allowed": allowed])
                 } catch {
                     self.resolveBridgeRequest(id: requestID, ok: false, result: error.localizedDescription)
                 }

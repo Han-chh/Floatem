@@ -129,6 +129,21 @@ function getStatusMeta(todo: TodoItemModel, doneFallbackLabel: string, timeZone:
     };
   }
 
+  if (todo.reminderAt <= Date.now()) {
+    return {
+      label: "expired",
+      reminderLabel: formatTimestampInTimeZone(todo.reminderAt, timeZone, "compact", timeFormat),
+      reminderClass:
+        "border-[rgba(150,154,151,0.24)] bg-[rgba(226,230,227,0.58)] text-[rgba(105,111,107,0.76)]",
+      toggleClass:
+        "border-[rgba(150,154,151,0.22)] bg-[rgba(255,255,255,0.82)] text-[rgba(105,111,107,0.78)]",
+      strikeClass: "bg-[rgba(132,136,133,0.52)]",
+      cardClass:
+        "border-[rgba(213,198,180,0.92)] bg-[linear-gradient(180deg,rgba(255,252,248,0.98),rgba(255,247,239,0.95))]",
+      accent: "rgba(132,136,133,0.72)",
+    };
+  }
+
   const reminderDateKey = formatDateKeyInTimeZone(new Date(todo.reminderAt), timeZone);
   const todayDateKey = formatDateKeyInTimeZone(new Date(), timeZone);
 
@@ -230,6 +245,7 @@ function TodoRowBody({
   onToggleDesktopPinned,
 }: TodoRowBodyProps) {
   const { t } = useI18n();
+  const [, refreshReminderStatus] = useState(0);
   const setReminder = useTodosStore((state) => state.setReminder);
   const groups = useTodosStore((state) => state.groups);
   const timeZone = useSettingsStore((state) => state.timeZone);
@@ -244,6 +260,20 @@ function TodoRowBody({
   const isDockAction = actionVariant === "dock";
   const selectionLabel = t.todos.selectTodo(todo.text);
   const canSelectTodo = selectionMode && !todo.done;
+
+  useEffect(() => {
+    if (todo.done || !todo.reminderAt) {
+      return;
+    }
+
+    const delay = todo.reminderAt - Date.now();
+    if (delay <= 0 || typeof window === "undefined") {
+      return;
+    }
+
+    const timer = window.setTimeout(() => refreshReminderStatus((value) => value + 1), delay + 50);
+    return () => window.clearTimeout(timer);
+  }, [todo.done, todo.reminderAt]);
 
   return (
     <>
@@ -417,6 +447,7 @@ function TodoRowBody({
                   timeZone={timeZone}
                   timeFormat={timeFormat}
                   displayValue={reminderButtonLabel}
+                  tooltip={status.label === "expired" ? t.todos.reminderExpiredTooltip : undefined}
                   className={status.reminderClass}
                   disabled={preview}
                   onChange={(value) => setReminder(todo.id, value)}

@@ -12,6 +12,21 @@ describe("TodoList", () => {
     vi.useRealTimers();
   });
 
+  it("renders an expired reminder in gray with an expiry tooltip", () => {
+    const dateKey = formatLocalDateKey(new Date());
+    const todo = createTodoItem("Expired reminder", {
+      dateKey,
+      reminderAt: Date.now() - 60_000,
+    });
+    useTodosStore.setState({ todos: [todo], selectedDateKey: dateKey, isLoaded: true });
+
+    render(<TodoList />);
+
+    const reminderButton = screen.getByRole("button", { name: "Change reminder" });
+    expect(reminderButton).toHaveAttribute("data-tooltip", "This reminder has expired");
+    expect(reminderButton.className).toContain("bg-[rgba(226,230,227,0.58)]");
+  });
+
   it("adds, completes, and deletes a todo with Enter submission while keeping Shift+Enter for new lines", async () => {
     const user = userEvent.setup();
     render(<TodoList />);

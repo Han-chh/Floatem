@@ -33,6 +33,10 @@ export type NotificationRequest = {
   data?: Record<string, unknown>;
 };
 
+export type NotificationPermissionResult = {
+  allowed: boolean;
+};
+
 export type ShortcutConfig = {
   shortcut: string;
 };
@@ -207,6 +211,7 @@ export type HostBridge<TLoadAllResult, TNotes, TTodos, TSettings> = {
   removeDesktopWidgetAssociation?: (card: FloatingCardReference) => Promise<void>;
   getDesktopWidgetState?: (card: FloatingCardReference) => Promise<DesktopWidgetState>;
   openNotificationSettings: () => Promise<void>;
+  checkNotificationPermission?: (options?: { language?: string }) => Promise<NotificationPermissionResult>;
   sendNotification: (request: NotificationRequest) => Promise<void>;
   showNotification: (request: NotificationRequest) => Promise<void>;
   scheduleNotification: (request: NotificationRequest) => Promise<void>;

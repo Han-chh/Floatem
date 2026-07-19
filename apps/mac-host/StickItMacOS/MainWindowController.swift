@@ -309,6 +309,10 @@ final class MainWindowController: NSObject, NSWindowDelegate, StickItNativeBridg
         throw StickItBridgeError.invalidParameters(language.localization.notificationOpenSettingsFailedMessage)
     }
 
+    func checkNotificationPermission(language: StickItLanguage) async throws -> Bool {
+        try await notificationManager.checkAuthorization(language: language)
+    }
+
     func sendNotification(id: String?, title: String, body: String, soundEnabled: Bool) async throws {
         let language = (try? storage.currentLanguage()) ?? .simplifiedChinese
         try await notificationManager.scheduleBridgeNotification(
@@ -598,6 +602,16 @@ final class MainWindowController: NSObject, NSWindowDelegate, StickItNativeBridg
             }
 
             return try await self.pickScreenColor()
+        }
+        controller.onOpenNotificationSettings = { [weak self] in
+            try self?.openNotificationSettings()
+        }
+        controller.onCheckNotificationPermission = { [weak self] language in
+            guard let self else {
+                return false
+            }
+
+            return try await self.checkNotificationPermission(language: language)
         }
         floatingCardWindowControllers[key] = controller
         floatingCardPayloads[key] = payloadDictionary
