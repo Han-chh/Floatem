@@ -1,7 +1,7 @@
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { AnimatePresence, motion } from "framer-motion";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type CSSProperties } from "react";
 import { createPortal } from "react-dom";
 import { useI18n } from "../../lib/i18n";
 import { resolveTodoAccentColor, resolveTodoGroup, type TodoItem as TodoItemModel } from "../../lib/models";
@@ -82,6 +82,7 @@ function GroupColorGlyph({ color, size = "md" }: { color: string; size?: "sm" | 
 
 type TodoRowBodyProps = {
   todo: TodoItemModel;
+  hasAssignedGroup: boolean;
   order?: number;
   onDelete?: (target: DOMRect) => void;
   onOpenGroupDialog?: () => void;
@@ -207,8 +208,13 @@ function getTodoCardSurface(todo: TodoItemModel, groupAccentColor: string) {
   ].join(", ");
 }
 
+function getTodoGroupStyle(groupAccentColor: string, hasAssignedGroup: boolean): CSSProperties {
+  return hasAssignedGroup ? ({ "--card-group-accent": groupAccentColor } as CSSProperties) : {};
+}
+
 function TodoRowBody({
   todo,
+  hasAssignedGroup,
   order,
   onDelete,
   onOpenGroupDialog,
@@ -241,20 +247,24 @@ function TodoRowBody({
 
   return (
     <>
-      <div
-        className={`pointer-events-none absolute inset-0 ${todo.done ? "opacity-[0.35]" : "opacity-[0.65]"}`}
-        style={{
-          backgroundImage:
-            `radial-gradient(${colorWithAlpha(groupAccentColor, "38")} 0.7px, transparent 0.8px), linear-gradient(120deg, transparent 0 38%, ${colorWithAlpha(groupAccentColor, "1e")} 38% 41%, transparent 41% 100%), linear-gradient(140deg, ${colorWithAlpha(groupAccentColor, "20")}, rgba(255,255,255,0.34) 42%, transparent 70%)`,
-          backgroundSize: "15px 15px, 22px 22px, 100% 100%",
-        }}
-      />
-      <div
-        className="pointer-events-none absolute inset-y-2 left-2 w-2 rounded-full opacity-90 shadow-[0_5px_12px_rgba(61,49,34,0.08)]"
-        style={{
-          background: `linear-gradient(180deg, ${groupAccentColor}, ${colorWithAlpha(groupAccentColor, "9c")} 54%, rgba(255,255,255,0.24))`,
-        }}
-      />
+      {hasAssignedGroup ? (
+        <>
+          <div
+            className={`pointer-events-none absolute inset-0 ${todo.done ? "opacity-[0.35]" : "opacity-[0.65]"}`}
+            style={{
+              backgroundImage:
+                `radial-gradient(${colorWithAlpha(groupAccentColor, "38")} 0.7px, transparent 0.8px), linear-gradient(120deg, transparent 0 38%, ${colorWithAlpha(groupAccentColor, "1e")} 38% 41%, transparent 41% 100%), linear-gradient(140deg, ${colorWithAlpha(groupAccentColor, "20")}, rgba(255,255,255,0.34) 42%, transparent 70%)`,
+              backgroundSize: "15px 15px, 22px 22px, 100% 100%",
+            }}
+          />
+          <div
+            className="pointer-events-none absolute inset-y-2 left-2 w-2 rounded-full opacity-90 shadow-[0_5px_12px_rgba(61,49,34,0.08)]"
+            style={{
+              background: `linear-gradient(180deg, ${groupAccentColor}, ${colorWithAlpha(groupAccentColor, "9c")} 54%, rgba(255,255,255,0.24))`,
+            }}
+          />
+        </>
+      ) : null}
       {isDraggingPlaceholder ? (
         <div className="absolute inset-0 rounded-[22px] border border-transparent bg-[rgba(255,255,255,0.08)]" />
       ) : null}
@@ -464,17 +474,20 @@ export function TodoItemPreview({ todo, width, order }: { todo: TodoItemModel; w
   const timeZone = useSettingsStore((state) => state.timeZone);
   const timeFormat = useSettingsStore((state) => state.timeFormat);
   const groupAccentColor = resolveTodoAccentColor(todo, groups);
+  const hasAssignedGroup = Boolean(resolveTodoGroup(todo, groups));
   return (
     <div
+      data-card-grouped={hasAssignedGroup}
       data-todo-status={todo.done ? "done" : "active"}
       className={`content-card-classic paper-card cq-card relative h-full w-full overflow-hidden rounded-[18px] px-2 py-1.25 ${getStatusMeta(todo, t.todos.doneFallback, timeZone, timeFormat).cardClass}`}
       style={{
+        ...getTodoGroupStyle(groupAccentColor, hasAssignedGroup),
         background: getTodoCardSurface(todo, groupAccentColor),
         borderColor: `${groupAccentColor}86`,
         width: width ? `${width}px` : "100%",
       }}
     >
-      <TodoRowBody todo={todo} order={order} preview />
+      <TodoRowBody todo={todo} order={order} hasAssignedGroup={hasAssignedGroup} preview />
     </div>
   );
 }
@@ -510,6 +523,7 @@ export function FloatingTodoItem({
   const pendingPointerRef = useRef<{ pointerId: number; x: number; y: number } | null>(null);
   const status = getStatusMeta(todo, t.todos.doneFallback, timeZone, timeFormat);
   const groupAccentColor = resolveTodoAccentColor(todo, groups);
+  const hasAssignedGroup = Boolean(resolveTodoGroup(todo, groups));
 
   const clearPendingPointer = (element: HTMLElement, pointerId: number) => {
     pendingPointerRef.current = null;
@@ -525,9 +539,11 @@ export function FloatingTodoItem({
         data-no-window-drag="true"
         data-testid="todo-item"
         data-todo-item-id={todo.id}
+        data-card-grouped={hasAssignedGroup}
         aria-label={t.todos.reorder}
         className={`content-card-classic paper-card cq-card relative overflow-hidden rounded-[18px] px-2 py-1.25 cursor-grab active:cursor-grabbing ${status.cardClass}`}
         style={{
+          ...getTodoGroupStyle(groupAccentColor, hasAssignedGroup),
           background: getTodoCardSurface(todo, groupAccentColor),
           borderColor: `${groupAccentColor}78`,
           boxShadow: `0 0 0 2px ${colorWithAlpha(groupAccentColor, "14")}, 0 12px 24px ${colorWithAlpha(groupAccentColor, "12")}, 0 10px 22px rgba(61,49,34,0.08)`,
@@ -592,6 +608,7 @@ export function FloatingTodoItem({
       >
         <TodoRowBody
           todo={todo}
+          hasAssignedGroup={hasAssignedGroup}
           order={order}
           onDelete={onDock}
           onOpenGroupDialog={() => setIsGroupDialogOpen(true)}
@@ -799,6 +816,7 @@ export function TodoItem({
   });
   const status = getStatusMeta(todo, t.todos.doneFallback, timeZone, timeFormat);
   const groupAccentColor = resolveTodoAccentColor(todo, groups);
+  const hasAssignedGroup = Boolean(resolveTodoGroup(todo, groups));
   const setArticleRef = (node: HTMLElement | null) => {
     cardRef.current = node;
     setNodeRef(node);
@@ -815,6 +833,7 @@ export function TodoItem({
         transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
         whileHover={!isDragging ? { y: -1.5, scale: 1.006 } : undefined}
         style={{
+          ...getTodoGroupStyle(groupAccentColor, hasAssignedGroup),
           background: isDragging ? undefined : getTodoCardSurface(todo, groupAccentColor),
           borderColor: isDragging ? undefined : `${groupAccentColor}78`,
           boxShadow: isDragging
@@ -829,6 +848,7 @@ export function TodoItem({
         data-testid="todo-item"
         data-todo-item-id={todo.id}
         data-dock-entity-id={todo.id}
+        data-card-grouped={hasAssignedGroup}
         data-todo-status={todo.done ? "done" : "active"}
         data-dragging={isDragging}
         aria-label={t.todos.reorder}
@@ -846,6 +866,7 @@ export function TodoItem({
       >
         <TodoRowBody
           todo={todo}
+          hasAssignedGroup={hasAssignedGroup}
           order={order}
           onDelete={(target) => onDelete(todo.id, cardRef.current?.getBoundingClientRect() ?? target)}
           onOpenGroupDialog={() => setIsGroupDialogOpen(true)}
@@ -887,6 +908,7 @@ export function CompletedTodoItem({
   const timeFormat = useSettingsStore((state) => state.timeFormat);
   const status = getStatusMeta(todo, t.todos.doneFallback, timeZone, timeFormat);
   const groupAccentColor = resolveTodoAccentColor(todo, groups);
+  const hasAssignedGroup = Boolean(resolveTodoGroup(todo, groups));
   const [isGroupDialogOpen, setIsGroupDialogOpen] = useState(false);
   const cardRef = useRef<HTMLElement | null>(null);
 
@@ -902,8 +924,10 @@ export function CompletedTodoItem({
         whileHover={{ y: -1.5, scale: 1.006 }}
         data-no-window-drag="true"
         data-testid="todo-item"
+        data-card-grouped={hasAssignedGroup}
         data-todo-status={todo.done ? "done" : "active"}
         style={{
+          ...getTodoGroupStyle(groupAccentColor, hasAssignedGroup),
           background: getTodoCardSurface(todo, groupAccentColor),
           borderColor: `${groupAccentColor}66`,
           boxShadow: `0 0 0 2px ${colorWithAlpha(groupAccentColor, "10")}, 0 8px 18px rgba(61,49,34,0.04)`,
@@ -920,6 +944,7 @@ export function CompletedTodoItem({
       >
         <TodoRowBody
           todo={todo}
+          hasAssignedGroup={hasAssignedGroup}
           onDelete={(target) => onDelete(todo.id, cardRef.current?.getBoundingClientRect() ?? target)}
           onOpenGroupDialog={() => setIsGroupDialogOpen(true)}
           onSelect={() => onSelect?.(todo.id)}

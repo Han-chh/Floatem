@@ -7,18 +7,22 @@ import {
   createEmptyNotesDocument,
   createEmptyTodosDocument,
   createNoteCard,
+  createNoteGroup,
+  createTodoGroup,
   createTodoItem,
   DEFAULT_NOTE_CONTENT,
   DEFAULT_SETTINGS,
   type NoteCard,
+  type NoteGroup,
   type TodoItem,
+  type TodoGroup,
 } from "../../src/lib/models";
 import { useNotesStore } from "../../src/store/notesStore";
 import { useTodosStore } from "../../src/store/todosStore";
 import { getNoteToolbarStateKey } from "../../src/lib/noteToolbarState";
 import { FLOATING_CARD_STATE_EVENT } from "../../src/lib/dragPreview";
 
-function createFloatingNotePayload(note: NoteCard): DragPreviewPayload {
+function createFloatingNotePayload(note: NoteCard, groups: NoteGroup[] = []): DragPreviewPayload {
   return {
     kind: "note",
     language: "en",
@@ -40,11 +44,11 @@ function createFloatingNotePayload(note: NoteCard): DragPreviewPayload {
       previewText: "",
       updatedAt: note.updatedAt,
     },
-    groups: [],
+    groups,
   };
 }
 
-function createFloatingTodoPayload(todo: TodoItem): DragPreviewPayload {
+function createFloatingTodoPayload(todo: TodoItem, groups: TodoGroup[] = []): DragPreviewPayload {
   return {
     kind: "todo",
     language: "en",
@@ -68,7 +72,7 @@ function createFloatingTodoPayload(todo: TodoItem): DragPreviewPayload {
       createdAt: todo.createdAt,
       dateKey: todo.dateKey,
     },
-    groups: [],
+    groups,
   };
 }
 
@@ -89,7 +93,7 @@ function createFloatingScreenPlacement(left: number, width: number, availableWid
   };
 }
 
-function installFloatingBridge(note: NoteCard) {
+function installFloatingBridge(note: NoteCard, groups: NoteGroup[] = []) {
   const originalBridge = window.stickItHost;
   const clipboard = { value: "" };
   const startFloatingCardDrag = vi.fn(async () => {});
@@ -109,7 +113,7 @@ function installFloatingBridge(note: NoteCard) {
     clipboard.value = text;
   });
 
-  window.__STICKIT_FLOATING_CARD_STATE__ = createFloatingNotePayload(note);
+  window.__STICKIT_FLOATING_CARD_STATE__ = createFloatingNotePayload(note, groups);
   window.stickItHost = {
     platform: "macos",
     getCapabilities: vi.fn(async () => ({
@@ -136,7 +140,7 @@ function installFloatingBridge(note: NoteCard) {
     loadAllData: vi.fn(async () => ({
       notes: {
         cards: [note],
-        groups: [],
+        groups,
       },
       todos: createEmptyTodosDocument(),
       settings: DEFAULT_SETTINGS,
@@ -201,7 +205,7 @@ function installFloatingBridge(note: NoteCard) {
   };
 }
 
-function installFloatingTodoBridge(todo: TodoItem) {
+function installFloatingTodoBridge(todo: TodoItem, groups: TodoGroup[] = []) {
   const originalBridge = window.stickItHost;
   const startFloatingCardDrag = vi.fn(async () => {});
   const closeFloatingCard = vi.fn(async () => {});
@@ -218,7 +222,7 @@ function installFloatingTodoBridge(todo: TodoItem) {
   const requestDesktopWidget = vi.fn(async () => ({ requested: true, requiresSystemPlacement: true }));
   const removeDesktopWidgetAssociation = vi.fn(async () => {});
 
-  window.__STICKIT_FLOATING_CARD_STATE__ = createFloatingTodoPayload(todo);
+  window.__STICKIT_FLOATING_CARD_STATE__ = createFloatingTodoPayload(todo, groups);
   window.stickItHost = {
     platform: "macos",
     getCapabilities: vi.fn(async () => ({
@@ -246,7 +250,7 @@ function installFloatingTodoBridge(todo: TodoItem) {
       notes: createEmptyNotesDocument(),
       todos: {
         items: [todo],
-        groups: [],
+        groups,
       },
       settings: DEFAULT_SETTINGS,
     })),
@@ -310,6 +314,35 @@ function installFloatingTodoBridge(todo: TodoItem) {
 }
 
 describe("FloatingNoteApp", () => {
+  it("keeps group rings on floating note and todo cards", async () => {
+    const noteGroup = createNoteGroup({ id: "floating-note-group", name: "Work", color: "#2F6BFF" });
+    const note = createNoteCard({ id: "floating-grouped-note", title: "Grouped note", groupId: noteGroup.id });
+    const noteBridge = installFloatingBridge(note, [noteGroup]);
+
+    const noteView = render(<FloatingNoteApp />);
+    try {
+      const noteCard = await screen.findByTestId("note-card");
+      expect(noteCard).toHaveAttribute("data-card-grouped", "true");
+      expect(noteCard.style.getPropertyValue("--card-group-accent")).toBe(noteGroup.color);
+    } finally {
+      noteView.unmount();
+      noteBridge.restore();
+    }
+
+    const todoGroup = createTodoGroup({ id: "floating-todo-group", name: "Focus", color: "#1FA87A" });
+    const todo = createTodoItem("Grouped todo", { id: "floating-grouped-todo", groupId: todoGroup.id });
+    const todoBridge = installFloatingTodoBridge(todo, [todoGroup]);
+
+    render(<FloatingNoteApp />);
+    try {
+      const todoCard = await screen.findByTestId("todo-item");
+      expect(todoCard).toHaveAttribute("data-card-grouped", "true");
+      expect(todoCard.style.getPropertyValue("--card-group-accent")).toBe(todoGroup.color);
+    } finally {
+      todoBridge.restore();
+    }
+  });
+
   it("restores the same per-note toolbar state in a floating card", async () => {
     const note = createNoteCard({ id: "floating-note-toolbar-state", title: "Remember toolbar" });
     const bridge = installFloatingBridge(note);

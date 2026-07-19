@@ -1,8 +1,20 @@
 import { describe, expect, it, vi } from "vitest";
-import { createNoteCard, createNoteGroup, DEFAULT_NOTE_CONTENT, DEFAULT_UNGROUPED_NOTE_COLOR } from "../../src/lib/models";
+import {
+  createNoteCard,
+  createNoteGroup,
+  DEFAULT_NOTE_CONTENT,
+  DEFAULT_UNGROUPED_NOTE_COLOR,
+  resolveNoteAccentColor,
+} from "../../src/lib/models";
 import { useNotesStore } from "../../src/store/notesStore";
 
 describe("notesStore", () => {
+  it("uses the fixed neutral accent for ungrouped notes", () => {
+    const legacyColoredNote = createNoteCard({ dotColor: "#2F6BFF", groupId: null });
+
+    expect(resolveNoteAccentColor(legacyColoredNote, [])).toBe(DEFAULT_UNGROUPED_NOTE_COLOR);
+  });
+
   it("adds and removes cards", () => {
     const created = useNotesStore.getState().addCard();
     expect(useNotesStore.getState().cards).toHaveLength(1);

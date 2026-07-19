@@ -158,8 +158,11 @@ describe("TodoList", () => {
 
     const alphaCard = screen.getAllByTestId("todo-item").find((item) => within(item).queryByText("Alpha"));
     expect(alphaCard).toBeTruthy();
+    expect(alphaCard).toHaveAttribute("data-card-grouped", "false");
     await user.click(within(alphaCard!).getByRole("button", { name: "Change todo group" }));
     await user.click(within(screen.getByRole("dialog", { name: "Manage todo groups" })).getByRole("button", { name: "Work" }));
+    expect(alphaCard).toHaveAttribute("data-card-grouped", "true");
+    expect(alphaCard!.style.getPropertyValue("--card-group-accent")).not.toBe("");
 
     await user.click(screen.getByRole("button", { name: "Filter todo groups" }));
     const filterDialog = screen.getByRole("dialog", { name: "Filter todo groups" });

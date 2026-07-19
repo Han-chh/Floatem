@@ -168,6 +168,8 @@ describe("NotesList", () => {
     await user.click(screen.getByRole("button", { name: "Work" }));
     expect(within(note).getByText("Work")).toBeInTheDocument();
     expect(note).toHaveAttribute("data-note-grouped", "true");
+    expect(note).toHaveAttribute("data-card-grouped", "true");
+    expect(note.style.getPropertyValue("--card-group-accent")).not.toBe("");
     expect(note.querySelector(".note-group-card-texture")).toBeInTheDocument();
     expect(note.querySelector(".note-group-card-rail")).toBeInTheDocument();
 
@@ -192,6 +194,7 @@ describe("NotesList", () => {
     await user.click(within(screen.getByRole("dialog", { name: "Manage groups" })).getByRole("button", { name: "Close" }));
     expect(within(note).getByText("No group")).toBeInTheDocument();
     expect(note).toHaveAttribute("data-note-grouped", "false");
+    expect(note).toHaveAttribute("data-card-grouped", "false");
     expect(note.querySelector(".note-group-card-texture")).not.toBeInTheDocument();
   });
 

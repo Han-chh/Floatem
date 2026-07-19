@@ -71,7 +71,9 @@ function getNoteCardSurface(accentColor: string, hasAssignedGroup = false) {
 }
 
 function getNoteGroupStyle(accentColor: string, hasAssignedGroup: boolean): CSSProperties {
-  return hasAssignedGroup ? ({ "--note-group-accent": accentColor } as CSSProperties) : {};
+  return hasAssignedGroup
+    ? ({ "--card-group-accent": accentColor, "--note-group-accent": accentColor } as CSSProperties)
+    : {};
 }
 
 const FLOATING_NOTE_EDIT_TARGET_SELECTOR =
@@ -301,6 +303,7 @@ export function NoteCardPreview({ note, width }: { note: NoteCardModel; width?: 
 
   return (
     <div
+      data-card-grouped={hasAssignedGroup}
       data-note-grouped={hasAssignedGroup}
       className="content-card-classic paper-card cq-card relative overflow-hidden rounded-[28px] border border-[rgba(213,198,180,0.92)] bg-[linear-gradient(180deg,rgba(255,252,248,0.98),rgba(255,247,239,0.95))]"
       style={{
@@ -367,6 +370,7 @@ export function FloatingNoteCard({
         aria-label={t.notes.reorder}
         data-testid="note-card"
         data-note-card-id={note.id}
+        data-card-grouped={hasAssignedGroup}
         data-note-grouped={hasAssignedGroup}
         className="content-card-classic paper-card cq-card relative overflow-hidden rounded-[28px] border border-[rgba(213,198,180,0.92)] bg-[linear-gradient(180deg,rgba(255,252,248,0.98),rgba(255,247,239,0.95))] shadow-[0_18px_36px_rgba(61,49,34,0.10)] cursor-grab active:cursor-grabbing"
         style={{
@@ -486,6 +490,7 @@ export function NoteCard({ note, onDelete, dropPreview = false, dockInsertionEdg
         data-testid="note-card"
         data-note-card-id={note.id}
         data-dock-entity-id={note.id}
+        data-card-grouped={hasAssignedGroup}
         data-note-grouped={hasAssignedGroup}
         data-dragging={isDragging}
         className={`content-card-classic paper-card cq-card mx-1 relative overflow-hidden rounded-[28px] border border-[rgba(213,198,180,0.92)] bg-[linear-gradient(180deg,rgba(255,252,248,0.98),rgba(255,247,239,0.95))] shadow-[0_18px_36px_rgba(61,49,34,0.10)] cursor-grab active:cursor-grabbing ${
