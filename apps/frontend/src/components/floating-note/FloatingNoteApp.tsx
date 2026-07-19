@@ -161,6 +161,8 @@ export function FloatingNoteApp() {
   const isDialogOpenRef = useRef(false);
   const lastDialogSideRef = useRef<FloatingDialogSide>("right");
   const completeDockTimerRef = useRef<number | null>(null);
+  const desktopPinRequestRef = useRef(0);
+  const confirmedDesktopPinRef = useRef<boolean | null>(null);
   const dialogStateRequestRef = useRef(0);
   const hasEditableFocusRef = useRef(false);
   const isTextComposingRef = useRef(false);
@@ -301,7 +303,7 @@ export function FloatingNoteApp() {
       height: Math.max(payload.size.height, current.height),
     }));
     setFrameSize(payload.size);
-    setIsDesktopPinned(Boolean(payload.desktopPinned));
+    setIsDesktopPinned(confirmedDesktopPinRef.current ?? Boolean(payload.desktopPinned));
   }, [payload]);
 
   useEffect(() => {
@@ -627,14 +629,33 @@ export function FloatingNoteApp() {
 
   const handleDesktopPinToggle = async () => {
     const nextPinned = !isDesktopPinned;
+    const requestID = desktopPinRequestRef.current + 1;
+    desktopPinRequestRef.current = requestID;
     setIsDesktopPinned(nextPinned);
     try {
       const result = await setFloatingCardDesktopPinned(cardReference, nextPinned);
+      if (desktopPinRequestRef.current !== requestID) {
+        return;
+      }
+
+      const confirmedPinned = Boolean(result.pinned);
+      confirmedDesktopPinRef.current = confirmedPinned;
+      setIsDesktopPinned(confirmedPinned);
+      if (window.__STICKIT_FLOATING_CARD_STATE__) {
+        window.__STICKIT_FLOATING_CARD_STATE__ = {
+          ...window.__STICKIT_FLOATING_CARD_STATE__,
+          desktopPinned: confirmedPinned,
+        };
+      }
       if (result.requiresLaunchAtLogin) {
         setShowDesktopBackgroundGuide(true);
       }
     } catch {
-      setIsDesktopPinned(!nextPinned);
+      if (desktopPinRequestRef.current === requestID) {
+        const restoredPinned = !nextPinned;
+        confirmedDesktopPinRef.current = restoredPinned;
+        setIsDesktopPinned(restoredPinned);
+      }
     }
   };
 

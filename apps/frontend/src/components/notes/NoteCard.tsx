@@ -218,7 +218,14 @@ function NoteCardBody({
                   onPointerDown={(event) => event.stopPropagation()}
                   onClick={onToggleDesktopPinned}
                 >
-                  <PushPinIcon active={desktopPinned} size={14} />
+                  <span
+                    aria-hidden="true"
+                    data-desktop-pin-indicator
+                    data-active={desktopPinned}
+                    className="desktop-pin-indicator"
+                  >
+                    <PushPinIcon active={desktopPinned} size={14} />
+                  </span>
                 </motion.button>
               ) : null}
               <motion.button

@@ -352,7 +352,14 @@ function TodoRowBody({
                     onToggleDesktopPinned();
                   }}
                 >
-                  <PushPinIcon active={desktopPinned} size={13.5} />
+                  <span
+                    aria-hidden="true"
+                    data-desktop-pin-indicator
+                    data-active={desktopPinned}
+                    className="desktop-pin-indicator"
+                  >
+                    <PushPinIcon active={desktopPinned} size={13.5} />
+                  </span>
                 </motion.button>
               ) : null}
               <motion.button

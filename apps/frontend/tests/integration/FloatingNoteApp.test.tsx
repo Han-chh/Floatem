@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
+import { act, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 import type { DragPreviewPayload, FloatingCardReference } from "@stickit/native-bridge";
@@ -16,6 +16,7 @@ import {
 import { useNotesStore } from "../../src/store/notesStore";
 import { useTodosStore } from "../../src/store/todosStore";
 import { getNoteToolbarStateKey } from "../../src/lib/noteToolbarState";
+import { FLOATING_CARD_STATE_EVENT } from "../../src/lib/dragPreview";
 
 function createFloatingNotePayload(note: NoteCard): DragPreviewPayload {
   return {
@@ -472,11 +473,59 @@ describe("FloatingNoteApp", () => {
         "aria-pressed",
         "true",
       );
+      expect(
+        within(card).getByRole("button", { name: "Remove from desktop" })
+          .querySelector("[data-desktop-pin-indicator]"),
+      ).toHaveAttribute("data-active", "true");
+
+      act(() => {
+        window.dispatchEvent(new CustomEvent(FLOATING_CARD_STATE_EVENT, {
+          detail: { ...createFloatingNotePayload(note), desktopPinned: false },
+        }));
+      });
+      await waitFor(() => {
+        expect(within(card).getByRole("button", { name: "Remove from desktop" })).toHaveAttribute(
+          "aria-pressed",
+          "true",
+        );
+      });
 
       await user.click(screen.getByRole("button", { name: "Got it" }));
-      await user.click(within(card).getByRole("button", { name: "Remove from desktop" }));
+      const refreshedCard = await screen.findByTestId("note-card");
+      await user.click(within(refreshedCard).getByRole("button", { name: "Remove from desktop" }));
       expect(bridge.setFloatingCardDesktopPinned).toHaveBeenCalledWith({ kind: "note", id: note.id }, false);
       expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+    } finally {
+      bridge.restore();
+    }
+  });
+
+  it("uses the native result as the authoritative desktop pin state", async () => {
+    const note = createNoteCard({ id: "floating-note-pin-rejected", title: "Rejected pin" });
+    const bridge = installFloatingBridge(note);
+    bridge.setFloatingCardDesktopPinned.mockResolvedValue({
+      pinned: false,
+      launchAtLoginEnabled: false,
+      requiresLaunchAtLogin: false,
+    });
+    const user = userEvent.setup();
+
+    render(<FloatingNoteApp />);
+
+    try {
+      const card = await screen.findByTestId("note-card");
+      await user.click(within(card).getByRole("button", { name: "Keep on desktop" }));
+
+      await waitFor(() => {
+        expect(within(card).getByRole("button", { name: "Keep on desktop" })).toHaveAttribute(
+          "aria-pressed",
+          "false",
+        );
+      });
+      expect(
+        within(card).getByRole("button", { name: "Keep on desktop" })
+          .querySelector("[data-desktop-pin-indicator]"),
+      ).toHaveAttribute("data-active", "false");
     } finally {
       bridge.restore();
     }

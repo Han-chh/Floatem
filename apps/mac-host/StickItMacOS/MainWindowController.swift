@@ -614,7 +614,7 @@ final class MainWindowController: NSObject, NSWindowDelegate, StickItNativeBridg
 
     func setFloatingCardDesktopPinnedFromBridge(kind: String, id: String, pinned: Bool) throws -> [String: Any] {
         guard
-            let entityKind = StickItEntityKind(rawValue: kind),
+            StickItEntityKind(rawValue: kind) != nil,
             !id.isEmpty,
             let controller = floatingCardWindowControllers[Self.floatingCardKey(kind: kind, id: id)]
         else {
@@ -626,6 +626,15 @@ final class MainWindowController: NSObject, NSWindowDelegate, StickItNativeBridg
             persistDesktopCard(kind: kind, id: id, frame: controller.currentFrame)
         } else {
             removePersistedDesktopCard(kind: kind, id: id)
+        }
+
+        // Keep the cached payload authoritative after replacing the underlying
+        // panel. The bridge result updates the UI without reloading the complete
+        // card payload, which could otherwise disturb an in-progress edit.
+        let key = Self.floatingCardKey(kind: kind, id: id)
+        if var payload = floatingCardPayloads[key] {
+            payload["desktopPinned"] = pinned
+            floatingCardPayloads[key] = payload
         }
 
         let launchAtLoginEnabled = launchAtLoginManager.isEnabled
