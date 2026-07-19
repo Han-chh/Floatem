@@ -581,12 +581,11 @@ final class WebViewController: NSViewController, WKNavigationDelegate {
                 else {
                     throw StickItBridgeError.invalidParameters("StickIt expected a floating card reference from JavaScript.")
                 }
-                try bridgeDelegate?.setFloatingCardDesktopPinnedFromBridge(
+                result = try bridgeDelegate?.setFloatingCardDesktopPinnedFromBridge(
                     kind: kind,
                     id: cardID,
                     pinned: params["pinned"] as? Bool ?? false
-                )
-                result = NSNull()
+                ) ?? [:]
             case "requestDesktopWidget":
                 guard let kind = params["kind"] as? String, let cardID = params["id"] as? String else {
                     throw StickItBridgeError.invalidParameters("StickIt expected a Widget entity reference.")

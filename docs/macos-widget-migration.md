@@ -1,4 +1,4 @@
-# macOS Widget migration and regression guide
+# macOS desktop-card migration and regression guide
 
 ## Migration
 
@@ -14,18 +14,18 @@ to the App Group container:
 group.com.stickit.app/SharedData/
 ```
 
-Only missing destination files are migrated. JSON is validated before an atomic write; repeated runs are idempotent; failures leave the old files intact. `desktop-cards.json` is retained in the legacy directory and reduced to unique Note/Todo entity references in `desktop-widget-preferences.json`. Full payloads and desktop frames are not copied. `legacy-data-migration.json` and `desktop-pin-migration.json` record schema version 1 completion.
+Only missing destination files are migrated. JSON is validated before an atomic write; repeated runs are idempotent; failures leave the old files intact. `desktop-cards.json` is retained in the legacy directory. Its unique Note/Todo references, and any references from the short-lived Widget pin flow, are converted to typed `desktop-panel-states.json` records. Full Note/Todo payloads are not copied. Current content is always loaded from the authoritative data files.
 
-The old DesktopCardPanel path is migration-only and is never restored at launch. macOS owns Widget position, family, restart restoration, and lifecycle.
+Desktop pinning uses `DesktopCardPanel`. StickIt restores these panels during both ordinary and silent Login Item launches, clamps them to current displays, and removes state for deleted entities. StickIt must remain running for its desktop panels to exist.
 
 ## Manual regression checklist
 
 1. Ordinary Finder/Dock/Spotlight launch shows the Main Window.
-2. Login Item launch initializes silently without focus or Main Window.
-3. Clicking a Note Widget opens only its Floating Editing Card.
-4. Clicking a Todo Widget opens only its Floating Editing Card.
-5. Toggle a Todo directly in its Widget and verify app data/timeline refresh.
-6. Delete an entity referenced by a Widget and verify the unavailable-content placeholder.
+2. Login Item launch initializes silently, restores desktop-pinned cards, and does not show or focus the Main Window.
+3. Pin a Note to the desktop and verify it becomes a desktop-level editable panel.
+4. Pin a Todo to the desktop and verify it remains editable.
+5. Disable Open StickIt at login, pin a card, and verify the background-running warning appears.
+6. Delete an entity referenced by a desktop panel and verify it is not recreated on the next launch.
 7. Place a floating card on a second display, disconnect it, and reopen the card on-screen.
 8. Change resolution/scaling and verify restored cards remain in `visibleFrame`.
 9. Switch Spaces and verify floating editing behavior.
@@ -33,7 +33,7 @@ The old DesktopCardPanel path is migration-only and is never restored at launch.
 11. Edit with a Chinese IME, including composition candidate windows.
 12. Drag out and dock back the same card 20 times; inspect WebKit active counts for zero growth.
 13. Open 10 floating cards simultaneously; verify shared-process diagnostics and editing isolation.
-14. Restart StickIt and verify shared data plus floating frame restoration.
-15. Restart macOS and verify the system restores Widgets without StickIt creating desktop panels.
+14. Restart StickIt and verify shared data plus desktop/floating frame restoration.
+15. Restart macOS with Open StickIt at login enabled; verify desktop panels return while the Main Window stays hidden.
 
-WidgetKit provides no public API for an app to silently add, place, resize, or remove a desktop Widget. The first pin request therefore guides the user to macOS Widget Gallery; clearing the StickIt association does not remove a Widget already placed by the user.
+The optional WidgetKit extension is independent from desktop pinning. The desktop-pin button never adds or removes a system Widget.

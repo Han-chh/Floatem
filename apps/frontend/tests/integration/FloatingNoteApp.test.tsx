@@ -1,7 +1,7 @@
 import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
-import type { DragPreviewPayload } from "@stickit/native-bridge";
+import type { DragPreviewPayload, FloatingCardReference } from "@stickit/native-bridge";
 import { FloatingNoteApp } from "../../src/components/floating-note/FloatingNoteApp";
 import {
   createEmptyNotesDocument,
@@ -97,7 +97,11 @@ function installFloatingBridge(note: NoteCard) {
   const getFloatingCardScreenPlacement = vi.fn(async () => createFloatingScreenPlacement(100, 420));
   const setEditableInputActive = vi.fn();
   const setTextCompositionActive = vi.fn();
-  const setFloatingCardDesktopPinned = vi.fn(async () => {});
+  const setFloatingCardDesktopPinned = vi.fn(async (_card: FloatingCardReference, pinned: boolean) => ({
+    pinned,
+    launchAtLoginEnabled: false,
+    requiresLaunchAtLogin: pinned,
+  }));
   const requestDesktopWidget = vi.fn(async () => ({ requested: true, requiresSystemPlacement: true }));
   const removeDesktopWidgetAssociation = vi.fn(async () => {});
   const writeClipboardText = vi.fn(async (text: string) => {
@@ -205,7 +209,11 @@ function installFloatingTodoBridge(todo: TodoItem) {
   const saveTodos = vi.fn(async () => {});
   const setEditableInputActive = vi.fn();
   const setTextCompositionActive = vi.fn();
-  const setFloatingCardDesktopPinned = vi.fn(async () => {});
+  const setFloatingCardDesktopPinned = vi.fn(async (_card: FloatingCardReference, pinned: boolean) => ({
+    pinned,
+    launchAtLoginEnabled: false,
+    requiresLaunchAtLogin: pinned,
+  }));
   const requestDesktopWidget = vi.fn(async () => ({ requested: true, requiresSystemPlacement: true }));
   const removeDesktopWidgetAssociation = vi.fn(async () => {});
 
@@ -446,7 +454,7 @@ describe("FloatingNoteApp", () => {
 
     try {
       const card = await screen.findByTestId("note-card");
-      const pinButton = within(card).getByRole("button", { name: "Add desktop Widget" });
+      const pinButton = within(card).getByRole("button", { name: "Keep on desktop" });
       const groupButton = within(card).getByRole("button", { name: "Change note group" });
       const metadataRow = groupButton.closest(".note-card-chip-group--floating");
       const actionRow = pinButton.closest(".note-card-actions--floating");
@@ -458,17 +466,42 @@ describe("FloatingNoteApp", () => {
       expect(within(card).getAllByRole("button", { name: "Change note group" })).toHaveLength(1);
 
       await user.click(pinButton);
-      expect(bridge.requestDesktopWidget).toHaveBeenCalledWith({ kind: "note", id: note.id });
-      expect(screen.getByRole("dialog", { name: "Add to the desktop with WidgetKit" })).toBeInTheDocument();
-      expect(within(card).getByRole("button", { name: "Remove Widget request" })).toHaveAttribute(
+      expect(bridge.setFloatingCardDesktopPinned).toHaveBeenCalledWith({ kind: "note", id: note.id }, true);
+      expect(screen.getByRole("dialog", { name: "Keep StickIt running" })).toBeInTheDocument();
+      expect(within(card).getByRole("button", { name: "Remove from desktop" })).toHaveAttribute(
         "aria-pressed",
         "true",
       );
 
       await user.click(screen.getByRole("button", { name: "Got it" }));
-      await user.click(within(card).getByRole("button", { name: "Remove Widget request" }));
-      expect(bridge.removeDesktopWidgetAssociation).toHaveBeenCalledWith({ kind: "note", id: note.id });
-      expect(screen.getByRole("dialog", { name: "Widget association removed" })).toBeInTheDocument();
+      await user.click(within(card).getByRole("button", { name: "Remove from desktop" }));
+      expect(bridge.setFloatingCardDesktopPinned).toHaveBeenCalledWith({ kind: "note", id: note.id }, false);
+      expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+    } finally {
+      bridge.restore();
+    }
+  });
+
+  it("does not warn when login launch is already enabled for a desktop card", async () => {
+    const note = createNoteCard({ id: "floating-note-login-enabled", title: "Persistent note" });
+    const bridge = installFloatingBridge(note);
+    bridge.setFloatingCardDesktopPinned.mockResolvedValue({
+      pinned: true,
+      launchAtLoginEnabled: true,
+      requiresLaunchAtLogin: false,
+    });
+    const user = userEvent.setup();
+
+    render(<FloatingNoteApp />);
+
+    try {
+      const card = await screen.findByTestId("note-card");
+      await user.click(within(card).getByRole("button", { name: "Keep on desktop" }));
+      expect(bridge.setFloatingCardDesktopPinned).toHaveBeenCalledWith(
+        { kind: "note", id: note.id },
+        true,
+      );
+      expect(screen.queryByRole("dialog", { name: "Keep StickIt running" })).not.toBeInTheDocument();
     } finally {
       bridge.restore();
     }
@@ -830,7 +863,7 @@ describe("FloatingNoteApp", () => {
     }
   });
 
-  it("requests a desktop todo Widget before its group action", async () => {
+  it("pins a desktop todo panel before its group action", async () => {
     const todo = createTodoItem("Pinned todo", { id: "floating-todo-pin" });
     const bridge = installFloatingTodoBridge(todo);
     const user = userEvent.setup();
@@ -840,13 +873,13 @@ describe("FloatingNoteApp", () => {
     try {
       const card = await screen.findByTestId("todo-item");
       const actions = within(card).getAllByRole("button");
-      const pinButton = within(card).getByRole("button", { name: "Add desktop Widget" });
+      const pinButton = within(card).getByRole("button", { name: "Keep on desktop" });
       const groupButton = within(card).getByRole("button", { name: "Change todo group" });
       expect(actions.indexOf(pinButton)).toBeLessThan(actions.indexOf(groupButton));
 
       await user.click(pinButton);
-      expect(bridge.requestDesktopWidget).toHaveBeenCalledWith({ kind: "todo", id: todo.id });
-      expect(screen.getByRole("dialog", { name: "Add to the desktop with WidgetKit" })).toBeInTheDocument();
+      expect(bridge.setFloatingCardDesktopPinned).toHaveBeenCalledWith({ kind: "todo", id: todo.id }, true);
+      expect(screen.getByRole("dialog", { name: "Keep StickIt running" })).toBeInTheDocument();
     } finally {
       bridge.restore();
     }

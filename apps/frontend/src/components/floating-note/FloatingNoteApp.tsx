@@ -9,8 +9,7 @@ import {
   resizeFloatingCard,
   saveTodos,
   setEditableInputActive,
-  removeDesktopWidgetAssociation,
-  requestDesktopWidget,
+  setFloatingCardDesktopPinned,
   setTextCompositionActive,
   startFloatingCardDrag,
 } from "../../hooks/usePlatform";
@@ -142,7 +141,7 @@ export function FloatingNoteApp() {
   const [cardSize, setCardSize] = useState(() => initialPayload?.size ?? { width: 1, height: 1 });
   const [frameSize, setFrameSize] = useState(() => initialPayload?.size ?? { width: 1, height: 1 });
   const [isDesktopPinned, setIsDesktopPinned] = useState(() => Boolean(initialPayload?.desktopPinned));
-  const [widgetGuide, setWidgetGuide] = useState<"add" | "remove" | null>(null);
+  const [showDesktopBackgroundGuide, setShowDesktopBackgroundGuide] = useState(false);
   const [hasOpenDialog, setHasOpenDialog] = useState(false);
   const [dialogSide, setDialogSide] = useState<FloatingDialogSide>("right");
   const [isHydrated, setIsHydrated] = useState(false);
@@ -630,14 +629,9 @@ export function FloatingNoteApp() {
     const nextPinned = !isDesktopPinned;
     setIsDesktopPinned(nextPinned);
     try {
-      if (nextPinned) {
-        const result = await requestDesktopWidget(cardReference);
-        if (result.requiresSystemPlacement) {
-          setWidgetGuide("add");
-        }
-      } else {
-        await removeDesktopWidgetAssociation(cardReference);
-        setWidgetGuide("remove");
+      const result = await setFloatingCardDesktopPinned(cardReference, nextPinned);
+      if (result.requiresLaunchAtLogin) {
+        setShowDesktopBackgroundGuide(true);
       }
     } catch {
       setIsDesktopPinned(!nextPinned);
@@ -800,7 +794,7 @@ export function FloatingNoteApp() {
             }}
           />
         ) : null}
-        {widgetGuide && typeof document !== "undefined"
+        {showDesktopBackgroundGuide && typeof document !== "undefined"
           ? createPortal(
               <div
                 className="stickit-modal-backdrop fixed inset-0 z-[120] flex items-center justify-center bg-[rgba(30,25,21,0.28)] p-5"
@@ -809,20 +803,20 @@ export function FloatingNoteApp() {
                 <div
                   role="dialog"
                   aria-modal="true"
-                  aria-label={widgetGuide === "add" ? t.common.widgetGuideAddTitle : t.common.widgetGuideRemoveTitle}
+                  aria-label={t.common.widgetGuideAddTitle}
                   className="paper-panel w-full max-w-[390px] rounded-[24px] p-5 shadow-[0_26px_48px_rgba(30,25,21,0.24)]"
                 >
                   <h2 className="font-display text-[21px] font-semibold text-[var(--brown-strong)]">
-                    {widgetGuide === "add" ? t.common.widgetGuideAddTitle : t.common.widgetGuideRemoveTitle}
+                    {t.common.widgetGuideAddTitle}
                   </h2>
                   <p className="mt-3 text-[12.5px] leading-6 text-[var(--muted)]">
-                    {widgetGuide === "add" ? t.common.widgetGuideAddBody : t.common.widgetGuideRemoveBody}
+                    {t.common.widgetGuideAddBody}
                   </p>
                   <div className="mt-5 flex justify-end">
                     <button
                       type="button"
                       className="paper-button paper-button-primary rounded-[14px] px-4 py-2.5 text-[12px] font-semibold"
-                      onClick={() => setWidgetGuide(null)}
+                      onClick={() => setShowDesktopBackgroundGuide(false)}
                     >
                       {t.common.widgetGuideDone}
                     </button>

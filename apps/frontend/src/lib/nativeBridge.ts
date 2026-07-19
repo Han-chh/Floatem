@@ -247,13 +247,17 @@ const browserBridge: StickItNativeBridge = {
     // Browser preview does not open separate floating card windows.
   },
   async setFloatingCardDesktopPinned(_card: FloatingCardReference, _pinned: boolean) {
-    // Browser preview does not own desktop-level card windows.
+    return {
+      pinned: _pinned,
+      launchAtLoginEnabled: false,
+      requiresLaunchAtLogin: _pinned,
+    };
   },
   async requestDesktopWidget() {
-    return { requested: true, requiresSystemPlacement: true };
+    return { requested: true, requiresSystemPlacement: false };
   },
   async removeDesktopWidgetAssociation() {
-    // Browser preview has no system Widget association.
+    // Compatibility no-op; browser preview has no desktop panels.
   },
   async getDesktopWidgetState() {
     return { requested: false, systemManaged: true };

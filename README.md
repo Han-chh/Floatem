@@ -14,7 +14,7 @@ StickIt is a cross-platform desktop app with a shared React frontend and isolate
 - [Architecture](docs/architecture.md)
 - [Four-day macOS prelaunch plan](docs/four-day-prelaunch-plan.md)
 - [macOS setup](docs/macos-setup.md)
-- [macOS Widget migration and regression guide](docs/macos-widget-migration.md)
+- [macOS desktop-card migration and regression guide](docs/macos-widget-migration.md)
 - [Windows setup (host features)](docs/windows-setup.md)
 - [Windows dev environment](docs/windows-dev-setup.md)
 
@@ -50,6 +50,6 @@ pnpm windows:run
 
 - **Main Window**: browsing, settings, global shortcut entry, and card drag-out.
 - **Floating Editing Card**: AppKit `NSPanel` + lightweight Web UI for full Note/Todo editing, resize, IME, clipboard, formatting, and drag-back.
-- **Desktop Widget**: WidgetKit-owned read/quick-action surface. Clicking it opens the matching Floating Editing Card.
+- **Desktop-pinned Card**: an app-owned `DesktopCardPanel` placed near the desktop window level and restored from typed entity/placement state.
 
-macOS controls Widget placement and lifecycle. StickIt can remember the requested entity and guide the user to Widget Gallery, but cannot silently add a Widget to the desktop.
+Desktop-pinned cards require StickIt to remain running. Enabling **Open StickIt at login** lets the silent Login Item launch recreate them after a Mac restart without opening the Main Window. The optional WidgetKit extension remains separate from desktop pinning.

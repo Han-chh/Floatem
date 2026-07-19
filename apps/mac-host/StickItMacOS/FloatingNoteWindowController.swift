@@ -168,7 +168,7 @@ final class FloatingNoteWindowController: NSObject, WKNavigationDelegate, WKScri
     let cardID: String
     var onClose: ((String, String) -> Void)?
     var onRequestDrag: ((String, String) -> Void)?
-    var onSetDesktopPinned: ((String, String, Bool) -> Void)?
+    var onSetDesktopPinned: ((String, String, Bool) throws -> [String: Any])?
     var onRequestDesktopWidget: ((String, String) throws -> [String: Any])?
     var onRemoveDesktopWidgetAssociation: ((String, String) throws -> Void)?
     var onGetDesktopWidgetState: ((String, String) throws -> [String: Any])?
@@ -712,8 +712,12 @@ final class FloatingNoteWindowController: NSObject, WKNavigationDelegate, WKScri
             let kind = params["kind"] as? String ?? cardKind
             let requestedCardID = params["id"] as? String ?? cardID
             let pinned = params["pinned"] as? Bool ?? false
-            onSetDesktopPinned?(kind, requestedCardID, pinned)
-            resolveBridgeRequest(id: requestID, ok: true, result: NSNull())
+            do {
+                let result = try onSetDesktopPinned?(kind, requestedCardID, pinned) ?? [:]
+                resolveBridgeRequest(id: requestID, ok: true, result: result)
+            } catch {
+                resolveBridgeRequest(id: requestID, ok: false, result: error.localizedDescription)
+            }
         case "requestDesktopWidget":
             do {
                 resolveBridgeRequest(id: requestID, ok: true, result: try onRequestDesktopWidget?(cardKind, cardID) ?? [:])

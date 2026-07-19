@@ -52,6 +52,42 @@ struct DesktopWidgetPreference: Codable, Hashable, Sendable {
     var schemaVersion: Int = StickItSharedContainer.currentSchemaVersion
 }
 
+struct DesktopPanelState: Codable, Hashable, Sendable {
+    var entityKind: StickItEntityKind
+    var entityID: String
+    var frame: CodableRect
+    var screenIdentifier: String?
+    var screenVisibleFrame: CodableRect?
+    var normalizedPosition: CodablePoint?
+    var updatedAt: Date
+    var schemaVersion: Int = StickItSharedContainer.currentSchemaVersion
+
+    var windowState: FloatingCardWindowState {
+        FloatingCardWindowState(
+            entityKind: entityKind,
+            entityID: entityID,
+            frame: frame,
+            screenIdentifier: screenIdentifier,
+            screenVisibleFrame: screenVisibleFrame,
+            normalizedPosition: normalizedPosition,
+            isAlwaysOnTop: false,
+            updatedAt: updatedAt,
+            schemaVersion: schemaVersion
+        )
+    }
+
+    init(windowState: FloatingCardWindowState) {
+        entityKind = windowState.entityKind
+        entityID = windowState.entityID
+        frame = windowState.frame
+        screenIdentifier = windowState.screenIdentifier
+        screenVisibleFrame = windowState.screenVisibleFrame
+        normalizedPosition = windowState.normalizedPosition
+        updatedAt = windowState.updatedAt
+        schemaVersion = windowState.schemaVersion
+    }
+}
+
 struct DesktopPinStateMigrationRecord: Codable, Sendable {
     var migratedEntityCount: Int
     var migratedAt: Date

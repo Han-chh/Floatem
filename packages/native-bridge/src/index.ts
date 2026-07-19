@@ -144,6 +144,12 @@ export type DesktopWidgetState = {
   systemManaged: boolean;
 };
 
+export type DesktopPinResult = {
+  pinned: boolean;
+  launchAtLoginEnabled: boolean;
+  requiresLaunchAtLogin: boolean;
+};
+
 export type ScreenColorPickResult = {
   sRGBHex: string;
 };
@@ -185,7 +191,7 @@ export type HostBridge<TLoadAllResult, TNotes, TTodos, TSettings> = {
   resizeFloatingCard: (size: FloatingCardResize) => Promise<void>;
   getFloatingCardScreenPlacement: () => Promise<FloatingCardScreenPlacement | null>;
   startFloatingCardDrag: (card: FloatingCardReference) => Promise<void>;
-  setFloatingCardDesktopPinned?: (card: FloatingCardReference, pinned: boolean) => Promise<void>;
+  setFloatingCardDesktopPinned?: (card: FloatingCardReference, pinned: boolean) => Promise<DesktopPinResult>;
   requestDesktopWidget?: (card: FloatingCardReference) => Promise<DesktopWidgetRequestResult>;
   removeDesktopWidgetAssociation?: (card: FloatingCardReference) => Promise<void>;
   getDesktopWidgetState?: (card: FloatingCardReference) => Promise<DesktopWidgetState>;

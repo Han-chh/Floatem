@@ -8,6 +8,10 @@ final class LaunchAtLoginManager {
     private let logger = Logger(subsystem: "com.stickit.app", category: "LaunchAtLogin")
     private let approvalPromptedKey = "stickit.launchAtLoginApprovalPrompted"
 
+    var isEnabled: Bool {
+        service.status == .enabled
+    }
+
     func setEnabled(_ enabled: Bool) throws {
         if enabled {
             switch service.status {

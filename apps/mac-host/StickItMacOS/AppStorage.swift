@@ -163,6 +163,20 @@ final class AppStorage {
         )
     }
 
+    func desktopPanelStates() throws -> [DesktopPanelState] {
+        try sharedStore.desktopPanelStates()
+    }
+
+    func saveDesktopPanelState(_ state: DesktopPanelState) throws {
+        try sharedStore.saveDesktopPanelState(state)
+    }
+
+    func removeDesktopPanelState(kind: StickItEntityKind, id: String) throws {
+        try sharedStore.removeDesktopPanelState(
+            WidgetEntityReference(entityKind: kind, entityID: id)
+        )
+    }
+
     func noteSnapshots() throws -> [NoteWidgetSnapshot] {
         try sharedStore.noteSnapshots()
     }
@@ -173,7 +187,7 @@ final class AppStorage {
 
     func floatingCardPayload(kind: StickItEntityKind, id: String) throws -> [String: Any]? {
         let settings = try loadSettings()
-        let desktopRequested = try loadWidgetPreferences().contains {
+        let desktopRequested = try desktopPanelStates().contains {
             $0.entityKind == kind && $0.entityID == id
         }
         switch kind {
@@ -185,9 +199,9 @@ final class AppStorage {
             return [
                 "kind": kind.rawValue,
                 "language": settings["language"] as? String ?? "zh-CN",
-                "size": ["width": 420, "height": 300],
-                "minimumSize": ["width": 420, "height": 300],
-                "pointerOffset": ["x": 24, "y": 24],
+                "size": ["width": 420.0, "height": 300.0] as [String: Any],
+                "minimumSize": ["width": 420.0, "height": 300.0] as [String: Any],
+                "pointerOffset": ["x": 24.0, "y": 24.0] as [String: Any],
                 "note": note,
                 "groups": groups,
                 "desktopPinned": desktopRequested,
@@ -202,9 +216,9 @@ final class AppStorage {
                 "language": settings["language"] as? String ?? "zh-CN",
                 "timeZone": settings["timeZone"] as? String ?? TimeZone.current.identifier,
                 "timeFormat": settings["timeFormat"] as? String ?? "24h",
-                "size": ["width": 360, "height": 72],
-                "minimumSize": ["width": 360, "height": 72],
-                "pointerOffset": ["x": 24, "y": 24],
+                "size": ["width": 360.0, "height": 72.0] as [String: Any],
+                "minimumSize": ["width": 360.0, "height": 72.0] as [String: Any],
+                "pointerOffset": ["x": 24.0, "y": 24.0] as [String: Any],
                 "todo": todo,
                 "groups": groups,
                 "desktopPinned": desktopRequested,

@@ -14,6 +14,7 @@ final class SharedDataStore: @unchecked Sendable {
     static let todosFilename = "todos.json"
     static let settingsFilename = "settings.json"
     static let widgetPreferencesFilename = "desktop-widget-preferences.json"
+    static let desktopPanelStatesFilename = "desktop-panel-states.json"
     static let floatingWindowStatesFilename = "floating-card-window-states.json"
 
     let directoryURL: URL
@@ -136,6 +137,26 @@ final class SharedDataStore: @unchecked Sendable {
         states.removeAll { $0.entityKind == reference.entityKind && $0.entityID == reference.entityID }
         if states.count != initialCount {
             try writeCodable(states, filename: Self.floatingWindowStatesFilename)
+        }
+    }
+
+    func desktopPanelStates() throws -> [DesktopPanelState] {
+        try readCodable([DesktopPanelState].self, filename: Self.desktopPanelStatesFilename) ?? []
+    }
+
+    func saveDesktopPanelState(_ state: DesktopPanelState) throws {
+        var states = try desktopPanelStates()
+        states.removeAll { $0.entityKind == state.entityKind && $0.entityID == state.entityID }
+        states.append(state)
+        try writeCodable(states, filename: Self.desktopPanelStatesFilename)
+    }
+
+    func removeDesktopPanelState(_ reference: WidgetEntityReference) throws {
+        var states = try desktopPanelStates()
+        let initialCount = states.count
+        states.removeAll { $0.entityKind == reference.entityKind && $0.entityID == reference.entityID }
+        if states.count != initialCount {
+            try writeCodable(states, filename: Self.desktopPanelStatesFilename)
         }
     }
 

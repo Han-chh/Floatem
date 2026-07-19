@@ -113,7 +113,11 @@ export async function startFloatingCardDrag(card: FloatingCardReference) {
 
 export async function setFloatingCardDesktopPinned(card: FloatingCardReference, pinned: boolean) {
   const bridge = getStickItBridge() as Partial<StickItNativeBridge>;
-  await bridge.setFloatingCardDesktopPinned?.(card, pinned);
+  return (await bridge.setFloatingCardDesktopPinned?.(card, pinned)) ?? {
+    pinned,
+    launchAtLoginEnabled: false,
+    requiresLaunchAtLogin: pinned,
+  };
 }
 
 export async function requestDesktopWidget(card: FloatingCardReference) {
@@ -122,7 +126,7 @@ export async function requestDesktopWidget(card: FloatingCardReference) {
     return await bridge.requestDesktopWidget(card);
   }
   await bridge.setFloatingCardDesktopPinned?.(card, true);
-  return { requested: true, requiresSystemPlacement: true };
+  return { requested: true, requiresSystemPlacement: false };
 }
 
 export async function removeDesktopWidgetAssociation(card: FloatingCardReference) {

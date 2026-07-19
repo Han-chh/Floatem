@@ -43,6 +43,7 @@ Then run the `StickIt` scheme.
 - Carbon hotkeys provide the global shortcut.
 - UserNotifications schedules test notifications and todo reminders.
 - WKWebView injects the shared `stickItHost` bridge into the React frontend.
+- `DesktopCardPanel` provides app-owned desktop-pinned cards. StickIt must stay running; the Login Item silently recreates saved panels after login.
 - WidgetKit and AppIntents provide Note/Todo desktop Widgets and Todo completion toggles.
 
 ## Signing and App Group

@@ -80,6 +80,33 @@ final class StickItCoreTests: XCTestCase {
         XCTAssertNil(try store.todoSnapshot(entityID: "deleted"))
     }
 
+    func testDesktopPanelStatePersistsEntityAndPlacementWithoutPayload() throws {
+        let directory = try makeDirectory()
+        let store = SharedDataStore(directoryURL: directory)
+        let windowState = FloatingCardWindowState(
+            entityKind: .note,
+            entityID: "desktop-note",
+            frame: CodableRect(x: 40, y: 50, width: 420, height: 300),
+            screenIdentifier: "screen-a",
+            screenVisibleFrame: CodableRect(x: 0, y: 0, width: 1_440, height: 900),
+            normalizedPosition: CodablePoint(x: 0.2, y: 0.3),
+            isAlwaysOnTop: false,
+            updatedAt: Date()
+        )
+
+        try store.saveDesktopPanelState(DesktopPanelState(windowState: windowState))
+        let restored = try XCTUnwrap(store.desktopPanelStates().first)
+        XCTAssertEqual(restored.entityKind, .note)
+        XCTAssertEqual(restored.entityID, "desktop-note")
+        XCTAssertEqual(restored.frame, windowState.frame)
+        XCTAssertEqual(restored.screenIdentifier, "screen-a")
+
+        try store.removeDesktopPanelState(
+            WidgetEntityReference(entityKind: .note, entityID: "desktop-note")
+        )
+        XCTAssertTrue(try store.desktopPanelStates().isEmpty)
+    }
+
     func testDeepLinkParsingEncodingAndValidation() throws {
         let reference = WidgetEntityReference(entityKind: .note, entityID: "note / 中文")
         let url = try XCTUnwrap(StickItDeepLink.url(for: reference))

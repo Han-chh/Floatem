@@ -88,6 +88,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
             self.mainWindowController.installSavedHotKey()
             self.mainWindowController.syncSavedTodoReminders()
+            // Desktop-pinned cards are application-owned NSPanel instances.
+            // Restore them for both silent login-item and interactive launches;
+            // only the main window remains suppressed during a login launch.
+            self.mainWindowController.restorePinnedDesktopCards()
             // SMAppService.mainApp does not expose a launch-reason API. Explicit
             // launch arguments are supported for managed deployments; otherwise
             // a user launch is identified by the app's first real activation.
