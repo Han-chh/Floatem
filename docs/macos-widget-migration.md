@@ -36,4 +36,4 @@ Desktop pinning uses `DesktopCardPanel`. StickIt restores these panels during bo
 14. Restart StickIt and verify shared data plus desktop/floating frame restoration.
 15. Restart macOS with Open StickIt at login enabled; verify desktop panels return while the Main Window stays hidden.
 
-The optional WidgetKit extension is independent from desktop pinning. The desktop-pin button never adds or removes a system Widget.
+The former WidgetKit extension is no longer shipped. Desktop pinning is implemented only with app-owned `DesktopCardPanel` windows.

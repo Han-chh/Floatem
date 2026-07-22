@@ -26,29 +26,14 @@
 		A00000000000000000000217 /* SharedModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = A00000000000000000000121 /* SharedModels.swift */; };
 		A00000000000000000000218 /* SharedDataStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = A00000000000000000000122 /* SharedDataStore.swift */; };
 		A00000000000000000000219 /* StickItDeepLink.swift in Sources */ = {isa = PBXBuildFile; fileRef = A00000000000000000000124 /* StickItDeepLink.swift */; };
-		A00000000000000000000227 /* WidgetRefreshCoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = A00000000000000000000132 /* WidgetRefreshCoordinator.swift */; };
 		A00000000000000000000228 /* FloatingWebViewFactory.swift in Sources */ = {isa = PBXBuildFile; fileRef = A00000000000000000000133 /* FloatingWebViewFactory.swift */; };
 		A00000000000000000000229 /* LaunchContextResolver.swift in Sources */ = {isa = PBXBuildFile; fileRef = A00000000000000000000134 /* LaunchContextResolver.swift */; };
 		A00000000000000000000230 /* ScreenPlacementResolver.swift in Sources */ = {isa = PBXBuildFile; fileRef = A00000000000000000000135 /* ScreenPlacementResolver.swift */; };
 		A00000000000000000000231 /* StickItCoreTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A00000000000000000000136 /* StickItCoreTests.swift */; };
 		A00000000000000000000232 /* XCTest.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A00000000000000000000138 /* XCTest.framework */; };
-		A00000000000000000000220 /* StickItWidgets.swift in Sources */ = {isa = PBXBuildFile; fileRef = A00000000000000000000125 /* StickItWidgets.swift */; };
-		A00000000000000000000221 /* SharedModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = A00000000000000000000121 /* SharedModels.swift */; };
-		A00000000000000000000222 /* SharedDataStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = A00000000000000000000122 /* SharedDataStore.swift */; };
-		A00000000000000000000223 /* WidgetKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A00000000000000000000129 /* WidgetKit.framework */; };
-		A00000000000000000000224 /* SwiftUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A00000000000000000000130 /* SwiftUI.framework */; };
-		A00000000000000000000225 /* AppIntents.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A00000000000000000000131 /* AppIntents.framework */; };
-		A00000000000000000000226 /* StickItWidgets.appex in Embed App Extensions */ = {isa = PBXBuildFile; fileRef = A00000000000000000000128 /* StickItWidgets.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
-		A00000000000000000000032 /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = A00000000000000000000001 /* Project object */;
-			proxyType = 1;
-			remoteGlobalIDString = A00000000000000000000020;
-			remoteInfo = StickItWidgets;
-		};
 		A00000000000000000000034 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = A00000000000000000000001 /* Project object */;
@@ -57,20 +42,6 @@
 			remoteInfo = StickIt;
 		};
 /* End PBXContainerItemProxy section */
-
-/* Begin PBXCopyFilesBuildPhase section */
-		A0000000000000000000001A /* Embed App Extensions */ = {
-			isa = PBXCopyFilesBuildPhase;
-			buildActionMask = 2147483647;
-			dstPath = "";
-			dstSubfolderSpec = 13;
-			files = (
-				A00000000000000000000226 /* StickItWidgets.appex in Embed App Extensions */,
-			);
-			name = "Embed App Extensions";
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-/* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
 		A00000000000000000000101 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
@@ -97,14 +68,6 @@
 		A00000000000000000000122 /* SharedDataStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SharedDataStore.swift; sourceTree = "<group>"; };
 		A00000000000000000000123 /* StickIt.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = StickIt.entitlements; sourceTree = "<group>"; };
 		A00000000000000000000124 /* StickItDeepLink.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StickItDeepLink.swift; sourceTree = "<group>"; };
-		A00000000000000000000125 /* StickItWidgets.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StickItWidgets.swift; sourceTree = "<group>"; };
-		A00000000000000000000126 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
-		A00000000000000000000127 /* StickItWidgets.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = StickItWidgets.entitlements; sourceTree = "<group>"; };
-		A00000000000000000000128 /* StickItWidgets.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = StickItWidgets.appex; sourceTree = BUILT_PRODUCTS_DIR; };
-		A00000000000000000000129 /* WidgetKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = WidgetKit.framework; path = System/Library/Frameworks/WidgetKit.framework; sourceTree = SDKROOT; };
-		A00000000000000000000130 /* SwiftUI.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SwiftUI.framework; path = System/Library/Frameworks/SwiftUI.framework; sourceTree = SDKROOT; };
-		A00000000000000000000131 /* AppIntents.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AppIntents.framework; path = System/Library/Frameworks/AppIntents.framework; sourceTree = SDKROOT; };
-		A00000000000000000000132 /* WidgetRefreshCoordinator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WidgetRefreshCoordinator.swift; sourceTree = "<group>"; };
 		A00000000000000000000133 /* FloatingWebViewFactory.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FloatingWebViewFactory.swift; sourceTree = "<group>"; };
 		A00000000000000000000134 /* LaunchContextResolver.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LaunchContextResolver.swift; sourceTree = "<group>"; };
 		A00000000000000000000135 /* ScreenPlacementResolver.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScreenPlacementResolver.swift; sourceTree = "<group>"; };
@@ -124,16 +87,6 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		A00000000000000000000018 /* Frameworks */ = {
-			isa = PBXFrameworksBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-				A00000000000000000000225 /* AppIntents.framework in Frameworks */,
-				A00000000000000000000224 /* SwiftUI.framework in Frameworks */,
-				A00000000000000000000223 /* WidgetKit.framework in Frameworks */,
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
 		A00000000000000000000023 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
@@ -149,7 +102,6 @@
 			isa = PBXGroup;
 			children = (
 				A00000000000000000000005 /* StickItMacOS */,
-				A00000000000000000000008 /* StickItWidgets */,
 				A00000000000000000000009 /* StickItTests */,
 				A00000000000000000000006 /* scripts */,
 				A00000000000000000000004 /* Frameworks */,
@@ -161,7 +113,6 @@
 			isa = PBXGroup;
 			children = (
 				A00000000000000000000115 /* StickIt.app */,
-				A00000000000000000000128 /* StickItWidgets.appex */,
 				A00000000000000000000137 /* StickItTests.xctest */,
 			);
 			name = Products;
@@ -173,9 +124,6 @@
 				A00000000000000000000112 /* AppKit.framework */,
 				A00000000000000000000113 /* WebKit.framework */,
 				A00000000000000000000114 /* Carbon.framework */,
-				A00000000000000000000129 /* WidgetKit.framework */,
-				A00000000000000000000130 /* SwiftUI.framework */,
-				A00000000000000000000131 /* AppIntents.framework */,
 				A00000000000000000000138 /* XCTest.framework */,
 			);
 			name = Frameworks;
@@ -197,7 +145,6 @@
 				A00000000000000000000121 /* SharedModels.swift */,
 				A00000000000000000000122 /* SharedDataStore.swift */,
 				A00000000000000000000124 /* StickItDeepLink.swift */,
-				A00000000000000000000132 /* WidgetRefreshCoordinator.swift */,
 				A00000000000000000000133 /* FloatingWebViewFactory.swift */,
 				A00000000000000000000134 /* LaunchContextResolver.swift */,
 				A00000000000000000000135 /* ScreenPlacementResolver.swift */,
@@ -227,16 +174,6 @@
 			path = Resources;
 			sourceTree = "<group>";
 		};
-		A00000000000000000000008 /* StickItWidgets */ = {
-			isa = PBXGroup;
-			children = (
-				A00000000000000000000125 /* StickItWidgets.swift */,
-				A00000000000000000000126 /* Info.plist */,
-				A00000000000000000000127 /* StickItWidgets.entitlements */,
-			);
-			path = StickItWidgets;
-			sourceTree = "<group>";
-		};
 		A00000000000000000000009 /* StickItTests */ = {
 			isa = PBXGroup;
 			children = (
@@ -255,35 +192,16 @@
 				A00000000000000000000013 /* Sources */,
 				A00000000000000000000014 /* Frameworks */,
 				A00000000000000000000015 /* Resources */,
-				A0000000000000000000001A /* Embed App Extensions */,
 				A00000000000000000000016 /* Build Frontend */,
 			);
 			buildRules = (
 			);
 			dependencies = (
-				A00000000000000000000031 /* PBXTargetDependency */,
 			);
 			name = StickIt;
 			productName = StickIt;
 			productReference = A00000000000000000000115 /* StickIt.app */;
 			productType = "com.apple.product-type.application";
-		};
-		A00000000000000000000020 /* StickItWidgets */ = {
-			isa = PBXNativeTarget;
-			buildConfigurationList = A00000000000000000000021 /* Build configuration list for PBXNativeTarget "StickItWidgets" */;
-			buildPhases = (
-				A00000000000000000000017 /* Sources */,
-				A00000000000000000000018 /* Frameworks */,
-				A00000000000000000000019 /* Resources */,
-			);
-			buildRules = (
-			);
-			dependencies = (
-			);
-			name = StickItWidgets;
-			productName = StickItWidgets;
-			productReference = A00000000000000000000128 /* StickItWidgets.appex */;
-			productType = "com.apple.product-type.app-extension";
 		};
 		A00000000000000000000025 /* StickItTests */ = {
 			isa = PBXNativeTarget;
@@ -316,9 +234,6 @@
 					A00000000000000000000010 = {
 						CreatedOnToolsVersion = 26.0.1;
 					};
-					A00000000000000000000020 = {
-						CreatedOnToolsVersion = 26.0.1;
-					};
 					A00000000000000000000025 = {
 						CreatedOnToolsVersion = 26.0.1;
 						TestTargetID = A00000000000000000000010;
@@ -339,7 +254,6 @@
 			projectRoot = "";
 			targets = (
 				A00000000000000000000010 /* StickIt */,
-				A00000000000000000000020 /* StickItWidgets */,
 				A00000000000000000000025 /* StickItTests */,
 			);
 		};
@@ -351,13 +265,6 @@
 			buildActionMask = 2147483647;
 			files = (
 				A00000000000000000000208 /* AppIcon.icns in Resources */,
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-		A00000000000000000000019 /* Resources */ = {
-			isa = PBXResourcesBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -406,23 +313,11 @@
 				A00000000000000000000217 /* SharedModels.swift in Sources */,
 				A00000000000000000000218 /* SharedDataStore.swift in Sources */,
 				A00000000000000000000219 /* StickItDeepLink.swift in Sources */,
-				A00000000000000000000227 /* WidgetRefreshCoordinator.swift in Sources */,
 				A00000000000000000000228 /* FloatingWebViewFactory.swift in Sources */,
 				A00000000000000000000229 /* LaunchContextResolver.swift in Sources */,
 				A00000000000000000000230 /* ScreenPlacementResolver.swift in Sources */,
 				A00000000000000000000207 /* WebViewController.swift in Sources */,
 				A00000000000000000000212 /* main.swift in Sources */,
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-		A00000000000000000000017 /* Sources */ = {
-			isa = PBXSourcesBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-				A00000000000000000000220 /* StickItWidgets.swift in Sources */,
-				A00000000000000000000221 /* SharedModels.swift in Sources */,
-				A00000000000000000000222 /* SharedDataStore.swift in Sources */,
-				A00000000000000000000219 /* StickItDeepLink.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -437,11 +332,6 @@
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
-		A00000000000000000000031 /* PBXTargetDependency */ = {
-			isa = PBXTargetDependency;
-			target = A00000000000000000000020 /* StickItWidgets */;
-			targetProxy = A00000000000000000000032 /* PBXContainerItemProxy */;
-		};
 		A00000000000000000000033 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			target = A00000000000000000000010 /* StickIt */;
@@ -486,7 +376,7 @@
 				CODE_SIGN_IDENTITY = "Apple Development";
 				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 30;
+				CURRENT_PROJECT_VERSION = 31;
 				DEVELOPMENT_TEAM = 7JXFC39YLS;
 				ENABLE_DEBUG_DYLIB = NO;
 				ENABLE_HARDENED_RUNTIME = YES;
@@ -498,7 +388,7 @@
 					"@executable_path/../Frameworks",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 14.0;
-				MARKETING_VERSION = 0.7.0;
+				MARKETING_VERSION = 1.0.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.hankchen.stickit;
 				PRODUCT_NAME = StickIt;
 				PROVISIONING_PROFILE_SPECIFIER = "";
@@ -511,12 +401,12 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CODE_SIGNING_ALLOWED = YES;
-				CODE_SIGN_ENTITLEMENTS = StickItMacOS/StickItLocal.entitlements;
+				CODE_SIGN_ENTITLEMENTS = StickItMacOS/StickIt.entitlements;
 				CODE_SIGNING_REQUIRED = YES;
-				CODE_SIGN_IDENTITY = "Apple Development";
-				CODE_SIGN_STYLE = Manual;
-				CURRENT_PROJECT_VERSION = 30;
-				DEVELOPMENT_TEAM = 7JXFC39YLS;
+				CODE_SIGN_IDENTITY = "Apple Distribution";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 31;
+				DEVELOPMENT_TEAM = 85923Q9JUG;
 				ENABLE_DEBUG_DYLIB = NO;
 				ENABLE_HARDENED_RUNTIME = YES;
 				GENERATE_INFOPLIST_FILE = NO;
@@ -526,63 +416,11 @@
 					"@executable_path/../Frameworks",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 14.0;
-				MARKETING_VERSION = 0.7.0;
+				MARKETING_VERSION = 1.0.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.hankchen.stickit;
 				PRODUCT_NAME = StickIt;
 				PROVISIONING_PROFILE_SPECIFIER = "";
 				SDKROOT = macosx;
-				SWIFT_VERSION = 5.0;
-			};
-			name = Release;
-		};
-		A00000000000000000000305 /* Debug */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				APPLICATION_EXTENSION_API_ONLY = YES;
-				CODE_SIGN_IDENTITY = "Apple Development";
-				CODE_SIGN_ENTITLEMENTS = StickItWidgets/StickItWidgets.entitlements;
-				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 30;
-				DEVELOPMENT_TEAM = 7JXFC39YLS;
-				ENABLE_HARDENED_RUNTIME = YES;
-				GENERATE_INFOPLIST_FILE = NO;
-				INFOPLIST_FILE = StickItWidgets/Info.plist;
-				LD_RUNPATH_SEARCH_PATHS = (
-					"$(inherited)",
-					"@executable_path/../Frameworks",
-					"@executable_path/../../../../Frameworks",
-				);
-				MACOSX_DEPLOYMENT_TARGET = 14.0;
-				MARKETING_VERSION = 0.7.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.hankchen.stickit.widgets;
-				PRODUCT_NAME = StickItWidgets;
-				SKIP_INSTALL = YES;
-				SWIFT_VERSION = 5.0;
-			};
-			name = Debug;
-		};
-		A00000000000000000000306 /* Release */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				APPLICATION_EXTENSION_API_ONLY = YES;
-				CODE_SIGN_IDENTITY = "Apple Development";
-				CODE_SIGN_ENTITLEMENTS = StickItWidgets/StickItWidgetsLocal.entitlements;
-				CODE_SIGN_STYLE = Manual;
-				CURRENT_PROJECT_VERSION = 30;
-				DEVELOPMENT_TEAM = 7JXFC39YLS;
-				ENABLE_HARDENED_RUNTIME = YES;
-				GENERATE_INFOPLIST_FILE = NO;
-				INFOPLIST_FILE = StickItWidgets/Info.plist;
-				LD_RUNPATH_SEARCH_PATHS = (
-					"$(inherited)",
-					"@executable_path/../Frameworks",
-					"@executable_path/../../../../Frameworks",
-				);
-				MACOSX_DEPLOYMENT_TARGET = 14.0;
-				MARKETING_VERSION = 0.7.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.hankchen.stickit.widgets;
-				PRODUCT_NAME = StickItWidgets;
-				SKIP_INSTALL = YES;
 				SWIFT_VERSION = 5.0;
 			};
 			name = Release;
@@ -636,15 +474,6 @@
 			buildConfigurations = (
 				A00000000000000000000303 /* Debug */,
 				A00000000000000000000304 /* Release */,
-			);
-			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = Debug;
-		};
-		A00000000000000000000021 /* Build configuration list for PBXNativeTarget "StickItWidgets" */ = {
-			isa = XCConfigurationList;
-			buildConfigurations = (
-				A00000000000000000000305 /* Debug */,
-				A00000000000000000000306 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Debug;

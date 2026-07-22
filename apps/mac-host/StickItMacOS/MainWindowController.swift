@@ -26,7 +26,6 @@ final class MainWindowController: NSObject, NSWindowDelegate, StickItNativeBridg
     private let hotKeyManager: GlobalHotKeyManager
     private let notificationManager: NotificationManager
     private let launchAtLoginManager: LaunchAtLoginManager
-    private let widgetRefreshCoordinator = WidgetRefreshCoordinator()
     private let panel: FloatingPanel
     private let webViewController: WebViewController
     private let dragPreviewWindowController = DragPreviewWindowController()
@@ -246,12 +245,10 @@ final class MainWindowController: NSObject, NSWindowDelegate, StickItNativeBridg
 
     func saveNotes(_ notes: Any) throws {
         try storage.saveNotes(notes)
-        widgetRefreshCoordinator.requestReload()
     }
 
     func saveTodos(_ todos: Any) throws {
         try storage.saveTodos(todos)
-        widgetRefreshCoordinator.requestReload()
         let settings = try storage.loadSettings()
         syncTodoReminderNotifications(todos: todos, settings: settings, requestAuthorizationIfNeeded: true)
     }
@@ -270,12 +267,11 @@ final class MainWindowController: NSObject, NSWindowDelegate, StickItNativeBridg
 
         let launchAtLogin = settingsDictionary["launchAtLogin"] as? Bool
             ?? (try? storage.currentLaunchAtLogin())
-            ?? true
+            ?? false
         try launchAtLoginManager.setEnabled(launchAtLogin)
         settingsDictionary["launchAtLogin"] = launchAtLoginManager.isEnabled
 
         try storage.saveSettings(settingsDictionary)
-        widgetRefreshCoordinator.requestReload()
         let todos = try storage.loadTodos()
         let savedSettings = try storage.loadSettings()
         syncTodoReminderNotifications(todos: todos, settings: savedSettings, requestAuthorizationIfNeeded: false)
@@ -572,7 +568,6 @@ final class MainWindowController: NSObject, NSWindowDelegate, StickItNativeBridg
             }
 
             try self.storage.saveNotes(notes)
-            self.widgetRefreshCoordinator.requestReload()
             self.webViewController.emitNotesUpdated(notes)
         }
         controller.onSaveTodos = { [weak self] todos in

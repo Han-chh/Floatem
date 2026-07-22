@@ -35,7 +35,7 @@ The macOS host remains AppKit + WKWebView. `WebViewController` injects `stickItH
 
 macOS uses AppKit window levels and collection behaviors such as `canJoinAllSpaces` and `fullScreenAuxiliary` for overlay behavior.
 
-The macOS product has three primary surfaces plus an optional Widget extension:
+The macOS product has three primary surfaces:
 
 1. **Main Window** — AppKit `NSPanel` containing the full React application.
 2. **Floating Editing Card** — a borderless AppKit `NSPanel` containing the lightweight `floating.html` entry. It keeps full editing, formatting, clipboard, IME, resize, drag-back, always-on-top, and cross-Space behavior.
@@ -43,11 +43,9 @@ The macOS product has three primary surfaces plus an optional Widget extension:
 
 `setFloatingCardDesktopPinned` switches between the ordinary floating panel and `DesktopCardPanel`. Typed `desktop-panel-states.json` records only entity kind/ID and screen placement. On every launch, StickIt reloads current entity data and recreates pinned panels; deleted entities are discarded safely. Because these are application windows, StickIt must remain running. A disabled or unapproved Login Item produces an explicit frontend warning when pinning.
 
-The optional `StickItWidgets` extension still reads App Group snapshots and can deep-link to a Floating Editing Card, but it is not used by the desktop-pin button.
-
 ### Shared data and migration
 
-The authoritative macOS data lives in App Group `group.com.stickit.app`, under `SharedData/`. The main app and Widget extension share `notes.json`, `todos.json`, settings, optional Widget preferences, typed floating-window state, and typed desktop-panel state. On first use, `LegacyDataMigrator` atomically copies missing valid JSON from `~/Library/Application Support/com.stickit.app/`; source files remain untouched. Legacy `desktop-cards.json` and short-lived Widget preferences are migrated into entity-only desktop panel records without copying Note/Todo payloads.
+The authoritative macOS data lives in App Group `group.com.stickit.app`, under `SharedData/`. The main app stores `notes.json`, `todos.json`, settings, typed floating-window state, and typed desktop-panel state there. On first use, `LegacyDataMigrator` atomically copies missing valid JSON from `~/Library/Application Support/com.stickit.app/`; source files remain untouched. Legacy `desktop-cards.json` and short-lived Widget preferences are migrated into entity-only desktop panel records without copying Note/Todo payloads.
 
 ### WebKit and window lifecycle
 
@@ -57,7 +55,7 @@ Floating window state records display UUID, previous visible frame, normalized p
 
 ### Launch behavior
 
-`SMAppService.mainApp` login launches initialize services and recreate desktop-pinned cards without showing or activating the Main Window. Finder/Dock/Spotlight launches show on the first actual app activation, reopen always shows, and Widget/deep-link launches open only the target Floating Editing Card. Because `SMAppService.mainApp` does not expose a launch-reason API, managed builds can use `--stickit-login-item`; the normal fallback is activation-state based and contains no timing delay.
+`SMAppService.mainApp` login launches initialize services and recreate desktop-pinned cards without showing or activating the Main Window. Finder/Dock/Spotlight launches show on the first actual app activation, reopen always shows, and deep-link launches open only the target Floating Editing Card. Because `SMAppService.mainApp` does not expose a launch-reason API, managed builds can use `--stickit-login-item`; the normal fallback is activation-state based and contains no timing delay.
 
 ## Windows Host
 
