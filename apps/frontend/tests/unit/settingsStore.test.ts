@@ -162,7 +162,7 @@ describe("settingsStore", () => {
     expect(state.defaultOpenSection).toBe("last");
     expect(state.transitionStyle).toBe("page");
     expect(state.animationSpeed).toBe("mediate");
-    expect(state.launchAtLogin).toBe(true);
+    expect(state.launchAtLogin).toBe(false);
     expect(state.enableParticles).toBe(true);
     expect(state.enableReminderSound).toBe(true);
     expect(state.panelPosition).toBeNull();

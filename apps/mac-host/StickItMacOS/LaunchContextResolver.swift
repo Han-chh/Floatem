@@ -25,10 +25,21 @@ struct LaunchContextResolver {
         receivedDeepLink = true
     }
 
-    mutating func shouldShowAtDidFinish(isApplicationActive _: Bool) -> Bool {
+    mutating func shouldShowAtDidFinish(isApplicationActive: Bool) -> Bool {
         guard !receivedDeepLink else { return false }
-        consumedInitialActivation = true
-        return true
+
+        switch explicitContext {
+        case .loginItem:
+            consumedInitialActivation = true
+            return false
+        case .user:
+            consumedInitialActivation = true
+            return true
+        case .automatic:
+            guard isApplicationActive else { return false }
+            consumedInitialActivation = true
+            return true
+        }
     }
 
     mutating func shouldShowForActivation() -> Bool {

@@ -88,7 +88,7 @@ final class AppStorage {
 
     func currentLaunchAtLogin() throws -> Bool {
         let settings = try loadSettings()
-        return settings["launchAtLogin"] as? Bool ?? true
+        return settings["launchAtLogin"] as? Bool ?? false
     }
 
     func updateHotkey(_ shortcut: String) throws {
@@ -286,7 +286,7 @@ final class AppStorage {
             "defaultOpenSection": "last",
             "transitionStyle": "page",
             "animationSpeed": "mediate",
-            "launchAtLogin": true,
+            "launchAtLogin": false,
             "enableParticles": true,
             "enableReminderSound": true,
         ]

@@ -10,19 +10,20 @@ All notable repository changes are recorded here.
 
 ## Unreleased
 
+- Prepare v1.0.0 for App Store distribution with an Apple Distribution Release configuration, App Sandbox, and the existing App Group.
+- Remove the WidgetKit extension from the product; desktop-pinned Note and Todo cards are provided exclusively by app-owned NSPanel windows.
+- Default new installations to launch-at-login off, keep login launches silent, and show the Main Window only for user-initiated launches.
 - Restore desktop pinning to app-owned `DesktopCardPanel` windows, persist entity-only typed placement state, recreate panels during silent Login Item startup, and warn when login launch is unavailable.
-- Add an optional signed macOS 14 WidgetKit extension containing configurable Note and Todo Widgets, AppEntity queries, deep links, deletion placeholders, and interactive Todo completion; it remains separate from desktop pinning.
 - Move macOS authoritative data into App Group `group.com.stickit.app`, add atomic/idempotent legacy migration, and reduce old `desktop-cards.json` entries to schema-v1 entity-only Widget preferences.
 - Keep full editing in floating AppKit/Web cards while sharing their WebKit process pool/data store/bootstrap, loading a dedicated floating Vite entry, and logging active lifecycle counts.
 - Restore floating frames with display UUIDs, normalized positions, and shared visible-frame clamping; keep login-item launches silent while preserving user launch, reopen, shortcut, and deep-link behavior.
-- Add native XCTest coverage and a macOS Widget/manual regression guide.
+- Add native XCTest coverage and a macOS desktop-card/manual regression guide.
 
 - Allow each note's rich-text formatting row to collapse into a compact arrow control, with the floating-card toolbar attached directly to the editor field.
 - Consolidate floating-note group selection into the group label and place its edited-time label on the same compact metadata row.
-- Keep the original desktop-pin entry point and map it to `DesktopCardPanel`; the optional WidgetKit extension is not part of this action.
+- Keep the original desktop-pin entry point and map it to `DesktopCardPanel`.
 - Preserve rounded note and todo silhouettes in drag previews and detached floating windows by making their dedicated WebView root surfaces fully transparent.
-- Add a default-enabled launch-at-login preference to General Settings, backed by `SMAppService.mainApp` on macOS and the current-user Run key on Windows.
-- Register the macOS login item during first launch, request alert and sound notification authorization when the system has not decided yet, and open Login Items once when macOS reports that startup requires user approval.
+- Add a user-controlled launch-at-login preference to General Settings, backed by `SMAppService.mainApp` on macOS and the current-user Run key on Windows.
 
 ## v0.5.0 - 2026-05-25
 

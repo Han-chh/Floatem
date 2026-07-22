@@ -225,16 +225,21 @@ final class StickItCoreTests: XCTestCase {
         XCTAssertNil(state.screenIdentifier)
     }
 
-    func testEveryRegularLaunchShowsMainWindow() {
+    func testLoginLaunchStaysSilentAndUserLaunchShowsMainWindow() {
         var login = LaunchContextResolver(arguments: ["StickIt", "--stickit-login-item"], environment: [:])
-        XCTAssertTrue(login.shouldShowAtDidFinish(isApplicationActive: false))
+        XCTAssertFalse(login.shouldShowAtDidFinish(isApplicationActive: false))
         XCTAssertFalse(login.shouldShowForActivation())
 
         var user = LaunchContextResolver(arguments: ["StickIt", "--stickit-user-launch"], environment: [:])
         XCTAssertTrue(user.shouldShowAtDidFinish(isApplicationActive: false))
 
         var automatic = LaunchContextResolver(arguments: ["StickIt"], environment: [:])
-        XCTAssertTrue(automatic.shouldShowAtDidFinish(isApplicationActive: false))
+        XCTAssertFalse(automatic.shouldShowAtDidFinish(isApplicationActive: false))
+        XCTAssertTrue(automatic.shouldShowForActivation())
+
+        var alreadyActive = LaunchContextResolver(arguments: ["StickIt"], environment: [:])
+        XCTAssertTrue(alreadyActive.shouldShowAtDidFinish(isApplicationActive: true))
+        XCTAssertFalse(alreadyActive.shouldShowForActivation())
 
         var deepLink = LaunchContextResolver(arguments: ["StickIt"], environment: [:])
         deepLink.markDeepLinkReceived()

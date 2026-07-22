@@ -179,7 +179,7 @@ export function createDefaultSettings(): AppSettings {
     defaultOpenSection: "last",
     transitionStyle: "page",
     animationSpeed: "mediate",
-    launchAtLogin: true,
+    launchAtLogin: false,
     enableParticles: true,
     enableReminderSound: true,
   };

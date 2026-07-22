@@ -64,7 +64,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         currentLanguage = (try? storage.currentLanguage()) ?? .simplifiedChinese
         notificationManager.configure()
         notificationManager.logCurrentAuthorizationStatus()
-        launchAtLoginManager.configureOnLaunch(enabled: (try? storage.currentLaunchAtLogin()) ?? true)
+        launchAtLoginManager.configureOnLaunch(enabled: (try? storage.currentLaunchAtLogin()) ?? false)
 
         configureMainMenu()
         configureStatusItem()
@@ -91,8 +91,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             // Desktop-pinned cards are application-owned NSPanel instances, so
             // restore them before presenting the main window on every launch.
             self.mainWindowController.restorePinnedDesktopCards()
-            // Present the main window for both direct and login-item launches.
-            // Deep links remain responsible for presenting their own destination.
+            // Login-item launches stay in the background. Direct user launches
+            // present on the initial activation, while deep links present only
+            // their requested destination.
             if self.launchContextResolver.shouldShowAtDidFinish(isApplicationActive: NSApp.isActive) {
                 self.mainWindowController.showMainWindow()
             }
