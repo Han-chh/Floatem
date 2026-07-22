@@ -57,6 +57,8 @@ Debug builds use the local Apple Development team. Release builds use automatic 
 
 Release archives are intended for App Store Connect/TestFlight distribution. Direct-download distribution would require a separate Developer ID and notarization configuration.
 
+Xcode automatically development-signs the Release archive, then uses the Apple Distribution certificate and `apps/mac-host/ExportOptions.plist` to re-sign the exported App Store package after the App Store Connect app record and Mac App Store provisioning profile exist.
+
 Shared data resolves to the App Group container's `SharedData/` directory. The repository commands use `CODE_SIGNING_ALLOWED=NO` for compilation and unit tests; a runnable or archived Release still needs valid App Group provisioning through Xcode.
 
 ## Tests
