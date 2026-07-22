@@ -2,7 +2,7 @@ import Foundation
 import Security
 
 enum StickItSharedContainer {
-    static let appGroupIdentifier = "group.com.stickit.app"
+    static let appGroupIdentifier = "group.com.hankch.stickit"
     static let sharedDataDirectoryName = "SharedData"
     static let currentSchemaVersion = 1
 

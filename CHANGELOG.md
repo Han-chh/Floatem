@@ -14,7 +14,7 @@ All notable repository changes are recorded here.
 - Remove the WidgetKit extension from the product; desktop-pinned Note and Todo cards are provided exclusively by app-owned NSPanel windows.
 - Default new installations to launch-at-login off, keep login launches silent, and show the Main Window only for user-initiated launches.
 - Restore desktop pinning to app-owned `DesktopCardPanel` windows, persist entity-only typed placement state, recreate panels during silent Login Item startup, and warn when login launch is unavailable.
-- Move macOS authoritative data into App Group `group.com.stickit.app`, add atomic/idempotent legacy migration, and reduce old `desktop-cards.json` entries to schema-v1 entity-only Widget preferences.
+- Move macOS authoritative data into App Group `group.com.hankch.stickit`, add atomic/idempotent legacy migration, and reduce old `desktop-cards.json` entries to schema-v1 entity-only Widget preferences.
 - Keep full editing in floating AppKit/Web cards while sharing their WebKit process pool/data store/bootstrap, loading a dedicated floating Vite entry, and logging active lifecycle counts.
 - Restore floating frames with display UUIDs, normalized positions, and shared visible-frame clamping; keep login-item launches silent while preserving user launch, reopen, shortcut, and deep-link behavior.
 - Add native XCTest coverage and a macOS desktop-card/manual regression guide.

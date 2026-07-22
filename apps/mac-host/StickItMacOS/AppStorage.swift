@@ -7,9 +7,9 @@ final class AppStorage {
     private let appSupportDirectory: URL
     private let legacyAppSupportDirectory: URL
     private let sharedStore: SharedDataStore
-    private let logger = Logger(subsystem: "com.hankchen.stickit", category: "Storage")
+    private let logger = Logger(subsystem: "com.hankch.stickit", category: "Storage")
 
-    init(bundleIdentifier: String = Bundle.main.bundleIdentifier ?? "com.hankchen.stickit") {
+    init(bundleIdentifier: String = Bundle.main.bundleIdentifier ?? "com.hankch.stickit") {
         let baseDirectory = fileManager.urls(for: .applicationSupportDirectory, in: .userDomainMask).first!
         legacyAppSupportDirectory = baseDirectory.appendingPathComponent(bundleIdentifier, isDirectory: true)
         let preferredDirectory = StickItSharedContainer.sharedDataURL(fileManager: fileManager)
@@ -19,7 +19,7 @@ final class AppStorage {
 
         let previousAppSupportDirectory = baseDirectory.appendingPathComponent("com.stickit.app", isDirectory: true)
         let previousSharedDirectory = fileManager.homeDirectoryForCurrentUser
-            .appendingPathComponent("Library/Group Containers/group.com.stickit.app/SharedData", isDirectory: true)
+            .appendingPathComponent("Library/Group Containers/group.com.hankch.stickit/SharedData", isDirectory: true)
         let migrationSources = [previousSharedDirectory, previousAppSupportDirectory, legacyAppSupportDirectory]
             .filter { $0.standardizedFileURL != preferredDirectory.standardizedFileURL }
 

@@ -45,7 +45,7 @@ The macOS product has three primary surfaces:
 
 ### Shared data and migration
 
-The authoritative macOS data lives in App Group `group.com.stickit.app`, under `SharedData/`. The main app stores `notes.json`, `todos.json`, settings, typed floating-window state, and typed desktop-panel state there. On first use, `LegacyDataMigrator` atomically copies missing valid JSON from `~/Library/Application Support/com.stickit.app/`; source files remain untouched. Legacy `desktop-cards.json` and short-lived Widget preferences are migrated into entity-only desktop panel records without copying Note/Todo payloads.
+The authoritative macOS data lives in App Group `group.com.hankch.stickit`, under `SharedData/`. The main app stores `notes.json`, `todos.json`, settings, typed floating-window state, and typed desktop-panel state there. On first use, `LegacyDataMigrator` atomically copies missing valid JSON from `~/Library/Application Support/com.stickit.app/`; source files remain untouched. Legacy `desktop-cards.json` and short-lived Widget preferences are migrated into entity-only desktop panel records without copying Note/Todo payloads.
 
 ### WebKit and window lifecycle
 

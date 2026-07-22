@@ -50,7 +50,7 @@ Then run the `StickIt` scheme.
 The `StickIt` target requires App Group:
 
 ```text
-group.com.stickit.app
+group.com.hankch.stickit
 ```
 
 Debug builds use the local Apple Development team. Release builds use automatic App Store signing with the Apple Distribution team. Both configurations enable App Sandbox, Hardened Runtime, and the shared App Group above.

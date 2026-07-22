@@ -11,7 +11,7 @@ Schema version 1 moves authoritative macOS data from:
 to the App Group container:
 
 ```text
-group.com.stickit.app/SharedData/
+group.com.hankch.stickit/SharedData/
 ```
 
 Only missing destination files are migrated. JSON is validated before an atomic write; repeated runs are idempotent; failures leave the old files intact. `desktop-cards.json` is retained in the legacy directory. Its unique Note/Todo references, and any references from the short-lived Widget pin flow, are converted to typed `desktop-panel-states.json` records. Full Note/Todo payloads are not copied. Current content is always loaded from the authoritative data files.
