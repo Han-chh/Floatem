@@ -233,6 +233,15 @@
 				TargetAttributes = {
 					A00000000000000000000010 = {
 						CreatedOnToolsVersion = 26.0.1;
+						DevelopmentTeam = 85923Q9JUG;
+						SystemCapabilities = {
+							com.apple.ApplicationGroups.Mac = {
+								enabled = 1;
+							};
+							com.apple.Sandbox = {
+								enabled = 1;
+							};
+						};
 					};
 					A00000000000000000000025 = {
 						CreatedOnToolsVersion = 26.0.1;
@@ -377,7 +386,7 @@
 				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 31;
-				DEVELOPMENT_TEAM = 7JXFC39YLS;
+				DEVELOPMENT_TEAM = 85923Q9JUG;
 				ENABLE_DEBUG_DYLIB = NO;
 				ENABLE_HARDENED_RUNTIME = YES;
 				ENABLE_TESTABILITY = YES;
