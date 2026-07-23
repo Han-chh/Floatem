@@ -7,6 +7,7 @@ import {
   closeFloatingCard,
   getFloatingCardScreenPlacement,
   loadAllData,
+  reportFrontendReady,
   resizeFloatingCard,
   saveTodos,
   setEditableInputActive,
@@ -593,6 +594,13 @@ export function FloatingNoteApp() {
     return () => {
       window.removeEventListener(FLOATING_CARD_STATE_EVENT, handleState as EventListener);
     };
+  }, []);
+
+  useEffect(() => {
+    // The native host replays the current payload and guide only after this
+    // acknowledgement. Keep this effect after both event-listener effects so
+    // the first floating-window guide cannot disappear into the mount race.
+    void reportFrontendReady();
   }, []);
 
   useEffect(() => {

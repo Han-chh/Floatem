@@ -2,6 +2,23 @@ import XCTest
 @testable import StickIt
 
 final class StickItCoreTests: XCTestCase {
+    func testFloatingGuideDeliveryWaitsForNavigationAndFrontendReadiness() {
+        var gate = FloatingGuideDeliveryGate()
+
+        XCTAssertFalse(gate.canDeliver)
+        gate.navigationDidFinish()
+        XCTAssertFalse(gate.canDeliver)
+        gate.frontendDidBecomeReady()
+        XCTAssertTrue(gate.canDeliver)
+
+        gate.navigationDidStart()
+        XCTAssertFalse(gate.canDeliver)
+        gate.navigationDidFinish()
+        XCTAssertFalse(gate.canDeliver)
+        gate.frontendDidBecomeReady()
+        XCTAssertTrue(gate.canDeliver)
+    }
+
     private var temporaryDirectories: [URL] = []
 
     override func tearDownWithError() throws {

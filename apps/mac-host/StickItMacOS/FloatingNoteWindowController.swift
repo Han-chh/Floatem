@@ -2,6 +2,28 @@ import AppKit
 import OSLog
 import WebKit
 
+struct FloatingGuideDeliveryGate {
+    private(set) var isNavigationReady = false
+    private(set) var isFrontendReady = false
+
+    var canDeliver: Bool {
+        isNavigationReady && isFrontendReady
+    }
+
+    mutating func navigationDidStart() {
+        isNavigationReady = false
+        isFrontendReady = false
+    }
+
+    mutating func navigationDidFinish() {
+        isNavigationReady = true
+    }
+
+    mutating func frontendDidBecomeReady() {
+        isFrontendReady = true
+    }
+}
+
 @MainActor
 final class FloatingNoteWindowController: NSObject, WKNavigationDelegate, WKScriptMessageHandler, NSWindowDelegate {
     private nonisolated static let diagnostics = Logger(subsystem: "com.stickit.floating", category: "Dock")
@@ -152,7 +174,7 @@ final class FloatingNoteWindowController: NSObject, WKNavigationDelegate, WKScri
         },
         openDevTools() { return Promise.resolve(); },
         quitApplication() { return Promise.resolve(); },
-        reportFrontendReady() {},
+        reportFrontendReady() { return send("reportFrontendReady"); },
         reportFrontendError() {},
       };
 
@@ -195,6 +217,7 @@ final class FloatingNoteWindowController: NSObject, WKNavigationDelegate, WKScri
     private var isEditableInputActive = false
     private var isTextCompositionActive = false
     private var minimumContentSize = NSSize(width: 1, height: 1)
+    private var guideDeliveryGate = FloatingGuideDeliveryGate()
     private var pendingGuideState: [String: Any]?
     private var pendingPayload: Any?
     private var pendingShowFrame: NSRect?
@@ -284,7 +307,7 @@ final class FloatingNoteWindowController: NSObject, WKNavigationDelegate, WKScri
 
     func updateGuideState(_ guide: [String: Any]?) {
         pendingGuideState = guide
-        guard isReady else {
+        guard guideDeliveryGate.canDeliver else {
             return
         }
         emitGuideState(guide)
@@ -574,9 +597,17 @@ final class FloatingNoteWindowController: NSObject, WKNavigationDelegate, WKScri
         ]
     }
 
+    func webView(_ webView: WKWebView, didStartProvisionalNavigation navigation: WKNavigation!) {
+        guard !isDestroyed else { return }
+        isReady = false
+        isContentReady = false
+        guideDeliveryGate.navigationDidStart()
+    }
+
     func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
         guard !isDestroyed else { return }
         isReady = true
+        guideDeliveryGate.navigationDidFinish()
         applyPendingPayloadIfPossible()
         focusWebView()
     }
@@ -694,6 +725,17 @@ final class FloatingNoteWindowController: NSObject, WKNavigationDelegate, WKScri
         let requestID = body["id"] as? Int ?? 0
 
         switch method {
+        case "reportFrontendReady":
+            guideDeliveryGate.frontendDidBecomeReady()
+            // React reports readiness only after both floating-card listeners
+            // are installed. Replaying here makes initial window creation,
+            // reloads, desktop pinning, and launch-at-login dialogs consume
+            // the same durable guide session instead of a best-effort event.
+            applyPendingPayloadIfPossible()
+            if guideDeliveryGate.canDeliver {
+                emitGuideState(pendingGuideState)
+            }
+            resolveBridgeRequest(id: requestID, ok: true, result: NSNull())
         case "closeFloatingCard":
             let kind = params["kind"] as? String ?? cardKind
             let requestedCardID = params["id"] as? String ?? cardID
@@ -872,8 +914,8 @@ final class FloatingNoteWindowController: NSObject, WKNavigationDelegate, WKScri
             completionHandler: { [weak self] result in
                 guard let self, !self.isDestroyed, case .success = result else { return }
                 self.isContentReady = true
-                if let guide = self.pendingGuideState {
-                    self.emitGuideState(guide)
+                if self.guideDeliveryGate.canDeliver {
+                    self.emitGuideState(self.pendingGuideState)
                 }
                 guard let panel = self.panel, let frame = self.pendingShowFrame else { return }
                 panel.setFrame(frame, display: true)

@@ -103,6 +103,7 @@ function installFloatingBridge(note: NoteCard, groups: NoteGroup[] = []) {
   const setEditableInputActive = vi.fn();
   const setTextCompositionActive = vi.fn();
   const saveSettings = vi.fn(async () => {});
+  const reportFrontendReady = vi.fn();
   const setFloatingCardDesktopPinned = vi.fn(async (_card: FloatingCardReference, pinned: boolean) => ({
     pinned,
     launchAtLoginEnabled: false,
@@ -183,7 +184,7 @@ function installFloatingBridge(note: NoteCard, groups: NoteGroup[] = []) {
     hidePanelWindow: vi.fn(async () => {}),
     quitApplication: vi.fn(async () => {}),
     openDevTools: vi.fn(async () => {}),
-    reportFrontendReady: vi.fn(),
+    reportFrontendReady,
     reportFrontendError: vi.fn(),
   };
 
@@ -204,6 +205,7 @@ function installFloatingBridge(note: NoteCard, groups: NoteGroup[] = []) {
     setFloatingCardDesktopPinned,
     requestDesktopWidget,
     removeDesktopWidgetAssociation,
+    reportFrontendReady,
     writeClipboardText,
   };
 }
@@ -217,6 +219,7 @@ function installFloatingTodoBridge(todo: TodoItem, groups: TodoGroup[] = []) {
   const saveTodos = vi.fn(async () => {});
   const setEditableInputActive = vi.fn();
   const setTextCompositionActive = vi.fn();
+  const reportFrontendReady = vi.fn();
   const setFloatingCardDesktopPinned = vi.fn(async (_card: FloatingCardReference, pinned: boolean) => ({
     pinned,
     launchAtLoginEnabled: false,
@@ -294,7 +297,7 @@ function installFloatingTodoBridge(todo: TodoItem, groups: TodoGroup[] = []) {
     hidePanelWindow: vi.fn(async () => {}),
     quitApplication: vi.fn(async () => {}),
     openDevTools: vi.fn(async () => {}),
-    reportFrontendReady: vi.fn(),
+    reportFrontendReady,
     reportFrontendError: vi.fn(),
   };
 
@@ -314,10 +317,37 @@ function installFloatingTodoBridge(todo: TodoItem, groups: TodoGroup[] = []) {
     setFloatingCardDesktopPinned,
     requestDesktopWidget,
     removeDesktopWidgetAssociation,
+    reportFrontendReady,
   };
 }
 
 describe("FloatingNoteApp", () => {
+  it("acknowledges readiness after installing listeners and accepts the native guide replay", async () => {
+    const note = createNoteCard({ id: "floating-guide-handshake", title: "Guided note" });
+    const bridge = installFloatingBridge(note);
+    bridge.reportFrontendReady.mockImplementation(() => {
+      window.dispatchEvent(new CustomEvent("stickit:floating-card-guide", {
+        detail: {
+          phase: "pin",
+          title: "Pin to desktop",
+          instruction: "Click the highlighted pin",
+        },
+      }));
+    });
+
+    render(<FloatingNoteApp />);
+
+    try {
+      expect(await screen.findByRole("dialog", { name: "Pin to desktop" })).toBeInTheDocument();
+      expect(bridge.reportFrontendReady).toHaveBeenCalledTimes(1);
+      await waitFor(() => {
+        expect(document.querySelector("[data-floating-guide-pin-ring]")).toBeInTheDocument();
+      });
+    } finally {
+      bridge.restore();
+    }
+  });
+
   it("renders animated guide actions inside the floating card window", async () => {
     const note = createNoteCard({ id: "floating-guide-note", title: "Guided note" });
     const bridge = installFloatingBridge(note);
