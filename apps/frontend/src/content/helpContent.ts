@@ -56,7 +56,7 @@ function buildEnglishHelpContent(context: HelpContentContext): HelpDialogContent
     heroBadge: "Quick help",
     interactiveGuide: {
       title: "Try the interactive guide",
-      body: "Follow 32 lightweight steps in the real app. Finish the guide to remove its practice items and restore temporary changes.",
+      body: "Explore 7 complete feature workflows in the real app. Finish the guide to remove its practice items and restore temporary changes.",
       action: "Start interactive guide",
     },
     sections: [
@@ -357,7 +357,7 @@ function buildChineseHelpContent(context: HelpContentContext): HelpDialogContent
     heroBadge: "快速帮助",
     interactiveGuide: {
       title: "体验交互式指引",
-      body: "在真实应用中完成 32 步轻量演练。完整结束后，演练内容会被删除，临时更改也会恢复。",
+      body: "在真实应用中体验 7 个完整功能流程。完整结束后，演练内容会被删除，临时更改也会恢复。",
       action: "开始交互式指引",
     },
     sections: [

@@ -134,17 +134,18 @@ describe("PanelShell", () => {
     );
 
     await user.click(screen.getByRole("button", { name: "StickIt help" }));
-    expect(screen.getByText(/Follow 32 lightweight steps in the real app/)).toBeInTheDocument();
+    expect(screen.getByText(/Explore 7 complete feature workflows in the real app/)).toBeInTheDocument();
 
     await user.click(screen.getByRole("button", { name: "Start interactive guide" }));
     const guide = screen.getByRole("dialog", { name: "StickIt interactive guide" });
-    expect(within(guide).getByText("Step 1 of 32")).toBeInTheDocument();
+    expect(within(guide).getByText("Step 1 of 7")).toBeInTheDocument();
     expect(guide).toHaveClass("fixed", "w-[min(268px,calc(100vw-28px))]");
     expect(screen.getByText("Original panel body")).toBeInTheDocument();
 
     await user.click(screen.getByRole("button", { name: "Collapse navigation" }));
     await waitFor(() => {
-      expect(within(guide).getByText("Step 2 of 32")).toBeInTheDocument();
+      expect(within(guide).getByText("Step 2 of 7")).toBeInTheDocument();
+      expect(within(guide).getByText("Create and organize a note")).toBeInTheDocument();
     });
 
     await user.click(within(guide).getByRole("button", { name: "Exit guide" }));

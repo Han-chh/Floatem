@@ -46,6 +46,18 @@ type GuideStep = {
   title: string;
 };
 
+const GUIDE_CHAPTER_COUNT = 7;
+
+function chapterForAction(action: number) {
+  if (action === 0) return 0;
+  if (action <= 8) return 1;
+  if (action <= 13) return 2;
+  if (action <= 17) return 3;
+  if (action <= 20) return 4;
+  if (action <= 26) return 5;
+  return 6;
+}
+
 function queryTarget(selector: string) {
   return document.querySelector<HTMLElement>(selector);
 }
@@ -286,6 +298,40 @@ export function InteractiveGuide({
     [isZh, noteId, todoId],
   );
 
+  const chapters = useMemo(
+    () => [
+      {
+        title: isZh ? "整理工作区" : "Shape your workspace",
+        body: isZh ? "先折叠导航，了解如何为内容腾出更多空间。" : "Collapse the navigation to make more room for your content.",
+      },
+      {
+        title: isZh ? "创建并整理便签" : "Create and organize a note",
+        body: isZh ? "完成便签创建、分组和折叠这一整套整理流程。" : "Complete the full flow for creating, grouping, and folding a note.",
+      },
+      {
+        title: isZh ? "使用悬浮卡片" : "Use a floating card",
+        body: isZh ? "把便签拖出主窗口，体验桌面固定，再安全收回演练内容。" : "Drag the note out, try desktop pinning, then return the practice card safely.",
+      },
+      {
+        title: isZh ? "安排日期待办" : "Plan a dated todo",
+        body: isZh ? "切换到明天并用快速输入创建一条真实待办。" : "Switch to tomorrow and create a real todo with quick entry.",
+      },
+      {
+        title: isZh ? "设置待办提醒" : "Schedule a reminder",
+        body: isZh ? "为刚创建的待办选择未来时间并保存系统提醒。" : "Choose a future time for the new todo and save its system reminder.",
+      },
+      {
+        title: isZh ? "用分组整理待办" : "Organize the todo with a group",
+        body: isZh ? "创建一个带名称和颜色的分组，并把它应用到待办。" : "Create a named, colored group and apply it to the todo.",
+      },
+      {
+        title: isZh ? "个性化并完成" : "Personalize and finish",
+        body: isZh ? "体验主题设置后清理演练内容；你的原始数据和外观会自动恢复。" : "Try a theme, then clean up; your original data and appearance restore automatically.",
+      },
+    ],
+    [isZh],
+  );
+
   const finishCleanup = useCallback(() => {
     const runtime = runtimeRef.current;
     if (!runtime || isFinishingRef.current) {
@@ -481,6 +527,8 @@ export function InteractiveGuide({
   }, [isOpen, onSettingsChange, onTabChange, showSettings, step, theme]);
 
   const currentStep = steps[step];
+  const currentChapter = chapterForAction(step);
+  const currentChapterContent = chapters[currentChapter];
 
   useEffect(() => {
     if (!isOpen || !currentStep) {
@@ -607,10 +655,10 @@ export function InteractiveGuide({
               </span>
               <div className="min-w-0 flex-1">
                 <p className="text-[10px] font-bold uppercase tracking-[0.08em] text-[var(--muted)]">
-                  {isZh ? `第 ${step + 1} / ${steps.length} 步` : `Step ${step + 1} of ${steps.length}`}
+                  {isZh ? `第 ${currentChapter + 1} / ${GUIDE_CHAPTER_COUNT} 步` : `Step ${currentChapter + 1} of ${GUIDE_CHAPTER_COUNT}`}
                 </p>
                 <div className="mt-1 h-1 overflow-hidden rounded-full bg-[rgba(156,126,94,0.14)]">
-                  <motion.div className="h-full rounded-full bg-[#ff7a59]" animate={{ width: `${((step + 1) / steps.length) * 100}%` }} />
+                  <motion.div className="h-full rounded-full bg-[#ff7a59]" animate={{ width: `${((currentChapter + 1) / GUIDE_CHAPTER_COUNT) * 100}%` }} />
                 </div>
               </div>
               <button
@@ -623,9 +671,12 @@ export function InteractiveGuide({
                 <XIcon size={13} />
               </button>
             </div>
-            <p className="mt-3 font-display text-[17px] font-semibold tracking-[-0.025em] text-[var(--brown-strong)]">{currentStep.title}</p>
-            <p className="mt-1.5 text-[11.5px] leading-5 text-[var(--muted)]">{currentStep.body}</p>
-            <p className="mt-3 rounded-[12px] bg-[rgba(255,122,89,0.09)] px-2.5 py-2 text-[10.5px] font-semibold leading-5 text-[#8f553d]">{currentStep.instruction}</p>
+            <p className="mt-3 font-display text-[17px] font-semibold tracking-[-0.025em] text-[var(--brown-strong)]">{currentChapterContent.title}</p>
+            <p className="mt-1.5 text-[11.5px] leading-5 text-[var(--muted)]">{currentChapterContent.body}</p>
+            <div className="mt-3 rounded-[12px] bg-[rgba(255,122,89,0.09)] px-2.5 py-2 text-[#8f553d]">
+              <p className="text-[10px] font-bold leading-4">{currentStep.title}</p>
+              <p className="mt-0.5 text-[10.5px] font-semibold leading-5">{currentStep.instruction}</p>
+            </div>
             {step === steps.length - 1 ? (
               <motion.button
                 type="button"
