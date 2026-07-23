@@ -58,17 +58,3 @@ struct LaunchContextResolver {
         return true
     }
 }
-
-struct LaunchAtLoginPromptPolicy {
-    static func shouldPresent(
-        isUserInitiatedPresentation: Bool,
-        launchAtLoginEnabled: Bool,
-        isSuppressed: Bool,
-        hasPresentedThisRun: Bool
-    ) -> Bool {
-        isUserInitiatedPresentation
-            && !launchAtLoginEnabled
-            && !isSuppressed
-            && !hasPresentedThisRun
-    }
-}

@@ -249,39 +249,6 @@ final class StickItCoreTests: XCTestCase {
         XCTAssertFalse(deepLink.shouldShowAtDidFinish(isApplicationActive: true, launchAtLoginEnabled: false))
     }
 
-    func testLaunchAtLoginPromptPolicyRequiresUnsuppressedUserPresentation() {
-        XCTAssertTrue(LaunchAtLoginPromptPolicy.shouldPresent(
-            isUserInitiatedPresentation: true,
-            launchAtLoginEnabled: false,
-            isSuppressed: false,
-            hasPresentedThisRun: false
-        ))
-        XCTAssertFalse(LaunchAtLoginPromptPolicy.shouldPresent(
-            isUserInitiatedPresentation: false,
-            launchAtLoginEnabled: false,
-            isSuppressed: false,
-            hasPresentedThisRun: false
-        ))
-        XCTAssertFalse(LaunchAtLoginPromptPolicy.shouldPresent(
-            isUserInitiatedPresentation: true,
-            launchAtLoginEnabled: true,
-            isSuppressed: false,
-            hasPresentedThisRun: false
-        ))
-        XCTAssertFalse(LaunchAtLoginPromptPolicy.shouldPresent(
-            isUserInitiatedPresentation: true,
-            launchAtLoginEnabled: false,
-            isSuppressed: true,
-            hasPresentedThisRun: false
-        ))
-        XCTAssertFalse(LaunchAtLoginPromptPolicy.shouldPresent(
-            isUserInitiatedPresentation: true,
-            launchAtLoginEnabled: false,
-            isSuppressed: false,
-            hasPresentedThisRun: true
-        ))
-    }
-
     private func makeDirectory() throws -> URL {
         let directory = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString, isDirectory: true)
         try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)

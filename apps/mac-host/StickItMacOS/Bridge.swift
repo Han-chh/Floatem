@@ -111,14 +111,6 @@ enum StickItLanguage: String {
                 menuCopy: "Copy",
                 menuPaste: "Paste",
                 menuSelectAll: "Select All",
-                launchAtLoginPromptTitle: "Open StickIt at login?",
-                launchAtLoginPromptDetail: "StickIt is designed to be summoned with its global keyboard shortcut. Enabling launch at login keeps the shortcut, reminders, and menu bar ready after you sign in. It is also required to recreate desktop-pinned cards automatically.",
-                launchAtLoginPromptEnable: "Enable Launch at Login",
-                launchAtLoginPromptNotNow: "Not Now",
-                launchAtLoginPromptSuppress: "Don't show this again",
-                launchAtLoginFailureTitle: "Couldn't enable launch at login",
-                launchAtLoginFailureDetail: "You can enable StickIt later in Settings or in System Settings > General > Login Items.",
-                alertOK: "OK",
                 loadingTitle: "Loading StickIt...",
                 loadingDetail: "Preparing the local app interface.",
                 missingInterfaceTitle: "StickIt couldn't load its interface.",
@@ -153,14 +145,6 @@ enum StickItLanguage: String {
                 menuCopy: "复制",
                 menuPaste: "粘贴",
                 menuSelectAll: "全选",
-                launchAtLoginPromptTitle: "登录时自动打开 StickIt？",
-                launchAtLoginPromptDetail: "StickIt 主要通过全局快捷键唤出。开启“登录时打开”可在登录后准备好快捷键、提醒和菜单栏；如需自动重新创建桌面置顶卡片，也必须授予此权限。",
-                launchAtLoginPromptEnable: "开启开机自启动",
-                launchAtLoginPromptNotNow: "暂不开启",
-                launchAtLoginPromptSuppress: "以后不再显示此对话框",
-                launchAtLoginFailureTitle: "无法开启开机自启动",
-                launchAtLoginFailureDetail: "你可以稍后在 StickIt 设置中，或前往“系统设置 > 通用 > 登录项”开启。",
-                alertOK: "好",
                 loadingTitle: "正在加载 StickIt...",
                 loadingDetail: "正在准备本地应用界面。",
                 missingInterfaceTitle: "StickIt 无法加载界面。",
@@ -207,14 +191,6 @@ struct StickItLocalization {
     let menuCopy: String
     let menuPaste: String
     let menuSelectAll: String
-    let launchAtLoginPromptTitle: String
-    let launchAtLoginPromptDetail: String
-    let launchAtLoginPromptEnable: String
-    let launchAtLoginPromptNotNow: String
-    let launchAtLoginPromptSuppress: String
-    let launchAtLoginFailureTitle: String
-    let launchAtLoginFailureDetail: String
-    let alertOK: String
     let loadingTitle: String
     let loadingDetail: String
     let missingInterfaceTitle: String

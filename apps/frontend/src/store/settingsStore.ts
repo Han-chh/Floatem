@@ -37,6 +37,7 @@ type SettingsState = AppSettings & {
   setTransitionStyle: (transitionStyle: TransitionStyle) => void;
   setAnimationSpeed: (animationSpeed: AnimationSpeed) => void;
   setLaunchAtLogin: (launchAtLogin: boolean) => void;
+  setSuppressLaunchAtLoginPrompt: (suppress: boolean) => void;
   setEnableParticles: (enableParticles: boolean) => void;
   setEnableReminderSound: (enableReminderSound: boolean) => void;
   reset: () => void;
@@ -121,6 +122,9 @@ export const useSettingsStore = create<SettingsState>()(
     },
     setLaunchAtLogin: (launchAtLogin) => {
       set({ launchAtLogin });
+    },
+    setSuppressLaunchAtLoginPrompt: (suppressLaunchAtLoginPrompt) => {
+      set({ suppressLaunchAtLoginPrompt });
     },
     setEnableParticles: (enableParticles) => {
       set({ enableParticles });

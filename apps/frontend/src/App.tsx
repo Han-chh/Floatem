@@ -4,6 +4,7 @@ import { DragPreviewApp } from "./components/drag-preview/DragPreviewApp";
 import { TooltipLayer } from "./components/feedback/TooltipLayer";
 import { FloatingNoteApp } from "./components/floating-note/FloatingNoteApp";
 import { PanelShell } from "./components/layout/PanelShell";
+import { LaunchAtLoginDialog } from "./components/layout/LaunchAtLoginDialog";
 import { NotesList } from "./components/notes/NotesList";
 import { FigmaNotesHomePreview } from "./components/preview/FigmaNotesHomePreview";
 import { SettingsPanel } from "./components/settings/SettingsPanel";
@@ -154,20 +155,6 @@ function StickItApp() {
     return subscribeToPanelPosition((panelPosition) => {
       useSettingsStore.getState().setPanelPosition(panelPosition);
     });
-  }, []);
-
-  useEffect(() => {
-    const handleLaunchAtLoginState = (event: Event) => {
-      const enabled = (event as CustomEvent<{ enabled?: unknown }>).detail?.enabled;
-      if (typeof enabled === "boolean") {
-        useSettingsStore.getState().setLaunchAtLogin(enabled);
-      }
-    };
-
-    window.addEventListener("stickit:launch-at-login-state", handleLaunchAtLoginState);
-    return () => {
-      window.removeEventListener("stickit:launch-at-login-state", handleLaunchAtLoginState);
-    };
   }, []);
 
   useEffect(() => {
@@ -522,6 +509,7 @@ function StickItApp() {
         </div>
       )}
       </PanelShell>
+      <LaunchAtLoginDialog />
       <TooltipLayer />
     </FrontendErrorBoundary>
   );

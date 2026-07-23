@@ -28,8 +28,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private weak var mainMenuSelectAllItem: NSMenuItem?
     private var languageObserver: NSObjectProtocol?
     private var launchContextResolver = LaunchContextResolver()
-    private let suppressLaunchAtLoginPromptKey = "stickit.suppressLaunchAtLoginPrompt"
-    private var didPresentLaunchAtLoginPrompt = false
 
     private var localization: StickItLocalization {
         currentLanguage.localization
@@ -334,61 +332,5 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     private func showMainWindowForUserAction() {
         mainWindowController.showMainWindow()
-        presentLaunchAtLoginPromptIfNeeded()
-    }
-
-    private func presentLaunchAtLoginPromptIfNeeded() {
-        let defaults = UserDefaults.standard
-        guard LaunchAtLoginPromptPolicy.shouldPresent(
-            isUserInitiatedPresentation: true,
-            launchAtLoginEnabled: launchAtLoginManager.isEnabled,
-            isSuppressed: defaults.bool(forKey: suppressLaunchAtLoginPromptKey),
-            hasPresentedThisRun: didPresentLaunchAtLoginPrompt
-        ) else {
-            return
-        }
-
-        didPresentLaunchAtLoginPrompt = true
-
-        let alert = NSAlert()
-        alert.alertStyle = .informational
-        alert.messageText = localization.launchAtLoginPromptTitle
-        alert.informativeText = localization.launchAtLoginPromptDetail
-        alert.addButton(withTitle: localization.launchAtLoginPromptEnable)
-        alert.addButton(withTitle: localization.launchAtLoginPromptNotNow)
-        alert.showsSuppressionButton = true
-        alert.suppressionButton?.title = localization.launchAtLoginPromptSuppress
-
-        alert.beginSheetModal(for: mainWindowController.presentationWindow) { [weak self, weak alert] response in
-            guard let self else {
-                return
-            }
-
-            if alert?.suppressionButton?.state == .on {
-                defaults.set(true, forKey: self.suppressLaunchAtLoginPromptKey)
-            }
-
-            guard response == .alertFirstButtonReturn else {
-                return
-            }
-
-            do {
-                try self.launchAtLoginManager.setEnabled(true)
-                let enabled = self.launchAtLoginManager.isEnabled
-                try self.storage.updateLaunchAtLogin(enabled)
-                self.mainWindowController.emitLaunchAtLoginState(enabled)
-            } catch {
-                self.presentLaunchAtLoginFailure(error)
-            }
-        }
-    }
-
-    private func presentLaunchAtLoginFailure(_ error: Error) {
-        let alert = NSAlert()
-        alert.alertStyle = .warning
-        alert.messageText = localization.launchAtLoginFailureTitle
-        alert.informativeText = "\(localization.launchAtLoginFailureDetail)\n\n\(error.localizedDescription)"
-        alert.addButton(withTitle: localization.alertOK)
-        alert.beginSheetModal(for: mainWindowController.presentationWindow)
     }
 }

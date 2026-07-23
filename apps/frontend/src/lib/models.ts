@@ -77,6 +77,7 @@ export type AppSettings = {
   transitionStyle: TransitionStyle;
   animationSpeed: AnimationSpeed;
   launchAtLogin: boolean;
+  suppressLaunchAtLoginPrompt: boolean;
   enableParticles: boolean;
   enableReminderSound: boolean;
 };
@@ -180,6 +181,7 @@ export function createDefaultSettings(): AppSettings {
     transitionStyle: "page",
     animationSpeed: "mediate",
     launchAtLogin: false,
+    suppressLaunchAtLoginPrompt: false,
     enableParticles: true,
     enableReminderSound: true,
   };
@@ -291,6 +293,10 @@ export function normalizeAppSettings(settings: Partial<AppSettings> & LegacyThem
     transitionStyle: normalizeTransitionStyle(settings.transitionStyle),
     animationSpeed: normalizeAnimationSpeed(settings.animationSpeed),
     launchAtLogin: typeof settings.launchAtLogin === "boolean" ? settings.launchAtLogin : defaultSettings.launchAtLogin,
+    suppressLaunchAtLoginPrompt:
+      typeof settings.suppressLaunchAtLoginPrompt === "boolean"
+        ? settings.suppressLaunchAtLoginPrompt
+        : defaultSettings.suppressLaunchAtLoginPrompt,
     enableParticles: typeof settings.enableParticles === "boolean" ? settings.enableParticles : defaultSettings.enableParticles,
     enableReminderSound:
       typeof settings.enableReminderSound === "boolean"

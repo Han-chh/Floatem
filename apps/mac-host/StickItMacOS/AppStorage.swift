@@ -91,12 +91,6 @@ final class AppStorage {
         return settings["launchAtLogin"] as? Bool ?? false
     }
 
-    func updateLaunchAtLogin(_ enabled: Bool) throws {
-        var settings = try loadSettings()
-        settings["launchAtLogin"] = enabled
-        try saveJSONObject(settings, to: settingsURL)
-    }
-
     func updateHotkey(_ shortcut: String) throws {
         var settings = try loadSettings()
         settings["hotkey"] = shortcut
@@ -293,6 +287,7 @@ final class AppStorage {
             "transitionStyle": "page",
             "animationSpeed": "mediate",
             "launchAtLogin": false,
+            "suppressLaunchAtLoginPrompt": false,
             "enableParticles": true,
             "enableReminderSound": true,
         ]
