@@ -10,6 +10,8 @@ All notable repository changes are recorded here.
 
 ## Unreleased
 
+- Bump StickIt to v1.0.1 (build 32), add a bilingual launch-at-login explanation prompt, and let users dismiss it once or suppress future prompts.
+- Always show the Main Window for first installs and user-initiated launches; keep only an actually enabled Login Item launch silent.
 - Prepare v1.0.0 for App Store distribution with an Apple Distribution Release configuration, App Sandbox, and the existing App Group.
 - Remove the WidgetKit extension from the product; desktop-pinned Note and Todo cards are provided exclusively by app-owned NSPanel windows.
 - Default new installations to launch-at-login off, keep login launches silent, and show the Main Window only for user-initiated launches.
