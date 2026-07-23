@@ -1,4 +1,4 @@
-import { render, screen, waitFor, within } from "@testing-library/react";
+import { act, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 import { PanelShell } from "../../src/components/layout/PanelShell";
@@ -157,6 +157,28 @@ describe("PanelShell", () => {
       expect(within(guide).getByText("Step 3 of 7")).toBeInTheDocument();
       expect(within(guide).getByText("Create a floating card")).toBeInTheDocument();
     });
+
+    const guideNoteId = useNotesStore.getState().cards[0]?.id;
+    expect(guideNoteId).toBeTruthy();
+    const draggedGuideCard = document.createElement("button");
+    draggedGuideCard.dataset.noteCardId = guideNoteId;
+    document.body.appendChild(draggedGuideCard);
+
+    fireEvent.click(draggedGuideCard);
+    await act(async () => {
+      await new Promise((resolve) => window.setTimeout(resolve, 140));
+    });
+    expect(within(guide).getByText("Create a floating card")).toBeInTheDocument();
+
+    act(() => {
+      useNotesStore.getState().setFloatingCardIds([guideNoteId]);
+    });
+    await waitFor(() => {
+      expect(within(guide).getByText("Pin it to the desktop")).toBeInTheDocument();
+      expect(guide).toHaveClass("hidden");
+    });
+    draggedGuideCard.remove();
+
     for (const chapter of [4, 5, 6, 7]) {
       await user.click(within(guide).getByRole("button", { name: "Next feature" }));
       await waitFor(() => {

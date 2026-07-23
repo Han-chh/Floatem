@@ -567,7 +567,10 @@ export function InteractiveGuide({
         event.stopPropagation();
         return;
       }
-      if (!didClickTarget || [1, 7, 8, 9, 15, 26, 37, 38, 39, 45].includes(step)) {
+      // Dragging the guide note out can synthesize a click on the source card
+      // after drag-end. Step 18 advances from the native floating-card state
+      // instead, otherwise both signals advance it and skip the floating guide.
+      if (!didClickTarget || [1, 7, 8, 9, 15, 18, 26, 37, 38, 39, 45].includes(step)) {
         return;
       }
       window.setTimeout(() => setStep((value) => value + 1), 90);
