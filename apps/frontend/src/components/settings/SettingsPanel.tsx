@@ -703,6 +703,7 @@ export function SettingsPanel({ onClose }: SettingsPanelProps) {
                   <div className="flex min-w-0 items-center gap-2">
                     <motion.button
                       type="button"
+                      data-guide="settings-back"
                       data-tooltip={t.settings.backToSettings}
                       className="paper-button inline-flex h-11 max-w-full shrink-0 items-center gap-2 rounded-full px-3 py-2 text-[12px] font-semibold text-[var(--muted)]"
                       whileHover={{ y: -2, scale: 1.02 }}
@@ -722,6 +723,7 @@ export function SettingsPanel({ onClose }: SettingsPanelProps) {
                   <motion.button
                     type="button"
                     aria-label={t.common.close}
+                    data-guide="settings-close"
                     data-tooltip={t.common.close}
                     className="paper-icon-button h-11 w-11 shrink-0"
                     whileHover={{ y: -2, scale: 1.02 }}
@@ -836,6 +838,7 @@ export function SettingsPanel({ onClose }: SettingsPanelProps) {
                 <motion.button
                   type="button"
                   aria-label={t.common.close}
+                  data-guide="settings-close"
                   data-tooltip={t.common.close}
                   className="paper-icon-button h-11 w-11 shrink-0 self-start"
                   whileHover={{ y: -2, scale: 1.02 }}

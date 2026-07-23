@@ -162,6 +162,7 @@ function NoteCardBody({
                   ref={titleRef}
                   id={`note-title-${note.id}`}
                   aria-label={t.notes.titleAria}
+                  data-action="note-title"
                   rows={1}
                   value={note.title}
                   onChange={(event) => onUpdateTitle?.(event.currentTarget.value, event.currentTarget)}

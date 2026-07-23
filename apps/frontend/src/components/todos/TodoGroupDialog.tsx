@@ -138,18 +138,6 @@ export function TodoGroupDialog({ todoId = null, isOpen, onClose }: TodoGroupDia
   }, [isColorPickerOpen, isDeleteMode, isEditorOpen, isNameRequiredDialogOpen, isOpen, onClose]);
 
   useEffect(() => {
-    if (!isOpen) {
-      return;
-    }
-    const handleGuideChapterChange = () => {
-      resetDialogState();
-      onClose();
-    };
-    window.addEventListener("stickit:guide-chapter-change", handleGuideChapterChange);
-    return () => window.removeEventListener("stickit:guide-chapter-change", handleGuideChapterChange);
-  }, [isOpen, onClose]);
-
-  useEffect(() => {
     if (!isEditorOpen || typeof window === "undefined") {
       return;
     }
@@ -290,6 +278,7 @@ export function TodoGroupDialog({ todoId = null, isOpen, onClose }: TodoGroupDia
                 <motion.button
                   type="button"
                   aria-label={t.common.close}
+                  data-guide="todo-group-close"
                   data-tooltip={t.common.close}
                   data-no-window-drag="true"
                   className="paper-button inline-flex shrink-0 items-center justify-center gap-1.5 rounded-[14px] px-3 py-2 text-[12px] font-semibold text-[var(--dark-text)]"
@@ -328,6 +317,7 @@ export function TodoGroupDialog({ todoId = null, isOpen, onClose }: TodoGroupDia
                       type="button"
                       aria-label={t.todos.deleteGroupAction}
                       aria-pressed={isDeleteMode}
+                      data-guide="todo-group-delete-mode"
                       data-tooltip={t.todos.deleteGroupAction}
                       disabled={groups.length === 0}
                       className={`paper-icon-button inline-flex h-8 w-8 min-h-0 min-w-0 rounded-full ${
@@ -405,6 +395,8 @@ export function TodoGroupDialog({ todoId = null, isOpen, onClose }: TodoGroupDia
                         <motion.button
                           type="button"
                           aria-label={isDeleteMode ? t.todos.deleteGroup(group.name) : t.todos.editGroup(group.name)}
+                          data-guide-group-delete-id={isDeleteMode ? group.id : undefined}
+                          data-guide-group-edit-id={isDeleteMode ? undefined : group.id}
                           data-tooltip={isDeleteMode ? t.todos.deleteGroup(group.name) : t.todos.editGroup(group.name)}
                           data-tooltip-align="left"
                           className={`paper-icon-button inline-flex h-9 w-9 min-h-0 min-w-0 rounded-[12px] ${
@@ -495,6 +487,7 @@ export function TodoGroupDialog({ todoId = null, isOpen, onClose }: TodoGroupDia
                         ref={draftInputRef}
                         type="text"
                         aria-label={t.todos.groupName}
+                        data-guide="todo-group-name"
                         value={draftName}
                         onChange={(event) => setDraftName(event.currentTarget.value)}
                         placeholder={t.todos.groupNamePlaceholder}
@@ -538,7 +531,7 @@ export function TodoGroupDialog({ todoId = null, isOpen, onClose }: TodoGroupDia
                     <div className="flex flex-wrap gap-2">
                       <motion.button
                         type="submit"
-                        data-guide={isEditing ? undefined : "todo-group-create"}
+                        data-guide={isEditing ? "todo-group-save" : "todo-group-create"}
                         data-tooltip={isEditing ? t.common.save : t.todos.createGroup}
                         className="paper-button inline-flex items-center justify-center rounded-[13px] px-3 py-2 text-[12px] font-semibold text-[var(--dark-text)]"
                         whileHover={isSaveDisabled ? undefined : { y: -1.5, scale: 1.01 }}

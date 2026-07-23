@@ -1698,6 +1698,7 @@ export function TodoList({ dockZoneTarget = null }: { dockZoneTarget?: DockZoneE
                           ref={editInputRef}
                           type="text"
                           aria-label={t.todos.titleLabel}
+                          data-guide="todo-edit-title"
                           value={editDraft}
                           onChange={(event) => setEditDraft(event.currentTarget.value)}
                           placeholder={t.todos.titlePlaceholder}
@@ -1738,6 +1739,7 @@ export function TodoList({ dockZoneTarget = null }: { dockZoneTarget?: DockZoneE
                         <motion.button
                           type="submit"
                           data-no-window-drag="true"
+                          data-guide="todo-edit-save"
                           data-tooltip={t.common.save}
                           disabled={isEditSaveDisabled}
                           className={`paper-button paper-button-primary inline-flex items-center justify-center rounded-[14px] px-3.5 py-2.5 text-[12px] font-semibold ${

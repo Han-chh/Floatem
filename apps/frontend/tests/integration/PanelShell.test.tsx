@@ -145,20 +145,12 @@ describe("PanelShell", () => {
     await user.click(screen.getByRole("button", { name: "Collapse navigation" }));
     await waitFor(() => {
       expect(within(guide).getByText("Step 2 of 7")).toBeInTheDocument();
-      expect(within(guide).getByText("Create and organize a note")).toBeInTheDocument();
+      expect(within(guide).getByText("Manage a note end to end")).toBeInTheDocument();
+      expect(screen.getByRole("button", { name: "Expand navigation" })).toHaveAttribute("aria-expanded", "false");
     });
 
-    await user.click(within(guide).getByRole("button", { name: "Next feature" }));
-    await waitFor(() => {
-      expect(within(guide).getByText("Step 3 of 7")).toBeInTheDocument();
-      expect(within(guide).getByText("Use a floating card")).toBeInTheDocument();
-    });
-
-    await user.click(within(guide).getByRole("button", { name: "Previous feature" }));
-    await waitFor(() => {
-      expect(within(guide).getByText("Step 2 of 7")).toBeInTheDocument();
-      expect(within(guide).getByText("Create and organize a note")).toBeInTheDocument();
-    });
+    expect(within(guide).queryByRole("button", { name: "Next feature" })).not.toBeInTheDocument();
+    expect(within(guide).queryByRole("button", { name: "Previous feature" })).not.toBeInTheDocument();
 
     await user.click(within(guide).getByRole("button", { name: "Exit guide" }));
     await waitFor(() => {
@@ -192,10 +184,13 @@ describe("PanelShell", () => {
     await user.click(screen.getByRole("button", { name: "Collapse navigation" }));
     await waitFor(() => expect(screen.getByText("Add a note")).toBeInTheDocument());
     await user.click(screen.getByRole("button", { name: "Add note" }));
-    await waitFor(() => expect(screen.getByText("Open note groups")).toBeInTheDocument());
+    await waitFor(() => expect(screen.getByText("Edit the note title")).toBeInTheDocument());
 
-    const guideNote = screen.getByDisplayValue("StickIt guide note").closest("[data-note-card-id]");
+    const guideNoteId = useNotesStore.getState().cards[0]?.id;
+    const guideNote = document.querySelector(`[data-note-card-id="${guideNoteId}"]`);
     expect(guideNote).not.toBeNull();
+    await user.type(within(guideNote as HTMLElement).getByRole("textbox", { name: "Note title" }), "StickIt guide note");
+    await waitFor(() => expect(screen.getByText("Open note groups")).toBeInTheDocument());
     await user.click(within(guideNote as HTMLElement).getByRole("button", { name: "Change note group" }));
     await waitFor(() => expect(screen.getByText("Add a note group")).toBeInTheDocument());
     const groupManagerDialog = screen.getByRole("dialog", { name: "Manage groups" });
@@ -206,10 +201,11 @@ describe("PanelShell", () => {
     await user.click(screen.getByRole("button", { name: "Add group" }));
 
     const createDialog = screen.getByRole("dialog", { name: "Create group" });
-    await waitFor(() => expect(screen.getByText("Choose a name and color")).toBeInTheDocument());
+    await waitFor(() => expect(screen.getByText("Name the note group")).toBeInTheDocument());
     await user.type(within(createDialog).getByRole("textbox", { name: "Group name" }), "Focus");
+    await waitFor(() => expect(screen.getByText("Open the color picker")).toBeInTheDocument());
     await user.click(within(createDialog).getByRole("button", { name: "Change group color" }));
-    await waitFor(() => expect(screen.getByText("Choose the group color")).toBeInTheDocument());
+    await waitFor(() => expect(screen.getByText("Choose a group color")).toBeInTheDocument());
     await user.click(screen.getAllByRole("button", { name: /Use .* for note/ })[2]);
     await waitFor(() => expect(screen.getByText("Create the note group")).toBeInTheDocument());
     await user.click(within(createDialog).getByRole("button", { name: "Create group" }));
@@ -218,7 +214,7 @@ describe("PanelShell", () => {
     await user.click(screen.getByRole("button", { name: "Focus" }));
 
     await waitFor(() => {
-      expect(screen.getByText("Fold the note")).toBeInTheDocument();
+      expect(screen.getByText("Open groups again")).toBeInTheDocument();
       expect(guideNote).toHaveAttribute("data-note-grouped", "true");
       expect(useNotesStore.getState().groups[0]?.name).toBe("Focus");
       expect(useNotesStore.getState().groups[0]?.color).toBe(TEXT_COLOR_PRESETS[2]);
