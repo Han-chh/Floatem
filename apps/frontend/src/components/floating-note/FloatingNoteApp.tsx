@@ -1,4 +1,5 @@
 import type { DragPreviewPayload, FloatingCardScreenPlacement } from "@stickit/native-bridge";
+import { AnimatePresence, motion } from "framer-motion";
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import type { Descendant } from "slate";
@@ -17,6 +18,7 @@ import { useAutoSave } from "../../hooks/useAutoSave";
 import { useTheme } from "../../hooks/useTheme";
 import { FLOATING_CARD_STATE_EVENT } from "../../lib/dragPreview";
 import { useI18n } from "../../lib/i18n";
+import type { FloatingCardGuideState } from "../../lib/nativeBridge";
 import {
   createEmptyNotesDocument,
   createEmptyTodosDocument,
@@ -33,6 +35,7 @@ import { FloatingTodoItem, TodoItemPreview } from "../todos/TodoItem";
 declare global {
   interface Window {
     __STICKIT_FLOATING_CARD_STATE__?: DragPreviewPayload | null;
+    __STICKIT_FLOATING_CARD_GUIDE__?: FloatingCardGuideState | null;
   }
 }
 
@@ -45,7 +48,95 @@ const FLOATING_DIALOG_GAP_PX = 12;
 const MAX_FLOATING_CARD_CONTENT_SCALE = 1.65;
 const FLOATING_DIALOG_BACKDROP_SELECTOR = ".stickit-modal-backdrop";
 const EDITABLE_TARGET_SELECTOR = 'input,textarea,select,[contenteditable="true"],[role="textbox"]';
+const FLOATING_CARD_GUIDE_EVENT = "stickit:floating-card-guide";
 type FloatingDialogSide = "left" | "right";
+
+function FloatingCardGuideOverlay({ guide }: { guide: FloatingCardGuideState | null }) {
+  const [targetRect, setTargetRect] = useState<DOMRect | null>(null);
+
+  useEffect(() => {
+    if (!guide) {
+      setTargetRect(null);
+      return;
+    }
+
+    const selector = guide.phase === "close" ? '[data-action="dock"]' : '[data-action="desktop-pin"]';
+    const update = () => {
+      const target = document.querySelector<HTMLElement>(selector);
+      setTargetRect(target?.getBoundingClientRect() ?? null);
+    };
+    update();
+    const observer = new MutationObserver(update);
+    observer.observe(document.body, { childList: true, subtree: true });
+    window.addEventListener("resize", update);
+    return () => {
+      observer.disconnect();
+      window.removeEventListener("resize", update);
+    };
+  }, [guide]);
+
+  if (typeof document === "undefined") {
+    return null;
+  }
+
+  return createPortal(
+    <AnimatePresence mode="wait">
+      {guide ? (
+        <motion.div
+          key={guide.phase}
+          data-floating-guide-overlay
+          className="pointer-events-none fixed inset-0 z-[190]"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+        >
+          <motion.div
+            className="absolute inset-0 rounded-[inherit] bg-[radial-gradient(circle_at_75%_18%,rgba(255,122,89,0.06),rgba(30,25,21,0.12))]"
+            animate={{ opacity: [0.68, 0.9, 0.68] }}
+            transition={{ duration: 1.6, repeat: Infinity }}
+          />
+          {targetRect ? (
+            <motion.div
+              data-floating-guide-highlight
+              className="fixed rounded-[12px] border-2 border-[#ff7a59] shadow-[0_0_0_5px_rgba(255,122,89,0.22),0_8px_24px_rgba(61,49,34,0.2)]"
+              style={{
+                height: targetRect.height + 10,
+                left: targetRect.left - 5,
+                top: targetRect.top - 5,
+                width: targetRect.width + 10,
+              }}
+              animate={{ opacity: [0.72, 1, 0.72], scale: [0.96, 1.06, 0.96] }}
+              transition={{ duration: 1.05, repeat: Infinity }}
+            />
+          ) : null}
+          <motion.aside
+            role="dialog"
+            aria-label={guide.title}
+            className="absolute bottom-2.5 left-2.5 max-w-[calc(100%-20px)] rounded-[13px] border border-[rgba(255,122,89,0.34)] bg-[rgba(255,252,248,0.96)] px-3 py-2 shadow-[0_12px_28px_rgba(61,49,34,0.2)] backdrop-blur-xl"
+            initial={{ opacity: 0, x: -8, y: 5, scale: 0.96 }}
+            animate={{ opacity: 1, x: 0, y: 0, scale: 1 }}
+            exit={{ opacity: 0, x: 6, scale: 0.97 }}
+            transition={{ duration: 0.22 }}
+          >
+            <div className="flex items-center gap-2">
+              <motion.span
+                aria-hidden="true"
+                className="h-2 w-2 shrink-0 rounded-full bg-[#ff7a59]"
+                animate={{ boxShadow: ["0 0 0 0 rgba(255,122,89,.4)", "0 0 0 7px rgba(255,122,89,0)"] }}
+                transition={{ duration: 1.15, repeat: Infinity }}
+              />
+              <div className="min-w-0">
+                <p className="truncate text-[10.5px] font-bold text-[#8f553d]">{guide.title}</p>
+                <p className="truncate text-[9.5px] font-semibold text-[var(--muted)]">{guide.instruction}</p>
+              </div>
+            </div>
+          </motion.aside>
+        </motion.div>
+      ) : null}
+    </AnimatePresence>,
+    document.body,
+  );
+}
 
 function readInitialState() {
   if (typeof window === "undefined") {
@@ -147,6 +238,9 @@ export function FloatingNoteApp() {
   const [hasOpenDialog, setHasOpenDialog] = useState(false);
   const [dialogSide, setDialogSide] = useState<FloatingDialogSide>("right");
   const [isHydrated, setIsHydrated] = useState(false);
+  const [floatingGuide, setFloatingGuide] = useState<FloatingCardGuideState | null>(
+    () => window.__STICKIT_FLOATING_CARD_GUIDE__ ?? null,
+  );
   const contentRef = useRef<HTMLElement | null>(null);
   const syncedFrameSizeRef = useRef(frameSize);
   const expandedCardSizeRef = useRef<{ width: number; height: number }>((() => {
@@ -285,6 +379,16 @@ export function FloatingNoteApp() {
         root.style.overflow = "";
       }
     };
+  }, []);
+
+  useEffect(() => {
+    const handleGuideState = (event: Event) => {
+      const guide = (event as CustomEvent<FloatingCardGuideState | null>).detail ?? null;
+      window.__STICKIT_FLOATING_CARD_GUIDE__ = guide;
+      setFloatingGuide(guide);
+    };
+    window.addEventListener(FLOATING_CARD_GUIDE_EVENT, handleGuideState as EventListener);
+    return () => window.removeEventListener(FLOATING_CARD_GUIDE_EVENT, handleGuideState as EventListener);
   }, []);
 
   useEffect(() => {
@@ -852,6 +956,7 @@ export function FloatingNoteApp() {
               document.body,
             )
           : null}
+        <FloatingCardGuideOverlay guide={floatingGuide} />
       </article>
     </main>
   );

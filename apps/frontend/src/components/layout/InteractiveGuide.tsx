@@ -1,6 +1,7 @@
 import { AnimatePresence, motion } from "framer-motion";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
+import { setFloatingCardGuide } from "../../hooks/usePlatform";
 import { useI18n } from "../../lib/i18n";
 import { subscribeToFloatingCardsState } from "../../lib/nativeBridge";
 import type { TabId } from "../../lib/models";
@@ -325,6 +326,35 @@ export function InteractiveGuide({
       setStep(22);
     }
   }, [floatingCardIds, isOpen, noteId, pinnedNoteIds, step]);
+
+  useEffect(() => {
+    if (!isOpen || !noteId || ![19, 20, 21].includes(step)) {
+      return;
+    }
+
+    const guide = step === 19
+      ? {
+          phase: "pin" as const,
+          title: copy("固定到桌面", "Pin to desktop"),
+          instruction: copy("点击高亮的图钉", "Click the highlighted pin"),
+        }
+      : step === 20
+        ? {
+            phase: "unpin" as const,
+            title: copy("取消桌面固定", "Remove desktop pin"),
+            instruction: copy("再次点击高亮的图钉", "Click the highlighted pin again"),
+          }
+        : {
+            phase: "close" as const,
+            title: copy("收回悬浮卡片", "Return the floating card"),
+            instruction: copy("点击高亮的关闭按钮", "Click the highlighted close button"),
+          };
+
+    void setFloatingCardGuide({ kind: "note", id: noteId }, guide).catch(() => {});
+    return () => {
+      void setFloatingCardGuide({ kind: "note", id: noteId }, null).catch(() => {});
+    };
+  }, [isOpen, isZh, noteId, step]);
 
   useEffect(() => {
     if (!isOpen || !isHeaderCollapsed || ![23, 49].includes(step)) {

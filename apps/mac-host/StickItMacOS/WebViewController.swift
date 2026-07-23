@@ -631,6 +631,19 @@ final class WebViewController: NSViewController, WKNavigationDelegate {
                     id: cardID,
                     pinned: params["pinned"] as? Bool ?? false
                 ) ?? [:]
+            case "setFloatingCardGuide":
+                guard
+                    let kind = params["kind"] as? String, !kind.isEmpty,
+                    let cardID = params["id"] as? String, !cardID.isEmpty
+                else {
+                    throw StickItBridgeError.invalidParameters("StickIt expected a floating card reference for its guide.")
+                }
+                bridgeDelegate?.setFloatingCardGuideFromBridge(
+                    kind: kind,
+                    id: cardID,
+                    guide: params["guide"] as? [String: Any]
+                )
+                result = NSNull()
             case "requestDesktopWidget":
                 guard let kind = params["kind"] as? String, let cardID = params["id"] as? String else {
                     throw StickItBridgeError.invalidParameters("StickIt expected a Widget entity reference.")
@@ -1053,6 +1066,13 @@ final class WebViewController: NSViewController, WKNavigationDelegate {
             kind: String(card?.kind ?? ""),
             id: String(card?.id ?? ""),
             pinned: Boolean(pinned),
+          });
+        },
+        setFloatingCardGuide(card, guide) {
+          return send("setFloatingCardGuide", {
+            kind: String(card?.kind ?? ""),
+            id: String(card?.id ?? ""),
+            guide: guide ?? null,
           });
         },
         requestDesktopWidget(card) {

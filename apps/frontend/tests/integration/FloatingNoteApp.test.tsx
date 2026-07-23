@@ -191,6 +191,7 @@ function installFloatingBridge(note: NoteCard, groups: NoteGroup[] = []) {
     restore() {
       window.stickItHost = originalBridge;
       window.__STICKIT_FLOATING_CARD_STATE__ = undefined;
+      window.__STICKIT_FLOATING_CARD_GUIDE__ = undefined;
     },
     startFloatingCardDrag,
     closeFloatingCard,
@@ -299,6 +300,7 @@ function installFloatingTodoBridge(todo: TodoItem, groups: TodoGroup[] = []) {
     restore() {
       window.stickItHost = originalBridge;
       window.__STICKIT_FLOATING_CARD_STATE__ = undefined;
+      window.__STICKIT_FLOATING_CARD_GUIDE__ = undefined;
     },
     closeFloatingCard,
     resizeFloatingCard,
@@ -314,6 +316,46 @@ function installFloatingTodoBridge(todo: TodoItem, groups: TodoGroup[] = []) {
 }
 
 describe("FloatingNoteApp", () => {
+  it("renders animated guide actions inside the floating card window", async () => {
+    const note = createNoteCard({ id: "floating-guide-note", title: "Guided note" });
+    const bridge = installFloatingBridge(note);
+
+    render(<FloatingNoteApp />);
+
+    try {
+      await screen.findByTestId("note-card");
+      act(() => {
+        window.dispatchEvent(new CustomEvent("stickit:floating-card-guide", {
+          detail: {
+            phase: "pin",
+            title: "Pin to desktop",
+            instruction: "Click the highlighted pin",
+          },
+        }));
+      });
+
+      expect(await screen.findByRole("dialog", { name: "Pin to desktop" })).toBeInTheDocument();
+      expect(document.querySelector("[data-floating-guide-overlay]")).toBeInTheDocument();
+      expect(document.querySelector("[data-floating-guide-highlight]")).toBeInTheDocument();
+      expect(screen.getByRole("button", { name: "Keep on desktop" })).toHaveAttribute("data-action", "desktop-pin");
+
+      act(() => {
+        window.dispatchEvent(new CustomEvent("stickit:floating-card-guide", {
+          detail: {
+            phase: "close",
+            title: "Return the floating card",
+            instruction: "Click the highlighted close button",
+          },
+        }));
+      });
+
+      expect(await screen.findByRole("dialog", { name: "Return the floating card" })).toBeInTheDocument();
+      expect(screen.getByRole("button", { name: "Close" })).toHaveAttribute("data-action", "dock");
+    } finally {
+      bridge.restore();
+    }
+  });
+
   it("keeps group rings on floating note and todo cards", async () => {
     const noteGroup = createNoteGroup({ id: "floating-note-group", name: "Work", color: "#2F6BFF" });
     const note = createNoteCard({ id: "floating-grouped-note", title: "Grouped note", groupId: noteGroup.id });

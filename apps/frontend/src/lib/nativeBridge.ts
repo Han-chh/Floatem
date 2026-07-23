@@ -49,6 +49,7 @@ export type TextColorPanelCloseDetail = {
 };
 
 export type StickItNativeBridge = HostBridge<RawLoadAllResult, NotesDocument, TodosDocument, Partial<AppSettings>> & {
+  setFloatingCardGuide?: (card: FloatingCardReference, guide: FloatingCardGuideState | null) => Promise<void>;
   testReminderNotification: (options?: {
     soundEnabled?: boolean;
     language?: AppLanguage;
@@ -56,6 +57,12 @@ export type StickItNativeBridge = HostBridge<RawLoadAllResult, NotesDocument, To
   getHotkeyRegistrationState: () => Promise<HotkeyRegistrationState>;
   registerHotkey: (shortcut: string | ShortcutConfig) => Promise<void>;
   hidePanelWindow: () => Promise<void>;
+};
+
+export type FloatingCardGuideState = {
+  instruction: string;
+  phase: "pin" | "unpin" | "close";
+  title: string;
 };
 
 declare global {
@@ -489,6 +496,12 @@ export function subscribeToFloatingCardsState(listener: (state: FloatingCardsSta
 
     listener({
       noteIds: detail.noteIds.filter((id): id is string => typeof id === "string" && id.length > 0),
+      pinnedNoteIds: (detail.pinnedNoteIds ?? []).filter(
+        (id): id is string => typeof id === "string" && id.length > 0,
+      ),
+      pinnedTodoIds: (detail.pinnedTodoIds ?? []).filter(
+        (id): id is string => typeof id === "string" && id.length > 0,
+      ),
       todoIds: detail.todoIds.filter((id): id is string => typeof id === "string" && id.length > 0),
     });
   };

@@ -6,7 +6,12 @@ import type {
 } from "@stickit/native-bridge";
 import type { AppSettings, LoadAllResult, NotesDocument, TodosDocument } from "../lib/models";
 import { normalizeNotesDocument, normalizeTodosDocument } from "../lib/models";
-import { getStickItBridge, isNativeStickItHost, type StickItNativeBridge } from "../lib/nativeBridge";
+import {
+  getStickItBridge,
+  isNativeStickItHost,
+  type FloatingCardGuideState,
+  type StickItNativeBridge,
+} from "../lib/nativeBridge";
 import { canUseFloatingNotes, canUseFloatingTodos } from "../lib/platformFeatures";
 
 export function usePlatform() {
@@ -122,6 +127,11 @@ export async function setFloatingCardDesktopPinned(card: FloatingCardReference, 
     launchAtLoginEnabled: false,
     requiresLaunchAtLogin: pinned,
   };
+}
+
+export async function setFloatingCardGuide(card: FloatingCardReference, guide: FloatingCardGuideState | null) {
+  const bridge = getStickItBridge() as Partial<StickItNativeBridge>;
+  await bridge.setFloatingCardGuide?.(card, guide);
 }
 
 export async function requestDesktopWidget(card: FloatingCardReference) {

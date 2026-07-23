@@ -20,6 +20,7 @@ final class FloatingNoteWindowController: NSObject, WKNavigationDelegate, WKScri
 
     private static let bridgeName = "stickItFloatingHost"
     private static let floatingCardStateEventName = "stickit:floating-card-state"
+    private static let floatingCardGuideEventName = "stickit:floating-card-guide"
     private static let bridgeBootstrapScript = """
     (() => {
       if (window.stickItFloatingHost) {
@@ -194,6 +195,7 @@ final class FloatingNoteWindowController: NSObject, WKNavigationDelegate, WKScri
     private var isEditableInputActive = false
     private var isTextCompositionActive = false
     private var minimumContentSize = NSSize(width: 1, height: 1)
+    private var pendingGuideState: [String: Any]?
     private var pendingPayload: Any?
     private var pendingShowFrame: NSRect?
     private(set) var isDesktopPinned = false
@@ -278,6 +280,14 @@ final class FloatingNoteWindowController: NSObject, WKNavigationDelegate, WKScri
     func updatePayload(_ payload: Any) {
         pendingPayload = payload
         applyPendingPayloadIfPossible()
+    }
+
+    func updateGuideState(_ guide: [String: Any]?) {
+        pendingGuideState = guide
+        guard isReady else {
+            return
+        }
+        emitGuideState(guide)
     }
 
     var currentFrame: NSRect {
@@ -880,12 +890,28 @@ final class FloatingNoteWindowController: NSObject, WKNavigationDelegate, WKScri
             completionHandler: { [weak self] result in
                 guard let self, !self.isDestroyed, case .success = result else { return }
                 self.isContentReady = true
+                if let guide = self.pendingGuideState {
+                    self.emitGuideState(guide)
+                }
                 guard let panel = self.panel, let frame = self.pendingShowFrame else { return }
                 panel.setFrame(frame, display: true)
                 panel.alphaValue = 1
                 panel.orderFrontRegardless()
                 self.focusWebView()
             }
+        )
+    }
+
+    private func emitGuideState(_ guide: [String: Any]?) {
+        let payload: Any = guide ?? NSNull()
+        guard let json = jsonString(for: payload) else {
+            return
+        }
+        webView.evaluateJavaScript(
+            """
+            window.__STICKIT_FLOATING_CARD_GUIDE__ = \(json);
+            window.dispatchEvent(new CustomEvent('\(Self.floatingCardGuideEventName)', { detail: \(json) }));
+            """
         )
     }
 
