@@ -35,13 +35,8 @@ type MessageCatalog = {
     simplifiedChinese: string;
   };
   launchAtLoginPrompt: {
-    badge: string;
     title: string;
     body: string;
-    shortcutTitle: string;
-    shortcutBody: string;
-    desktopCardsTitle: string;
-    desktopCardsBody: string;
     suppress: string;
     notNow: string;
     enable: string;
@@ -389,16 +384,11 @@ const messages: Record<AppLanguage, MessageCatalog> = {
       simplifiedChinese: "Simplified Chinese",
     },
     launchAtLoginPrompt: {
-      badge: "STARTUP",
-      title: "Keep StickIt ready after login?",
-      body: "StickIt can start quietly when you sign in, so your everyday tools are ready without opening the main window.",
-      shortcutTitle: "Summon it with your shortcut",
-      shortcutBody: "StickIt is designed to appear through its global keyboard shortcut whenever you need it.",
-      desktopCardsTitle: "Restore desktop-pinned cards",
-      desktopCardsBody: "Desktop-pinned cards are StickIt windows. Launch at login is required to recreate them after restarting your Mac.",
+      title: "Open StickIt at login?",
+      body: "This keeps the shortcut ready and restores desktop-pinned cards after you sign in.",
       suppress: "Don't show this dialog again",
       notNow: "Not Now",
-      enable: "Enable Launch at Login",
+      enable: "Enable",
     },
     notes: {
       add: "Add note",
@@ -743,16 +733,11 @@ const messages: Record<AppLanguage, MessageCatalog> = {
       simplifiedChinese: "简体中文",
     },
     launchAtLoginPrompt: {
-      badge: "启动方式",
-      title: "登录后让 StickIt 随时待命？",
-      body: "StickIt 可以在你登录时静默启动，让常用功能准备就绪，同时不会自动打开主窗口。",
-      shortcutTitle: "通过快捷键随时唤出",
-      shortcutBody: "StickIt 主要通过全局快捷键唤出，需要时按下快捷键即可打开。",
-      desktopCardsTitle: "自动恢复桌面置顶卡片",
-      desktopCardsBody: "桌面置顶卡片是 StickIt 创建的窗口。重新启动 Mac 后要自动重建这些卡片，必须开启登录时启动。",
+      title: "登录时启动 StickIt？",
+      body: "开启后，快捷键会在登录后立即可用，并自动恢复桌面置顶卡片。",
       suppress: "以后不再显示此对话框",
       notNow: "暂不开启",
-      enable: "开启开机自启动",
+      enable: "开启",
     },
     notes: {
       add: "新增笔记",

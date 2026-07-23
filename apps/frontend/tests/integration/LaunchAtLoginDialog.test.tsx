@@ -24,7 +24,7 @@ describe("LaunchAtLoginDialog", () => {
 
   it("uses the StickIt dialog surface and repeats after Not Now when unsuppressed", async () => {
     const firstRender = render(<LaunchAtLoginDialog />);
-    expect(screen.getByRole("dialog", { name: "Keep StickIt ready after login?" })).toHaveClass("paper-panel");
+    expect(screen.getByRole("dialog", { name: "Open StickIt at login?" })).toHaveClass("paper-panel");
 
     fireEvent.click(screen.getByRole("button", { name: "Not Now" }));
     await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
@@ -32,13 +32,13 @@ describe("LaunchAtLoginDialog", () => {
 
     firstRender.unmount();
     render(<LaunchAtLoginDialog />);
-    expect(screen.getByRole("dialog", { name: "Keep StickIt ready after login?" })).toBeInTheDocument();
+    expect(screen.getByRole("dialog", { name: "Open StickIt at login?" })).toBeInTheDocument();
   });
 
   it("persists suppression and enables launch at login from the primary action", async () => {
     render(<LaunchAtLoginDialog />);
     fireEvent.click(screen.getByRole("checkbox", { name: "Don't show this dialog again" }));
-    fireEvent.click(screen.getByRole("button", { name: "Enable Launch at Login" }));
+    fireEvent.click(screen.getByRole("button", { name: "Enable" }));
 
     expect(useSettingsStore.getState().launchAtLogin).toBe(true);
     expect(useSettingsStore.getState().suppressLaunchAtLoginPrompt).toBe(true);
