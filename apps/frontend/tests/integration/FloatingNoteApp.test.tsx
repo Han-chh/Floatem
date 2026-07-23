@@ -349,6 +349,25 @@ describe("FloatingNoteApp", () => {
         screen.getByRole("dialog", { name: "Guide: Handle the startup dialog first" }),
       ).toHaveTextContent("Choose an option in the startup dialog before continuing with the pin guide.");
       expect(document.querySelector("[data-floating-guide-pin-ring]")).not.toBeInTheDocument();
+      expect(document.querySelector("[data-floating-guide-dialog-ring]")).toHaveClass("rounded-[30px]");
+
+      act(() => {
+        window.dispatchEvent(new CustomEvent("stickit:floating-card-guide", { detail: null }));
+      });
+      expect(
+        screen.getByRole("dialog", { name: "Guide: Handle the startup dialog first" }),
+      ).toBeInTheDocument();
+      expect(document.querySelector("[data-floating-guide-dialog-ring]")).toBeInTheDocument();
+
+      act(() => {
+        window.dispatchEvent(new CustomEvent("stickit:floating-card-guide", {
+          detail: {
+            phase: "pin",
+            title: "Pin to desktop",
+            instruction: "Click the highlighted pin",
+          },
+        }));
+      });
 
       expect(screen.getByRole("button", { name: "Not Now" })).toBeInTheDocument();
       expect(screen.getByRole("button", { name: "Enable" })).toBeInTheDocument();

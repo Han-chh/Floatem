@@ -484,6 +484,7 @@ export function InteractiveGuide({
   const currentStep = steps[step];
   const currentChapter = chapterForAction(step);
   const currentChapterContent = chapters[currentChapter];
+  const isFloatingCardWindowStep = [19, 20, 21].includes(step);
 
   useEffect(() => {
     if (!isOpen || !currentStep) {
@@ -679,12 +680,14 @@ export function InteractiveGuide({
       {isOpen ? (
         <>
           <motion.div
-            className="pointer-events-none fixed inset-0 z-[195] bg-[rgba(30,25,21,0.08)]"
+            className={`pointer-events-none fixed inset-0 z-[195] bg-[rgba(30,25,21,0.08)] ${
+              isFloatingCardWindowStep ? "hidden" : ""
+            }`}
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
           />
-          {targetRect ? (
+          {targetRect && !isFloatingCardWindowStep ? (
             <motion.div
               key={`highlight-${step}`}
               data-guide-highlight
@@ -718,7 +721,9 @@ export function InteractiveGuide({
             data-guide-dialog
             role="dialog"
             aria-label={copy("StickIt 交互式指引", "StickIt interactive guide")}
-            className="fixed z-[200] w-[min(268px,calc(100vw-28px))] rounded-[20px] border border-[rgba(213,198,180,0.88)] bg-[rgba(255,252,248,0.97)] p-3.5 shadow-[0_22px_46px_rgba(61,49,34,0.22)] backdrop-blur-xl"
+            className={`fixed z-[200] w-[min(268px,calc(100vw-28px))] rounded-[20px] border border-[rgba(213,198,180,0.88)] bg-[rgba(255,252,248,0.97)] p-3.5 shadow-[0_22px_46px_rgba(61,49,34,0.22)] backdrop-blur-xl ${
+              isFloatingCardWindowStep ? "hidden" : ""
+            }`}
             style={panelStyle}
             initial={{ opacity: 0, y: 8, scale: 0.97 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}

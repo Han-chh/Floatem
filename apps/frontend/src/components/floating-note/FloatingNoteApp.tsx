@@ -65,16 +65,17 @@ function FloatingCardGuideOverlay({
   const displayInstruction = showLaunchAtLoginDialog
     ? t.common.guideLaunchAtLoginInstruction
     : guide?.instruction;
+  const isVisible = Boolean(guide) || showLaunchAtLoginDialog;
 
   useEffect(() => {
-    if (!guide) {
+    if (!isVisible) {
       setTargetRect(null);
       return;
     }
 
     const selector = showLaunchAtLoginDialog
       ? "[data-floating-launch-at-login-dialog]"
-      : guide.phase === "close"
+      : guide?.phase === "close"
         ? '[data-action="dock"]'
         : '[data-action="desktop-pin"] [data-desktop-pin-indicator]';
     const update = () => {
@@ -89,15 +90,15 @@ function FloatingCardGuideOverlay({
       observer.disconnect();
       window.removeEventListener("resize", update);
     };
-  }, [guide, showLaunchAtLoginDialog]);
+  }, [guide, isVisible, showLaunchAtLoginDialog]);
 
-  if (!guide || typeof document === "undefined") {
+  if (!isVisible || typeof document === "undefined") {
     return null;
   }
 
   return createPortal(
     <motion.div
-      key={guide.phase}
+      key={showLaunchAtLoginDialog ? "launch-at-login" : guide?.phase}
       data-floating-guide-overlay
       className="pointer-events-none fixed inset-0 z-[190]"
       initial={{ opacity: 0 }}
@@ -112,8 +113,9 @@ function FloatingCardGuideOverlay({
             <motion.div
               data-floating-guide-highlight
               data-floating-guide-pin-ring={isPinTarget ? "true" : undefined}
+              data-floating-guide-dialog-ring={showLaunchAtLoginDialog ? "true" : undefined}
               className={`fixed border-2 border-[#ff4f3d] shadow-[0_0_0_5px_rgba(255,79,61,0.22),0_8px_24px_rgba(61,49,34,0.2)] ${
-                isPinTarget ? "rounded-full" : "rounded-[20px]"
+                isPinTarget ? "rounded-full" : "rounded-[30px]"
               }`}
               style={{
                 height: targetRect.height + (isPinTarget ? 14 : 10),
@@ -134,7 +136,7 @@ function FloatingCardGuideOverlay({
           ) : null}
           <motion.aside
             role="dialog"
-            aria-label={showLaunchAtLoginDialog ? `Guide: ${displayTitle}` : displayTitle}
+            aria-label={showLaunchAtLoginDialog ? `Guide: ${displayTitle}` : displayTitle ?? ""}
             className="absolute bottom-2.5 left-2.5 max-w-[calc(100%-20px)] rounded-[13px] border border-[rgba(255,122,89,0.34)] bg-[rgba(255,252,248,0.96)] px-3 py-2 shadow-[0_12px_28px_rgba(61,49,34,0.2)] backdrop-blur-xl"
             initial={{ opacity: 0, x: -8, y: 5, scale: 0.96 }}
             animate={{ opacity: 1, x: 0, y: 0, scale: 1 }}

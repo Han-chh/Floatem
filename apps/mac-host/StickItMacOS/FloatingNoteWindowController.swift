@@ -593,7 +593,9 @@ final class FloatingNoteWindowController: NSObject, WKNavigationDelegate, WKScri
     }
 
     private func configurePanelForGlobalOverlay() {
-        panel?.level = MainWindowController.overlayPanelLevel
+        panel?.level = NSWindow.Level(
+            rawValue: MainWindowController.overlayPanelLevel.rawValue + 1
+        )
     }
 
     func setDesktopPinned(_ pinned: Bool) {
@@ -615,14 +617,32 @@ final class FloatingNoteWindowController: NSObject, WKNavigationDelegate, WKScri
 
         if isContentReady {
             panel.alphaValue = 1
-            if !pinned {
-                NSApp.activate(ignoringOtherApps: true)
-            }
             panel.orderFrontRegardless()
         }
         if !pinned && isContentReady {
             panel.makeKey()
             panel.makeFirstResponder(webView)
+
+            // Changing from the desktop-icon level to an overlay level is
+            // committed asynchronously by WindowServer. Reassert the same
+            // floating panel after that commit so it cannot fall behind the
+            // main StickIt panel or disappear from the current desktop.
+            DispatchQueue.main.async { [weak self, weak panel] in
+                guard
+                    let self,
+                    let panel,
+                    !self.isDestroyed,
+                    !self.isDesktopPinned,
+                    self.panel === panel
+                else {
+                    return
+                }
+                self.configurePanelForGlobalOverlay()
+                panel.alphaValue = 1
+                panel.orderFrontRegardless()
+                panel.makeKey()
+                panel.makeFirstResponder(self.webView)
+            }
         }
     }
 
