@@ -38,6 +38,8 @@ type GuideStep = {
   title: string;
 };
 
+type PaletteGuideStage = "compact" | "expanded" | "advanced" | "save";
+
 const GUIDE_CHAPTER_COUNT = 7;
 
 function chapterForAction(action: number) {
@@ -77,6 +79,7 @@ export function InteractiveGuide({
   const [step, setStep] = useState(0);
   const [targetRect, setTargetRect] = useState<DOMRect | null>(null);
   const [pinnedNoteIds, setPinnedNoteIds] = useState<string[]>([]);
+  const [paletteGuideStage, setPaletteGuideStage] = useState<PaletteGuideStage>("compact");
   const runtimeRef = useRef<GuideRuntime | null>(null);
   const cards = useNotesStore((state) => state.cards);
   const floatingCardIds = useNotesStore((state) => state.floatingCardIds);
@@ -111,7 +114,45 @@ export function InteractiveGuide({
       stepItem("新增便签分组", "Add a note group", "点击新增分组", "Click Add group", () => queryTarget('[data-guide="note-group-add"]')),
       stepItem("命名便签分组", "Name the note group", "输入一个分组名称", "Enter a group name", () => queryTarget('[data-guide="note-group-name"]'), { advanceOn: "input" }),
       stepItem("打开颜色选择", "Open the color picker", "点击调色板按钮", "Click the palette button", () => queryTarget('[data-guide="note-group-color"]')),
-      stepItem("选择分组颜色", "Choose a group color", "选择任意一种颜色", "Choose any color", () => queryTarget('[data-guide="note-group-color-options"]')),
+      stepItem(
+        paletteGuideStage === "compact"
+          ? "发现更多颜色"
+          : paletteGuideStage === "expanded"
+            ? "打开高级调色盘"
+            : paletteGuideStage === "advanced"
+              ? "调出自定义颜色"
+              : "保存自定义颜色",
+        paletteGuideStage === "compact"
+          ? "Discover more colors"
+          : paletteGuideStage === "expanded"
+            ? "Open the advanced palette"
+            : paletteGuideStage === "advanced"
+              ? "Create a custom color"
+              : "Save the custom color",
+        paletteGuideStage === "compact"
+          ? "点击彩色调色盘入口"
+          : paletteGuideStage === "expanded"
+            ? "点击“显示颜色面板”"
+            : paletteGuideStage === "advanced"
+              ? "在色彩区域中点击或拖动"
+              : "保存刚刚调出的颜色",
+        paletteGuideStage === "compact"
+          ? "Click the multicolor palette"
+          : paletteGuideStage === "expanded"
+            ? "Click Show Colors"
+            : paletteGuideStage === "advanced"
+              ? "Click or drag in the color field"
+              : "Save the color you just created",
+        () => queryTarget(`[data-guide="note-group-${
+          paletteGuideStage === "compact"
+            ? "more-colors"
+            : paletteGuideStage === "expanded"
+              ? "advanced-open"
+              : paletteGuideStage === "advanced"
+                ? "advanced-surface"
+                : "advanced-save"
+        }"]`),
+      ),
       stepItem("创建便签分组", "Create the note group", "点击创建分组", "Click Create group", () => queryTarget('[data-guide="note-group-create"]')),
       stepItem("应用新分组", "Apply the new group", "选择刚创建的分组", "Choose the group you just created", () => runtimeRef.current?.noteGroupId ? queryGroupTarget(runtimeRef.current.noteGroupId) : null),
       stepItem("再次打开分组", "Open groups again", "再次点击便签分组标签", "Click the note group label again", () => noteId ? queryTarget(`[data-note-card-id="${cssValue(noteId)}"] [data-action="note-group"]`) : null),
@@ -145,7 +186,45 @@ export function InteractiveGuide({
       stepItem("新增 Todo 分组", "Add a todo group", "点击新增分组", "Click Add group", () => queryTarget('[data-guide="todo-group-add"]')),
       stepItem("命名 Todo 分组", "Name the todo group", "输入一个分组名称", "Enter a group name", () => queryTarget('[data-guide="todo-group-name"]'), { advanceOn: "input" }),
       stepItem("打开颜色选择", "Open the color picker", "点击调色板按钮", "Click the palette button", () => queryTarget('[data-guide="todo-group-color"]')),
-      stepItem("选择分组颜色", "Choose a group color", "选择任意一种颜色", "Choose any color", () => queryTarget('[data-guide="todo-group-color-options"]')),
+      stepItem(
+        paletteGuideStage === "compact"
+          ? "发现更多颜色"
+          : paletteGuideStage === "expanded"
+            ? "打开高级调色盘"
+            : paletteGuideStage === "advanced"
+              ? "调出自定义颜色"
+              : "保存自定义颜色",
+        paletteGuideStage === "compact"
+          ? "Discover more colors"
+          : paletteGuideStage === "expanded"
+            ? "Open the advanced palette"
+            : paletteGuideStage === "advanced"
+              ? "Create a custom color"
+              : "Save the custom color",
+        paletteGuideStage === "compact"
+          ? "点击彩色调色盘入口"
+          : paletteGuideStage === "expanded"
+            ? "点击“显示颜色面板”"
+            : paletteGuideStage === "advanced"
+              ? "在色彩区域中点击或拖动"
+              : "保存刚刚调出的颜色",
+        paletteGuideStage === "compact"
+          ? "Click the multicolor palette"
+          : paletteGuideStage === "expanded"
+            ? "Click Show Colors"
+            : paletteGuideStage === "advanced"
+              ? "Click or drag in the color field"
+              : "Save the color you just created",
+        () => queryTarget(`[data-guide="todo-group-${
+          paletteGuideStage === "compact"
+            ? "more-colors"
+            : paletteGuideStage === "expanded"
+              ? "advanced-open"
+              : paletteGuideStage === "advanced"
+                ? "advanced-surface"
+                : "advanced-save"
+        }"]`),
+      ),
       stepItem("创建 Todo 分组", "Create the todo group", "点击创建分组", "Click Create group", () => queryTarget('[data-guide="todo-group-create"]')),
       stepItem("应用新分组", "Apply the new group", "选择刚创建的分组", "Choose the group you just created", () => runtimeRef.current?.todoGroupId ? queryGroupTarget(runtimeRef.current.todoGroupId) : null),
       stepItem("再次打开分组", "Open groups again", "再次点击待办分组按钮", "Click the todo group button again", () => todoId ? queryTarget(`[data-todo-item-id="${cssValue(todoId)}"] [data-action="todo-group"]`) : null),
@@ -176,7 +255,7 @@ export function InteractiveGuide({
       stepItem("删除待办", "Delete the todo", "点击待办删除按钮", "Click the todo delete button", () => todoId ? queryTarget(`[data-todo-item-id="${cssValue(todoId)}"] [data-action="todo-delete"]`) : null),
       stepItem("指引完成", "Guide complete", "你已经实际体验了 StickIt 的主要功能", "You have now tried StickIt's main features", () => null),
     ],
-    [isZh, noteId, todoId],
+    [isZh, noteId, paletteGuideStage, todoId],
   );
 
   const chapters = useMemo(
@@ -232,10 +311,34 @@ export function InteractiveGuide({
     };
     setStep(0);
     setPinnedNoteIds([]);
+    setPaletteGuideStage("compact");
     onSettingsChange(false);
     onTabChange("notes");
     onHeaderCollapsedChange(false);
   }, [isOpen, onHeaderCollapsedChange, onSettingsChange, onTabChange]);
+
+  useEffect(() => {
+    if (step === 7 || step === 37) {
+      setPaletteGuideStage("compact");
+    }
+  }, [step]);
+
+  useEffect(() => {
+    if (!isOpen) {
+      return;
+    }
+    const handlePaletteStage = (event: Event) => {
+      const detail = (event as CustomEvent<{ id?: string; stage?: PaletteGuideStage }>).detail;
+      const isCurrentPalette =
+        (step === 7 && detail?.id === "note-group")
+        || (step === 37 && detail?.id === "todo-group");
+      if (isCurrentPalette && detail?.stage && detail.stage !== "compact") {
+        setPaletteGuideStage(detail.stage);
+      }
+    };
+    window.addEventListener("stickit:guide-palette-stage", handlePaletteStage);
+    return () => window.removeEventListener("stickit:guide-palette-stage", handlePaletteStage);
+  }, [isOpen, step]);
 
   useEffect(() => {
     if (!isOpen) {
@@ -251,8 +354,10 @@ export function InteractiveGuide({
     const handleColorSelected = (event: Event) => {
       const guideId = (event as CustomEvent<{ id?: string }>).detail?.id;
       if (step === 7 && guideId === "note-group") {
+        setPaletteGuideStage("compact");
         setStep(8);
       } else if (step === 37 && guideId === "todo-group") {
+        setPaletteGuideStage("compact");
         setStep(38);
       }
     };
@@ -436,7 +541,7 @@ export function InteractiveGuide({
         event.stopPropagation();
         return;
       }
-      if (!didClickTarget || [1, 8, 9, 15, 26, 38, 39, 45].includes(step)) {
+      if (!didClickTarget || [1, 7, 8, 9, 15, 26, 37, 38, 39, 45].includes(step)) {
         return;
       }
       window.setTimeout(() => setStep((value) => value + 1), 90);

@@ -3,7 +3,6 @@ import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 import { PanelShell } from "../../src/components/layout/PanelShell";
 import { NotesList } from "../../src/components/notes/NotesList";
-import { TEXT_COLOR_PRESETS } from "../../src/components/notes/textFormatting";
 import { SETTINGS_LANGUAGE_ORDER, SettingsPanel } from "../../src/components/settings/SettingsPanel";
 import { useNotesStore } from "../../src/store/notesStore";
 import { useSettingsStore } from "../../src/store/settingsStore";
@@ -206,8 +205,16 @@ describe("PanelShell", () => {
     await user.type(within(createDialog).getByRole("textbox", { name: "Group name" }), "Focus");
     await waitFor(() => expect(screen.getByText("Open the color picker")).toBeInTheDocument());
     await user.click(within(createDialog).getByRole("button", { name: "Change group color" }));
-    await waitFor(() => expect(screen.getByText("Choose a group color")).toBeInTheDocument());
-    await user.click(screen.getAllByRole("button", { name: /Use .* for note/ })[2]);
+    await waitFor(() => expect(screen.getByText("Discover more colors")).toBeInTheDocument());
+    await user.click(screen.getByRole("button", { name: "More Colors" }));
+    await waitFor(() => expect(screen.getByText("Open the advanced palette")).toBeInTheDocument());
+    await user.click(screen.getByRole("button", { name: "Show Colors" }));
+    await waitFor(() => expect(screen.getByText("Create a custom color")).toBeInTheDocument());
+    const customColorField = screen.getByRole("slider", { name: "Saturation and brightness" });
+    customColorField.focus();
+    await user.keyboard("{ArrowRight}");
+    await waitFor(() => expect(screen.getByText("Save the custom color")).toBeInTheDocument());
+    await user.click(screen.getByRole("button", { name: "Save" }));
     await waitFor(() => expect(screen.getByText("Create the note group")).toBeInTheDocument());
     await user.click(within(createDialog).getByRole("button", { name: "Create group" }));
 
@@ -218,7 +225,7 @@ describe("PanelShell", () => {
       expect(screen.getByText("Open groups again")).toBeInTheDocument();
       expect(guideNote).toHaveAttribute("data-note-grouped", "true");
       expect(useNotesStore.getState().groups[0]?.name).toBe("Focus");
-      expect(useNotesStore.getState().groups[0]?.color).toBe(TEXT_COLOR_PRESETS[2]);
+      expect(useNotesStore.getState().groups[0]?.color).toMatch(/^#[0-9A-F]{6}$/);
     });
   });
 });

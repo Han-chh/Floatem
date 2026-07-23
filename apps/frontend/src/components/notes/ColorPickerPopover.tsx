@@ -363,6 +363,14 @@ export function ColorPickerPopover({
     }
   };
 
+  const emitGuidePaletteStage = (stage: "expanded" | "advanced" | "save") => {
+    if (dataGuideId && typeof window !== "undefined") {
+      window.dispatchEvent(
+        new CustomEvent("stickit:guide-palette-stage", { detail: { id: dataGuideId, stage } }),
+      );
+    }
+  };
+
   const applyAdvancedColor = () => {
     const normalizedHexDraft = normalizeHexColor(hexDraft);
     applyColor(/^#[0-9A-F]{6}$/i.test(hexDraft) ? normalizedHexDraft : advancedHexColor);
@@ -447,12 +455,14 @@ export function ColorPickerPopover({
             <button
               type="button"
               aria-label={t.notes.moreColors}
+              data-guide={dataGuideId ? `${dataGuideId}-more-colors` : undefined}
               data-tooltip={t.notes.moreColors}
               className="relative inline-flex h-6 w-6 items-center justify-center overflow-hidden rounded-[9px] border border-[rgba(213,198,180,0.92)] bg-[linear-gradient(145deg,rgba(255,255,255,0.98),rgba(248,240,229,0.94))] shadow-[0_8px_16px_rgba(61,49,34,0.08)]"
               onPointerDown={(event) => {
                 event.preventDefault();
                 event.stopPropagation();
                 setColorPaletteMode("expanded");
+                emitGuidePaletteStage("expanded");
               }}
             >
               <span className="pointer-events-none absolute inset-[1px] rounded-[8px] bg-[radial-gradient(circle_at_30%_28%,rgba(255,255,255,0.95),rgba(255,255,255,0.18)_42%,transparent_70%),linear-gradient(135deg,rgba(255,122,89,0.36),rgba(244,185,66,0.3),rgba(31,168,122,0.28),rgba(47,107,255,0.28),rgba(123,92,250,0.28))]" />
@@ -495,6 +505,7 @@ export function ColorPickerPopover({
             <button
               type="button"
               aria-label={t.notes.showColors}
+              data-guide={dataGuideId ? `${dataGuideId}-advanced-open` : undefined}
               data-tooltip={t.notes.showColors}
               className="inline-flex h-8 w-full items-center justify-center gap-1.5 rounded-[11px] border border-[rgba(213,198,180,0.92)] bg-[linear-gradient(145deg,rgba(255,255,255,0.98),rgba(248,240,229,0.96))] px-3 text-[11px] font-semibold text-[rgba(42,32,23,0.88)] shadow-[0_8px_16px_rgba(61,49,34,0.08)]"
               onPointerDown={(event) => {
@@ -503,6 +514,7 @@ export function ColorPickerPopover({
                 setAdvancedHsvColor(getHsvFromColor(activeColor));
                 setHexDraft(normalizeHexColor(activeColor));
                 setColorPaletteMode("advanced");
+                emitGuidePaletteStage("advanced");
               }}
             >
               <FilledPaletteIcon size={12} className="text-[rgba(42,32,23,0.88)]" />
@@ -560,6 +572,7 @@ export function ColorPickerPopover({
             <div
               role="slider"
               aria-label="Saturation and brightness"
+              data-guide={dataGuideId ? `${dataGuideId}-advanced-surface` : undefined}
               aria-valuemax={100}
               aria-valuemin={0}
               aria-valuenow={advancedHsvColor.saturation}
@@ -576,15 +589,19 @@ export function ColorPickerPopover({
                 if (event.key === "ArrowLeft") {
                   event.preventDefault();
                   previewAdvancedColor({ ...advancedHsvColor, saturation: advancedHsvColor.saturation - step });
+                  emitGuidePaletteStage("save");
                 } else if (event.key === "ArrowRight") {
                   event.preventDefault();
                   previewAdvancedColor({ ...advancedHsvColor, saturation: advancedHsvColor.saturation + step });
+                  emitGuidePaletteStage("save");
                 } else if (event.key === "ArrowDown") {
                   event.preventDefault();
                   previewAdvancedColor({ ...advancedHsvColor, value: advancedHsvColor.value - step });
+                  emitGuidePaletteStage("save");
                 } else if (event.key === "ArrowUp") {
                   event.preventDefault();
                   previewAdvancedColor({ ...advancedHsvColor, value: advancedHsvColor.value + step });
+                  emitGuidePaletteStage("save");
                 }
               }}
               onPointerDown={(event) => {
@@ -592,6 +609,7 @@ export function ColorPickerPopover({
                 event.stopPropagation();
                 event.currentTarget.setPointerCapture(event.pointerId);
                 handleSaturationValueChange(event);
+                emitGuidePaletteStage("save");
               }}
               onPointerMove={(event) => {
                 if (!event.currentTarget.hasPointerCapture(event.pointerId)) {
@@ -651,6 +669,7 @@ export function ColorPickerPopover({
               <button
                 type="button"
                 aria-label={t.common.save}
+                data-guide={dataGuideId ? `${dataGuideId}-advanced-save` : undefined}
                 className="inline-flex h-8 flex-1 items-center justify-center rounded-[10px] border border-[rgba(30,25,21,0.88)] bg-[rgba(30,25,21,0.96)] px-3 text-[11px] font-semibold text-white shadow-[0_10px_18px_rgba(30,25,21,0.16)]"
                 onPointerDown={(event) => {
                   event.preventDefault();
