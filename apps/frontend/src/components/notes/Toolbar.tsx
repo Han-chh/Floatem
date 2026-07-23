@@ -233,6 +233,7 @@ export function Toolbar({
 
   return (
     <motion.div
+      data-action="note-rich-toolbar"
       className={`${attached ? "note-toolbar-attached" : "paper-card"} note-toolbar-grid relative transition-[width] duration-200 ease-out ${
         isCollapsed
           ? attached

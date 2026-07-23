@@ -137,13 +137,13 @@ describe("PanelShell", () => {
 
     await user.click(screen.getByRole("button", { name: "Start interactive guide" }));
     const guide = screen.getByRole("dialog", { name: "StickIt interactive guide" });
-    expect(within(guide).getByText("Step 1 of 7")).toBeInTheDocument();
+    expect(within(guide).getByText("Feature 1 of 7 · Step 1 of 1")).toBeInTheDocument();
     expect(guide).toHaveClass("fixed", "w-[min(268px,calc(100vw-28px))]");
     expect(screen.getByText("Original panel body")).toBeInTheDocument();
 
     await user.click(screen.getByRole("button", { name: "Collapse navigation" }));
     await waitFor(() => {
-      expect(within(guide).getByText("Step 2 of 7")).toBeInTheDocument();
+      expect(within(guide).getByText(/Feature 2 of 7 · Step 1 of \d+/)).toBeInTheDocument();
       expect(within(guide).getByText("Edit and organize notes")).toBeInTheDocument();
       expect(screen.getByRole("button", { name: "Expand navigation" })).toHaveAttribute("aria-expanded", "false");
       expect(within(guide).getByText("Create the first note")).toBeInTheDocument();
@@ -161,7 +161,7 @@ describe("PanelShell", () => {
     try {
       await user.click(within(guide).getByRole("button", { name: "Next feature" }));
       await waitFor(() => {
-        expect(within(guide).getByText("Step 3 of 7")).toBeInTheDocument();
+        expect(within(guide).getByText(/Feature 3 of 7 · Step 1 of \d+/)).toBeInTheDocument();
         expect(within(guide).getByText("Create a floating note")).toBeInTheDocument();
       });
 
@@ -202,14 +202,16 @@ describe("PanelShell", () => {
     for (const chapter of [4, 5, 6, 7]) {
       await user.click(within(guide).getByRole("button", { name: "Next feature" }));
       await waitFor(() => {
-        expect(within(guide).getByText(`Step ${chapter} of 7`)).toBeInTheDocument();
+        expect(
+          within(guide).getByText(new RegExp(`Feature ${chapter} of 7 · Step 1 of \\d+`)),
+        ).toBeInTheDocument();
       });
     }
     expect(within(guide).getByRole("button", { name: "Next feature" })).toBeDisabled();
 
     await user.click(within(guide).getByRole("button", { name: "Previous feature" }));
     await waitFor(() => {
-      expect(within(guide).getByText("Step 6 of 7")).toBeInTheDocument();
+      expect(within(guide).getByText(/Feature 6 of 7 · Step 1 of \d+/)).toBeInTheDocument();
       expect(within(guide).getByText("Open todo groups")).toBeInTheDocument();
     });
 
@@ -258,10 +260,13 @@ describe("PanelShell", () => {
     expect(editor).not.toBeNull();
     await user.click(editor as HTMLElement);
     await user.keyboard("A formatted guide note");
-    await waitFor(() => expect(screen.getByText("Apply rich-text formatting")).toBeInTheDocument());
-
-    await user.click(within(guideNote as HTMLElement).getByRole("button", { name: /Bold/ }));
-    await waitFor(() => expect(screen.getByText("Collapse the editor toolbar")).toBeInTheDocument());
+    await waitFor(() => expect(screen.getByText("This is the rich-text toolbar")).toBeInTheDocument());
+    expect(guideNote?.querySelector('[data-action="note-rich-toolbar"]')).toBeInTheDocument();
+    expect(document.querySelector("[data-guide-highlight]")).toBeInTheDocument();
+    await waitFor(
+      () => expect(screen.getByText("Collapse the editor toolbar")).toBeInTheDocument(),
+      { timeout: 2_500 },
+    );
     await user.click(within(guideNote as HTMLElement).getByRole("button", { name: "Collapse formatting toolbar" }));
     await waitFor(() => expect(screen.getByText("Expand the editor toolbar")).toBeInTheDocument());
     await user.click(within(guideNote as HTMLElement).getByRole("button", { name: "Expand formatting toolbar" }));

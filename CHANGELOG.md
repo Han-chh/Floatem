@@ -5,6 +5,7 @@
 - Expand the seven-part interactive guide with real note and todo reordering, group filtering, note rich-text editing, formatting-toolbar folding, Enter-to-focus todo capture, and floating todo practice.
 - Demonstrate both ways to return a floating note to StickIt: click × or drag the card back into the main list with an insertion preview.
 - Replace the final settings tour with one focused Settings entry step and a concise bilingual overview of every configurable area.
+- Show both feature-level and within-feature progress, keep Previous/Next navigation scoped to whole features, and present the rich-text toolbar as an automatic explanation before reliably demonstrating its collapse and expand controls.
 - Keep practice cards and groups isolated, clear floating guidance reliably, and add regression coverage for the new rich-text walkthrough.
 - Bump the macOS app to build 43.
 

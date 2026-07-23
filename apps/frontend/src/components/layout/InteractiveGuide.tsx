@@ -52,7 +52,7 @@ type GuideStepId =
   | "note-add"
   | "note-title"
   | "note-body"
-  | "note-bold"
+  | "note-toolbar-overview"
   | "note-toolbar-collapse"
   | "note-toolbar-expand"
   | "note-add-second"
@@ -111,8 +111,9 @@ type GuideStepId =
   | "settings-overview";
 
 type GuideStep = {
-  advanceOn?: "click" | "focus" | "input";
+  advanceOn?: "click" | "focus" | "input" | "pointerdown";
   allowOutsideTarget?: boolean;
+  autoAdvanceMs?: number;
   chapter: number;
   id: GuideStepId;
   instruction: string;
@@ -183,7 +184,7 @@ export function InteractiveGuide({
     instructionZh: string,
     instructionEn: string,
     target: () => HTMLElement | null,
-    options: Pick<GuideStep, "advanceOn" | "allowOutsideTarget"> = {},
+    options: Pick<GuideStep, "advanceOn" | "allowOutsideTarget" | "autoAdvanceMs"> = {},
   ): GuideStep => ({
     chapter,
     id,
@@ -200,9 +201,9 @@ export function InteractiveGuide({
       stepItem("note-add", 1, "新建第一张便签", "Create the first note", "点击新增便签", "Click Add note", () => queryTarget('[data-guide="note-add"]')),
       stepItem("note-title", 1, "填写标题", "Add a title", "直接输入便签标题", "Type a note title", () => noteId ? queryTarget(`[data-note-card-id="${cssValue(noteId)}"] [data-action="note-title"]`) : null, { advanceOn: "input" }),
       stepItem("note-body", 1, "输入富文本内容", "Write rich text", "在正文输入一行内容；这里支持富文本格式", "Type a line in the body; this editor supports rich text", () => noteId ? queryTarget(`[data-note-card-id="${cssValue(noteId)}"] [data-action="note-rich-editor"]`) : null, { advanceOn: "input" }),
-      stepItem("note-bold", 1, "应用富文本格式", "Apply rich-text formatting", "点击粗体；斜体、下划线、文字颜色、复制粘贴和撤销重做也在同一工具栏", "Click Bold; italic, underline, text color, clipboard, undo, and redo are in the same toolbar", () => noteId ? queryTarget(`[data-note-card-id="${cssValue(noteId)}"] [data-action="note-format-bold"]`) : null),
-      stepItem("note-toolbar-collapse", 1, "折叠编辑工具栏", "Collapse the editor toolbar", "点击工具栏末端箭头，把编辑区收成紧凑模式", "Click the arrow at the end of the toolbar for a compact editor", () => noteId ? queryTarget(`[data-note-card-id="${cssValue(noteId)}"] [data-action="note-toolbar-toggle"]`) : null),
-      stepItem("note-toolbar-expand", 1, "展开编辑工具栏", "Expand the editor toolbar", "再次点击箭头即可恢复全部工具", "Click the arrow again to restore every tool", () => noteId ? queryTarget(`[data-note-card-id="${cssValue(noteId)}"] [data-action="note-toolbar-toggle"]`) : null),
+      stepItem("note-toolbar-overview", 1, "这是富文本工具栏", "This is the rich-text toolbar", "高亮区域包含粗体、斜体、下划线、文字颜色、复制粘贴和撤销重做；此步只需查看，无需点击", "The highlighted toolbar contains bold, italic, underline, text color, clipboard, undo, and redo; just review it—no click needed", () => noteId ? queryTarget(`[data-note-card-id="${cssValue(noteId)}"] [data-action="note-rich-toolbar"]`) : null, { autoAdvanceMs: 1_800 }),
+      stepItem("note-toolbar-collapse", 1, "折叠编辑工具栏", "Collapse the editor toolbar", "点击工具栏末端箭头，把编辑区收成紧凑模式", "Click the arrow at the end of the toolbar for a compact editor", () => noteId ? queryTarget(`[data-note-card-id="${cssValue(noteId)}"] [data-action="note-toolbar-toggle"]`) : null, { advanceOn: "pointerdown" }),
+      stepItem("note-toolbar-expand", 1, "展开编辑工具栏", "Expand the editor toolbar", "再次点击箭头即可恢复全部工具", "Click the arrow again to restore every tool", () => noteId ? queryTarget(`[data-note-card-id="${cssValue(noteId)}"] [data-action="note-toolbar-toggle"]`) : null, { advanceOn: "pointerdown" }),
       stepItem("note-add-second", 1, "再建一张便签", "Create another note", "点击新增便签，为换序准备第二张卡片", "Click Add note to prepare a second card for reordering", () => queryTarget('[data-guide="note-add"]')),
       stepItem("note-reorder", 1, "交换便签位置", "Reorder note cards", "按住高亮便签的空白区域，把它拖到另一张便签的上方或下方", "Drag the highlighted card by a blank area above or below the other note", () => secondaryNoteId ? queryTarget(`[data-note-card-id="${cssValue(secondaryNoteId)}"]`) : null),
       stepItem("note-group-open", 1, "打开便签分组", "Open note groups", "点击第一张便签的分组标签", "Click the group label on the first note", () => noteId ? queryTarget(`[data-note-card-id="${cssValue(noteId)}"] [data-action="note-group"]`) : null),
@@ -303,6 +304,9 @@ export function InteractiveGuide({
   const currentStep = steps[step];
   const currentChapter = currentStep?.chapter ?? 0;
   const currentChapterContent = chapters[currentChapter];
+  const currentChapterSteps = steps.filter((item) => item.chapter === currentChapter);
+  const currentStepInChapter =
+    currentChapterSteps.findIndex((item) => item.id === currentStep?.id) + 1;
   const isFloatingCardWindowStep = [
     "note-pin",
     "note-unpin",
@@ -604,7 +608,22 @@ export function InteractiveGuide({
   }, [currentStep, isOpen]);
 
   useEffect(() => {
-    if (!isOpen || !currentStep || !["input", "focus"].includes(currentStep.advanceOn ?? "")) {
+    if (!isOpen || !currentStep?.autoAdvanceMs) {
+      return;
+    }
+    const timer = window.setTimeout(
+      () => setStep((value) => value + 1),
+      currentStep.autoAdvanceMs,
+    );
+    return () => window.clearTimeout(timer);
+  }, [currentStep, isOpen]);
+
+  useEffect(() => {
+    if (
+      !isOpen ||
+      !currentStep ||
+      !["input", "focus", "pointerdown"].includes(currentStep.advanceOn ?? "")
+    ) {
       return;
     }
     const target = currentStep.target();
@@ -612,10 +631,18 @@ export function InteractiveGuide({
       return;
     }
     let timer = 0;
-    const eventName = currentStep.advanceOn === "focus" ? "focus" : "input";
+    const eventName =
+      currentStep.advanceOn === "focus"
+        ? "focus"
+        : currentStep.advanceOn === "pointerdown"
+          ? "pointerdown"
+          : "input";
     const advance = () => {
       window.clearTimeout(timer);
-      timer = window.setTimeout(() => setStep((value) => value + 1), 220);
+      timer = window.setTimeout(
+        () => setStep((value) => value + 1),
+        currentStep.advanceOn === "pointerdown" ? 90 : 220,
+      );
     };
     target.addEventListener(eventName, advance);
     return () => {
@@ -625,7 +652,12 @@ export function InteractiveGuide({
   }, [currentStep, isOpen]);
 
   useEffect(() => {
-    if (!isOpen || !currentStep || currentStep.advanceOn === "input" || currentStep.advanceOn === "focus") {
+    if (
+      !isOpen ||
+      !currentStep ||
+      currentStep.autoAdvanceMs ||
+      ["input", "focus", "pointerdown"].includes(currentStep.advanceOn ?? "")
+    ) {
       return;
     }
     const stateDrivenSteps: GuideStepId[] = [
@@ -848,17 +880,30 @@ export function InteractiveGuide({
               <div className="min-w-0 flex-1">
                 <p className="text-[10px] font-bold uppercase tracking-[0.08em] text-[var(--muted)]">
                   {copy(
-                    `第 ${currentChapter + 1} / ${GUIDE_CHAPTER_COUNT} 步`,
-                    `Step ${currentChapter + 1} of ${GUIDE_CHAPTER_COUNT}`,
+                    `功能 ${currentChapter + 1}/${GUIDE_CHAPTER_COUNT} · 步骤 ${currentStepInChapter}/${currentChapterSteps.length}`,
+                    `Feature ${currentChapter + 1} of ${GUIDE_CHAPTER_COUNT} · Step ${currentStepInChapter} of ${currentChapterSteps.length}`,
                   )}
                 </p>
-                <div className="mt-1 h-1 overflow-hidden rounded-full bg-[rgba(156,126,94,0.14)]">
-                  <motion.div
-                    className="h-full rounded-full bg-[#ff7a59]"
-                    animate={{
-                      width: `${((currentChapter + 1) / GUIDE_CHAPTER_COUNT) * 100}%`,
-                    }}
-                  />
+                <div className="mt-1.5 flex h-1 gap-0.5" aria-hidden="true">
+                  {chapters.map((_, chapterIndex) => (
+                    <span
+                      key={chapterIndex}
+                      className="relative flex-1 overflow-hidden rounded-full bg-[rgba(156,126,94,0.14)]"
+                    >
+                      <motion.span
+                        className="absolute inset-y-0 left-0 rounded-full bg-[#ff7a59]"
+                        animate={{
+                          width:
+                            chapterIndex < currentChapter
+                              ? "100%"
+                              : chapterIndex === currentChapter
+                                ? `${(currentStepInChapter / currentChapterSteps.length) * 100}%`
+                                : "0%",
+                        }}
+                        transition={{ duration: 0.2, ease: [0.22, 1, 0.36, 1] }}
+                      />
+                    </span>
+                  ))}
                 </div>
               </div>
               <button
