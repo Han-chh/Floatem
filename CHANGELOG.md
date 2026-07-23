@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.0.4
+
+- Keep floating cards visible when switching from desktop-pinned mode back to the regular overlay on macOS.
+- Add explicit Previous and Next controls to every interactive-guide action.
+- Highlight the desktop-pin control with a red circular guide, explain the launch-at-login dialog, and clarify how group deletion mode works.
+- Bump the macOS app to build 42.
+
 ## 1.0.3
 
 - Distinguish Finder and Spotlight opens from macOS Login Item launches so the first direct open presents StickIt immediately while login startup remains silent.
