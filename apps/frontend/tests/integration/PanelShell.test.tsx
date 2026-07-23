@@ -3,7 +3,9 @@ import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 import { PanelShell } from "../../src/components/layout/PanelShell";
 import { SETTINGS_LANGUAGE_ORDER, SettingsPanel } from "../../src/components/settings/SettingsPanel";
+import { useNotesStore } from "../../src/store/notesStore";
 import { useSettingsStore } from "../../src/store/settingsStore";
+import { useTodosStore } from "../../src/store/todosStore";
 
 describe("PanelShell", () => {
   it("lists Simplified Chinese before English", () => {
@@ -108,7 +110,7 @@ describe("PanelShell", () => {
     ).toBeInTheDocument();
   });
 
-  it("runs the interactive guide in a resettable practice sandbox", async () => {
+  it("runs the interactive guide over the real panel with a lightweight floating dialog", async () => {
     const user = userEvent.setup();
     useSettingsStore.setState({ language: "en", timeFormat: "24h" });
 
@@ -127,23 +129,25 @@ describe("PanelShell", () => {
     );
 
     await user.click(screen.getByRole("button", { name: "StickIt help" }));
-    expect(screen.getByText(/Practice 14 guided steps in a safe sandbox/)).toBeInTheDocument();
+    expect(screen.getByText(/Follow 24 lightweight steps in the real app/)).toBeInTheDocument();
 
     await user.click(screen.getByRole("button", { name: "Start interactive guide" }));
     const guide = screen.getByRole("dialog", { name: "StickIt interactive guide" });
-    expect(within(guide).getByText("Interactive guide · Step 1 of 14")).toBeInTheDocument();
+    expect(within(guide).getByText("Step 1 of 24")).toBeInTheDocument();
+    expect(guide).toHaveClass("fixed", "w-[min(268px,calc(100vw-28px))]");
+    expect(screen.getByText("Original panel body")).toBeInTheDocument();
 
-    await user.click(within(guide).getByRole("button", { name: "Click the highlighted fold button" }));
-    expect(within(guide).getByText("Interactive guide · Step 2 of 14")).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "Collapse navigation" }));
+    await waitFor(() => {
+      expect(within(guide).getByText("Step 2 of 24")).toBeInTheDocument();
+    });
 
-    await user.click(within(guide).getByRole("button", { name: "Exit guide and discard practice state" }));
+    await user.click(within(guide).getByRole("button", { name: "Exit guide" }));
     await waitFor(() => {
       expect(screen.queryByRole("dialog", { name: "StickIt interactive guide" })).not.toBeInTheDocument();
     });
     expect(screen.getByText("Original panel body")).toBeInTheDocument();
-
-    await user.click(screen.getByRole("button", { name: "StickIt help" }));
-    await user.click(screen.getByRole("button", { name: "Start interactive guide" }));
-    expect(screen.getByText("Interactive guide · Step 1 of 14")).toBeInTheDocument();
+    expect(useNotesStore.getState().groups.some((group) => group.name === "StickIt Guide")).toBe(true);
+    expect(useTodosStore.getState().groups.some((group) => group.name === "StickIt Guide")).toBe(true);
   });
 });

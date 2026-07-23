@@ -179,6 +179,7 @@ function NoteCardBody({
               <motion.button
                 type="button"
                 aria-label={t.notes.changeGroup}
+                data-action="note-group"
                 data-tooltip={t.notes.group}
                 className="note-group-chip status-chip inline-flex max-w-full items-center gap-1.5"
                 whileHover={isInteractive ? { y: -1, scale: 1.015 } : undefined}
@@ -235,6 +236,7 @@ function NoteCardBody({
               <motion.button
                 type="button"
                 aria-label={t.notes.collapse}
+                data-action="note-collapse"
                 data-tooltip={note.collapsed ? t.notes.open : t.notes.fold}
                 className="note-card-action-button paper-icon-button group relative rounded-[9px]"
                 whileHover={isInteractive ? { y: -1.5, scale: 1.03 } : undefined}

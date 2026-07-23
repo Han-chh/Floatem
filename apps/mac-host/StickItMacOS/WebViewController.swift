@@ -207,9 +207,16 @@ final class WebViewController: NSViewController, WKNavigationDelegate {
         )
     }
 
-    func emitFloatingCardsState(noteIDs: [String], todoIDs: [String]) {
+    func emitFloatingCardsState(
+        noteIDs: [String],
+        pinnedNoteIDs: [String] = [],
+        pinnedTodoIDs: [String] = [],
+        todoIDs: [String]
+    ) {
         let payload: [String: Any] = [
             "noteIds": noteIDs,
+            "pinnedNoteIds": pinnedNoteIDs,
+            "pinnedTodoIds": pinnedTodoIDs,
             "todoIds": todoIDs,
         ]
 
@@ -365,6 +372,8 @@ final class WebViewController: NSViewController, WKNavigationDelegate {
             let floatingCardState = bridgeDelegate?.currentFloatingCardState() ?? [:]
             emitFloatingCardsState(
                 noteIDs: floatingCardState["note"] ?? [],
+                pinnedNoteIDs: floatingCardState["pinnedNote"] ?? [],
+                pinnedTodoIDs: floatingCardState["pinnedTodo"] ?? [],
                 todoIDs: floatingCardState["todo"] ?? []
             )
             hideLoadingOverlay()

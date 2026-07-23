@@ -129,6 +129,8 @@ export type HotkeyRegistrationState = {
 
 export type FloatingCardsState = {
   noteIds: string[];
+  pinnedNoteIds?: string[];
+  pinnedTodoIds?: string[];
   todoIds: string[];
 };
 

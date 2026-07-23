@@ -151,6 +151,7 @@ export function PanelShell({
                                   <motion.button
                                     type="button"
                                     aria-label={t.app.settings}
+                                    data-guide="settings-open"
                                     data-tooltip={t.app.settings}
                                     data-tooltip-placement="bottom"
                                     className="paper-icon-button mt-1.5 h-[30px] w-[30px] min-h-0 min-w-0 shrink-0 rounded-[11px]"
@@ -179,6 +180,7 @@ export function PanelShell({
                           type="button"
                           aria-expanded={!isHeaderCollapsed}
                           aria-label={headerToggleLabel}
+                          data-guide="navigation-fold"
                           data-tooltip={headerToggleLabel}
                           data-tooltip-placement="bottom"
                           className="group relative mx-3 inline-flex h-[26px] w-[64px] min-h-0 shrink-0 items-center justify-center rounded-[12px] border border-[rgba(156,126,94,0.14)] bg-white/90 text-[var(--brown-strong)] shadow-[0_4px_12px_rgba(61,49,34,0.06),inset_0_1px_0_rgba(255,255,255,0.92)]"
@@ -239,7 +241,19 @@ export function PanelShell({
           setIsInteractiveGuideOpen(true);
         }}
       />
-      <InteractiveGuide isOpen={isInteractiveGuideOpen} onClose={() => setIsInteractiveGuideOpen(false)} />
+      <InteractiveGuide
+        isHeaderCollapsed={isHeaderCollapsed}
+        isOpen={isInteractiveGuideOpen}
+        onClose={() => setIsInteractiveGuideOpen(false)}
+        onHeaderCollapsedChange={setIsHeaderCollapsed}
+        onSettingsChange={(open) => {
+          if (open !== showSettings) {
+            onToggleSettings();
+          }
+        }}
+        onTabChange={onTabChange}
+        showSettings={showSettings}
+      />
     </main>
   );
 }

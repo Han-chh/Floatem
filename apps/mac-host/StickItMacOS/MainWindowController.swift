@@ -408,9 +408,19 @@ final class MainWindowController: NSObject, NSWindowDelegate, StickItNativeBridg
             .filter { $0.cardKind == "todo" }
             .map(\.cardID)
             .sorted()
+        let pinnedNoteIDs = floatingCardWindowControllers.values
+            .filter { $0.cardKind == "note" && $0.isDesktopPinned }
+            .map(\.cardID)
+            .sorted()
+        let pinnedTodoIDs = floatingCardWindowControllers.values
+            .filter { $0.cardKind == "todo" && $0.isDesktopPinned }
+            .map(\.cardID)
+            .sorted()
 
         return [
             "note": noteIDs,
+            "pinnedNote": pinnedNoteIDs,
+            "pinnedTodo": pinnedTodoIDs,
             "todo": todoIDs,
         ]
     }
@@ -659,6 +669,7 @@ final class MainWindowController: NSObject, NSWindowDelegate, StickItNativeBridg
             payload["desktopPinned"] = pinned
             floatingCardPayloads[key] = payload
         }
+        emitFloatingCardsState()
 
         let launchAtLoginEnabled = launchAtLoginManager.isEnabled
         return [
@@ -1009,6 +1020,8 @@ final class MainWindowController: NSObject, NSWindowDelegate, StickItNativeBridg
 
         webViewController.emitFloatingCardsState(
             noteIDs: state["note"] ?? [],
+            pinnedNoteIDs: state["pinnedNote"] ?? [],
+            pinnedTodoIDs: state["pinnedTodo"] ?? [],
             todoIDs: state["todo"] ?? []
         )
     }

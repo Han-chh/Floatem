@@ -407,6 +407,7 @@ function TodoRowBody({
               <motion.button
                 type="button"
                 aria-label={t.todos.changeGroup}
+                data-action="todo-group"
                 data-tooltip={`${t.todos.group}: ${groupLabel}`}
                 className="paper-icon-button todo-card-action-button todo-card-group-button inline-flex shrink-0 items-center justify-center rounded-full border p-0"
                 style={{
@@ -457,6 +458,7 @@ function TodoRowBody({
               <motion.button
                 type="button"
                 aria-label={isDockAction ? t.common.close : t.todos.delete}
+                data-action={isDockAction ? "dock" : "todo-delete"}
                 data-tooltip={isDockAction ? t.common.close : t.todos.delete}
                 data-tooltip-align="left"
                 className={`paper-icon-button todo-card-action-button inline-flex h-6.5 min-w-10 items-center justify-center rounded-full px-2.5 ${

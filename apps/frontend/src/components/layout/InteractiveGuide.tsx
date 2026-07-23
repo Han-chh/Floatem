@@ -1,286 +1,559 @@
 import { AnimatePresence, motion } from "framer-motion";
-import { useEffect, useState, type ReactNode } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useI18n } from "../../lib/i18n";
-import {
-  CalendarDaysIcon,
-  ChevronUpIcon,
-  CircleCheckBigIcon,
-  Clock3Icon,
-  GroupPlusIcon,
-  PlusIcon,
-  PushPinIcon,
-  SlidersHorizontalIcon,
-  SparklesIcon,
-  Trash2Icon,
-  XIcon,
-} from "../icons/AppIcons";
+import { subscribeToFloatingCardsState } from "../../lib/nativeBridge";
+import type { TabId, ThemeId } from "../../lib/models";
+import { useNotesStore } from "../../store/notesStore";
+import { useSettingsStore } from "../../store/settingsStore";
+import { useTodosStore } from "../../store/todosStore";
+import { CircleCheckBigIcon, SparklesIcon, XIcon } from "../icons/AppIcons";
 
 type InteractiveGuideProps = {
+  isHeaderCollapsed: boolean;
   isOpen: boolean;
   onClose: () => void;
+  onHeaderCollapsedChange: (collapsed: boolean) => void;
+  onSettingsChange: (open: boolean) => void;
+  onTabChange: (tab: TabId) => void;
+  showSettings: boolean;
 };
 
-type GuideCopy = {
-  action: string;
+type GuideSnapshot = {
+  activeTab: TabId;
+  headerCollapsed: boolean;
+  noteIds: string[];
+  selectedDateKey: string;
+  showSettings: boolean;
+  theme: ThemeId;
+  todoIds: string[];
+};
+
+type GuideRuntime = {
+  noteGroupId: string;
+  noteId: string | null;
+  snapshot: GuideSnapshot;
+  todoGroupId: string;
+  todoId: string | null;
+};
+
+type GuideStep = {
   body: string;
+  instruction: string;
+  target: () => HTMLElement | null;
   title: string;
 };
 
-const EN_STEPS: GuideCopy[] = [
-  { title: "Collapse the navigation", body: "Click the fold button in the app’s top navigation bar to collapse the navigation and make more room for your work.", action: "Click the highlighted fold button" },
-  { title: "Add a note card", body: "The plus button creates a new card without interrupting your flow.", action: "Click the highlighted plus button" },
-  { title: "Organize it into a group", body: "Groups give related notes a shared color and make them easier to filter.", action: "Assign the note to Work" },
-  { title: "Open a floating card", body: "Drag a note outside the main panel in the real app. Here, click the same affordance to practice.", action: "Move the card out of the panel" },
-  { title: "Keep it on the desktop", body: "Pin a floating card to the desktop so it returns after StickIt starts in the background.", action: "Click the highlighted pin" },
-  { title: "Delete the practice note", body: "Deleting removes the note. Closing a floating card only returns it to the main list.", action: "Click the highlighted delete button" },
-  { title: "Switch to Todos", body: "Notes and Todos share the top navigation, so daily planning stays one click away.", action: "Open Todos" },
-  { title: "Add a todo", body: "Use quick entry for a task you want to plan and remember.", action: "Add the practice todo" },
-  { title: "Plan it for another date", body: "Todos belong to a selected date. You can move between today, tomorrow, or any calendar date.", action: "Move the todo to tomorrow" },
-  { title: "Set a reminder", body: "Choose a future time and StickIt will schedule a desktop reminder.", action: "Set a 09:00 reminder" },
-  { title: "Group the todo", body: "Todo groups add visual context and can be used as filters.", action: "Assign the todo to Work" },
-  { title: "Open Settings", body: "Settings controls startup, language, shortcuts, themes, motion, and notifications.", action: "Click the highlighted settings button" },
-  { title: "Switch the theme", body: "Choose a theme for the whole workspace. Notes and Todos remain readable in every palette.", action: "Choose Plum" },
-  { title: "Guide complete", body: "You practiced the core StickIt workflow. This sandbox will now be discarded, leaving your app exactly as it was.", action: "Finish and return to StickIt" },
-];
-
-const ZH_STEPS: GuideCopy[] = [
-  { title: "折叠顶部导航栏", body: "点击应用顶部导航栏中的折叠按钮，可以收起导航栏，腾出更多工作空间。", action: "点击高亮的折叠按钮" },
-  { title: "新增便签卡片", body: "底部的加号可以快速创建一张新卡片，不会打断当前思路。", action: "点击高亮的加号" },
-  { title: "把卡片加入分组", body: "分组会为相关便签提供统一颜色，也方便之后按主题筛选。", action: "将便签加入“工作”分组" },
-  { title: "打开悬浮卡片", body: "在真实应用中，将便签拖出主面板即可悬浮；这里点击相同入口完成演练。", action: "把卡片移出主面板" },
-  { title: "固定到桌面", body: "将悬浮卡片固定到桌面后，StickIt 在后台启动时会恢复这张卡片。", action: "点击高亮的图钉" },
-  { title: "删除演练便签", body: "删除会移除便签；关闭悬浮卡片只会把它收回主列表，两者并不相同。", action: "点击高亮的删除按钮" },
-  { title: "切换到 Todos", body: "Notes 与 Todos 共用顶部导航，日常计划只需一次点击即可进入。", action: "打开 Todos" },
-  { title: "添加待办", body: "通过快速输入，记录一件需要安排和提醒的任务。", action: "添加演练待办" },
-  { title: "设置不同日期", body: "每条待办都属于一个日期，可以切换到今天、明天或日历中的任意一天。", action: "把待办移到明天" },
-  { title: "设置提醒时间", body: "选择未来时间后，StickIt 会安排桌面提醒。", action: "设置 09:00 提醒" },
-  { title: "为待办分组", body: "Todo 分组会增加视觉提示，也可以用于筛选。", action: "将待办加入“工作”分组" },
-  { title: "打开设置页面", body: "设置页面集中管理启动方式、语言、快捷键、主题、动效和通知。", action: "点击高亮的设置按钮" },
-  { title: "切换应用主题", body: "主题会作用于整个工作区，同时保持 Notes 与 Todos 的可读性。", action: "选择“梅”主题" },
-  { title: "指引已完成", body: "你已经演练了 StickIt 的核心功能。关闭沙盒后，应用会完整回到指引前的状态。", action: "完成并返回 StickIt" },
-];
-
-function GuideAction({ ariaLabel, children, className = "", onClick }: { ariaLabel: string; children: ReactNode; className?: string; onClick: () => void }) {
-  return (
-    <motion.button
-      type="button"
-      aria-label={ariaLabel}
-      className={`relative z-10 ring-4 ring-[rgba(255,122,89,0.22)] shadow-[0_0_0_1px_rgba(255,122,89,0.9),0_14px_30px_rgba(61,49,34,0.16)] ${className}`}
-      animate={{ opacity: [1, 0.82, 1] }}
-      transition={{ duration: 1.35, repeat: Infinity, ease: "easeInOut" }}
-      whileTap={{ scale: 0.96 }}
-      onClick={onClick}
-    >
-      {children}
-    </motion.button>
-  );
+function queryTarget(selector: string) {
+  return document.querySelector<HTMLElement>(selector);
 }
 
-export function InteractiveGuide({ isOpen, onClose }: InteractiveGuideProps) {
+function cssValue(value: string) {
+  return typeof CSS !== "undefined" && CSS.escape ? CSS.escape(value) : value.replace(/["\\]/g, "\\$&");
+}
+
+function getAvailableGroupName(baseName: string, names: string[]) {
+  if (!names.includes(baseName)) {
+    return baseName;
+  }
+
+  let suffix = 2;
+  while (names.includes(`${baseName} ${suffix}`)) {
+    suffix += 1;
+  }
+  return `${baseName} ${suffix}`;
+}
+
+export function InteractiveGuide({
+  isHeaderCollapsed,
+  isOpen,
+  onClose,
+  onHeaderCollapsedChange,
+  onSettingsChange,
+  onTabChange,
+  showSettings,
+}: InteractiveGuideProps) {
   const { language } = useI18n();
-  const copy = language === "zh-CN" ? ZH_STEPS : EN_STEPS;
   const isZh = language === "zh-CN";
   const [step, setStep] = useState(0);
-  const [headerCollapsed, setHeaderCollapsed] = useState(false);
-  const [noteCreated, setNoteCreated] = useState(false);
-  const [noteGrouped, setNoteGrouped] = useState(false);
-  const [noteFloating, setNoteFloating] = useState(false);
-  const [notePinned, setNotePinned] = useState(false);
-  const [noteDeleted, setNoteDeleted] = useState(false);
-  const [tab, setTab] = useState<"notes" | "todos">("notes");
-  const [todoCreated, setTodoCreated] = useState(false);
-  const [todoTomorrow, setTodoTomorrow] = useState(false);
-  const [todoReminder, setTodoReminder] = useState(false);
-  const [todoGrouped, setTodoGrouped] = useState(false);
-  const [settingsOpen, setSettingsOpen] = useState(false);
-  const [plumTheme, setPlumTheme] = useState(false);
+  const [targetRect, setTargetRect] = useState<DOMRect | null>(null);
+  const [pinnedNoteIds, setPinnedNoteIds] = useState<string[]>([]);
+  const runtimeRef = useRef<GuideRuntime | null>(null);
+  const isFinishingRef = useRef(false);
+  const cards = useNotesStore((state) => state.cards);
+  const floatingCardIds = useNotesStore((state) => state.floatingCardIds);
+  const todos = useTodosStore((state) => state.todos);
+  const theme = useSettingsStore((state) => state.theme);
 
-  const advance = () => setStep((current) => Math.min(copy.length - 1, current + 1));
-  const resetAndClose = () => {
-    setStep(0);
-    setHeaderCollapsed(false);
-    setNoteCreated(false);
-    setNoteGrouped(false);
-    setNoteFloating(false);
-    setNotePinned(false);
-    setNoteDeleted(false);
-    setTab("notes");
-    setTodoCreated(false);
-    setTodoTomorrow(false);
-    setTodoReminder(false);
-    setTodoGrouped(false);
-    setSettingsOpen(false);
-    setPlumTheme(false);
-    onClose();
-  };
-  const run = (effect: () => void) => {
-    effect();
-    advance();
-  };
-  const current = copy[step];
+  const noteId = runtimeRef.current?.noteId ?? null;
+  const todoId = runtimeRef.current?.todoId ?? null;
 
-  useEffect(() => {
-    if (step !== 1 || !headerCollapsed) {
+  const steps = useMemo<GuideStep[]>(
+    () => [
+      {
+        title: isZh ? "折叠顶部导航" : "Collapse the navigation",
+        body: isZh ? "点击顶部折叠按钮，腾出更多工作空间。" : "Use the top fold button to make more room for your work.",
+        instruction: isZh ? "点击高亮的折叠按钮" : "Click the highlighted fold button",
+        target: () => queryTarget('[data-guide="navigation-fold"]'),
+      },
+      {
+        title: isZh ? "新增便签" : "Add a note",
+        body: isZh ? "通过底部加号创建一张真实便签。" : "Create a real note with the plus button in the footer.",
+        instruction: isZh ? "点击新增便签" : "Click Add note",
+        target: () => queryTarget('[data-guide="note-add"]'),
+      },
+      {
+        title: isZh ? "打开便签分组" : "Open note groups",
+        body: isZh ? "分组会为相关便签增加统一的视觉标记。" : "Groups give related notes a shared visual marker.",
+        instruction: isZh ? "点击便签上的分组标签" : "Click the group label on the note",
+        target: () => noteId ? queryTarget(`[data-note-card-id="${cssValue(noteId)}"] [data-action="note-group"]`) : null,
+      },
+      {
+        title: isZh ? "选择演练分组" : "Choose the guide group",
+        body: isZh ? "这次演练使用临时分组，完成后会自动删除。" : "This temporary group will be removed when the guide is complete.",
+        instruction: isZh ? "选择高亮的临时指引分组" : "Choose the highlighted temporary guide group",
+        target: () => runtimeRef.current ? queryTarget(`[data-guide-group-id="${cssValue(runtimeRef.current.noteGroupId)}"]`) : null,
+      },
+      {
+        title: isZh ? "折叠便签" : "Fold the note",
+        body: isZh ? "折叠后只保留便签标题和顶部操作。" : "Folding keeps only the note title and its top actions visible.",
+        instruction: isZh ? "点击便签折叠按钮" : "Click the note fold button",
+        target: () => noteId ? queryTarget(`[data-note-card-id="${cssValue(noteId)}"] [data-action="note-collapse"]`) : null,
+      },
+      {
+        title: isZh ? "创建悬浮卡片" : "Create a floating card",
+        body: isZh ? "按住这张便签并拖出 StickIt 主窗口，然后松开。" : "Drag this note outside the StickIt window, then release it.",
+        instruction: isZh ? "将高亮便签拖出窗口" : "Drag the highlighted note outside",
+        target: () => noteId ? queryTarget(`[data-note-card-id="${cssValue(noteId)}"]`) : null,
+      },
+      {
+        title: isZh ? "固定到桌面" : "Pin it to the desktop",
+        body: isZh ? "在刚打开的真实悬浮卡片上点击图钉。" : "Click the pin in the real floating card you just opened.",
+        instruction: isZh ? "在悬浮卡片中点击“固定到桌面”" : "Click “Keep on desktop” in the floating card",
+        target: () => null,
+      },
+      {
+        title: isZh ? "取消桌面固定" : "Remove the desktop pin",
+        body: isZh ? "再次点击图钉，避免演练卡片保留在桌面上。" : "Click the pin again so the practice card does not remain on your desktop.",
+        instruction: isZh ? "在悬浮卡片中取消桌面固定" : "Remove the desktop pin in the floating card",
+        target: () => null,
+      },
+      {
+        title: isZh ? "收回悬浮卡片" : "Return the floating card",
+        body: isZh ? "点击悬浮卡片的关闭按钮，将它收回主列表。" : "Close the floating card to return it to the main list.",
+        instruction: isZh ? "关闭悬浮卡片" : "Close the floating card",
+        target: () => null,
+      },
+      {
+        title: isZh ? "删除演练便签" : "Delete the practice note",
+        body: isZh ? "现在删除这张便签，完成 Notes 的收尾。" : "Delete the note now to finish the Notes practice.",
+        instruction: isZh ? "点击便签删除按钮" : "Click the note delete button",
+        target: () => noteId ? queryTarget(`[data-note-card-id="${cssValue(noteId)}"] [data-action="delete"]`) : null,
+      },
+      {
+        title: isZh ? "切换到 Todos" : "Switch to Todos",
+        body: isZh ? "通过顶部标签进入待办页面。" : "Open daily planning from the top tabs.",
+        instruction: isZh ? "点击 Todos 标签" : "Click the Todos tab",
+        target: () => queryTarget('[data-guide="tab-todos"]'),
+      },
+      {
+        title: isZh ? "打开日期选择" : "Open the calendar",
+        body: isZh ? "待办会归属于当前选择的日期。" : "Todos belong to the currently selected date.",
+        instruction: isZh ? "点击日期卡片" : "Click the date card",
+        target: () => queryTarget('[data-guide="todo-calendar"]'),
+      },
+      {
+        title: isZh ? "切换到明天" : "Switch to tomorrow",
+        body: isZh ? "使用快捷日期为不同日期安排任务。" : "Use a quick date to plan work for another day.",
+        instruction: isZh ? "点击“明天”" : "Click “Tomorrow”",
+        target: () => queryTarget('[data-guide-date="tomorrow"]'),
+      },
+      {
+        title: isZh ? "添加待办" : "Add a todo",
+        body: isZh ? "在真实快速输入框中输入内容，然后按 Enter。" : "Type in the real quick-entry field, then press Enter.",
+        instruction: isZh ? "输入“StickIt 指引待办”并提交" : "Enter “StickIt guide todo” and submit",
+        target: () => queryTarget('[data-guide="todo-quick-add"]'),
+      },
+      {
+        title: isZh ? "打开提醒" : "Open the reminder",
+        body: isZh ? "为刚创建的待办安排一个未来提醒。" : "Schedule a future reminder for the todo you just created.",
+        instruction: isZh ? "点击待办提醒按钮" : "Click the todo reminder button",
+        target: () => todoId ? queryTarget(`[data-todo-item-id="${cssValue(todoId)}"] [data-action="todo-reminder"]`) : null,
+      },
+      {
+        title: isZh ? "选择提醒时间" : "Choose a reminder time",
+        body: isZh ? "快捷选项会为明天自动填入一个有效时间。" : "A quick option fills a valid time for tomorrow.",
+        instruction: isZh ? "点击“上午”" : "Click “Morning”",
+        target: () => queryTarget('[data-guide-reminder="morning"]'),
+      },
+      {
+        title: isZh ? "保存提醒" : "Save the reminder",
+        body: isZh ? "保存后，桌面宿主会调度系统提醒。" : "Saving lets the desktop host schedule the system reminder.",
+        instruction: isZh ? "点击保存" : "Click Save",
+        target: () => queryTarget('[data-guide="reminder-save"]'),
+      },
+      {
+        title: isZh ? "打开 Todo 分组" : "Open todo groups",
+        body: isZh ? "Todo 也可以通过分组增加上下文。" : "Todo groups add visual context too.",
+        instruction: isZh ? "点击待办分组按钮" : "Click the todo group button",
+        target: () => todoId ? queryTarget(`[data-todo-item-id="${cssValue(todoId)}"] [data-action="todo-group"]`) : null,
+      },
+      {
+        title: isZh ? "选择演练分组" : "Choose the guide group",
+        body: isZh ? "选择临时 Todo 分组继续。" : "Choose the temporary Todo group to continue.",
+        instruction: isZh ? "选择高亮的临时指引分组" : "Choose the highlighted temporary guide group",
+        target: () => runtimeRef.current ? queryTarget(`[data-guide-group-id="${cssValue(runtimeRef.current.todoGroupId)}"]`) : null,
+      },
+      {
+        title: isZh ? "打开设置" : "Open Settings",
+        body: isZh ? "设置页面集中管理主题、启动、语言与通知。" : "Settings brings themes, startup, language, and notifications together.",
+        instruction: isZh ? "点击顶部设置按钮" : "Click the Settings button",
+        target: () => queryTarget('[data-guide="settings-open"]'),
+      },
+      {
+        title: isZh ? "进入主题设置" : "Open theme settings",
+        body: isZh ? "主题会作用于整个真实应用界面。" : "Themes apply to the entire real app interface.",
+        instruction: isZh ? "点击主题分类" : "Click the Theme category",
+        target: () => queryTarget('[data-guide-settings-category="theme"]'),
+      },
+      {
+        title: isZh ? "切换主题" : "Switch the theme",
+        body: isZh ? "选择“梅”查看主题变化；稍后会恢复原主题。" : "Choose Plum to see the change; your original theme will be restored.",
+        instruction: isZh ? "选择“梅”" : "Choose Plum",
+        target: () => queryTarget('[data-guide-theme="plum"]'),
+      },
+      {
+        title: isZh ? "删除演练待办" : "Delete the practice todo",
+        body: isZh ? "最后删除待办，应用数据随后会恢复到演练前。" : "Delete the todo; the app data will then match its pre-guide state.",
+        instruction: isZh ? "点击待办删除按钮" : "Click the todo delete button",
+        target: () => todoId ? queryTarget(`[data-todo-item-id="${cssValue(todoId)}"] [data-action="todo-delete"]`) : null,
+      },
+      {
+        title: isZh ? "指引完成" : "Guide complete",
+        body: isZh ? "演练卡片、临时分组、日期与主题均已归位。" : "Practice cards, temporary groups, date, and theme are back where they started.",
+        instruction: isZh ? "返回 StickIt" : "Return to StickIt",
+        target: () => null,
+      },
+    ],
+    [isZh, noteId, todoId],
+  );
+
+  const finishCleanup = useCallback(() => {
+    const runtime = runtimeRef.current;
+    if (!runtime || isFinishingRef.current) {
       return;
     }
 
-    const timer = window.setTimeout(() => setHeaderCollapsed(false), 420);
+    isFinishingRef.current = true;
+    const notesState = useNotesStore.getState();
+    const todosState = useTodosStore.getState();
+    const settingsState = useSettingsStore.getState();
+
+    if (runtime.noteId) {
+      notesState.removeCard(runtime.noteId);
+    }
+    if (runtime.todoId) {
+      todosState.removeTodo(runtime.todoId);
+    }
+    notesState.deleteGroup(runtime.noteGroupId);
+    todosState.deleteGroup(runtime.todoGroupId);
+    todosState.selectDate(runtime.snapshot.selectedDateKey);
+    settingsState.setTheme(runtime.snapshot.theme);
+    onHeaderCollapsedChange(runtime.snapshot.headerCollapsed);
+    onSettingsChange(runtime.snapshot.showSettings);
+    onTabChange(runtime.snapshot.activeTab);
+    setStep(steps.length - 1);
+  }, [onHeaderCollapsedChange, onSettingsChange, onTabChange, steps.length]);
+
+  useEffect(() => {
+    if (!isOpen || runtimeRef.current) {
+      return;
+    }
+
+    const notesState = useNotesStore.getState();
+    const todosState = useTodosStore.getState();
+    const settingsState = useSettingsStore.getState();
+    const baseGroupName = isZh ? "StickIt 指引" : "StickIt Guide";
+    const noteGroupName = getAvailableGroupName(baseGroupName, notesState.groups.map((group) => group.name));
+    const todoGroupName = getAvailableGroupName(baseGroupName, todosState.groups.map((group) => group.name));
+    const noteGroup = notesState.createGroup({ color: "#E59445", name: noteGroupName });
+    const todoGroup = todosState.createGroup({ color: "#547AC3", name: todoGroupName });
+
+    if (!noteGroup || !todoGroup) {
+      return;
+    }
+
+    const runtime: GuideRuntime = {
+      noteGroupId: noteGroup.id,
+      noteId: null,
+      snapshot: {
+        activeTab: settingsState.activeTab,
+        headerCollapsed: isHeaderCollapsed,
+        noteIds: notesState.cards.map((card) => card.id),
+        selectedDateKey: todosState.selectedDateKey,
+        showSettings,
+        theme: settingsState.theme,
+        todoIds: todosState.todos.map((todo) => todo.id),
+      },
+      todoGroupId: todoGroup.id,
+      todoId: null,
+    };
+
+    runtimeRef.current = runtime;
+    isFinishingRef.current = false;
+    setStep(0);
+    setPinnedNoteIds([]);
+    onSettingsChange(false);
+    onTabChange("notes");
+    onHeaderCollapsedChange(false);
+  }, [isHeaderCollapsed, isOpen, isZh, onHeaderCollapsedChange, onSettingsChange, onTabChange, showSettings]);
+
+  useEffect(() => {
+    if (!isOpen) {
+      return;
+    }
+
+    return subscribeToFloatingCardsState((state) => {
+      setPinnedNoteIds(state.pinnedNoteIds ?? []);
+    });
+  }, [isOpen]);
+
+  useEffect(() => {
+    if (!isOpen || !runtimeRef.current) {
+      return;
+    }
+
+    const runtime = runtimeRef.current;
+    if (step === 1 && !runtime.noteId) {
+      const created = cards.find((card) => !runtime.snapshot.noteIds.includes(card.id));
+      if (created) {
+        runtime.noteId = created.id;
+        useNotesStore.getState().updateCardTitle(created.id, isZh ? "StickIt 指引便签" : "StickIt guide note");
+        setStep(2);
+      }
+    }
+
+    if (step === 13 && !runtime.todoId) {
+      const created = todos.find((todo) => !runtime.snapshot.todoIds.includes(todo.id));
+      if (created) {
+        runtime.todoId = created.id;
+        setStep(14);
+      }
+    }
+  }, [cards, isOpen, isZh, step, todos]);
+
+  useEffect(() => {
+    if (!isOpen || !noteId) {
+      return;
+    }
+
+    if (step === 5 && floatingCardIds.includes(noteId)) {
+      setStep(6);
+    } else if (step === 6 && pinnedNoteIds.includes(noteId)) {
+      setStep(7);
+    } else if (step === 7 && !pinnedNoteIds.includes(noteId)) {
+      setStep(8);
+    } else if (step === 8 && !floatingCardIds.includes(noteId)) {
+      setStep(9);
+    }
+  }, [floatingCardIds, isOpen, noteId, pinnedNoteIds, step]);
+
+  useEffect(() => {
+    if (!isOpen) {
+      return;
+    }
+
+    if (step === 1 && isHeaderCollapsed) {
+      const timer = window.setTimeout(() => onHeaderCollapsedChange(false), 360);
+      return () => window.clearTimeout(timer);
+    }
+  }, [isHeaderCollapsed, isOpen, onHeaderCollapsedChange, step]);
+
+  useEffect(() => {
+    if (!isOpen || step !== 22 || !showSettings) {
+      return;
+    }
+
+    const runtime = runtimeRef.current;
+    if (!runtime || theme !== "plum") {
+      return;
+    }
+
+    const timer = window.setTimeout(() => {
+      useSettingsStore.getState().setTheme(runtime.snapshot.theme);
+      onSettingsChange(false);
+      onTabChange("todos");
+      setStep(22);
+    }, 650);
     return () => window.clearTimeout(timer);
-  }, [headerCollapsed, step]);
+  }, [isOpen, onSettingsChange, onTabChange, showSettings, step, theme]);
+
+  const currentStep = steps[step];
+
+  useEffect(() => {
+    if (!isOpen || !currentStep) {
+      setTargetRect(null);
+      return;
+    }
+
+    const update = () => {
+      const target = currentStep.target();
+      setTargetRect(target?.getBoundingClientRect() ?? null);
+      target?.scrollIntoView?.({ block: "nearest", behavior: "smooth" });
+    };
+
+    update();
+    const observer = new MutationObserver(update);
+    observer.observe(document.body, { childList: true, subtree: true });
+    window.addEventListener("resize", update);
+    window.addEventListener("scroll", update, true);
+    return () => {
+      observer.disconnect();
+      window.removeEventListener("resize", update);
+      window.removeEventListener("scroll", update, true);
+    };
+  }, [currentStep, isOpen, step]);
+
+  useEffect(() => {
+    if (!isOpen || !currentStep || step === steps.length - 1) {
+      return;
+    }
+
+    const handleClick = (event: MouseEvent) => {
+      const target = currentStep.target();
+      const clicked = event.target;
+      if (!(clicked instanceof Node)) {
+        return;
+      }
+      if ((clicked instanceof Element && clicked.closest("[data-guide-dialog]")) || !target) {
+        return;
+      }
+      if (!target.contains(clicked)) {
+        event.preventDefault();
+        event.stopPropagation();
+        return;
+      }
+
+      if ([1, 13].includes(step)) {
+        return;
+      }
+
+      window.setTimeout(() => {
+        if (step === 0) {
+          setStep(1);
+        } else if (step === 4) {
+          setStep(5);
+          window.setTimeout(() => {
+            if (runtimeRef.current?.noteId) {
+              useNotesStore.getState().toggleCollapsed(runtimeRef.current.noteId);
+            }
+          }, 280);
+        } else if (step === 9) {
+          setStep(10);
+        } else if (step === 10) {
+          setStep(11);
+        } else if (step === 11) {
+          setStep(12);
+        } else if (step === 12) {
+          setStep(13);
+        } else if (step >= 2 && step <= 3) {
+          setStep(step + 1);
+        } else if (step >= 14 && step <= 21) {
+          setStep(step + 1);
+        } else if (step === 22) {
+          window.setTimeout(finishCleanup, 260);
+        }
+      }, 80);
+    };
+
+    document.addEventListener("click", handleClick, true);
+    return () => document.removeEventListener("click", handleClick, true);
+  }, [currentStep, finishCleanup, isOpen, step, steps.length]);
+
+  const handleExit = () => {
+    runtimeRef.current = null;
+    onClose();
+  };
+
+  const handleFinish = () => {
+    runtimeRef.current = null;
+    onClose();
+  };
+
+  const viewportHeight = typeof window === "undefined" ? 800 : window.innerHeight;
+  const panelStyle = targetRect && targetRect.top > viewportHeight * 0.52
+    ? { left: 14, top: 14 }
+    : { bottom: 14, right: 14 };
 
   return (
     <AnimatePresence>
       {isOpen ? (
-        <motion.div
-          role="dialog"
-          aria-modal="true"
-          aria-label={isZh ? "StickIt 交互式指引" : "StickIt interactive guide"}
-          data-no-window-drag="true"
-          className={`fixed inset-0 z-[120] overflow-hidden ${plumTheme ? "bg-[radial-gradient(circle_at_top,#fff4f5_0,#f4d9df_42%,#c98b9c_100%)]" : "bg-[radial-gradient(circle_at_top,#fffaf3_0,#f5eee4_45%,#d8c4ad_100%)]"}`}
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-        >
-          <div className="relative flex h-full flex-col p-3 sm:p-5">
-            <header className="relative z-20 mx-auto flex w-full max-w-[980px] items-center gap-3 rounded-[22px] border border-white/70 bg-white/88 px-3 py-3 shadow-[0_18px_44px_rgba(61,49,34,0.13)] backdrop-blur-xl">
-              <span className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-[13px] bg-[linear-gradient(145deg,#ff7a59,#f4b942)] text-white shadow-[0_8px_18px_rgba(255,122,89,0.24)]"><SparklesIcon size={17} /></span>
+        <>
+          <motion.div
+            className="pointer-events-none fixed inset-0 z-[105] bg-[rgba(30,25,21,0.08)]"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+          />
+          {targetRect ? (
+            <motion.div
+              className="pointer-events-none fixed z-[106] rounded-[16px] border-2 border-[#ff7a59] shadow-[0_0_0_5px_rgba(255,122,89,0.18),0_12px_32px_rgba(61,49,34,0.14)]"
+              animate={{
+                height: targetRect.height + 10,
+                left: targetRect.left - 5,
+                top: targetRect.top - 5,
+                width: targetRect.width + 10,
+              }}
+              transition={{ duration: 0.2, ease: [0.22, 1, 0.36, 1] }}
+            />
+          ) : null}
+          <motion.aside
+            data-guide-dialog
+            role="dialog"
+            aria-label={isZh ? "StickIt 交互式指引" : "StickIt interactive guide"}
+            className="fixed z-[110] w-[min(268px,calc(100vw-28px))] rounded-[20px] border border-[rgba(213,198,180,0.88)] bg-[rgba(255,252,248,0.97)] p-3.5 shadow-[0_22px_46px_rgba(61,49,34,0.22)] backdrop-blur-xl"
+            style={panelStyle}
+            initial={{ opacity: 0, y: 8, scale: 0.97 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 6, scale: 0.98 }}
+          >
+            <div className="flex items-center gap-2.5">
+              <span className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-[11px] bg-[linear-gradient(145deg,#ff7a59,#f4b942)] text-white">
+                <SparklesIcon size={14} />
+              </span>
               <div className="min-w-0 flex-1">
-                <div className="flex items-center justify-between gap-3">
-                  <p className="truncate text-[12px] font-bold text-[var(--brown-strong)]">{isZh ? `交互式指引 · 第 ${step + 1} / ${copy.length} 步` : `Interactive guide · Step ${step + 1} of ${copy.length}`}</p>
-                  <p className="shrink-0 text-[10px] font-semibold text-[var(--muted)]">{Math.round(((step + 1) / copy.length) * 100)}%</p>
-                </div>
-                <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-[rgba(156,126,94,0.13)]">
-                  <motion.div className="h-full rounded-full bg-[linear-gradient(90deg,#ff7a59,#f4b942)]" animate={{ width: `${((step + 1) / copy.length) * 100}%` }} transition={{ duration: 0.28 }} />
+                <p className="text-[10px] font-bold uppercase tracking-[0.08em] text-[var(--muted)]">
+                  {isZh ? `第 ${step + 1} / ${steps.length} 步` : `Step ${step + 1} of ${steps.length}`}
+                </p>
+                <div className="mt-1 h-1 overflow-hidden rounded-full bg-[rgba(156,126,94,0.14)]">
+                  <motion.div className="h-full rounded-full bg-[#ff7a59]" animate={{ width: `${((step + 1) / steps.length) * 100}%` }} />
                 </div>
               </div>
-              <button type="button" aria-label={isZh ? "退出指引" : "Exit guide"} className="paper-icon-button inline-flex h-9 w-9 min-h-0 min-w-0 shrink-0 rounded-[12px]" onClick={resetAndClose}><XIcon size={14} /></button>
-            </header>
-
-            <div className="relative mx-auto mt-3 grid min-h-0 w-full max-w-[980px] flex-1 gap-3 lg:grid-cols-[minmax(0,1fr)_280px]">
-              <div className="relative min-h-0 overflow-hidden rounded-[30px] border border-white/70 bg-[rgba(255,252,247,0.88)] p-3 shadow-[0_30px_70px_rgba(61,49,34,0.18)] backdrop-blur-xl">
-                <div className="flex h-full min-h-0 flex-col gap-2.5">
-                  <motion.div layout className="rounded-[21px] border border-[rgba(213,198,180,0.72)] bg-white/76 px-3 py-2.5">
-                    {!headerCollapsed ? (
-                      <>
-                        <div className="mb-2 flex items-center justify-between">
-                          <p className="font-display text-[18px] font-semibold text-[var(--brown-strong)]">StickIt</p>
-                          {step === 11 ? (
-                            <GuideAction ariaLabel={current.action} className="paper-icon-button inline-flex h-8 w-8 min-h-0 min-w-0 items-center justify-center rounded-[11px]" onClick={() => run(() => setSettingsOpen(true))}><SlidersHorizontalIcon size={14} /></GuideAction>
-                          ) : (
-                            <span className="paper-icon-button inline-flex h-8 w-8 min-h-0 min-w-0 items-center justify-center rounded-[11px] opacity-55"><SlidersHorizontalIcon size={14} /></span>
-                          )}
-                        </div>
-                        <div className="mb-2 grid grid-cols-2 gap-1 rounded-[14px] bg-[rgba(156,126,94,0.09)] p-1">
-                          {step === 6 ? (
-                            <>
-                              <span className="rounded-[11px] px-3 py-2 text-center text-[11px] font-semibold text-[var(--muted)]">Notes</span>
-                              <GuideAction ariaLabel={current.action} className="rounded-[11px] bg-white px-3 py-2 text-[11px] font-bold text-[var(--brown-strong)]" onClick={() => run(() => setTab("todos"))}>Todos</GuideAction>
-                            </>
-                          ) : (
-                            <>
-                              <span className={`rounded-[11px] px-3 py-2 text-center text-[11px] font-semibold ${tab === "notes" ? "bg-white text-[var(--brown-strong)] shadow-sm" : "text-[var(--muted)]"}`}>Notes</span>
-                              <span className={`rounded-[11px] px-3 py-2 text-center text-[11px] font-semibold ${tab === "todos" ? "bg-white text-[var(--brown-strong)] shadow-sm" : "text-[var(--muted)]"}`}>Todos</span>
-                            </>
-                          )}
-                        </div>
-                      </>
-                    ) : null}
-                    <div className="flex items-center gap-2">
-                      <span className="h-[2px] flex-1 rounded-full bg-[rgba(255,122,89,0.2)]" />
-                      {step === 0 ? (
-                        <GuideAction ariaLabel={current.action} className="inline-flex h-7 w-16 items-center justify-center rounded-[12px] bg-white text-[var(--brown-strong)]" onClick={() => run(() => setHeaderCollapsed(true))}><ChevronUpIcon size={14} /></GuideAction>
-                      ) : (
-                        <span className="inline-flex h-7 w-16 items-center justify-center rounded-[12px] border border-[rgba(156,126,94,0.14)] bg-white text-[var(--brown-strong)]"><ChevronUpIcon size={14} className={headerCollapsed ? "rotate-180" : ""} /></span>
-                      )}
-                      <span className="h-[2px] flex-1 rounded-full bg-[rgba(47,107,255,0.18)]" />
-                    </div>
-                  </motion.div>
-
-                  <div className="relative min-h-0 flex-1 overflow-y-auto rounded-[23px] border border-[rgba(213,198,180,0.68)] bg-white/55 p-3">
-                    {settingsOpen ? (
-                      <div className="space-y-3">
-                        <div className="flex items-center gap-3">
-                          <span className="inline-flex h-10 w-10 items-center justify-center rounded-[14px] bg-white text-[#7A5E39]"><SlidersHorizontalIcon size={17} /></span>
-                          <div><p className="font-display text-[18px] font-semibold text-[var(--brown-strong)]">{isZh ? "设置" : "Settings"}</p><p className="text-[11px] text-[var(--muted)]">{isZh ? "主题、启动、语言与通知" : "Theme, startup, language, and notifications"}</p></div>
-                        </div>
-                        <div className="rounded-[18px] border border-[rgba(213,198,180,0.72)] bg-white/74 p-3">
-                          <p className="mb-3 text-[11px] font-bold text-[var(--brown-strong)]">{isZh ? "选择主题" : "Choose theme"}</p>
-                          <div className="grid grid-cols-3 gap-2">
-                            <span className="rounded-[14px] border border-[rgba(213,198,180,0.72)] bg-[#fffaf2] p-3 text-center text-[10px] font-semibold">{isZh ? "经典色" : "Classic"}</span>
-                            {step === 12 ? <GuideAction ariaLabel={current.action} className="rounded-[14px] bg-[#8f4057] p-3 text-center text-[10px] font-bold text-white" onClick={() => run(() => setPlumTheme(true))}>{isZh ? "梅" : "Plum"}</GuideAction> : <span className="rounded-[14px] bg-[#8f4057] p-3 text-center text-[10px] font-bold text-white">{isZh ? "梅" : "Plum"}</span>}
-                            <span className="rounded-[14px] bg-[#dce9d6] p-3 text-center text-[10px] font-semibold">{isZh ? "竹" : "Forest"}</span>
-                          </div>
-                        </div>
-                      </div>
-                    ) : tab === "notes" ? (
-                      <div className="flex h-full flex-col">
-                        <div className="min-h-0 flex-1">
-                          {noteCreated && !noteDeleted ? (
-                            <motion.article layoutId="guide-note" className={`rounded-[20px] border bg-[#fff9df] p-3 shadow-[0_12px_24px_rgba(61,49,34,0.08)] ${noteGrouped ? "border-[#d79743]" : "border-[rgba(213,198,180,0.8)]"}`}>
-                              <div className="flex items-center justify-between gap-2">
-                                <span className="text-[10px] font-bold text-[#8b6739]">{noteGrouped ? (isZh ? "工作" : "Work") : (isZh ? "未分组" : "Ungrouped")}</span>
-                                <div className="flex items-center gap-1.5">
-                                  {step === 2 ? <GuideAction ariaLabel={current.action} className="rounded-[10px] bg-white/80 px-2 py-1.5 text-[#7A5E39]" onClick={() => run(() => setNoteGrouped(true))}><GroupPlusIcon size={13} /></GuideAction> : null}
-                                  {step === 3 ? <GuideAction ariaLabel={current.action} className="rounded-[10px] bg-white/80 px-2 py-1.5 text-[12px] font-bold text-[#7A5E39]" onClick={() => run(() => setNoteFloating(true))}>↗</GuideAction> : null}
-                                  {step === 5 ? <GuideAction ariaLabel={current.action} className="rounded-[10px] bg-white/80 p-1.5 text-[#b84c43]" onClick={() => run(() => setNoteDeleted(true))}><Trash2Icon size={13} /></GuideAction> : null}
-                                </div>
-                              </div>
-                              <p className="mt-3 font-display text-[16px] font-semibold text-[var(--brown-strong)]">{isZh ? "准备发布 v1.0.2" : "Prepare v1.0.2 release"}</p>
-                              <p className="mt-2 text-[11px] leading-5 text-[var(--muted)]">{isZh ? "检查更新内容与构建产物。" : "Review the changes and build artifact."}</p>
-                            </motion.article>
-                          ) : <div className="flex h-full items-center justify-center text-center text-[12px] leading-6 text-[var(--muted)]">{isZh ? "还没有演练便签" : "No practice notes yet"}</div>}
-                        </div>
-                        <div className="mt-3 flex items-center justify-end rounded-[18px] border border-[rgba(213,198,180,0.7)] bg-white/72 p-2.5">
-                          {step === 1 ? <GuideAction ariaLabel={current.action} className="inline-flex h-10 w-10 items-center justify-center rounded-full bg-[linear-gradient(145deg,#ff7a59,#f4b942)] text-white" onClick={() => run(() => setNoteCreated(true))}><PlusIcon size={17} /></GuideAction> : <span className="inline-flex h-10 w-10 items-center justify-center rounded-full bg-[rgba(156,126,94,0.12)] text-[var(--muted)]"><PlusIcon size={17} /></span>}
-                        </div>
-                      </div>
-                    ) : (
-                      <div className="flex h-full flex-col">
-                        <div className="mb-3 flex items-center justify-between rounded-[18px] border border-[rgba(213,198,180,0.7)] bg-white/72 px-3 py-2.5">
-                          <div className="flex items-center gap-2"><CalendarDaysIcon size={16} /><div><p className="text-[11px] font-bold text-[var(--brown-strong)]">{todoTomorrow ? (isZh ? "明天" : "Tomorrow") : (isZh ? "今天" : "Today")}</p><p className="text-[9px] text-[var(--muted)]">{todoTomorrow ? (isZh ? "已切换日期" : "Date changed") : (isZh ? "当前日期" : "Current date")}</p></div></div>
-                          {step === 8 ? <GuideAction ariaLabel={current.action} className="rounded-[11px] bg-white px-3 py-2 text-[10px] font-bold text-[#2f6bff]" onClick={() => run(() => setTodoTomorrow(true))}>{isZh ? "明天" : "Tomorrow"}</GuideAction> : null}
-                        </div>
-                        <div className="min-h-0 flex-1">
-                          {todoCreated ? (
-                            <div className={`rounded-[18px] border bg-white/76 p-3 ${todoGrouped ? "border-[#7691c9]" : "border-[rgba(213,198,180,0.75)]"}`}>
-                              <div className="flex items-start gap-2.5">
-                                <span className="mt-0.5 h-4 w-4 rounded-[5px] border-2 border-[#2f6bff]" />
-                                <div className="min-w-0 flex-1"><p className="text-[12px] font-semibold text-[var(--brown-strong)]">{isZh ? "确认 v1.0.2 构建" : "Verify the v1.0.2 build"}</p><div className="mt-2 flex flex-wrap gap-1.5 text-[9px] font-semibold">{todoGrouped ? <span className="rounded-full bg-[#e8eefc] px-2 py-1 text-[#4565a8]">{isZh ? "工作" : "Work"}</span> : null}{todoReminder ? <span className="rounded-full bg-[#fff0df] px-2 py-1 text-[#9a632d]">09:00</span> : null}</div></div>
-                                {step === 9 ? <GuideAction ariaLabel={current.action} className="rounded-[10px] bg-white p-2 text-[#9a632d]" onClick={() => run(() => setTodoReminder(true))}><Clock3Icon size={14} /></GuideAction> : null}
-                                {step === 10 ? <GuideAction ariaLabel={current.action} className="rounded-[10px] bg-white p-2 text-[#4565a8]" onClick={() => run(() => setTodoGrouped(true))}><GroupPlusIcon size={14} /></GuideAction> : null}
-                              </div>
-                            </div>
-                          ) : null}
-                        </div>
-                        <div className="mt-3 rounded-[18px] border border-[rgba(213,198,180,0.7)] bg-white/72 p-2.5">
-                          {step === 7 ? <GuideAction ariaLabel={current.action} className="flex w-full items-center justify-center gap-2 rounded-[13px] bg-[linear-gradient(145deg,#ff7a59,#f4b942)] px-3 py-2.5 text-[11px] font-bold text-white" onClick={() => run(() => setTodoCreated(true))}><PlusIcon size={15} />{isZh ? "添加演练待办" : "Add practice todo"}</GuideAction> : <span className="block rounded-[13px] bg-[rgba(156,126,94,0.09)] px-3 py-2.5 text-[11px] text-[var(--muted)]">{isZh ? "快速添加待办…" : "Quick add a todo…"}</span>}
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                </div>
-
-                <AnimatePresence>
-                  {noteFloating && !noteDeleted ? (
-                    <motion.div className="absolute bottom-7 right-7 z-20 w-[215px] rounded-[20px] border border-[#d79743] bg-[#fff9df] p-3 shadow-[0_24px_54px_rgba(61,49,34,0.26)]" initial={{ opacity: 0, scale: 0.85, x: -30, y: 20 }} animate={{ opacity: 1, scale: 1, x: 0, y: 0 }} exit={{ opacity: 0, scale: 0.88, y: 15 }}>
-                      <div className="flex items-center justify-between"><span className="text-[9px] font-bold text-[#8b6739]">{isZh ? "悬浮便签" : "Floating note"}</span>{step === 4 ? <GuideAction ariaLabel={current.action} className="rounded-[9px] bg-white p-1.5 text-[#7A5E39]" onClick={() => run(() => setNotePinned(true))}><PushPinIcon size={13} active={notePinned} /></GuideAction> : <span className="rounded-[9px] bg-white p-1.5 text-[#ff7a59]"><PushPinIcon size={13} active={notePinned} /></span>}</div>
-                      <p className="mt-2 text-[12px] font-semibold text-[var(--brown-strong)]">{isZh ? "准备发布 v1.0.2" : "Prepare v1.0.2 release"}</p>
-                    </motion.div>
-                  ) : null}
-                </AnimatePresence>
-              </div>
-
-              <motion.aside key={step} className="relative z-20 self-end rounded-[25px] border border-white/75 bg-[rgba(255,255,255,0.94)] p-4 shadow-[0_24px_54px_rgba(61,49,34,0.19)] backdrop-blur-xl lg:self-center" initial={{ opacity: 0, x: 12, y: 6 }} animate={{ opacity: 1, x: 0, y: 0 }}>
-                <span className="status-chip" data-tone="coral">{step + 1} / {copy.length}</span>
-                <p className="mt-3 font-display text-[21px] font-semibold tracking-[-0.03em] text-[var(--brown-strong)]">{current.title}</p>
-                <p className="mt-2 text-[12px] leading-6 text-[var(--muted)]">{current.body}</p>
-                <div className="mt-4 flex items-start gap-2 rounded-[15px] bg-[rgba(255,122,89,0.09)] px-3 py-2.5 text-[11px] font-semibold leading-5 text-[#8f553d]"><SparklesIcon size={14} className="mt-0.5 shrink-0" />{current.action}</div>
-                {step === copy.length - 1 ? <motion.button type="button" className="mt-4 flex w-full items-center justify-center gap-2 rounded-[14px] bg-[linear-gradient(145deg,#ff7a59,#f4b942)] px-4 py-3 text-[12px] font-bold text-white shadow-[0_12px_24px_rgba(255,122,89,0.24)]" whileTap={{ scale: 0.98 }} onClick={resetAndClose}><CircleCheckBigIcon size={16} />{isZh ? "完成指引" : "Finish guide"}</motion.button> : null}
-                <button type="button" className="mt-3 w-full text-center text-[11px] font-semibold text-[var(--muted)] underline decoration-[rgba(156,126,94,0.35)] underline-offset-4" onClick={resetAndClose}>{isZh ? "退出指引并丢弃演练状态" : "Exit guide and discard practice state"}</button>
-              </motion.aside>
+              <button
+                type="button"
+                aria-label={isZh ? "退出指引" : "Exit guide"}
+                data-tooltip={isZh ? "退出指引" : "Exit guide"}
+                className="paper-icon-button inline-flex h-8 w-8 min-h-0 min-w-0 rounded-[11px]"
+                onClick={handleExit}
+              >
+                <XIcon size={13} />
+              </button>
             </div>
-          </div>
-        </motion.div>
+            <p className="mt-3 font-display text-[17px] font-semibold tracking-[-0.025em] text-[var(--brown-strong)]">{currentStep.title}</p>
+            <p className="mt-1.5 text-[11.5px] leading-5 text-[var(--muted)]">{currentStep.body}</p>
+            <p className="mt-3 rounded-[12px] bg-[rgba(255,122,89,0.09)] px-2.5 py-2 text-[10.5px] font-semibold leading-5 text-[#8f553d]">{currentStep.instruction}</p>
+            {step === steps.length - 1 ? (
+              <motion.button
+                type="button"
+                className="mt-3 flex w-full items-center justify-center gap-2 rounded-[12px] bg-[linear-gradient(145deg,#ff7a59,#f4b942)] px-3 py-2.5 text-[11px] font-bold text-white"
+                whileTap={{ scale: 0.98 }}
+                onClick={handleFinish}
+              >
+                <CircleCheckBigIcon size={14} />
+                {isZh ? "完成" : "Done"}
+              </motion.button>
+            ) : null}
+          </motion.aside>
+        </>
       ) : null}
     </AnimatePresence>
   );

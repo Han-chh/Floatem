@@ -32,6 +32,7 @@ export function TabBar({ activeTab, onTabChange }: TabBarProps) {
             type="button"
             role="tab"
             aria-selected={activeTab === tab.id}
+            data-guide={`tab-${tab.id}`}
             data-tooltip={tab.label}
             data-tooltip-placement="bottom"
             className={clsx(

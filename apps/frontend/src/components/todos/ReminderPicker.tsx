@@ -375,9 +375,9 @@ export function ReminderPicker({
     try {
       const checkPermission = getStickItBridge().checkNotificationPermission;
       const permission = checkPermission ? await checkPermission({ language }) : { allowed: false };
-      setShowPermissionWarning(!permission.allowed);
+      setShowPermissionWarning(!permission.allowed && !document.querySelector("[data-guide-dialog]"));
     } catch {
-      setShowPermissionWarning(true);
+      setShowPermissionWarning(!document.querySelector("[data-guide-dialog]"));
     }
   };
 
@@ -395,6 +395,7 @@ export function ReminderPicker({
       <motion.button
         type="button"
         aria-label={reminderAt ? t.todos.changeReminder : t.todos.setReminder}
+        data-action="todo-reminder"
         data-tooltip={tooltip ?? displayValue ?? (reminderAt ? t.todos.changeReminder : t.todos.setReminder)}
         data-no-window-drag="true"
         className={`inline-flex max-w-full min-w-0 shrink items-center gap-1.5 rounded-full border px-2.5 py-1.25 text-[10.5px] font-semibold shadow-[0_7px_14px_rgba(61,49,34,0.08)] ${className}`}
@@ -521,6 +522,7 @@ export function ReminderPicker({
                               type="button"
                               aria-disabled={option.disabled}
                               aria-pressed={isSelected}
+                              data-guide-reminder={option.label === t.todos.morning ? "morning" : undefined}
                               data-tooltip={option.tooltip}
                               data-no-window-drag="true"
                               className={`rounded-[11px] border px-2 py-1.75 text-[10.5px] font-semibold ${
@@ -585,6 +587,7 @@ export function ReminderPicker({
                           </motion.button>
                           <motion.button
                             type="submit"
+                            data-guide="reminder-save"
                             data-no-window-drag="true"
                             data-tooltip={t.common.save}
                             className="paper-button paper-button-primary inline-flex items-center justify-center rounded-[14px] px-3.5 py-2.5 text-[12px] font-semibold"

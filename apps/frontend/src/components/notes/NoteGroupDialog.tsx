@@ -436,6 +436,7 @@ export function NoteGroupDialog({ noteId, isOpen, onClose }: NoteGroupDialogProp
                         <button
                           type="button"
                           aria-label={group.name}
+                          data-guide-group-id={group.id}
                           data-tooltip={group.name}
                           className={`flex flex-1 items-center gap-3 rounded-[18px] border px-3 py-2 text-left text-[12.5px] font-semibold ${
                             note.groupId === group.id

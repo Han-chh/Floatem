@@ -340,6 +340,7 @@ function TodoCalendarView({
           <motion.button
             key={quickDate.id}
             type="button"
+            data-guide-date={quickDate.id}
             data-no-window-drag="true"
             data-tooltip={quickDate.label}
             className="inline-flex items-center justify-center rounded-[12px] border border-[rgba(47,107,255,0.45)] bg-[rgba(239,248,249,0.72)] px-2.5 py-2 text-[11px] font-semibold text-[var(--status-upcoming)] shadow-[0_8px_16px_rgba(47,107,255,0.08)] transition-colors hover:border-[rgba(47,107,255,0.68)] hover:bg-[rgba(239,248,249,0.94)]"
@@ -1323,6 +1324,7 @@ export function TodoList({ dockZoneTarget = null }: { dockZoneTarget?: DockZoneE
         <button
           type="button"
           aria-label={t.todos.openCalendar}
+          data-guide="todo-calendar"
           data-tooltip={t.todos.openCalendar}
           data-tooltip-placement="bottom"
           className={`relative z-10 grid min-h-[72px] w-full min-w-0 grid-cols-[minmax(0,1fr)_auto_auto] items-center gap-3 rounded-[15px] px-2 py-2 text-left outline-none transition-colors hover:bg-[rgba(255,255,255,0.34)] focus-visible:ring-2 focus-visible:ring-[rgba(47,107,255,0.32)] ${
@@ -1497,6 +1499,7 @@ export function TodoList({ dockZoneTarget = null }: { dockZoneTarget?: DockZoneE
       <div className="pb-1.5">
         <form
           ref={formRef}
+          data-guide="todo-quick-add"
           className="paper-card relative overflow-visible rounded-[18px] px-2.5 py-2"
           onSubmit={handleSubmit}
         >

@@ -210,12 +210,14 @@ function SettingRow({
 }
 
 function CategoryButton({
+  guideId,
   icon,
   title,
   description,
   meta,
   onClick,
 }: {
+  guideId?: string;
   icon: ReactNode;
   title: string;
   description: string;
@@ -225,6 +227,7 @@ function CategoryButton({
   return (
     <motion.button
       type="button"
+      data-guide-settings-category={guideId}
       data-tooltip={title}
       className="paper-card group grid w-full grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-3 rounded-[24px] p-4 text-left"
       whileHover={{ y: -2, scale: 1.006 }}
@@ -853,6 +856,7 @@ export function SettingsPanel({ onClose }: SettingsPanelProps) {
                 {categories.map((category) => (
                   <CategoryButton
                     key={category.id}
+                    guideId={category.id}
                     icon={category.icon}
                     title={category.title}
                     description={category.description}
@@ -1036,6 +1040,7 @@ function ThemeChoice({
     <motion.button
       type="button"
       aria-pressed={selected}
+      data-guide-theme={theme}
       className={`group overflow-hidden rounded-[20px] border p-2.5 text-left ${
         selected ? "border-[var(--border-strong)] shadow-[0_0_0_3px_var(--theme-selection-ring)]" : "border-[var(--theme-border)]"
       }`}

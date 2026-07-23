@@ -450,6 +450,7 @@ export function NotesList({ dockZoneTarget = null }: { dockZoneTarget?: DockZone
         <motion.button
           type="button"
           aria-label={t.notes.add}
+          data-guide="note-add"
           data-tooltip={t.notes.add}
           data-tooltip-align="left"
           className="paper-button paper-button-primary inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-full"
