@@ -1,5 +1,5 @@
 import type { DragPreviewPayload, FloatingCardScreenPlacement } from "@stickit/native-bridge";
-import { AnimatePresence, motion } from "framer-motion";
+import { motion } from "framer-motion";
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import type { Descendant } from "slate";
@@ -75,21 +75,18 @@ function FloatingCardGuideOverlay({ guide }: { guide: FloatingCardGuideState | n
     };
   }, [guide]);
 
-  if (typeof document === "undefined") {
+  if (!guide || typeof document === "undefined") {
     return null;
   }
 
   return createPortal(
-    <AnimatePresence mode="wait">
-      {guide ? (
-        <motion.div
-          key={guide.phase}
-          data-floating-guide-overlay
-          className="pointer-events-none fixed inset-0 z-[190]"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-        >
+    <motion.div
+      key={guide.phase}
+      data-floating-guide-overlay
+      className="pointer-events-none fixed inset-0 z-[190]"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+    >
           <motion.div
             className="absolute inset-0 rounded-[inherit] bg-[radial-gradient(circle_at_75%_18%,rgba(255,122,89,0.06),rgba(30,25,21,0.12))]"
             animate={{ opacity: [0.68, 0.9, 0.68] }}
@@ -131,9 +128,7 @@ function FloatingCardGuideOverlay({ guide }: { guide: FloatingCardGuideState | n
               </div>
             </div>
           </motion.aside>
-        </motion.div>
-      ) : null}
-    </AnimatePresence>,
+    </motion.div>,
     document.body,
   );
 }

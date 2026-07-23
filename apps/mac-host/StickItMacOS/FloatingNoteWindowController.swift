@@ -907,10 +907,19 @@ final class FloatingNoteWindowController: NSObject, WKNavigationDelegate, WKScri
         guard let json = jsonString(for: payload) else {
             return
         }
+        let cleanupScript = guide == nil
+            ? """
+              requestAnimationFrame(() => {
+                document.querySelectorAll('[data-floating-guide-overlay], [data-floating-guide-highlight]')
+                  .forEach((node) => node.remove());
+              });
+              """
+            : ""
         webView.evaluateJavaScript(
             """
             window.__STICKIT_FLOATING_CARD_GUIDE__ = \(json);
             window.dispatchEvent(new CustomEvent('\(Self.floatingCardGuideEventName)', { detail: \(json) }));
+            \(cleanupScript)
             """
         )
     }

@@ -457,7 +457,7 @@ export function InteractiveGuide({
     ? { left: 14, top: 14 }
     : { bottom: 14, right: 14 };
 
-  if (typeof document === "undefined") {
+  if (!isOpen || typeof document === "undefined") {
     return null;
   }
 
