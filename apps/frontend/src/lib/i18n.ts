@@ -22,6 +22,8 @@ type MessageCatalog = {
     english: string;
     language: string;
     keepOnDesktop: string;
+    guideLaunchAtLoginInstruction: string;
+    guideLaunchAtLoginTitle: string;
     removeFromDesktop: string;
     resizeFloatingCard: string;
     widgetGuideAddBody: string;
@@ -371,6 +373,8 @@ const messages: Record<AppLanguage, MessageCatalog> = {
       english: "English",
       language: "Language",
       keepOnDesktop: "Keep on desktop",
+      guideLaunchAtLoginInstruction: "Choose an option in the startup dialog before continuing with the pin guide.",
+      guideLaunchAtLoginTitle: "Handle the startup dialog first",
       removeFromDesktop: "Remove from desktop",
       resizeFloatingCard: "Resize floating card",
       widgetGuideAddBody: "Desktop cards are StickIt windows. StickIt must be running in the background to display them. Turn on “Open StickIt at login” to restore them automatically after restarting your Mac.",
@@ -720,6 +724,8 @@ const messages: Record<AppLanguage, MessageCatalog> = {
       english: "English",
       language: "语言",
       keepOnDesktop: "固定到桌面",
+      guideLaunchAtLoginInstruction: "请先在开机启动对话框中选择一项，再继续置顶指引。",
+      guideLaunchAtLoginTitle: "请先处理开机启动对话框",
       removeFromDesktop: "取消桌面固定",
       resizeFloatingCard: "调整悬浮卡片大小",
       widgetGuideAddBody: "桌面置顶卡片是 StickIt 创建的窗口，必须让 StickIt 在后台运行才能显示。请开启“登录时打开 StickIt”，这样重新启动 Mac 后会自动恢复桌面卡片。",

@@ -420,7 +420,10 @@ export function InteractiveGuide({
       ? {
           phase: "pin" as const,
           title: copy("固定到桌面", "Pin to desktop"),
-          instruction: copy("点击高亮的图钉", "Click the highlighted pin"),
+          instruction: copy(
+            "点击红圈中的图钉；若弹出开机启动对话框，请先完成选择",
+            "Click the pin inside the red circle; handle the startup dialog if it appears",
+          ),
         }
       : step === 20
         ? {

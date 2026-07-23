@@ -51,8 +51,20 @@ const EDITABLE_TARGET_SELECTOR = 'input,textarea,select,[contenteditable="true"]
 const FLOATING_CARD_GUIDE_EVENT = "stickit:floating-card-guide";
 type FloatingDialogSide = "left" | "right";
 
-function FloatingCardGuideOverlay({ guide }: { guide: FloatingCardGuideState | null }) {
+function FloatingCardGuideOverlay({
+  guide,
+  showLaunchAtLoginDialog,
+}: {
+  guide: FloatingCardGuideState | null;
+  showLaunchAtLoginDialog: boolean;
+}) {
+  const { t } = useI18n();
   const [targetRect, setTargetRect] = useState<DOMRect | null>(null);
+  const isPinTarget = Boolean(guide && guide.phase !== "close" && !showLaunchAtLoginDialog);
+  const displayTitle = showLaunchAtLoginDialog ? t.common.guideLaunchAtLoginTitle : guide?.title;
+  const displayInstruction = showLaunchAtLoginDialog
+    ? t.common.guideLaunchAtLoginInstruction
+    : guide?.instruction;
 
   useEffect(() => {
     if (!guide) {
@@ -60,7 +72,11 @@ function FloatingCardGuideOverlay({ guide }: { guide: FloatingCardGuideState | n
       return;
     }
 
-    const selector = guide.phase === "close" ? '[data-action="dock"]' : '[data-action="desktop-pin"]';
+    const selector = showLaunchAtLoginDialog
+      ? "[data-floating-launch-at-login-dialog]"
+      : guide.phase === "close"
+        ? '[data-action="dock"]'
+        : '[data-action="desktop-pin"] [data-desktop-pin-indicator]';
     const update = () => {
       const target = document.querySelector<HTMLElement>(selector);
       setTargetRect(target?.getBoundingClientRect() ?? null);
@@ -73,7 +89,7 @@ function FloatingCardGuideOverlay({ guide }: { guide: FloatingCardGuideState | n
       observer.disconnect();
       window.removeEventListener("resize", update);
     };
-  }, [guide]);
+  }, [guide, showLaunchAtLoginDialog]);
 
   if (!guide || typeof document === "undefined") {
     return null;
@@ -95,20 +111,30 @@ function FloatingCardGuideOverlay({ guide }: { guide: FloatingCardGuideState | n
           {targetRect ? (
             <motion.div
               data-floating-guide-highlight
-              className="fixed rounded-[12px] border-2 border-[#ff7a59] shadow-[0_0_0_5px_rgba(255,122,89,0.22),0_8px_24px_rgba(61,49,34,0.2)]"
+              data-floating-guide-pin-ring={isPinTarget ? "true" : undefined}
+              className={`fixed border-2 border-[#ff4f3d] shadow-[0_0_0_5px_rgba(255,79,61,0.22),0_8px_24px_rgba(61,49,34,0.2)] ${
+                isPinTarget ? "rounded-full" : "rounded-[20px]"
+              }`}
               style={{
-                height: targetRect.height + 10,
-                left: targetRect.left - 5,
-                top: targetRect.top - 5,
-                width: targetRect.width + 10,
+                height: targetRect.height + (isPinTarget ? 14 : 10),
+                left: targetRect.left - (isPinTarget ? 7 : 5),
+                top: targetRect.top - (isPinTarget ? 7 : 5),
+                width: targetRect.width + (isPinTarget ? 14 : 10),
               }}
-              animate={{ opacity: [0.72, 1, 0.72], scale: [0.96, 1.06, 0.96] }}
+              animate={{
+                opacity: [0.72, 1, 0.72],
+                boxShadow: [
+                  "0 0 0 3px rgba(255,79,61,0.18), 0 8px 24px rgba(61,49,34,0.16)",
+                  "0 0 0 7px rgba(255,79,61,0.3), 0 8px 24px rgba(61,49,34,0.22)",
+                  "0 0 0 3px rgba(255,79,61,0.18), 0 8px 24px rgba(61,49,34,0.16)",
+                ],
+              }}
               transition={{ duration: 1.05, repeat: Infinity }}
             />
           ) : null}
           <motion.aside
             role="dialog"
-            aria-label={guide.title}
+            aria-label={showLaunchAtLoginDialog ? `Guide: ${displayTitle}` : displayTitle}
             className="absolute bottom-2.5 left-2.5 max-w-[calc(100%-20px)] rounded-[13px] border border-[rgba(255,122,89,0.34)] bg-[rgba(255,252,248,0.96)] px-3 py-2 shadow-[0_12px_28px_rgba(61,49,34,0.2)] backdrop-blur-xl"
             initial={{ opacity: 0, x: -8, y: 5, scale: 0.96 }}
             animate={{ opacity: 1, x: 0, y: 0, scale: 1 }}
@@ -123,8 +149,12 @@ function FloatingCardGuideOverlay({ guide }: { guide: FloatingCardGuideState | n
                 transition={{ duration: 1.15, repeat: Infinity }}
               />
               <div className="min-w-0">
-                <p className="truncate text-[10.5px] font-bold text-[#8f553d]">{guide.title}</p>
-                <p className="truncate text-[9.5px] font-semibold text-[var(--muted)]">{guide.instruction}</p>
+                <p className="text-[10.5px] font-bold text-[#8f553d]">{displayTitle}</p>
+                <p className={`text-[9.5px] font-semibold leading-4 text-[var(--muted)] ${
+                  showLaunchAtLoginDialog ? "" : "truncate"
+                }`}>
+                  {displayInstruction}
+                </p>
               </div>
             </div>
           </motion.aside>
@@ -929,6 +959,7 @@ export function FloatingNoteApp() {
                   role="dialog"
                   aria-modal="true"
                   aria-label={t.common.widgetGuideAddTitle}
+                  data-floating-launch-at-login-dialog
                   className="paper-panel w-full max-w-[390px] rounded-[24px] p-5 shadow-[0_26px_48px_rgba(30,25,21,0.24)]"
                 >
                   <h2 className="font-display text-[21px] font-semibold text-[var(--brown-strong)]">
@@ -951,7 +982,10 @@ export function FloatingNoteApp() {
               document.body,
             )
           : null}
-        <FloatingCardGuideOverlay guide={floatingGuide} />
+        <FloatingCardGuideOverlay
+          guide={floatingGuide}
+          showLaunchAtLoginDialog={showDesktopBackgroundGuide}
+        />
       </article>
     </main>
   );

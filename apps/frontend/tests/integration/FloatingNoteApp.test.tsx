@@ -319,6 +319,7 @@ describe("FloatingNoteApp", () => {
   it("renders animated guide actions inside the floating card window", async () => {
     const note = createNoteCard({ id: "floating-guide-note", title: "Guided note" });
     const bridge = installFloatingBridge(note);
+    const user = userEvent.setup();
 
     render(<FloatingNoteApp />);
 
@@ -337,7 +338,20 @@ describe("FloatingNoteApp", () => {
       expect(await screen.findByRole("dialog", { name: "Pin to desktop" })).toBeInTheDocument();
       expect(document.querySelector("[data-floating-guide-overlay]")).toBeInTheDocument();
       expect(document.querySelector("[data-floating-guide-highlight]")).toBeInTheDocument();
+      expect(document.querySelector("[data-floating-guide-pin-ring]")).toHaveClass("rounded-full");
       expect(screen.getByRole("button", { name: "Keep on desktop" })).toHaveAttribute("data-action", "desktop-pin");
+
+      await user.click(screen.getByRole("button", { name: "Keep on desktop" }));
+      expect(await screen.findByRole("dialog", { name: "Keep StickIt running" })).toBeInTheDocument();
+      expect(
+        screen.getByRole("dialog", { name: "Guide: Handle the startup dialog first" }),
+      ).toHaveTextContent("Choose an option in the startup dialog before continuing with the pin guide.");
+      expect(document.querySelector("[data-floating-guide-pin-ring]")).not.toBeInTheDocument();
+
+      await user.click(screen.getByRole("button", { name: "Got it" }));
+      await waitFor(() => {
+        expect(document.querySelector("[data-floating-guide-pin-ring]")).toHaveClass("rounded-full");
+      });
 
       act(() => {
         window.dispatchEvent(new CustomEvent("stickit:floating-card-guide", {

@@ -598,7 +598,6 @@ final class FloatingNoteWindowController: NSObject, WKNavigationDelegate, WKScri
 
     func setDesktopPinned(_ pinned: Bool) {
         guard !isDestroyed, isDesktopPinned != pinned else { return }
-        replacePanelForDesktopMode(pinned)
         guard let panel else { return }
         isDesktopPinned = pinned
         if pinned {
@@ -610,59 +609,11 @@ final class FloatingNoteWindowController: NSObject, WKNavigationDelegate, WKScri
             configurePanelForGlobalOverlay()
         }
         if isContentReady {
+            panel.alphaValue = 1
             panel.orderFrontRegardless()
-        }
-    }
-
-    private func replacePanelForDesktopMode(_ desktopPinned: Bool) {
-        guard let previousPanel = panel else { return }
-
-        let replacement: FloatingPanel
-        if desktopPinned {
-            replacement = DesktopCardPanel(
-                contentRect: previousPanel.frame,
-                styleMask: [.borderless, .nonactivatingPanel],
-                backing: .buffered,
-                defer: false
-            )
-        } else {
-            replacement = FloatingPanel(
-                contentRect: previousPanel.frame,
-                styleMask: [.borderless, .nonactivatingPanel],
-                backing: .buffered,
-                defer: false
-            )
-        }
-
-        let contentView = previousPanel.contentView
-        previousPanel.contentView = nil
-
-        replacement.isReleasedWhenClosed = false
-        replacement.backgroundColor = .clear
-        replacement.isOpaque = false
-        replacement.alphaValue = isContentReady ? 1 : previousPanel.alphaValue
-        replacement.hasShadow = false
-        replacement.hidesOnDeactivate = false
-        replacement.isFloatingPanel = true
-        replacement.lifecycleCardID = cardID
-        replacement.delegate = self
-        replacement.contentView = contentView
-        replacement.setFrame(previousPanel.frame, display: false)
-
-        // AppKit can briefly report a desktop-level panel as hidden while it
-        // changes spaces or activation. A ready floating card must remain
-        // presented throughout a pin-mode transition.
-        let shouldRemainVisible = previousPanel.isVisible || isContentReady
-        previousPanel.delegate = nil
-        previousPanel.orderOut(nil)
-        previousPanel.close()
-        panel = replacement
-
-        if shouldRemainVisible {
-            replacement.orderFrontRegardless()
-            if isContentReady {
-                replacement.makeKey()
-                replacement.makeFirstResponder(webView)
+            if !pinned {
+                panel.makeKey()
+                panel.makeFirstResponder(webView)
             }
         }
     }
