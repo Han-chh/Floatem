@@ -146,10 +146,17 @@ describe("PanelShell", () => {
       expect(within(guide).getByText("Step 2 of 7")).toBeInTheDocument();
       expect(within(guide).getByText("Manage a note end to end")).toBeInTheDocument();
       expect(screen.getByRole("button", { name: "Expand navigation" })).toHaveAttribute("aria-expanded", "false");
+      expect(within(guide).getByText("Add a note")).toBeInTheDocument();
     });
 
-    expect(within(guide).queryByRole("button", { name: "Next feature" })).not.toBeInTheDocument();
-    expect(within(guide).queryByRole("button", { name: "Previous feature" })).not.toBeInTheDocument();
+    const previousFeature = within(guide).getByRole("button", { name: "Previous feature" });
+    expect(previousFeature).toBeEnabled();
+    expect(within(guide).getByRole("button", { name: "Next feature" })).toBeEnabled();
+
+    await user.click(within(guide).getByRole("button", { name: "Next feature" }));
+    await waitFor(() => expect(within(guide).getByText("Edit the note title")).toBeInTheDocument());
+    await user.click(previousFeature);
+    await waitFor(() => expect(within(guide).getByText("Add a note")).toBeInTheDocument());
 
     await user.click(within(guide).getByRole("button", { name: "Exit guide" }));
     await waitFor(() => {

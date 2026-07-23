@@ -7,7 +7,13 @@ import { subscribeToFloatingCardsState } from "../../lib/nativeBridge";
 import type { TabId } from "../../lib/models";
 import { useNotesStore } from "../../store/notesStore";
 import { useTodosStore } from "../../store/todosStore";
-import { CircleCheckBigIcon, SparklesIcon, XIcon } from "../icons/AppIcons";
+import {
+  ChevronLeftIcon,
+  ChevronRightIcon,
+  CircleCheckBigIcon,
+  SparklesIcon,
+  XIcon,
+} from "../icons/AppIcons";
 
 type InteractiveGuideProps = {
   isHeaderCollapsed: boolean;
@@ -159,7 +165,13 @@ export function InteractiveGuide({
       stepItem("编辑便签分组", "Edit the note group", "点击刚创建分组旁的编辑按钮", "Click Edit beside the new group", () => runtimeRef.current?.noteGroupId ? queryTarget(`[data-guide-group-edit-id="${cssValue(runtimeRef.current.noteGroupId)}"]`) : null),
       stepItem("修改分组名称", "Rename the group", "修改分组名称", "Change the group name", () => queryTarget('[data-guide="note-group-name"]'), { advanceOn: "input" }),
       stepItem("保存分组修改", "Save the group changes", "点击保存", "Click Save", () => queryTarget('[data-guide="note-group-save"]')),
-      stepItem("进入删除模式", "Enter delete mode", "点击删除模式按钮", "Click the delete-mode button", () => queryTarget('[data-guide="note-group-delete-mode"]')),
+      stepItem(
+        "进入删除模式",
+        "Enter delete mode",
+        "点击删除模式按钮；进入后，想删除分组请选择其旁边的删除键",
+        "Click the delete-mode button; then choose the Delete key beside any group you want to remove",
+        () => queryTarget('[data-guide="note-group-delete-mode"]'),
+      ),
       stepItem("删除便签分组", "Delete the note group", "点击刚才分组旁的删除按钮", "Click Delete beside the group", () => runtimeRef.current?.noteGroupId ? queryTarget(`[data-guide-group-delete-id="${cssValue(runtimeRef.current.noteGroupId)}"]`) : null),
       stepItem("关闭分组管理", "Close group management", "点击关闭按钮", "Click Close", () => queryTarget('[data-guide="note-group-close"]')),
       stepItem("折叠便签", "Fold the note", "点击便签折叠按钮", "Click the note fold button", () => noteId ? queryTarget(`[data-note-card-id="${cssValue(noteId)}"] [data-action="note-collapse"]`) : null),
@@ -199,7 +211,13 @@ export function InteractiveGuide({
       stepItem("编辑 Todo 分组", "Edit the todo group", "点击刚创建分组旁的编辑按钮", "Click Edit beside the new group", () => runtimeRef.current?.todoGroupId ? queryTarget(`[data-guide-group-edit-id="${cssValue(runtimeRef.current.todoGroupId)}"]`) : null),
       stepItem("修改分组名称", "Rename the group", "修改分组名称", "Change the group name", () => queryTarget('[data-guide="todo-group-name"]'), { advanceOn: "input" }),
       stepItem("保存分组修改", "Save the group changes", "点击保存", "Click Save", () => queryTarget('[data-guide="todo-group-save"]')),
-      stepItem("进入删除模式", "Enter delete mode", "点击删除模式按钮", "Click the delete-mode button", () => queryTarget('[data-guide="todo-group-delete-mode"]')),
+      stepItem(
+        "进入删除模式",
+        "Enter delete mode",
+        "点击删除模式按钮；进入后，想删除分组请选择其旁边的删除键",
+        "Click the delete-mode button; then choose the Delete key beside any group you want to remove",
+        () => queryTarget('[data-guide="todo-group-delete-mode"]'),
+      ),
       stepItem("删除 Todo 分组", "Delete the todo group", "点击刚才分组旁的删除按钮", "Click Delete beside the group", () => runtimeRef.current?.todoGroupId ? queryTarget(`[data-guide-group-delete-id="${cssValue(runtimeRef.current.todoGroupId)}"]`) : null),
       stepItem("关闭分组管理", "Close group management", "点击关闭按钮", "Click Close", () => queryTarget('[data-guide="todo-group-close"]')),
       stepItem("完成待办", "Complete the todo", "点击待办完成圆圈", "Click the todo completion circle", () => todoId ? queryTarget(`[data-todo-item-id="${cssValue(todoId)}"] [data-action="todo-completion"]`) : null),
@@ -559,6 +577,12 @@ export function InteractiveGuide({
     onClose();
   };
 
+  const moveToStep = (nextStep: number) => {
+    setTargetRect(null);
+    setPaletteGuideStage("compact");
+    setStep(Math.max(0, Math.min(steps.length - 1, nextStep)));
+  };
+
   const viewportHeight = typeof window === "undefined" ? 800 : window.innerHeight;
   const panelStyle = targetRect && targetRect.top > viewportHeight * 0.52
     ? { left: 14, top: 14 }
@@ -667,6 +691,30 @@ export function InteractiveGuide({
                 transition={{ duration: 1.3, repeat: Infinity }}
               />
             ) : null}
+            <div className="mt-3 grid grid-cols-2 gap-2">
+              <motion.button
+                type="button"
+                aria-label={copy("上一功能", "Previous feature")}
+                disabled={step === 0}
+                className="paper-button inline-flex items-center justify-center gap-1 rounded-[11px] px-2.5 py-2 text-[10.5px] font-bold disabled:cursor-not-allowed disabled:opacity-40"
+                whileTap={step === 0 ? undefined : { scale: 0.97 }}
+                onClick={() => moveToStep(step - 1)}
+              >
+                <ChevronLeftIcon size={12} />
+                {copy("上一功能", "Previous")}
+              </motion.button>
+              <motion.button
+                type="button"
+                aria-label={copy("下一功能", "Next feature")}
+                disabled={step === steps.length - 1}
+                className="paper-button paper-button-primary inline-flex items-center justify-center gap-1 rounded-[11px] px-2.5 py-2 text-[10.5px] font-bold disabled:cursor-not-allowed disabled:opacity-40"
+                whileTap={step === steps.length - 1 ? undefined : { scale: 0.97 }}
+                onClick={() => moveToStep(step + 1)}
+              >
+                {copy("下一功能", "Next")}
+                <ChevronRightIcon size={12} />
+              </motion.button>
+            </div>
             {step === steps.length - 1 ? (
               <motion.button
                 type="button"

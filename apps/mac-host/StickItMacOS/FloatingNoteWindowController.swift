@@ -198,6 +198,7 @@ final class FloatingNoteWindowController: NSObject, WKNavigationDelegate, WKScri
     private var pendingGuideState: [String: Any]?
     private var pendingPayload: Any?
     private var pendingShowFrame: NSRect?
+    private var presentationRevision = 0
     private(set) var isDesktopPinned = false
 
     init(cardKind: String, cardID: String) {
@@ -599,6 +600,19 @@ final class FloatingNoteWindowController: NSObject, WKNavigationDelegate, WKScri
     func setDesktopPinned(_ pinned: Bool) {
         guard !isDestroyed, isDesktopPinned != pinned else { return }
         guard let panel else { return }
+        presentationRevision += 1
+        let revision = presentationRevision
+        let shouldRemainVisible = panel.isVisible || isContentReady
+        let frame = panel.frame
+
+        // Changing both the level and Space behavior of an already presented
+        // borderless panel can detach it from the active Space in WindowServer.
+        // Explicitly withdraw and re-present the same panel so unpinning never
+        // leaves a live card hidden off-Space.
+        if shouldRemainVisible {
+            panel.orderOut(nil)
+        }
+
         isDesktopPinned = pinned
         if pinned {
             let desktopIconLevel = Int(CGWindowLevelForKey(.desktopIconWindow)) + 1
@@ -608,13 +622,34 @@ final class FloatingNoteWindowController: NSObject, WKNavigationDelegate, WKScri
             panel.collectionBehavior = MainWindowController.overlayCollectionBehavior
             configurePanelForGlobalOverlay()
         }
-        if isContentReady {
-            panel.alphaValue = 1
-            panel.orderFrontRegardless()
-            if !pinned {
-                panel.makeKey()
-                panel.makeFirstResponder(webView)
+
+        guard shouldRemainVisible else { return }
+        panel.setFrame(frame, display: false)
+        presentPanelAfterDesktopModeChange(panel, pinned: pinned)
+
+        // AppKit may apply the new collection behavior one run-loop later.
+        // Reassert presentation once it has reached WindowServer, while a
+        // revision guard prevents an older pin request from winning a race.
+        DispatchQueue.main.async { [weak self, weak panel] in
+            guard
+                let self,
+                let panel,
+                !self.isDestroyed,
+                self.presentationRevision == revision,
+                self.isDesktopPinned == pinned
+            else {
+                return
             }
+            self.presentPanelAfterDesktopModeChange(panel, pinned: pinned)
+        }
+    }
+
+    private func presentPanelAfterDesktopModeChange(_ panel: FloatingPanel, pinned: Bool) {
+        panel.alphaValue = isContentReady ? 1 : panel.alphaValue
+        panel.orderFrontRegardless()
+        if !pinned && isContentReady {
+            panel.makeKey()
+            panel.makeFirstResponder(webView)
         }
     }
 
