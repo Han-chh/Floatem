@@ -49,6 +49,7 @@ export type TextColorPanelCloseDetail = {
 };
 
 export type StickItNativeBridge = HostBridge<RawLoadAllResult, NotesDocument, TodosDocument, Partial<AppSettings>> & {
+  clearFloatingCardGuides?: () => Promise<void>;
   setFloatingCardGuide?: (card: FloatingCardReference, guide: FloatingCardGuideState | null) => Promise<void>;
   testReminderNotification: (options?: {
     soundEnabled?: boolean;

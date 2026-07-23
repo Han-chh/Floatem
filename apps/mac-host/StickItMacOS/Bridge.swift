@@ -78,6 +78,7 @@ protocol StickItNativeBridgeHandling: AnyObject {
     func startFloatingCardDragFromBridge(kind: String, id: String) throws
     func setFloatingCardDesktopPinnedFromBridge(kind: String, id: String, pinned: Bool) throws -> [String: Any]
     func setFloatingCardGuideFromBridge(kind: String, id: String, guide: [String: Any]?)
+    func clearFloatingCardGuidesFromBridge()
     func requestDesktopWidgetFromBridge(kind: String, id: String) throws -> [String: Any]
     func removeDesktopWidgetAssociationFromBridge(kind: String, id: String) throws
     func getDesktopWidgetStateFromBridge(kind: String, id: String) throws -> [String: Any]

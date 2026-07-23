@@ -155,6 +155,7 @@ describe("PanelShell", () => {
     await user.click(within(guide).getByRole("button", { name: "Exit guide" }));
     await waitFor(() => {
       expect(screen.queryByRole("dialog", { name: "StickIt interactive guide" })).not.toBeInTheDocument();
+      expect(document.querySelector("[data-guide-highlight]")).not.toBeInTheDocument();
     });
     expect(screen.getByText("Original panel body")).toBeInTheDocument();
     expect(useNotesStore.getState().groups).toHaveLength(0);

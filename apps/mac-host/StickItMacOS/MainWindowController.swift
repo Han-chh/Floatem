@@ -684,6 +684,12 @@ final class MainWindowController: NSObject, NSWindowDelegate, StickItNativeBridg
         floatingCardWindowControllers[key]?.updateGuideState(guide)
     }
 
+    func clearFloatingCardGuidesFromBridge() {
+        for controller in floatingCardWindowControllers.values {
+            controller.updateGuideState(nil)
+        }
+    }
+
     // Compatibility adapters for frontend builds from the short-lived Widget
     // desktop implementation. Desktop pinning is now backed by DesktopCardPanel.
     func requestDesktopWidgetFromBridge(kind: String, id: String) throws -> [String: Any] {

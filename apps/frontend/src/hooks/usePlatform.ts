@@ -134,6 +134,11 @@ export async function setFloatingCardGuide(card: FloatingCardReference, guide: F
   await bridge.setFloatingCardGuide?.(card, guide);
 }
 
+export async function clearFloatingCardGuides() {
+  const bridge = getStickItBridge() as Partial<StickItNativeBridge>;
+  await bridge.clearFloatingCardGuides?.();
+}
+
 export async function requestDesktopWidget(card: FloatingCardReference) {
   const bridge = getStickItBridge() as Partial<StickItNativeBridge>;
   if (bridge.requestDesktopWidget) {

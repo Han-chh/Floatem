@@ -644,6 +644,9 @@ final class WebViewController: NSViewController, WKNavigationDelegate {
                     guide: params["guide"] as? [String: Any]
                 )
                 result = NSNull()
+            case "clearFloatingCardGuides":
+                bridgeDelegate?.clearFloatingCardGuidesFromBridge()
+                result = NSNull()
             case "requestDesktopWidget":
                 guard let kind = params["kind"] as? String, let cardID = params["id"] as? String else {
                     throw StickItBridgeError.invalidParameters("StickIt expected a Widget entity reference.")
@@ -1074,6 +1077,9 @@ final class WebViewController: NSViewController, WKNavigationDelegate {
             id: String(card?.id ?? ""),
             guide: guide ?? null,
           });
+        },
+        clearFloatingCardGuides() {
+          return send("clearFloatingCardGuides");
         },
         requestDesktopWidget(card) {
           return send("requestDesktopWidget", { kind: String(card?.kind ?? ""), id: String(card?.id ?? "") });

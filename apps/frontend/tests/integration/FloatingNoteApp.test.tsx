@@ -351,6 +351,14 @@ describe("FloatingNoteApp", () => {
 
       expect(await screen.findByRole("dialog", { name: "Return the floating card" })).toBeInTheDocument();
       expect(screen.getByRole("button", { name: "Close" })).toHaveAttribute("data-action", "dock");
+
+      act(() => {
+        window.dispatchEvent(new CustomEvent("stickit:floating-card-guide", { detail: null }));
+      });
+      await waitFor(() => {
+        expect(document.querySelector("[data-floating-guide-overlay]")).not.toBeInTheDocument();
+        expect(document.querySelector("[data-floating-guide-highlight]")).not.toBeInTheDocument();
+      });
     } finally {
       bridge.restore();
     }
