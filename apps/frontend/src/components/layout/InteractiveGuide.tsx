@@ -781,24 +781,24 @@ export function InteractiveGuide({
             <div className="mt-3 grid grid-cols-2 gap-2">
               <motion.button
                 type="button"
-                aria-label={copy("上一个大步骤", "Previous chapter")}
+                aria-label={copy("上一功能", "Previous feature")}
                 disabled={currentChapter === 0}
                 className="paper-button inline-flex items-center justify-center gap-1 rounded-[11px] px-2.5 py-2 text-[10.5px] font-bold disabled:cursor-not-allowed disabled:opacity-40"
                 whileTap={currentChapter === 0 ? undefined : { scale: 0.97 }}
                 onClick={() => moveToChapter(currentChapter - 1)}
               >
                 <ChevronLeftIcon size={12} />
-                {copy("上一大步", "Previous")}
+                {copy("上一功能", "Previous feature")}
               </motion.button>
               <motion.button
                 type="button"
-                aria-label={copy("下一个大步骤", "Next chapter")}
+                aria-label={copy("下一功能", "Next feature")}
                 disabled={currentChapter === GUIDE_CHAPTER_COUNT - 1}
                 className="paper-button paper-button-primary inline-flex items-center justify-center gap-1 rounded-[11px] px-2.5 py-2 text-[10.5px] font-bold disabled:cursor-not-allowed disabled:opacity-40"
                 whileTap={currentChapter === GUIDE_CHAPTER_COUNT - 1 ? undefined : { scale: 0.97 }}
                 onClick={() => moveToChapter(currentChapter + 1)}
               >
-                {copy("下一大步", "Next")}
+                {copy("下一功能", "Next feature")}
                 <ChevronRightIcon size={12} />
               </motion.button>
             </div>

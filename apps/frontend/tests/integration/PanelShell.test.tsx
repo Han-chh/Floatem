@@ -149,23 +149,23 @@ describe("PanelShell", () => {
       expect(within(guide).getByText("Add a note")).toBeInTheDocument();
     });
 
-    expect(within(guide).getByRole("button", { name: "Previous chapter" })).toBeEnabled();
-    expect(within(guide).getByRole("button", { name: "Next chapter" })).toBeEnabled();
+    expect(within(guide).getByRole("button", { name: "Previous feature" })).toBeEnabled();
+    expect(within(guide).getByRole("button", { name: "Next feature" })).toBeEnabled();
 
-    await user.click(within(guide).getByRole("button", { name: "Next chapter" }));
+    await user.click(within(guide).getByRole("button", { name: "Next feature" }));
     await waitFor(() => {
       expect(within(guide).getByText("Step 3 of 7")).toBeInTheDocument();
       expect(within(guide).getByText("Create a floating card")).toBeInTheDocument();
     });
     for (const chapter of [4, 5, 6, 7]) {
-      await user.click(within(guide).getByRole("button", { name: "Next chapter" }));
+      await user.click(within(guide).getByRole("button", { name: "Next feature" }));
       await waitFor(() => {
         expect(within(guide).getByText(`Step ${chapter} of 7`)).toBeInTheDocument();
       });
     }
-    expect(within(guide).getByRole("button", { name: "Next chapter" })).toBeDisabled();
+    expect(within(guide).getByRole("button", { name: "Next feature" })).toBeDisabled();
 
-    await user.click(within(guide).getByRole("button", { name: "Previous chapter" }));
+    await user.click(within(guide).getByRole("button", { name: "Previous feature" }));
     await waitFor(() => {
       expect(within(guide).getByText("Step 6 of 7")).toBeInTheDocument();
       expect(within(guide).getByText("Open todo groups")).toBeInTheDocument();
