@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.0.2
+
+- Add a bilingual 14-step interactive guide for navigation folding, note and todo workflows, reminders, groups, floating and desktop-pinned cards, settings, and themes.
+- Run the guide in an isolated practice sandbox so completing or exiting it never changes existing app data.
+- Clarify the navigation-folding help copy and remove duplicate punctuation from the English time-format status.
+- Keep direct launches from Finder, Spotlight, or a double-click visible while login-item launches remain in the background.
+
 All notable repository changes are recorded here.
 
 ## v0.6.1 - 2026-07-18

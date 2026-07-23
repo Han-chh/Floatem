@@ -107,4 +107,43 @@ describe("PanelShell", () => {
       ),
     ).toBeInTheDocument();
   });
+
+  it("runs the interactive guide in a resettable practice sandbox", async () => {
+    const user = userEvent.setup();
+    useSettingsStore.setState({ language: "en", timeFormat: "24h" });
+
+    render(
+      <PanelShell
+        activeTab="notes"
+        animationSpeed="mediate"
+        onTabChange={vi.fn()}
+        onToggleSettings={vi.fn()}
+        settingsPanel={<div>Settings panel</div>}
+        showSettings={false}
+        transitionStyle="lift"
+      >
+        <div>Original panel body</div>
+      </PanelShell>,
+    );
+
+    await user.click(screen.getByRole("button", { name: "StickIt help" }));
+    expect(screen.getByText(/Practice 14 guided steps in a safe sandbox/)).toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: "Start interactive guide" }));
+    const guide = screen.getByRole("dialog", { name: "StickIt interactive guide" });
+    expect(within(guide).getByText("Interactive guide · Step 1 of 14")).toBeInTheDocument();
+
+    await user.click(within(guide).getByRole("button", { name: "Click the highlighted fold button" }));
+    expect(within(guide).getByText("Interactive guide · Step 2 of 14")).toBeInTheDocument();
+
+    await user.click(within(guide).getByRole("button", { name: "Exit guide and discard practice state" }));
+    await waitFor(() => {
+      expect(screen.queryByRole("dialog", { name: "StickIt interactive guide" })).not.toBeInTheDocument();
+    });
+    expect(screen.getByText("Original panel body")).toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: "StickIt help" }));
+    await user.click(screen.getByRole("button", { name: "Start interactive guide" }));
+    expect(screen.getByText("Interactive guide · Step 1 of 14")).toBeInTheDocument();
+  });
 });

@@ -37,6 +37,11 @@ export type HelpDialogContent = {
   title: string;
   subtitle: string;
   heroBadge: string;
+  interactiveGuide: {
+    action: string;
+    body: string;
+    title: string;
+  };
   sections: HelpSection[];
 };
 
@@ -49,6 +54,11 @@ function buildEnglishHelpContent(context: HelpContentContext): HelpDialogContent
     title: `${context.appName} guide`,
     subtitle: "Open a topic to see the details in a dedicated second layer.",
     heroBadge: "Quick help",
+    interactiveGuide: {
+      title: "Try the interactive guide",
+      body: "Practice 14 guided steps in a safe sandbox. Your notes, todos, settings, and desktop cards will not change.",
+      action: "Start interactive guide",
+    },
     sections: [
       {
         id: "overview",
@@ -68,7 +78,7 @@ function buildEnglishHelpContent(context: HelpContentContext): HelpDialogContent
                 items: [
                   `Use ${context.hotkey} to summon or hide ${context.appName}.`,
                   "Switch between Notes and Todos from the top tabs.",
-                  "Use the long fold control to collapse the header and free more vertical space.",
+                  "Click the fold button in the app’s top navigation bar to collapse the navigation and make more room for your work.",
                 ],
               },
               {
@@ -77,7 +87,7 @@ function buildEnglishHelpContent(context: HelpContentContext): HelpDialogContent
                 items: [
                   `Default section: ${context.defaultSectionLabel}.`,
                   `Timezone: ${context.timeZoneLabel}.`,
-                  `Time format: ${context.timeFormatLabel}.`,
+                  `Time format: ${context.timeFormatLabel.replace(/[.!?。！？]+$/u, "")}.`,
                 ],
               },
             ],
@@ -345,6 +355,11 @@ function buildChineseHelpContent(context: HelpContentContext): HelpDialogContent
     title: `${context.appName} 使用指南`,
     subtitle: "一级面板负责导航，点击模块后在二级对话框查看细节。",
     heroBadge: "快速帮助",
+    interactiveGuide: {
+      title: "体验交互式指引",
+      body: "在安全沙盒中完成 14 步操作。你的便签、待办、设置和桌面卡片都不会被修改。",
+      action: "开始交互式指引",
+    },
     sections: [
       {
         id: "overview",
@@ -364,7 +379,7 @@ function buildChineseHelpContent(context: HelpContentContext): HelpDialogContent
                 items: [
                   `使用 ${context.hotkey} 可以唤起或隐藏 ${context.appName}。`,
                   "通过顶部标签可以在 Notes 和 Todos 之间切换。",
-                  "通过加长折叠条可以收起顶部区域，腾出更多纵向空间。",
+                  "点击应用顶部导航栏中的折叠按钮，可以收起导航栏，腾出更多工作空间。",
                 ],
               },
               {

@@ -10,6 +10,7 @@ import {
 import type { AnimationSpeed, TabId, TransitionStyle } from "../../lib/models";
 import { getSurfaceMotionConfig } from "../../lib/transitionMotion";
 import { HelpDialog } from "./HelpDialog";
+import { InteractiveGuide } from "./InteractiveGuide";
 import { TabBar } from "./TabBar";
 
 type PanelShellProps = {
@@ -38,6 +39,7 @@ export function PanelShell({
   const { t } = useI18n();
   const [isHeaderCollapsed, setIsHeaderCollapsed] = useState(false);
   const [isHelpOpen, setIsHelpOpen] = useState(false);
+  const [isInteractiveGuideOpen, setIsInteractiveGuideOpen] = useState(false);
   const pageDirection = showSettings ? 1 : -1;
   const surfaceMotion = getSurfaceMotionConfig(transitionStyle, animationSpeed);
   const panelChromeDuration =
@@ -229,7 +231,15 @@ export function PanelShell({
         </div>
       </motion.div>
 
-      <HelpDialog isOpen={isHelpOpen} onClose={() => setIsHelpOpen(false)} />
+      <HelpDialog
+        isOpen={isHelpOpen}
+        onClose={() => setIsHelpOpen(false)}
+        onStartInteractiveGuide={() => {
+          setIsHelpOpen(false);
+          setIsInteractiveGuideOpen(true);
+        }}
+      />
+      <InteractiveGuide isOpen={isInteractiveGuideOpen} onClose={() => setIsInteractiveGuideOpen(false)} />
     </main>
   );
 }

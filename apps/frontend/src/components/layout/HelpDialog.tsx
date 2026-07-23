@@ -18,6 +18,7 @@ import {
 type HelpDialogProps = {
   isOpen: boolean;
   onClose: () => void;
+  onStartInteractiveGuide: () => void;
 };
 
 const SECTION_ICON_MAP: Record<HelpSection["id"], typeof SparklesIcon> = {
@@ -29,7 +30,7 @@ const SECTION_ICON_MAP: Record<HelpSection["id"], typeof SparklesIcon> = {
   shortcuts: KeyboardIcon,
 };
 
-export function HelpDialog({ isOpen, onClose }: HelpDialogProps) {
+export function HelpDialog({ isOpen, onClose, onStartInteractiveGuide }: HelpDialogProps) {
   const { language, t } = useI18n();
   const hotkey = useSettingsStore((state) => state.hotkey);
   const defaultOpenSection = useSettingsStore((state) => state.defaultOpenSection);
@@ -155,6 +156,20 @@ export function HelpDialog({ isOpen, onClose }: HelpDialogProps) {
                       {content.title}
                     </p>
                     <p className="mt-2 max-w-[62ch] text-[12px] leading-6 text-[var(--muted)]">{content.subtitle}</p>
+                    <motion.button
+                      type="button"
+                      className="mt-4 inline-flex items-center gap-2 rounded-[14px] bg-[linear-gradient(145deg,#ff7a59,#f4b942)] px-4 py-2.5 text-[11px] font-bold text-white shadow-[0_12px_24px_rgba(255,122,89,0.22)]"
+                      whileHover={{ y: -1.5, scale: 1.01 }}
+                      whileTap={{ scale: 0.98 }}
+                      onClick={onStartInteractiveGuide}
+                    >
+                      <SparklesIcon size={14} />
+                      {content.interactiveGuide.action}
+                    </motion.button>
+                    <p className="mt-2 max-w-[62ch] text-[11px] leading-5 text-[var(--muted)]">
+                      <span className="font-semibold text-[var(--brown-strong)]">{content.interactiveGuide.title}</span>{" "}
+                      {content.interactiveGuide.body}
+                    </p>
                   </div>
                   <motion.button
                     type="button"

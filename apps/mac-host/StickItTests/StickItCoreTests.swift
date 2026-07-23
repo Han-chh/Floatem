@@ -240,9 +240,17 @@ final class StickItCoreTests: XCTestCase {
         XCTAssertFalse(automatic.shouldShowAtDidFinish(isApplicationActive: false, launchAtLoginEnabled: false))
         XCTAssertTrue(automatic.shouldShowForActivation(launchAtLoginEnabled: false))
 
+        var automaticLogin = LaunchContextResolver(arguments: ["StickIt"], environment: [:])
+        XCTAssertFalse(automaticLogin.shouldShowAtDidFinish(isApplicationActive: false, launchAtLoginEnabled: true))
+        XCTAssertFalse(automaticLogin.shouldShowForActivation(launchAtLoginEnabled: true))
+
         var alreadyActive = LaunchContextResolver(arguments: ["StickIt"], environment: [:])
         XCTAssertTrue(alreadyActive.shouldShowAtDidFinish(isApplicationActive: true, launchAtLoginEnabled: false))
         XCTAssertFalse(alreadyActive.shouldShowForActivation(launchAtLoginEnabled: false))
+
+        var spotlightOrDoubleClick = LaunchContextResolver(arguments: ["StickIt"], environment: [:])
+        XCTAssertTrue(spotlightOrDoubleClick.shouldShowAtDidFinish(isApplicationActive: true, launchAtLoginEnabled: true))
+        XCTAssertFalse(spotlightOrDoubleClick.shouldShowForActivation(launchAtLoginEnabled: true))
 
         var deepLink = LaunchContextResolver(arguments: ["StickIt"], environment: [:])
         deepLink.markDeepLinkReceived()

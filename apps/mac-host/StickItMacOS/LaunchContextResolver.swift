@@ -40,7 +40,17 @@ struct LaunchContextResolver {
             consumedInitialActivation = true
             return true
         case .automatic:
-            guard isApplicationActive else { return false }
+            guard isApplicationActive else {
+                // SMAppService.mainApp launches the same executable without a
+                // login-item argument. A background launch while the service is
+                // enabled is therefore the reliable login-launch signal. Consume
+                // its first activation so a later workspace activation does not
+                // unexpectedly present the main window.
+                if launchAtLoginEnabled {
+                    consumedInitialActivation = true
+                }
+                return false
+            }
             consumedInitialActivation = true
             return true
         }
@@ -50,7 +60,7 @@ struct LaunchContextResolver {
         guard !receivedDeepLink, !consumedInitialActivation else {
             return false
         }
-        if explicitContext == .loginItem, launchAtLoginEnabled {
+        if (explicitContext == .loginItem || explicitContext == .automatic), launchAtLoginEnabled {
             consumedInitialActivation = true
             return false
         }
