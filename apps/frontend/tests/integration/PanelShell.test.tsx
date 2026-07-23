@@ -152,32 +152,48 @@ describe("PanelShell", () => {
     expect(within(guide).getByRole("button", { name: "Previous feature" })).toBeEnabled();
     expect(within(guide).getByRole("button", { name: "Next feature" })).toBeEnabled();
 
-    await user.click(within(guide).getByRole("button", { name: "Next feature" }));
-    await waitFor(() => {
-      expect(within(guide).getByText("Step 3 of 7")).toBeInTheDocument();
-      expect(within(guide).getByText("Create a floating card")).toBeInTheDocument();
-    });
-
-    const guideNoteId = useNotesStore.getState().cards[0]?.id;
-    expect(guideNoteId).toBeTruthy();
+    const originalBridge = window.stickItHost;
+    const setFloatingCardGuide = vi.fn(async (_card: unknown, _guide: unknown) => {});
+    window.stickItHost = {
+      setFloatingCardGuide,
+    } as unknown as NonNullable<typeof window.stickItHost>;
     const draggedGuideCard = document.createElement("button");
-    draggedGuideCard.dataset.noteCardId = guideNoteId;
-    document.body.appendChild(draggedGuideCard);
+    try {
+      await user.click(within(guide).getByRole("button", { name: "Next feature" }));
+      await waitFor(() => {
+        expect(within(guide).getByText("Step 3 of 7")).toBeInTheDocument();
+        expect(within(guide).getByText("Create a floating card")).toBeInTheDocument();
+      });
 
-    fireEvent.click(draggedGuideCard);
-    await act(async () => {
-      await new Promise((resolve) => window.setTimeout(resolve, 140));
-    });
-    expect(within(guide).getByText("Create a floating card")).toBeInTheDocument();
+      const guideNoteId = useNotesStore.getState().cards[0]?.id;
+      expect(guideNoteId).toBeTruthy();
+      await waitFor(() => {
+        expect(setFloatingCardGuide).toHaveBeenLastCalledWith(
+          { kind: "note", id: guideNoteId },
+          expect.objectContaining({ phase: "pin" }),
+        );
+      });
 
-    act(() => {
-      useNotesStore.getState().setFloatingCardIds([guideNoteId]);
-    });
-    await waitFor(() => {
-      expect(within(guide).getByText("Pin it to the desktop")).toBeInTheDocument();
-      expect(guide).toHaveClass("hidden");
-    });
-    draggedGuideCard.remove();
+      draggedGuideCard.dataset.noteCardId = guideNoteId;
+      document.body.appendChild(draggedGuideCard);
+      fireEvent.click(draggedGuideCard);
+      await act(async () => {
+        await new Promise((resolve) => window.setTimeout(resolve, 140));
+      });
+      expect(within(guide).getByText("Create a floating card")).toBeInTheDocument();
+
+      act(() => {
+        useNotesStore.getState().setFloatingCardIds([guideNoteId]);
+      });
+      await waitFor(() => {
+        expect(within(guide).getByText("Pin it to the desktop")).toBeInTheDocument();
+        expect(guide).toHaveClass("hidden");
+      });
+      expect(setFloatingCardGuide.mock.calls.some(([, state]) => state === null)).toBe(false);
+    } finally {
+      draggedGuideCard.remove();
+      window.stickItHost = originalBridge;
+    }
 
     for (const chapter of [4, 5, 6, 7]) {
       await user.click(within(guide).getByRole("button", { name: "Next feature" }));

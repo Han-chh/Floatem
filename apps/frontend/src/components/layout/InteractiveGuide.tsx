@@ -92,6 +92,7 @@ export function InteractiveGuide({
   const [pinnedNoteIds, setPinnedNoteIds] = useState<string[]>([]);
   const [paletteGuideStage, setPaletteGuideStage] = useState<PaletteGuideStage>("compact");
   const runtimeRef = useRef<GuideRuntime | null>(null);
+  const floatingGuideNoteIdRef = useRef<string | null>(null);
   const cards = useNotesStore((state) => state.cards);
   const floatingCardIds = useNotesStore((state) => state.floatingCardIds);
   const noteGroups = useNotesStore((state) => state.groups);
@@ -435,11 +436,17 @@ export function InteractiveGuide({
   }, [floatingCardIds, isOpen, noteId, pinnedNoteIds, step]);
 
   useEffect(() => {
-    if (!isOpen || !noteId || ![19, 20, 21].includes(step)) {
+    if (!isOpen || !noteId || ![18, 19, 20, 21].includes(step)) {
+      const guidedNoteId = floatingGuideNoteIdRef.current;
+      floatingGuideNoteIdRef.current = null;
+      if (guidedNoteId) {
+        void setFloatingCardGuide({ kind: "note", id: guidedNoteId }, null).catch(() => {});
+      }
       return;
     }
 
-    const guide = step === 19
+    floatingGuideNoteIdRef.current = noteId;
+    const guide = step <= 19
       ? {
           phase: "pin" as const,
           title: copy("固定到桌面", "Pin to desktop"),
@@ -458,18 +465,16 @@ export function InteractiveGuide({
             phase: "close" as const,
             title: copy("收回悬浮卡片", "Return the floating card"),
             instruction: copy("点击高亮的关闭按钮", "Click the highlighted close button"),
-          };
+        };
 
     void setFloatingCardGuide({ kind: "note", id: noteId }, guide).catch(() => {});
-    return () => {
-      void setFloatingCardGuide({ kind: "note", id: noteId }, null).catch(() => {});
-    };
   }, [isOpen, isZh, noteId, step]);
 
   useEffect(() => {
     if (isOpen) {
       return;
     }
+    floatingGuideNoteIdRef.current = null;
     void clearFloatingCardGuides().catch(() => {});
   }, [isOpen]);
 

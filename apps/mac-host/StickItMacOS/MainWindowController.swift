@@ -56,6 +56,7 @@ final class MainWindowController: NSObject, NSWindowDelegate, StickItNativeBridg
     private var isDragPreviewDockZoneActive = false
     private var floatingCardWindowControllers: [String: FloatingNoteWindowController] = [:]
     private var floatingCardPayloads: [String: [String: Any]] = [:]
+    private var floatingCardGuideStates: [String: [String: Any]] = [:]
 
     private static let hotKeyDebounceInterval: CFAbsoluteTime = 0.25
 
@@ -620,6 +621,9 @@ final class MainWindowController: NSObject, NSWindowDelegate, StickItNativeBridg
         }
         floatingCardWindowControllers[key] = controller
         floatingCardPayloads[key] = payloadDictionary
+        if let guide = floatingCardGuideStates[key] {
+            controller.updateGuideState(guide)
+        }
         if Self.debugLifecycle {
             Self.lifecycle.info("panelCreated(cardId=\(cardID, privacy: .public)) kind=\(kind, privacy: .public)")
             logRemainingFloatingPanelCount()
@@ -681,10 +685,19 @@ final class MainWindowController: NSObject, NSWindowDelegate, StickItNativeBridg
 
     func setFloatingCardGuideFromBridge(kind: String, id: String, guide: [String: Any]?) {
         let key = Self.floatingCardKey(kind: kind, id: id)
+        if let guide {
+            // The guide can be registered before the user releases the card
+            // outside the main panel. Cache it so a newly created floating
+            // WKWebView receives the guide during its initial payload load.
+            floatingCardGuideStates[key] = guide
+        } else {
+            floatingCardGuideStates.removeValue(forKey: key)
+        }
         floatingCardWindowControllers[key]?.updateGuideState(guide)
     }
 
     func clearFloatingCardGuidesFromBridge() {
+        floatingCardGuideStates.removeAll()
         for controller in floatingCardWindowControllers.values {
             controller.updateGuideState(nil)
         }
@@ -1054,6 +1067,7 @@ final class MainWindowController: NSObject, NSWindowDelegate, StickItNativeBridg
 
         controller.closeWindow()
         floatingCardPayloads.removeValue(forKey: key)
+        floatingCardGuideStates.removeValue(forKey: key)
         removePersistedDesktopCard(kind: kind, id: id)
         if let entityKind = StickItEntityKind(rawValue: kind) {
             try? storage.removeFloatingWindowState(kind: entityKind, id: id)

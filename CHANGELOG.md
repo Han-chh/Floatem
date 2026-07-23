@@ -5,7 +5,7 @@
 - Keep floating cards above the main panel when switching from desktop-pinned mode back to the regular overlay on macOS.
 - Add explicit Previous and Next controls that jump between the seven complete interactive-guide workflows.
 - Keep floating-card instructions inside the floating window, highlight both the desktop-pin control and launch-at-login dialog even across guide-state updates, let users handle launch-at-login directly, and clarify how group deletion mode works.
-- Keep the floating-card guide active when dragging its note out of the main panel by ignoring the synthetic source-card click emitted after drag completion.
+- Keep the floating-card guide active when dragging its note out of the main panel by pre-registering the guide with the native host, carrying it into the new floating window, and ignoring the synthetic source-card click emitted after drag completion.
 - Bump the macOS app to build 42.
 
 ## 1.0.3
