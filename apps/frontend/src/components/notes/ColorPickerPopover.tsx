@@ -38,6 +38,7 @@ type RgbColor = {
 type ColorPickerPopoverProps = {
   activeColor: string | null;
   anchorRef: RefObject<HTMLElement | null>;
+  dataGuideId?: string;
   dataTestId?: string;
   isOpen: boolean;
   onApplyColor: (color: string) => void;
@@ -214,6 +215,7 @@ function getHsvFromColor(color: string | null) {
 export function ColorPickerPopover({
   activeColor,
   anchorRef,
+  dataGuideId,
   dataTestId = "note-text-color-palette",
   isOpen,
   onApplyColor,
@@ -354,9 +356,16 @@ export function ColorPickerPopover({
     onPreviewColor?.(normalizedHexColor);
   };
 
+  const applyColor = (color: string) => {
+    onApplyColor(color);
+    if (dataGuideId && typeof window !== "undefined") {
+      window.dispatchEvent(new CustomEvent("stickit:guide-color-selected", { detail: { id: dataGuideId } }));
+    }
+  };
+
   const applyAdvancedColor = () => {
     const normalizedHexDraft = normalizeHexColor(hexDraft);
-    onApplyColor(/^#[0-9A-F]{6}$/i.test(hexDraft) ? normalizedHexDraft : advancedHexColor);
+    applyColor(/^#[0-9A-F]{6}$/i.test(hexDraft) ? normalizedHexDraft : advancedHexColor);
   };
 
   const handlePickScreenColor = async () => {
@@ -408,7 +417,7 @@ export function ColorPickerPopover({
         }
       >
         {colorPaletteMode === "compact" ? (
-          <div className="grid grid-cols-5 gap-2">
+          <div data-guide={dataGuideId ? `${dataGuideId}-color-options` : undefined} className="grid grid-cols-5 gap-2">
             {TEXT_COLOR_PRESETS.map((color) => {
               const isSelected = activeColor === color;
 
@@ -428,7 +437,7 @@ export function ColorPickerPopover({
                   onPointerDown={(event) => {
                     event.preventDefault();
                     event.stopPropagation();
-                    onApplyColor(color);
+                    applyColor(color);
                   }}
                 >
                   <span className="pointer-events-none absolute inset-[-3px] rounded-full border-2 border-white/92 opacity-0 shadow-[0_0_0_1px_rgba(61,49,34,0.16)] transition-opacity duration-100 group-hover:opacity-100 group-focus-visible:opacity-100" />
@@ -475,7 +484,7 @@ export function ColorPickerPopover({
                     onPointerDown={(event) => {
                       event.preventDefault();
                       event.stopPropagation();
-                      onApplyColor(color);
+                      applyColor(color);
                     }}
                   >
                     <span className="pointer-events-none absolute inset-[-2px] rounded-[4px] border-2 border-white/92 opacity-0 shadow-[0_0_0_1px_rgba(61,49,34,0.16)] transition-opacity duration-100 group-hover:opacity-100 group-focus-visible:opacity-100" />

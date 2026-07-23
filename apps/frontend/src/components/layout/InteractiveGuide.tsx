@@ -21,22 +21,25 @@ type InteractiveGuideProps = {
 type GuideSnapshot = {
   activeTab: TabId;
   headerCollapsed: boolean;
+  noteGroupIds: string[];
   noteIds: string[];
   selectedDateKey: string;
   showSettings: boolean;
   theme: ThemeId;
+  todoGroupIds: string[];
   todoIds: string[];
 };
 
 type GuideRuntime = {
-  noteGroupId: string;
+  noteGroupId: string | null;
   noteId: string | null;
   snapshot: GuideSnapshot;
-  todoGroupId: string;
+  todoGroupId: string | null;
   todoId: string | null;
 };
 
 type GuideStep = {
+  allowOutsideTarget?: boolean;
   body: string;
   instruction: string;
   target: () => HTMLElement | null;
@@ -57,18 +60,6 @@ function cssValue(value: string) {
   return typeof CSS !== "undefined" && CSS.escape ? CSS.escape(value) : value.replace(/["\\]/g, "\\$&");
 }
 
-function getAvailableGroupName(baseName: string, names: string[]) {
-  if (!names.includes(baseName)) {
-    return baseName;
-  }
-
-  let suffix = 2;
-  while (names.includes(`${baseName} ${suffix}`)) {
-    suffix += 1;
-  }
-  return `${baseName} ${suffix}`;
-}
-
 export function InteractiveGuide({
   isHeaderCollapsed,
   isOpen,
@@ -87,7 +78,9 @@ export function InteractiveGuide({
   const isFinishingRef = useRef(false);
   const cards = useNotesStore((state) => state.cards);
   const floatingCardIds = useNotesStore((state) => state.floatingCardIds);
+  const noteGroups = useNotesStore((state) => state.groups);
   const todos = useTodosStore((state) => state.todos);
+  const todoGroups = useTodosStore((state) => state.groups);
   const theme = useSettingsStore((state) => state.theme);
 
   const noteId = runtimeRef.current?.noteId ?? null;
@@ -114,10 +107,35 @@ export function InteractiveGuide({
         target: () => noteId ? queryTarget(`[data-note-card-id="${cssValue(noteId)}"] [data-action="note-group"]`) : null,
       },
       {
-        title: isZh ? "选择演练分组" : "Choose the guide group",
-        body: isZh ? "这次演练使用临时分组，完成后会自动删除。" : "This temporary group will be removed when the guide is complete.",
-        instruction: isZh ? "选择高亮的临时指引分组" : "Choose the highlighted temporary guide group",
-        target: () => runtimeRef.current ? queryGroupTarget(runtimeRef.current.noteGroupId) : null,
+        title: isZh ? "新增便签分组" : "Add a note group",
+        body: isZh ? "由你创建这次演练使用的分组。" : "Create the group you want to use for this practice.",
+        instruction: isZh ? "点击新增分组" : "Click Add group",
+        target: () => queryTarget('[data-guide="note-group-add"]'),
+      },
+      {
+        allowOutsideTarget: true,
+        title: isZh ? "设置名称与颜色" : "Choose a name and color",
+        body: isZh ? "先输入任意分组名称，再打开颜色选择器。" : "Enter any group name, then open the color picker.",
+        instruction: isZh ? "填写名称后，点击高亮的调色板按钮" : "Enter a name, then click the highlighted palette button",
+        target: () => queryTarget('[data-guide="note-group-color"]'),
+      },
+      {
+        title: isZh ? "选择分组颜色" : "Choose the group color",
+        body: isZh ? "从调色板中选择一种你喜欢的颜色。" : "Choose any color you like from the palette.",
+        instruction: isZh ? "点击一种高亮区域内的颜色" : "Click a color in the highlighted palette",
+        target: () => queryTarget('[data-guide="note-group-color-options"]'),
+      },
+      {
+        title: isZh ? "创建便签分组" : "Create the note group",
+        body: isZh ? "名称和颜色设置完成后，创建这个分组。" : "Create the group with the name and color you selected.",
+        instruction: isZh ? "点击“创建分组”" : "Click Create group",
+        target: () => queryTarget('[data-guide="note-group-create"]'),
+      },
+      {
+        title: isZh ? "应用新分组" : "Apply the new group",
+        body: isZh ? "把刚创建的分组应用到这张便签。" : "Apply the group you just created to this note.",
+        instruction: isZh ? "选择高亮的新分组" : "Choose the highlighted new group",
+        target: () => runtimeRef.current?.noteGroupId ? queryGroupTarget(runtimeRef.current.noteGroupId) : null,
       },
       {
         title: isZh ? "折叠便签" : "Fold the note",
@@ -204,10 +222,35 @@ export function InteractiveGuide({
         target: () => todoId ? queryTarget(`[data-todo-item-id="${cssValue(todoId)}"] [data-action="todo-group"]`) : null,
       },
       {
-        title: isZh ? "选择演练分组" : "Choose the guide group",
-        body: isZh ? "选择临时 Todo 分组继续。" : "Choose the temporary Todo group to continue.",
-        instruction: isZh ? "选择高亮的临时指引分组" : "Choose the highlighted temporary guide group",
-        target: () => runtimeRef.current ? queryGroupTarget(runtimeRef.current.todoGroupId) : null,
+        title: isZh ? "新增 Todo 分组" : "Add a todo group",
+        body: isZh ? "Todo 分组独立管理，请再创建一个分组。" : "Todo groups are managed separately, so create one here too.",
+        instruction: isZh ? "点击新增分组" : "Click Add group",
+        target: () => queryTarget('[data-guide="todo-group-add"]'),
+      },
+      {
+        allowOutsideTarget: true,
+        title: isZh ? "设置名称与颜色" : "Choose a name and color",
+        body: isZh ? "先输入 Todo 分组名称，再打开颜色选择器。" : "Enter a todo group name, then open the color picker.",
+        instruction: isZh ? "填写名称后，点击高亮的调色板按钮" : "Enter a name, then click the highlighted palette button",
+        target: () => queryTarget('[data-guide="todo-group-color"]'),
+      },
+      {
+        title: isZh ? "选择分组颜色" : "Choose the group color",
+        body: isZh ? "为 Todo 分组选择一种颜色。" : "Choose a color for the todo group.",
+        instruction: isZh ? "点击一种高亮区域内的颜色" : "Click a color in the highlighted palette",
+        target: () => queryTarget('[data-guide="todo-group-color-options"]'),
+      },
+      {
+        title: isZh ? "创建 Todo 分组" : "Create the todo group",
+        body: isZh ? "使用刚才填写的名称与颜色创建分组。" : "Create the group with the name and color you selected.",
+        instruction: isZh ? "点击“创建分组”" : "Click Create group",
+        target: () => queryTarget('[data-guide="todo-group-create"]'),
+      },
+      {
+        title: isZh ? "应用新分组" : "Apply the new group",
+        body: isZh ? "把刚创建的分组应用到演练待办。" : "Apply the group you just created to the practice todo.",
+        instruction: isZh ? "选择高亮的新分组" : "Choose the highlighted new group",
+        target: () => runtimeRef.current?.todoGroupId ? queryGroupTarget(runtimeRef.current.todoGroupId) : null,
       },
       {
         title: isZh ? "打开设置" : "Open Settings",
@@ -235,7 +278,7 @@ export function InteractiveGuide({
       },
       {
         title: isZh ? "指引完成" : "Guide complete",
-        body: isZh ? "演练卡片、临时分组、日期与主题均已归位。" : "Practice cards, temporary groups, date, and theme are back where they started.",
+        body: isZh ? "演练卡片、你创建的演练分组、日期与主题均已归位。" : "Practice cards, the groups you created, date, and theme are back where they started.",
         instruction: isZh ? "返回 StickIt" : "Return to StickIt",
         target: () => null,
       },
@@ -260,8 +303,12 @@ export function InteractiveGuide({
     if (runtime.todoId) {
       todosState.removeTodo(runtime.todoId);
     }
-    notesState.deleteGroup(runtime.noteGroupId);
-    todosState.deleteGroup(runtime.todoGroupId);
+    if (runtime.noteGroupId) {
+      notesState.deleteGroup(runtime.noteGroupId);
+    }
+    if (runtime.todoGroupId) {
+      todosState.deleteGroup(runtime.todoGroupId);
+    }
     todosState.selectDate(runtime.snapshot.selectedDateKey);
     settingsState.setTheme(runtime.snapshot.theme);
     onHeaderCollapsedChange(runtime.snapshot.headerCollapsed);
@@ -278,29 +325,21 @@ export function InteractiveGuide({
     const notesState = useNotesStore.getState();
     const todosState = useTodosStore.getState();
     const settingsState = useSettingsStore.getState();
-    const baseGroupName = isZh ? "StickIt 指引" : "StickIt Guide";
-    const noteGroupName = getAvailableGroupName(baseGroupName, notesState.groups.map((group) => group.name));
-    const todoGroupName = getAvailableGroupName(baseGroupName, todosState.groups.map((group) => group.name));
-    const noteGroup = notesState.createGroup({ color: "#E59445", name: noteGroupName });
-    const todoGroup = todosState.createGroup({ color: "#547AC3", name: todoGroupName });
-
-    if (!noteGroup || !todoGroup) {
-      return;
-    }
-
     const runtime: GuideRuntime = {
-      noteGroupId: noteGroup.id,
+      noteGroupId: null,
       noteId: null,
       snapshot: {
         activeTab: settingsState.activeTab,
         headerCollapsed: isHeaderCollapsed,
+        noteGroupIds: notesState.groups.map((group) => group.id),
         noteIds: notesState.cards.map((card) => card.id),
         selectedDateKey: todosState.selectedDateKey,
         showSettings,
         theme: settingsState.theme,
+        todoGroupIds: todosState.groups.map((group) => group.id),
         todoIds: todosState.todos.map((todo) => todo.id),
       },
-      todoGroupId: todoGroup.id,
+      todoGroupId: null,
       todoId: null,
     };
 
@@ -324,6 +363,24 @@ export function InteractiveGuide({
   }, [isOpen]);
 
   useEffect(() => {
+    if (!isOpen) {
+      return;
+    }
+
+    const handleColorSelected = (event: Event) => {
+      const guideId = (event as CustomEvent<{ id?: string }>).detail?.id;
+      if (step === 5 && guideId === "note-group") {
+        setStep(6);
+      } else if (step === 24 && guideId === "todo-group") {
+        setStep(25);
+      }
+    };
+
+    window.addEventListener("stickit:guide-color-selected", handleColorSelected);
+    return () => window.removeEventListener("stickit:guide-color-selected", handleColorSelected);
+  }, [isOpen, step]);
+
+  useEffect(() => {
     if (!isOpen || !runtimeRef.current) {
       return;
     }
@@ -338,42 +395,58 @@ export function InteractiveGuide({
       }
     }
 
-    if (step === 3 && runtime.noteId) {
-      const guideNote = cards.find((card) => card.id === runtime.noteId);
-      if (guideNote?.groupId === runtime.noteGroupId) {
-        setStep(4);
+    if (step === 6 && !runtime.noteGroupId) {
+      const createdGroup = noteGroups.find((group) => !runtime.snapshot.noteGroupIds.includes(group.id));
+      if (createdGroup) {
+        runtime.noteGroupId = createdGroup.id;
+        setStep(7);
       }
     }
 
-    if (step === 13 && !runtime.todoId) {
+    if (step === 7 && runtime.noteId && runtime.noteGroupId) {
+      const guideNote = cards.find((card) => card.id === runtime.noteId);
+      if (guideNote?.groupId === runtime.noteGroupId) {
+        setStep(8);
+      }
+    }
+
+    if (step === 17 && !runtime.todoId) {
       const created = todos.find((todo) => !runtime.snapshot.todoIds.includes(todo.id));
       if (created) {
         runtime.todoId = created.id;
-        setStep(14);
+        setStep(18);
       }
     }
 
-    if (step === 18 && runtime.todoId) {
-      const guideTodo = todos.find((todo) => todo.id === runtime.todoId);
-      if (guideTodo?.groupId === runtime.todoGroupId) {
-        setStep(19);
+    if (step === 25 && !runtime.todoGroupId) {
+      const createdGroup = todoGroups.find((group) => !runtime.snapshot.todoGroupIds.includes(group.id));
+      if (createdGroup) {
+        runtime.todoGroupId = createdGroup.id;
+        setStep(26);
       }
     }
-  }, [cards, isOpen, isZh, step, todos]);
+
+    if (step === 26 && runtime.todoId && runtime.todoGroupId) {
+      const guideTodo = todos.find((todo) => todo.id === runtime.todoId);
+      if (guideTodo?.groupId === runtime.todoGroupId) {
+        setStep(27);
+      }
+    }
+  }, [cards, isOpen, isZh, noteGroups, step, todoGroups, todos]);
 
   useEffect(() => {
     if (!isOpen || !noteId) {
       return;
     }
 
-    if (step === 5 && floatingCardIds.includes(noteId)) {
-      setStep(6);
-    } else if (step === 6 && pinnedNoteIds.includes(noteId)) {
-      setStep(7);
-    } else if (step === 7 && !pinnedNoteIds.includes(noteId)) {
-      setStep(8);
-    } else if (step === 8 && !floatingCardIds.includes(noteId)) {
-      setStep(9);
+    if (step === 9 && floatingCardIds.includes(noteId)) {
+      setStep(10);
+    } else if (step === 10 && pinnedNoteIds.includes(noteId)) {
+      setStep(11);
+    } else if (step === 11 && !pinnedNoteIds.includes(noteId)) {
+      setStep(12);
+    } else if (step === 12 && !floatingCardIds.includes(noteId)) {
+      setStep(13);
     }
   }, [floatingCardIds, isOpen, noteId, pinnedNoteIds, step]);
 
@@ -389,7 +462,7 @@ export function InteractiveGuide({
   }, [isHeaderCollapsed, isOpen, onHeaderCollapsedChange, step]);
 
   useEffect(() => {
-    if (!isOpen || step !== 22 || !showSettings) {
+    if (!isOpen || step !== 30 || !showSettings) {
       return;
     }
 
@@ -402,7 +475,7 @@ export function InteractiveGuide({
       useSettingsStore.getState().setTheme(runtime.snapshot.theme);
       onSettingsChange(false);
       onTabChange("todos");
-      setStep(22);
+      setStep(30);
     }, 650);
     return () => window.clearTimeout(timer);
   }, [isOpen, onSettingsChange, onTabChange, showSettings, step, theme]);
@@ -447,40 +520,32 @@ export function InteractiveGuide({
       if ((clicked instanceof Element && clicked.closest("[data-guide-dialog]")) || !target) {
         return;
       }
-      if (!target.contains(clicked)) {
+      const didClickTarget = target.contains(clicked);
+      if (!didClickTarget && !currentStep.allowOutsideTarget) {
         event.preventDefault();
         event.stopPropagation();
         return;
       }
+      if (!didClickTarget) {
+        return;
+      }
 
-      if ([1, 3, 13, 18].includes(step)) {
+      if ([1, 6, 7, 17, 25, 26].includes(step)) {
         return;
       }
 
       window.setTimeout(() => {
-        if (step === 0) {
-          setStep(1);
-        } else if (step === 4) {
-          setStep(5);
+        if (step === 8) {
+          setStep(9);
           window.setTimeout(() => {
             if (runtimeRef.current?.noteId) {
               useNotesStore.getState().toggleCollapsed(runtimeRef.current.noteId);
             }
           }, 280);
-        } else if (step === 9) {
-          setStep(10);
-        } else if (step === 10) {
-          setStep(11);
-        } else if (step === 11) {
-          setStep(12);
-        } else if (step === 12) {
-          setStep(13);
-        } else if (step === 2) {
-          setStep(step + 1);
-        } else if ((step >= 14 && step <= 17) || (step >= 19 && step <= 21)) {
-          setStep(step + 1);
-        } else if (step === 22) {
+        } else if (step === 30) {
           window.setTimeout(finishCleanup, 260);
+        } else {
+          setStep(step + 1);
         }
       }, 80);
     };

@@ -332,6 +332,7 @@ export function TodoGroupDialog({ todoId = null, isOpen, onClose }: TodoGroupDia
                     <motion.button
                       type="button"
                       aria-label={t.todos.addGroup}
+                      data-guide="todo-group-add"
                       data-tooltip={t.todos.addGroup}
                       className="paper-icon-button inline-flex h-8 w-8 min-h-0 min-w-0 rounded-full"
                       whileHover={{ y: -1.5, scale: 1.03 }}
@@ -439,6 +440,7 @@ export function TodoGroupDialog({ todoId = null, isOpen, onClose }: TodoGroupDia
                   role="dialog"
                   aria-modal="true"
                   aria-label={editorDialogTitle}
+                  data-guide="todo-group-editor"
                   className="paper-panel flex w-full max-w-[420px] flex-col rounded-[24px] p-5 shadow-[0_26px_48px_rgba(30,25,21,0.24)]"
                   initial={{ opacity: 0, scale: 0.95, y: 12 }}
                   animate={{ opacity: 1, scale: 1, y: 0 }}
@@ -496,6 +498,7 @@ export function TodoGroupDialog({ todoId = null, isOpen, onClose }: TodoGroupDia
                         ref={colorButtonRef}
                         type="button"
                         aria-label={t.todos.changeGroupColor}
+                        data-guide="todo-group-color"
                         data-tooltip={t.todos.changeGroupColor}
                         className="group relative inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-[14px] border border-[rgba(213,198,180,0.88)] bg-[rgba(255,255,255,0.82)] text-[#2853C7] shadow-[0_10px_20px_rgba(61,49,34,0.08)]"
                         whileHover={{ y: -1.5, scale: 1.03 }}
@@ -523,6 +526,7 @@ export function TodoGroupDialog({ todoId = null, isOpen, onClose }: TodoGroupDia
                     <div className="flex flex-wrap gap-2">
                       <motion.button
                         type="submit"
+                        data-guide={isEditing ? undefined : "todo-group-create"}
                         data-tooltip={isEditing ? t.common.save : t.todos.createGroup}
                         className="paper-button inline-flex items-center justify-center rounded-[13px] px-3 py-2 text-[12px] font-semibold text-[var(--dark-text)]"
                         whileHover={isSaveDisabled ? undefined : { y: -1.5, scale: 1.01 }}
@@ -616,6 +620,7 @@ export function TodoGroupDialog({ todoId = null, isOpen, onClose }: TodoGroupDia
           <ColorPickerPopover
             activeColor={draftColor}
             anchorRef={colorButtonRef}
+            dataGuideId="todo-group"
             dataTestId="todo-group-dialog-color-palette"
             isOpen={isEditorOpen && isColorPickerOpen}
             onApplyColor={(color) => {
