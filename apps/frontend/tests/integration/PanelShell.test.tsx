@@ -2,6 +2,7 @@ import { render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 import { PanelShell } from "../../src/components/layout/PanelShell";
+import { NotesList } from "../../src/components/notes/NotesList";
 import { SETTINGS_LANGUAGE_ORDER, SettingsPanel } from "../../src/components/settings/SettingsPanel";
 import { useNotesStore } from "../../src/store/notesStore";
 import { useSettingsStore } from "../../src/store/settingsStore";
@@ -86,11 +87,14 @@ describe("PanelShell", () => {
     await user.click(helpButton);
 
     const dialog = screen.getByRole("dialog", { name: "StickIt guide" });
+    const scrollRegion = screen.getByTestId("help-scroll-region");
 
     expect(dialog).toBeInTheDocument();
     expect(dialog.parentElement).toHaveClass("stickit-modal-backdrop", "fixed", "z-[95]");
-    expect(screen.getByText("Overview")).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: /Notes/i })).toBeInTheDocument();
+    expect(scrollRegion).toContainElement(screen.getByText("StickIt guide"));
+    expect(scrollRegion).toContainElement(screen.getByText("Overview"));
+    expect(scrollRegion).toContainElement(screen.getByRole("button", { name: /Notes/i }));
+    expect(scrollRegion).toHaveClass("overflow-y-auto");
     expect(within(dialog).queryByText("Add")).not.toBeInTheDocument();
 
     await user.click(screen.getByRole("button", { name: "Notes" }));
@@ -149,5 +153,42 @@ describe("PanelShell", () => {
     expect(screen.getByText("Original panel body")).toBeInTheDocument();
     expect(useNotesStore.getState().groups.some((group) => group.name === "StickIt Guide")).toBe(true);
     expect(useTodosStore.getState().groups.some((group) => group.name === "StickIt Guide")).toBe(true);
+  });
+
+  it("advances through note grouping using the real note card and group dialog", async () => {
+    const user = userEvent.setup();
+    useSettingsStore.setState({ language: "en" });
+
+    render(
+      <PanelShell
+        activeTab="notes"
+        animationSpeed="mediate"
+        onTabChange={vi.fn()}
+        onToggleSettings={vi.fn()}
+        settingsPanel={<div>Settings panel</div>}
+        showSettings={false}
+        transitionStyle="lift"
+      >
+        <NotesList />
+      </PanelShell>,
+    );
+
+    await user.click(screen.getByRole("button", { name: "StickIt help" }));
+    await user.click(screen.getByRole("button", { name: "Start interactive guide" }));
+    await user.click(screen.getByRole("button", { name: "Collapse navigation" }));
+    await waitFor(() => expect(screen.getByText("Add a note")).toBeInTheDocument());
+    await user.click(screen.getByRole("button", { name: "Add note" }));
+    await waitFor(() => expect(screen.getByText("Open note groups")).toBeInTheDocument());
+
+    const guideNote = screen.getByDisplayValue("StickIt guide note").closest("[data-note-card-id]");
+    expect(guideNote).not.toBeNull();
+    await user.click(within(guideNote as HTMLElement).getByRole("button", { name: "Change note group" }));
+    await waitFor(() => expect(screen.getByText("Choose the guide group")).toBeInTheDocument());
+    await user.click(screen.getByRole("button", { name: "StickIt Guide" }));
+
+    await waitFor(() => {
+      expect(screen.getByText("Fold the note")).toBeInTheDocument();
+      expect(guideNote).toHaveAttribute("data-note-grouped", "true");
+    });
   });
 });

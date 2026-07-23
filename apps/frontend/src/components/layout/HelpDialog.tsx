@@ -144,7 +144,10 @@ export function HelpDialog({ isOpen, onClose, onStartInteractiveGuide }: HelpDia
               <div className="absolute right-0 top-20 h-44 w-44 rounded-full bg-[rgba(47,107,255,0.1)] blur-3xl" />
             </div>
 
-            <div className="relative flex min-h-0 flex-1 flex-col gap-3">
+            <div
+              data-testid="help-scroll-region"
+              className="paper-scroll relative flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto pr-1"
+            >
               <div className="rounded-[24px] border border-[rgba(213,198,180,0.78)] bg-[linear-gradient(145deg,rgba(255,252,248,0.98),rgba(244,249,252,0.92)_55%,rgba(255,244,232,0.96))] px-4 pb-4 pt-4 shadow-[0_18px_36px_rgba(61,49,34,0.08)]">
                 <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0">
@@ -186,7 +189,7 @@ export function HelpDialog({ isOpen, onClose, onStartInteractiveGuide }: HelpDia
                 </div>
               </div>
 
-              <div className="paper-scroll min-h-0 flex-1 overflow-y-auto pr-1">
+              <div>
                 <div className="grid gap-3 pb-1 md:grid-cols-2 xl:grid-cols-3">
                   {content.sections.map((section) => {
                     const Icon = SECTION_ICON_MAP[section.id];

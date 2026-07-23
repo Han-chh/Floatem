@@ -47,6 +47,12 @@ function queryTarget(selector: string) {
   return document.querySelector<HTMLElement>(selector);
 }
 
+function queryGroupTarget(groupId: string) {
+  return Array.from(document.querySelectorAll<HTMLElement>("[data-guide-group-id]")).find(
+    (element) => element.dataset.guideGroupId === groupId,
+  ) ?? null;
+}
+
 function cssValue(value: string) {
   return typeof CSS !== "undefined" && CSS.escape ? CSS.escape(value) : value.replace(/["\\]/g, "\\$&");
 }
@@ -111,7 +117,7 @@ export function InteractiveGuide({
         title: isZh ? "选择演练分组" : "Choose the guide group",
         body: isZh ? "这次演练使用临时分组，完成后会自动删除。" : "This temporary group will be removed when the guide is complete.",
         instruction: isZh ? "选择高亮的临时指引分组" : "Choose the highlighted temporary guide group",
-        target: () => runtimeRef.current ? queryTarget(`[data-guide-group-id="${cssValue(runtimeRef.current.noteGroupId)}"]`) : null,
+        target: () => runtimeRef.current ? queryGroupTarget(runtimeRef.current.noteGroupId) : null,
       },
       {
         title: isZh ? "折叠便签" : "Fold the note",
@@ -201,7 +207,7 @@ export function InteractiveGuide({
         title: isZh ? "选择演练分组" : "Choose the guide group",
         body: isZh ? "选择临时 Todo 分组继续。" : "Choose the temporary Todo group to continue.",
         instruction: isZh ? "选择高亮的临时指引分组" : "Choose the highlighted temporary guide group",
-        target: () => runtimeRef.current ? queryTarget(`[data-guide-group-id="${cssValue(runtimeRef.current.todoGroupId)}"]`) : null,
+        target: () => runtimeRef.current ? queryGroupTarget(runtimeRef.current.todoGroupId) : null,
       },
       {
         title: isZh ? "打开设置" : "Open Settings",
@@ -332,11 +338,25 @@ export function InteractiveGuide({
       }
     }
 
+    if (step === 3 && runtime.noteId) {
+      const guideNote = cards.find((card) => card.id === runtime.noteId);
+      if (guideNote?.groupId === runtime.noteGroupId) {
+        setStep(4);
+      }
+    }
+
     if (step === 13 && !runtime.todoId) {
       const created = todos.find((todo) => !runtime.snapshot.todoIds.includes(todo.id));
       if (created) {
         runtime.todoId = created.id;
         setStep(14);
+      }
+    }
+
+    if (step === 18 && runtime.todoId) {
+      const guideTodo = todos.find((todo) => todo.id === runtime.todoId);
+      if (guideTodo?.groupId === runtime.todoGroupId) {
+        setStep(19);
       }
     }
   }, [cards, isOpen, isZh, step, todos]);
@@ -433,7 +453,7 @@ export function InteractiveGuide({
         return;
       }
 
-      if ([1, 13].includes(step)) {
+      if ([1, 3, 13, 18].includes(step)) {
         return;
       }
 
@@ -455,9 +475,9 @@ export function InteractiveGuide({
           setStep(12);
         } else if (step === 12) {
           setStep(13);
-        } else if (step >= 2 && step <= 3) {
+        } else if (step === 2) {
           setStep(step + 1);
-        } else if (step >= 14 && step <= 21) {
+        } else if ((step >= 14 && step <= 17) || (step >= 19 && step <= 21)) {
           setStep(step + 1);
         } else if (step === 22) {
           window.setTimeout(finishCleanup, 260);
