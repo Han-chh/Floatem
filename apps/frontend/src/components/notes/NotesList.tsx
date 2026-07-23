@@ -429,6 +429,7 @@ export function NotesList({ dockZoneTarget = null }: { dockZoneTarget?: DockZone
           type="button"
           aria-label={t.notes.filterGroups}
           aria-pressed={isFilterActive}
+          data-guide="note-filter-open"
           data-tooltip={t.notes.filterGroups}
           data-tooltip-align="left"
           className={`paper-button relative inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-full ${

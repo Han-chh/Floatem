@@ -61,7 +61,10 @@ function FloatingCardGuideOverlay({
 }) {
   const { t } = useI18n();
   const [targetRect, setTargetRect] = useState<DOMRect | null>(null);
-  const isPinTarget = Boolean(guide && guide.phase !== "close" && !showLaunchAtLoginDialog);
+  const isPinTarget = Boolean(
+    guide && (guide.phase === "pin" || guide.phase === "unpin") && !showLaunchAtLoginDialog,
+  );
+  const isDragTarget = guide?.phase === "drag" && !showLaunchAtLoginDialog;
   const displayTitle = showLaunchAtLoginDialog ? t.common.guideLaunchAtLoginTitle : guide?.title;
   const displayInstruction = showLaunchAtLoginDialog
     ? t.common.guideLaunchAtLoginInstruction
@@ -76,7 +79,9 @@ function FloatingCardGuideOverlay({
 
     const selector = showLaunchAtLoginDialog
       ? "[data-floating-launch-at-login-dialog]"
-      : guide?.phase === "close"
+      : guide?.phase === "drag"
+        ? '[data-testid="floating-card-shell"]'
+        : guide?.phase === "close"
         ? '[data-action="dock"]'
         : '[data-action="desktop-pin"] [data-desktop-pin-indicator]';
     const update = () => {
@@ -114,9 +119,10 @@ function FloatingCardGuideOverlay({
             <motion.div
               data-floating-guide-highlight
               data-floating-guide-pin-ring={isPinTarget ? "true" : undefined}
+              data-floating-guide-drag-ring={isDragTarget ? "true" : undefined}
               data-floating-guide-dialog-ring={showLaunchAtLoginDialog ? "true" : undefined}
               className={`fixed border-2 border-[#ff4f3d] shadow-[0_0_0_5px_rgba(255,79,61,0.22),0_8px_24px_rgba(61,49,34,0.2)] ${
-                isPinTarget ? "rounded-full" : "rounded-[30px]"
+                isPinTarget ? "rounded-full" : isDragTarget ? "rounded-[26px]" : "rounded-[30px]"
               }`}
               style={{
                 height: targetRect.height + (isPinTarget ? 14 : 10),

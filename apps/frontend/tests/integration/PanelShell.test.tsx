@@ -144,9 +144,9 @@ describe("PanelShell", () => {
     await user.click(screen.getByRole("button", { name: "Collapse navigation" }));
     await waitFor(() => {
       expect(within(guide).getByText("Step 2 of 7")).toBeInTheDocument();
-      expect(within(guide).getByText("Manage a note end to end")).toBeInTheDocument();
+      expect(within(guide).getByText("Edit and organize notes")).toBeInTheDocument();
       expect(screen.getByRole("button", { name: "Expand navigation" })).toHaveAttribute("aria-expanded", "false");
-      expect(within(guide).getByText("Add a note")).toBeInTheDocument();
+      expect(within(guide).getByText("Create the first note")).toBeInTheDocument();
     });
 
     expect(within(guide).getByRole("button", { name: "Previous feature" })).toBeEnabled();
@@ -162,11 +162,15 @@ describe("PanelShell", () => {
       await user.click(within(guide).getByRole("button", { name: "Next feature" }));
       await waitFor(() => {
         expect(within(guide).getByText("Step 3 of 7")).toBeInTheDocument();
-        expect(within(guide).getByText("Create a floating card")).toBeInTheDocument();
+        expect(within(guide).getByText("Create a floating note")).toBeInTheDocument();
       });
 
-      const guideNoteId = useNotesStore.getState().cards[0]?.id;
-      expect(guideNoteId).toBeTruthy();
+      const guideNoteId = setFloatingCardGuide.mock.calls.at(-1)?.[0]
+        ? (setFloatingCardGuide.mock.calls.at(-1)?.[0] as { id: string }).id
+        : undefined;
+      if (!guideNoteId) {
+        throw new Error("Expected the floating guide to register a note.");
+      }
       await waitFor(() => {
         expect(setFloatingCardGuide).toHaveBeenLastCalledWith(
           { kind: "note", id: guideNoteId },
@@ -180,7 +184,7 @@ describe("PanelShell", () => {
       await act(async () => {
         await new Promise((resolve) => window.setTimeout(resolve, 140));
       });
-      expect(within(guide).getByText("Create a floating card")).toBeInTheDocument();
+      expect(within(guide).getByText("Create a floating note")).toBeInTheDocument();
 
       act(() => {
         useNotesStore.getState().setFloatingCardIds([guideNoteId]);
@@ -219,7 +223,7 @@ describe("PanelShell", () => {
     expect(useTodosStore.getState().groups).toHaveLength(0);
   });
 
-  it("advances through note grouping using the real note card and group dialog", async () => {
+  it("guides rich-text editing and toolbar folding on the real note card", async () => {
     const user = userEvent.setup();
     useSettingsStore.setState({ language: "en" });
 
@@ -240,50 +244,27 @@ describe("PanelShell", () => {
     await user.click(screen.getByRole("button", { name: "StickIt help" }));
     await user.click(screen.getByRole("button", { name: "Start interactive guide" }));
     await user.click(screen.getByRole("button", { name: "Collapse navigation" }));
-    await waitFor(() => expect(screen.getByText("Add a note")).toBeInTheDocument());
+    await waitFor(() => expect(screen.getByText("Create the first note")).toBeInTheDocument());
     await user.click(screen.getByRole("button", { name: "Add note" }));
-    await waitFor(() => expect(screen.getByText("Edit the note title")).toBeInTheDocument());
+    await waitFor(() => expect(screen.getByText("Add a title")).toBeInTheDocument());
 
     const guideNoteId = useNotesStore.getState().cards[0]?.id;
     const guideNote = document.querySelector(`[data-note-card-id="${guideNoteId}"]`);
     expect(guideNote).not.toBeNull();
     await user.type(within(guideNote as HTMLElement).getByRole("textbox", { name: "Note title" }), "StickIt guide note");
-    await waitFor(() => expect(screen.getByText("Open note groups")).toBeInTheDocument());
-    await user.click(within(guideNote as HTMLElement).getByRole("button", { name: "Change note group" }));
-    await waitFor(() => expect(screen.getByText("Add a note group")).toBeInTheDocument());
-    const groupManagerDialog = screen.getByRole("dialog", { name: "Manage groups" });
-    const guide = screen.getByRole("dialog", { name: "StickIt interactive guide" });
-    expect(groupManagerDialog).toBeInTheDocument();
-    expect(guide).toHaveClass("z-[200]");
-    expect(document.querySelector("[data-guide-highlight]")).toHaveClass("z-[196]");
-    await user.click(screen.getByRole("button", { name: "Add group" }));
+    await waitFor(() => expect(screen.getByText("Write rich text")).toBeInTheDocument());
 
-    const createDialog = screen.getByRole("dialog", { name: "Create group" });
-    await waitFor(() => expect(screen.getByText("Name the note group")).toBeInTheDocument());
-    await user.type(within(createDialog).getByRole("textbox", { name: "Group name" }), "Focus");
-    await waitFor(() => expect(screen.getByText("Open the color picker")).toBeInTheDocument());
-    await user.click(within(createDialog).getByRole("button", { name: "Change group color" }));
-    await waitFor(() => expect(screen.getByText("Discover more colors")).toBeInTheDocument());
-    await user.click(screen.getByRole("button", { name: "More Colors" }));
-    await waitFor(() => expect(screen.getByText("Open the advanced palette")).toBeInTheDocument());
-    await user.click(screen.getByRole("button", { name: "Show Colors" }));
-    await waitFor(() => expect(screen.getByText("Create a custom color")).toBeInTheDocument());
-    const customColorField = screen.getByRole("slider", { name: "Saturation and brightness" });
-    customColorField.focus();
-    await user.keyboard("{ArrowRight}");
-    await waitFor(() => expect(screen.getByText("Save the custom color")).toBeInTheDocument());
-    await user.click(screen.getByRole("button", { name: "Save" }));
-    await waitFor(() => expect(screen.getByText("Create the note group")).toBeInTheDocument());
-    await user.click(within(createDialog).getByRole("button", { name: "Create group" }));
+    const editor = guideNote?.querySelector<HTMLElement>('[data-action="note-rich-editor"]');
+    expect(editor).not.toBeNull();
+    await user.click(editor as HTMLElement);
+    await user.keyboard("A formatted guide note");
+    await waitFor(() => expect(screen.getByText("Apply rich-text formatting")).toBeInTheDocument());
 
-    await waitFor(() => expect(screen.getByText("Apply the new group")).toBeInTheDocument());
-    await user.click(screen.getByRole("button", { name: "Focus" }));
-
-    await waitFor(() => {
-      expect(screen.getByText("Open groups again")).toBeInTheDocument();
-      expect(guideNote).toHaveAttribute("data-note-grouped", "true");
-      expect(useNotesStore.getState().groups[0]?.name).toBe("Focus");
-      expect(useNotesStore.getState().groups[0]?.color).toMatch(/^#[0-9A-F]{6}$/);
-    });
+    await user.click(within(guideNote as HTMLElement).getByRole("button", { name: /Bold/ }));
+    await waitFor(() => expect(screen.getByText("Collapse the editor toolbar")).toBeInTheDocument());
+    await user.click(within(guideNote as HTMLElement).getByRole("button", { name: "Collapse formatting toolbar" }));
+    await waitFor(() => expect(screen.getByText("Expand the editor toolbar")).toBeInTheDocument());
+    await user.click(within(guideNote as HTMLElement).getByRole("button", { name: "Expand formatting toolbar" }));
+    await waitFor(() => expect(screen.getByText("Create another note")).toBeInTheDocument());
   });
 });

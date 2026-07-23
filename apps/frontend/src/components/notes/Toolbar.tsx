@@ -253,6 +253,7 @@ export function Toolbar({
           <motion.button
             key={label}
             type="button"
+            data-action={format ? `note-format-${format}` : action ? `note-toolbar-${action}` : undefined}
             ref={action === "color" ? colorButtonRef : undefined}
             aria-label={label}
             aria-disabled={disabled ? "true" : "false"}
@@ -328,6 +329,7 @@ export function Toolbar({
 
       <motion.button
         type="button"
+        data-action="note-toolbar-toggle"
         aria-label={isCollapsed ? t.notes.expandToolbar : t.notes.collapseToolbar}
         aria-expanded={!isCollapsed}
         data-tooltip={isCollapsed ? t.notes.expandToolbar : t.notes.collapseToolbar}

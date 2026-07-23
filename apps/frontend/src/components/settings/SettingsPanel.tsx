@@ -676,7 +676,7 @@ export function SettingsPanel({ onClose }: SettingsPanelProps) {
   };
 
   return (
-    <section data-testid="settings-panel" className="relative h-full min-h-0">
+    <section data-testid="settings-panel" data-guide="settings-overview" className="relative h-full min-h-0">
       <div
         ref={scrollRegionRef}
         data-testid="settings-scroll-region"

@@ -302,6 +302,7 @@ export function Editor({ content, onChange, instantToolbar = false, attachedTool
           noteId={noteId}
         />
         <Editable
+          data-action="note-rich-editor"
           onDOMBeforeInput={(event) => {
             const inputEvent = event as InputEvent;
 

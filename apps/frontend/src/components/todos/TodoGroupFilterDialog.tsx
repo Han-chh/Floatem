@@ -225,6 +225,7 @@ export function TodoGroupFilterDialog({
               <motion.button
                 type="button"
                 data-no-window-drag="true"
+                data-guide="todo-filter-apply"
                 className="paper-button paper-button-primary inline-flex min-h-10 items-center justify-center rounded-full px-4 text-[12px] font-semibold"
                 whileHover={{ y: -1.5, scale: 1.02 }}
                 whileTap={{ scale: 0.985 }}

@@ -1279,6 +1279,7 @@ export function TodoList({ dockZoneTarget = null }: { dockZoneTarget?: DockZoneE
               type="button"
               aria-label={t.todos.filterGroups}
               aria-pressed={isFilterActive}
+              data-guide="todo-filter-open"
               data-tooltip={t.todos.filterGroups}
               className={`${toolbarButtonClass} relative opacity-78 ${
                 isFilterActive
@@ -1510,6 +1511,7 @@ export function TodoList({ dockZoneTarget = null }: { dockZoneTarget?: DockZoneE
             <textarea
               ref={draftRef}
               id="todo-input"
+              data-guide="todo-quick-input"
               rows={1}
               value={draft}
               onChange={(event) => setDraft(event.currentTarget.value)}

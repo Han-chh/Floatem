@@ -425,6 +425,19 @@ describe("FloatingNoteApp", () => {
       expect(screen.getByRole("button", { name: "Close" })).toHaveAttribute("data-action", "dock");
 
       act(() => {
+        window.dispatchEvent(new CustomEvent("stickit:floating-card-guide", {
+          detail: {
+            phase: "drag",
+            title: "Drag back to the app",
+            instruction: "Drag a blank area into the main window",
+          },
+        }));
+      });
+
+      expect(await screen.findByRole("dialog", { name: "Drag back to the app" })).toBeInTheDocument();
+      expect(document.querySelector("[data-floating-guide-drag-ring]")).toHaveClass("rounded-[26px]");
+
+      act(() => {
         window.dispatchEvent(new CustomEvent("stickit:floating-card-guide", { detail: null }));
       });
       await waitFor(() => {
