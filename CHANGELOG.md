@@ -3,8 +3,8 @@
 ## 1.0.4
 
 - Keep floating cards visible when switching from desktop-pinned mode back to the regular overlay on macOS.
-- Add explicit Previous and Next controls to every interactive-guide action.
-- Highlight the desktop-pin control with a red circular guide, explain the launch-at-login dialog, and clarify how group deletion mode works.
+- Add explicit Previous and Next controls that jump between the seven complete interactive-guide workflows.
+- Highlight the desktop-pin control with a red circular guide, let users handle launch-at-login directly in its dialog, and clarify how group deletion mode works.
 - Bump the macOS app to build 42.
 
 ## 1.0.3

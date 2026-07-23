@@ -1,7 +1,11 @@
 import { AnimatePresence, motion } from "framer-motion";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import { clearFloatingCardGuides, setFloatingCardGuide } from "../../hooks/usePlatform";
+import {
+  clearFloatingCardGuides,
+  closeFloatingCard,
+  setFloatingCardGuide,
+} from "../../hooks/usePlatform";
 import { useI18n } from "../../lib/i18n";
 import { subscribeToFloatingCardsState } from "../../lib/nativeBridge";
 import type { TabId } from "../../lib/models";
@@ -47,6 +51,7 @@ type GuideStep = {
 type PaletteGuideStage = "compact" | "expanded" | "advanced" | "save";
 
 const GUIDE_CHAPTER_COUNT = 7;
+const GUIDE_CHAPTER_START_STEPS = [0, 1, 18, 23, 30, 33, 49] as const;
 
 function chapterForAction(action: number) {
   if (action === 0) return 0;
@@ -577,10 +582,87 @@ export function InteractiveGuide({
     onClose();
   };
 
-  const moveToStep = (nextStep: number) => {
+  const ensureGuideNote = () => {
+    const runtime = runtimeRef.current;
+    if (!runtime) {
+      return null;
+    }
+
+    const existing = runtime.noteId
+      ? useNotesStore.getState().cards.find((card) => card.id === runtime.noteId)
+      : null;
+    if (existing) {
+      return existing.id;
+    }
+
+    const created = useNotesStore.getState().addCard();
+    useNotesStore.getState().updateCardTitle(
+      created.id,
+      copy("交互指引便签", "Interactive guide note"),
+    );
+    runtime.noteId = created.id;
+    return created.id;
+  };
+
+  const ensureGuideTodo = () => {
+    const runtime = runtimeRef.current;
+    if (!runtime) {
+      return null;
+    }
+
+    const existing = runtime.todoId
+      ? useTodosStore.getState().todos.find((todo) => todo.id === runtime.todoId)
+      : null;
+    if (existing) {
+      return existing.id;
+    }
+
+    const created = useTodosStore.getState().addTodo(
+      copy("体验 StickIt 交互指引", "Try the StickIt interactive guide"),
+    );
+    runtime.todoId = created?.id ?? null;
+    return runtime.todoId;
+  };
+
+  const moveToChapter = (nextChapter: number) => {
+    const targetChapter = Math.max(0, Math.min(GUIDE_CHAPTER_COUNT - 1, nextChapter));
+    const runtime = runtimeRef.current;
+
+    if (targetChapter === 1 && runtime?.noteId) {
+      if (useNotesStore.getState().floatingCardIds.includes(runtime.noteId)) {
+        void closeFloatingCard({ kind: "note", id: runtime.noteId });
+      }
+      useNotesStore.getState().removeCard(runtime.noteId);
+      runtime.noteId = null;
+      runtime.noteGroupId = null;
+    }
+    if (targetChapter === 3 && runtime?.todoId) {
+      useTodosStore.getState().removeTodo(runtime.todoId);
+      runtime.todoId = null;
+      runtime.todoGroupId = null;
+    }
+    if (targetChapter === 2 || targetChapter === 3) {
+      ensureGuideNote();
+    }
+    if (targetChapter >= 4) {
+      ensureGuideTodo();
+    }
+    if (
+      targetChapter !== 2
+      && runtime?.noteId
+      && useNotesStore.getState().floatingCardIds.includes(runtime.noteId)
+    ) {
+      void closeFloatingCard({ kind: "note", id: runtime.noteId });
+    }
+
     setTargetRect(null);
     setPaletteGuideStage("compact");
-    setStep(Math.max(0, Math.min(steps.length - 1, nextStep)));
+    onSettingsChange(false);
+    onTabChange(targetChapter <= 3 ? "notes" : "todos");
+    if (targetChapter === 0 || targetChapter === 3 || targetChapter === 6) {
+      onHeaderCollapsedChange(false);
+    }
+    setStep(GUIDE_CHAPTER_START_STEPS[targetChapter]);
   };
 
   const viewportHeight = typeof window === "undefined" ? 800 : window.innerHeight;
@@ -694,24 +776,24 @@ export function InteractiveGuide({
             <div className="mt-3 grid grid-cols-2 gap-2">
               <motion.button
                 type="button"
-                aria-label={copy("上一功能", "Previous feature")}
-                disabled={step === 0}
+                aria-label={copy("上一个大步骤", "Previous chapter")}
+                disabled={currentChapter === 0}
                 className="paper-button inline-flex items-center justify-center gap-1 rounded-[11px] px-2.5 py-2 text-[10.5px] font-bold disabled:cursor-not-allowed disabled:opacity-40"
-                whileTap={step === 0 ? undefined : { scale: 0.97 }}
-                onClick={() => moveToStep(step - 1)}
+                whileTap={currentChapter === 0 ? undefined : { scale: 0.97 }}
+                onClick={() => moveToChapter(currentChapter - 1)}
               >
                 <ChevronLeftIcon size={12} />
-                {copy("上一功能", "Previous")}
+                {copy("上一大步", "Previous")}
               </motion.button>
               <motion.button
                 type="button"
-                aria-label={copy("下一功能", "Next feature")}
-                disabled={step === steps.length - 1}
+                aria-label={copy("下一个大步骤", "Next chapter")}
+                disabled={currentChapter === GUIDE_CHAPTER_COUNT - 1}
                 className="paper-button paper-button-primary inline-flex items-center justify-center gap-1 rounded-[11px] px-2.5 py-2 text-[10.5px] font-bold disabled:cursor-not-allowed disabled:opacity-40"
-                whileTap={step === steps.length - 1 ? undefined : { scale: 0.97 }}
-                onClick={() => moveToStep(step + 1)}
+                whileTap={currentChapter === GUIDE_CHAPTER_COUNT - 1 ? undefined : { scale: 0.97 }}
+                onClick={() => moveToChapter(currentChapter + 1)}
               >
-                {copy("下一功能", "Next")}
+                {copy("下一大步", "Next")}
                 <ChevronRightIcon size={12} />
               </motion.button>
             </div>

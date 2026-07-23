@@ -102,6 +102,7 @@ function installFloatingBridge(note: NoteCard, groups: NoteGroup[] = []) {
   const getFloatingCardScreenPlacement = vi.fn(async () => createFloatingScreenPlacement(100, 420));
   const setEditableInputActive = vi.fn();
   const setTextCompositionActive = vi.fn();
+  const saveSettings = vi.fn(async () => {});
   const setFloatingCardDesktopPinned = vi.fn(async (_card: FloatingCardReference, pinned: boolean) => ({
     pinned,
     launchAtLoginEnabled: false,
@@ -147,7 +148,7 @@ function installFloatingBridge(note: NoteCard, groups: NoteGroup[] = []) {
     })),
     saveNotes: vi.fn(async () => {}),
     saveTodos: vi.fn(async () => {}),
-    saveSettings: vi.fn(async () => {}),
+    saveSettings,
     showWindow: vi.fn(async () => {}),
     hideWindow: vi.fn(async () => {}),
     toggleWindow: vi.fn(async () => {}),
@@ -196,6 +197,7 @@ function installFloatingBridge(note: NoteCard, groups: NoteGroup[] = []) {
     startFloatingCardDrag,
     closeFloatingCard,
     resizeFloatingCard,
+    saveSettings,
     getFloatingCardScreenPlacement,
     setEditableInputActive,
     setTextCompositionActive,
@@ -348,7 +350,14 @@ describe("FloatingNoteApp", () => {
       ).toHaveTextContent("Choose an option in the startup dialog before continuing with the pin guide.");
       expect(document.querySelector("[data-floating-guide-pin-ring]")).not.toBeInTheDocument();
 
-      await user.click(screen.getByRole("button", { name: "Got it" }));
+      expect(screen.getByRole("button", { name: "Not Now" })).toBeInTheDocument();
+      expect(screen.getByRole("button", { name: "Enable" })).toBeInTheDocument();
+      await user.click(screen.getByRole("button", { name: "Enable" }));
+      await waitFor(() => {
+        expect(bridge.saveSettings).toHaveBeenCalledWith(
+          expect.objectContaining({ launchAtLogin: true }),
+        );
+      });
       await waitFor(() => {
         expect(document.querySelector("[data-floating-guide-pin-ring]")).toHaveClass("rounded-full");
       });
@@ -590,7 +599,7 @@ describe("FloatingNoteApp", () => {
         );
       });
 
-      await user.click(screen.getByRole("button", { name: "Got it" }));
+      await user.click(screen.getByRole("button", { name: "Not Now" }));
       const refreshedCard = await screen.findByTestId("note-card");
       await user.click(within(refreshedCard).getByRole("button", { name: "Remove from desktop" }));
       expect(bridge.setFloatingCardDesktopPinned).toHaveBeenCalledWith({ kind: "note", id: note.id }, false);

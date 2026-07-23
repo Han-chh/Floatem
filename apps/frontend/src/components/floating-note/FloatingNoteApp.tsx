@@ -971,10 +971,20 @@ export function FloatingNoteApp() {
                   <div className="mt-5 flex justify-end">
                     <button
                       type="button"
-                      className="paper-button paper-button-primary rounded-[14px] px-4 py-2.5 text-[12px] font-semibold"
+                      className="paper-button rounded-[14px] px-4 py-2.5 text-[12px] font-semibold"
                       onClick={() => setShowDesktopBackgroundGuide(false)}
                     >
-                      {t.common.widgetGuideDone}
+                      {t.launchAtLoginPrompt.notNow}
+                    </button>
+                    <button
+                      type="button"
+                      className="paper-button paper-button-primary ml-2 rounded-[14px] px-4 py-2.5 text-[12px] font-semibold"
+                      onClick={() => {
+                        useSettingsStore.getState().setLaunchAtLogin(true);
+                        setShowDesktopBackgroundGuide(false);
+                      }}
+                    >
+                      {t.launchAtLoginPrompt.enable}
                     </button>
                   </div>
                 </div>
