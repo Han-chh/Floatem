@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.0.3
+
+- Distinguish Finder and Spotlight opens from macOS Login Item launches so the first direct open presents StickIt immediately while login startup remains silent.
+- Consolidate the interactive guide into 7 complete feature workflows while preserving focused, in-place instructions and automatic practice-data cleanup.
+- Bump the macOS app to build 34.
+
 ## 1.0.2
 
 - Add a bilingual 14-step interactive guide for navigation folding, note and todo workflows, reminders, groups, floating and desktop-pinned cards, settings, and themes.
