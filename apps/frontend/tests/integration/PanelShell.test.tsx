@@ -148,6 +148,18 @@ describe("PanelShell", () => {
       expect(within(guide).getByText("Create and organize a note")).toBeInTheDocument();
     });
 
+    await user.click(within(guide).getByRole("button", { name: "Next feature" }));
+    await waitFor(() => {
+      expect(within(guide).getByText("Step 3 of 7")).toBeInTheDocument();
+      expect(within(guide).getByText("Use a floating card")).toBeInTheDocument();
+    });
+
+    await user.click(within(guide).getByRole("button", { name: "Previous feature" }));
+    await waitFor(() => {
+      expect(within(guide).getByText("Step 2 of 7")).toBeInTheDocument();
+      expect(within(guide).getByText("Create and organize a note")).toBeInTheDocument();
+    });
+
     await user.click(within(guide).getByRole("button", { name: "Exit guide" }));
     await waitFor(() => {
       expect(screen.queryByRole("dialog", { name: "StickIt interactive guide" })).not.toBeInTheDocument();
@@ -186,6 +198,11 @@ describe("PanelShell", () => {
     expect(guideNote).not.toBeNull();
     await user.click(within(guideNote as HTMLElement).getByRole("button", { name: "Change note group" }));
     await waitFor(() => expect(screen.getByText("Add a note group")).toBeInTheDocument());
+    const groupManagerDialog = screen.getByRole("dialog", { name: "Manage groups" });
+    const guide = screen.getByRole("dialog", { name: "StickIt interactive guide" });
+    expect(groupManagerDialog).toBeInTheDocument();
+    expect(guide).toHaveClass("z-[200]");
+    expect(document.querySelector("[data-guide-highlight]")).toHaveClass("z-[196]");
     await user.click(screen.getByRole("button", { name: "Add group" }));
 
     const createDialog = screen.getByRole("dialog", { name: "Create group" });

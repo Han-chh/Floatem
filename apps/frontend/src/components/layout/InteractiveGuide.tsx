@@ -1,12 +1,13 @@
 import { AnimatePresence, motion } from "framer-motion";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { useI18n } from "../../lib/i18n";
 import { subscribeToFloatingCardsState } from "../../lib/nativeBridge";
-import type { TabId, ThemeId } from "../../lib/models";
+import { formatLocalDateKey, type TabId, type ThemeId } from "../../lib/models";
 import { useNotesStore } from "../../store/notesStore";
 import { useSettingsStore } from "../../store/settingsStore";
 import { useTodosStore } from "../../store/todosStore";
-import { CircleCheckBigIcon, SparklesIcon, XIcon } from "../icons/AppIcons";
+import { ChevronLeftIcon, ChevronRightIcon, CircleCheckBigIcon, SparklesIcon, XIcon } from "../icons/AppIcons";
 
 type InteractiveGuideProps = {
   isHeaderCollapsed: boolean;
@@ -47,6 +48,7 @@ type GuideStep = {
 };
 
 const GUIDE_CHAPTER_COUNT = 7;
+const GUIDE_CHAPTER_START_ACTIONS = [0, 1, 9, 14, 18, 21, 27] as const;
 
 function chapterForAction(action: number) {
   if (action === 0) return 0;
@@ -530,6 +532,85 @@ export function InteractiveGuide({
   const currentChapter = chapterForAction(step);
   const currentChapterContent = chapters[currentChapter];
 
+  const ensureGuideNote = useCallback(() => {
+    const runtime = runtimeRef.current;
+    if (!runtime) {
+      return null;
+    }
+    const notesState = useNotesStore.getState();
+    if (runtime.noteId && notesState.cards.some((card) => card.id === runtime.noteId)) {
+      return runtime.noteId;
+    }
+    const created = notesState.addCard();
+    runtime.noteId = created.id;
+    notesState.updateCardTitle(created.id, isZh ? "StickIt 指引便签" : "StickIt guide note");
+    return created.id;
+  }, [isZh]);
+
+  const ensureGuideTodo = useCallback(() => {
+    const runtime = runtimeRef.current;
+    if (!runtime) {
+      return null;
+    }
+    const todosState = useTodosStore.getState();
+    if (runtime.todoId && todosState.todos.some((todo) => todo.id === runtime.todoId)) {
+      return runtime.todoId;
+    }
+    const tomorrow = new Date();
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    todosState.selectDate(formatLocalDateKey(tomorrow));
+    const created = todosState.addTodo(isZh ? "StickIt 指引待办" : "StickIt guide todo");
+    runtime.todoId = created?.id ?? null;
+    return runtime.todoId;
+  }, [isZh]);
+
+  const jumpToChapter = useCallback((chapter: number) => {
+    const runtime = runtimeRef.current;
+    const nextChapter = Math.max(0, Math.min(GUIDE_CHAPTER_COUNT - 1, chapter));
+    if (!runtime || nextChapter === chapterForAction(step)) {
+      return;
+    }
+
+    window.dispatchEvent(new CustomEvent("stickit:guide-chapter-change"));
+    isFinishingRef.current = false;
+    onSettingsChange(false);
+    onHeaderCollapsedChange(false);
+
+    if (nextChapter === 0) {
+      onTabChange("notes");
+    } else if (nextChapter === 1) {
+      const notesState = useNotesStore.getState();
+      if (runtime.noteId) {
+        notesState.removeCard(runtime.noteId);
+      }
+      if (runtime.noteGroupId) {
+        notesState.deleteGroup(runtime.noteGroupId);
+      }
+      runtime.noteId = null;
+      runtime.noteGroupId = null;
+      onTabChange("notes");
+    } else if (nextChapter === 2) {
+      ensureGuideNote();
+      onTabChange("notes");
+    } else if (nextChapter === 3) {
+      const todosState = useTodosStore.getState();
+      if (runtime.todoId) {
+        todosState.removeTodo(runtime.todoId);
+      }
+      if (runtime.todoGroupId) {
+        todosState.deleteGroup(runtime.todoGroupId);
+      }
+      runtime.todoId = null;
+      runtime.todoGroupId = null;
+      onTabChange("notes");
+    } else {
+      ensureGuideTodo();
+      onTabChange("todos");
+    }
+
+    setStep(GUIDE_CHAPTER_START_ACTIONS[nextChapter]);
+  }, [ensureGuideNote, ensureGuideTodo, onHeaderCollapsedChange, onSettingsChange, onTabChange, step]);
+
   useEffect(() => {
     if (!isOpen || !currentStep) {
       setTargetRect(null);
@@ -617,19 +698,24 @@ export function InteractiveGuide({
     ? { left: 14, top: 14 }
     : { bottom: 14, right: 14 };
 
-  return (
+  if (typeof document === "undefined") {
+    return null;
+  }
+
+  return createPortal(
     <AnimatePresence>
       {isOpen ? (
         <>
           <motion.div
-            className="pointer-events-none fixed inset-0 z-[105] bg-[rgba(30,25,21,0.08)]"
+            className="pointer-events-none fixed inset-0 z-[195] bg-[rgba(30,25,21,0.08)]"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
           />
           {targetRect ? (
             <motion.div
-              className="pointer-events-none fixed z-[106] rounded-[16px] border-2 border-[#ff7a59] shadow-[0_0_0_5px_rgba(255,122,89,0.18),0_12px_32px_rgba(61,49,34,0.14)]"
+              data-guide-highlight
+              className="pointer-events-none fixed z-[196] rounded-[16px] border-2 border-[#ff7a59] shadow-[0_0_0_5px_rgba(255,122,89,0.18),0_12px_32px_rgba(61,49,34,0.14)]"
               animate={{
                 height: targetRect.height + 10,
                 left: targetRect.left - 5,
@@ -643,7 +729,7 @@ export function InteractiveGuide({
             data-guide-dialog
             role="dialog"
             aria-label={isZh ? "StickIt 交互式指引" : "StickIt interactive guide"}
-            className="fixed z-[110] w-[min(268px,calc(100vw-28px))] rounded-[20px] border border-[rgba(213,198,180,0.88)] bg-[rgba(255,252,248,0.97)] p-3.5 shadow-[0_22px_46px_rgba(61,49,34,0.22)] backdrop-blur-xl"
+            className="fixed z-[200] w-[min(268px,calc(100vw-28px))] rounded-[20px] border border-[rgba(213,198,180,0.88)] bg-[rgba(255,252,248,0.97)] p-3.5 shadow-[0_22px_46px_rgba(61,49,34,0.22)] backdrop-blur-xl"
             style={panelStyle}
             initial={{ opacity: 0, y: 8, scale: 0.97 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
@@ -677,6 +763,30 @@ export function InteractiveGuide({
               <p className="text-[10px] font-bold leading-4">{currentStep.title}</p>
               <p className="mt-0.5 text-[10.5px] font-semibold leading-5">{currentStep.instruction}</p>
             </div>
+            <div className="mt-3 flex items-center gap-2">
+              <motion.button
+                type="button"
+                aria-label={isZh ? "上一个功能" : "Previous feature"}
+                className="paper-button inline-flex h-9 min-w-0 flex-1 items-center justify-center gap-1 rounded-[12px] px-2 text-[10.5px] font-semibold text-[var(--muted)] disabled:cursor-not-allowed disabled:opacity-40"
+                disabled={currentChapter === 0}
+                whileTap={currentChapter === 0 ? undefined : { scale: 0.98 }}
+                onClick={() => jumpToChapter(currentChapter - 1)}
+              >
+                <ChevronLeftIcon size={12} />
+                {isZh ? "上一步" : "Previous"}
+              </motion.button>
+              <motion.button
+                type="button"
+                aria-label={isZh ? "下一个功能" : "Next feature"}
+                className="paper-button inline-flex h-9 min-w-0 flex-1 items-center justify-center gap-1 rounded-[12px] px-2 text-[10.5px] font-semibold text-[var(--brown-strong)] disabled:cursor-not-allowed disabled:opacity-40"
+                disabled={currentChapter === GUIDE_CHAPTER_COUNT - 1}
+                whileTap={currentChapter === GUIDE_CHAPTER_COUNT - 1 ? undefined : { scale: 0.98 }}
+                onClick={() => jumpToChapter(currentChapter + 1)}
+              >
+                {isZh ? "下一步" : "Next"}
+                <ChevronRightIcon size={12} />
+              </motion.button>
+            </div>
             {step === steps.length - 1 ? (
               <motion.button
                 type="button"
@@ -691,6 +801,7 @@ export function InteractiveGuide({
           </motion.aside>
         </>
       ) : null}
-    </AnimatePresence>
+    </AnimatePresence>,
+    document.body,
   );
 }

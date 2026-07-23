@@ -151,6 +151,18 @@ export function NoteGroupDialog({ noteId, isOpen, onClose }: NoteGroupDialogProp
   }, [isColorPickerOpen, isDeleteMode, isEditorOpen, isNameRequiredDialogOpen, isOpen, onClose]);
 
   useEffect(() => {
+    if (!isOpen) {
+      return;
+    }
+    const handleGuideChapterChange = () => {
+      resetDialogState();
+      onClose();
+    };
+    window.addEventListener("stickit:guide-chapter-change", handleGuideChapterChange);
+    return () => window.removeEventListener("stickit:guide-chapter-change", handleGuideChapterChange);
+  }, [isOpen, onClose]);
+
+  useEffect(() => {
     if (!isEditorOpen || typeof window === "undefined") {
       return;
     }
