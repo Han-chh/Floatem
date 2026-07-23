@@ -227,23 +227,59 @@ final class StickItCoreTests: XCTestCase {
 
     func testLoginLaunchStaysSilentAndUserLaunchShowsMainWindow() {
         var login = LaunchContextResolver(arguments: ["StickIt", "--stickit-login-item"], environment: [:])
-        XCTAssertFalse(login.shouldShowAtDidFinish(isApplicationActive: false))
-        XCTAssertFalse(login.shouldShowForActivation())
+        XCTAssertFalse(login.shouldShowAtDidFinish(isApplicationActive: false, launchAtLoginEnabled: true))
+        XCTAssertFalse(login.shouldShowForActivation(launchAtLoginEnabled: true))
+
+        var disabledLogin = LaunchContextResolver(arguments: ["StickIt", "--stickit-login-item"], environment: [:])
+        XCTAssertTrue(disabledLogin.shouldShowAtDidFinish(isApplicationActive: false, launchAtLoginEnabled: false))
 
         var user = LaunchContextResolver(arguments: ["StickIt", "--stickit-user-launch"], environment: [:])
-        XCTAssertTrue(user.shouldShowAtDidFinish(isApplicationActive: false))
+        XCTAssertTrue(user.shouldShowAtDidFinish(isApplicationActive: false, launchAtLoginEnabled: false))
 
         var automatic = LaunchContextResolver(arguments: ["StickIt"], environment: [:])
-        XCTAssertFalse(automatic.shouldShowAtDidFinish(isApplicationActive: false))
-        XCTAssertTrue(automatic.shouldShowForActivation())
+        XCTAssertFalse(automatic.shouldShowAtDidFinish(isApplicationActive: false, launchAtLoginEnabled: false))
+        XCTAssertTrue(automatic.shouldShowForActivation(launchAtLoginEnabled: false))
 
         var alreadyActive = LaunchContextResolver(arguments: ["StickIt"], environment: [:])
-        XCTAssertTrue(alreadyActive.shouldShowAtDidFinish(isApplicationActive: true))
-        XCTAssertFalse(alreadyActive.shouldShowForActivation())
+        XCTAssertTrue(alreadyActive.shouldShowAtDidFinish(isApplicationActive: true, launchAtLoginEnabled: false))
+        XCTAssertFalse(alreadyActive.shouldShowForActivation(launchAtLoginEnabled: false))
 
         var deepLink = LaunchContextResolver(arguments: ["StickIt"], environment: [:])
         deepLink.markDeepLinkReceived()
-        XCTAssertFalse(deepLink.shouldShowAtDidFinish(isApplicationActive: true))
+        XCTAssertFalse(deepLink.shouldShowAtDidFinish(isApplicationActive: true, launchAtLoginEnabled: false))
+    }
+
+    func testLaunchAtLoginPromptPolicyRequiresUnsuppressedUserPresentation() {
+        XCTAssertTrue(LaunchAtLoginPromptPolicy.shouldPresent(
+            isUserInitiatedPresentation: true,
+            launchAtLoginEnabled: false,
+            isSuppressed: false,
+            hasPresentedThisRun: false
+        ))
+        XCTAssertFalse(LaunchAtLoginPromptPolicy.shouldPresent(
+            isUserInitiatedPresentation: false,
+            launchAtLoginEnabled: false,
+            isSuppressed: false,
+            hasPresentedThisRun: false
+        ))
+        XCTAssertFalse(LaunchAtLoginPromptPolicy.shouldPresent(
+            isUserInitiatedPresentation: true,
+            launchAtLoginEnabled: true,
+            isSuppressed: false,
+            hasPresentedThisRun: false
+        ))
+        XCTAssertFalse(LaunchAtLoginPromptPolicy.shouldPresent(
+            isUserInitiatedPresentation: true,
+            launchAtLoginEnabled: false,
+            isSuppressed: true,
+            hasPresentedThisRun: false
+        ))
+        XCTAssertFalse(LaunchAtLoginPromptPolicy.shouldPresent(
+            isUserInitiatedPresentation: true,
+            launchAtLoginEnabled: false,
+            isSuppressed: false,
+            hasPresentedThisRun: true
+        ))
     }
 
     private func makeDirectory() throws -> URL {

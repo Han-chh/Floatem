@@ -157,6 +157,20 @@ function StickItApp() {
   }, []);
 
   useEffect(() => {
+    const handleLaunchAtLoginState = (event: Event) => {
+      const enabled = (event as CustomEvent<{ enabled?: unknown }>).detail?.enabled;
+      if (typeof enabled === "boolean") {
+        useSettingsStore.getState().setLaunchAtLogin(enabled);
+      }
+    };
+
+    window.addEventListener("stickit:launch-at-login-state", handleLaunchAtLoginState);
+    return () => {
+      window.removeEventListener("stickit:launch-at-login-state", handleLaunchAtLoginState);
+    };
+  }, []);
+
+  useEffect(() => {
     return subscribeToPanelWillOpen(() => {
       startTransition(() => {
         setShowSettings(false);

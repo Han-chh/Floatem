@@ -7,6 +7,7 @@ final class WebViewController: NSViewController, WKNavigationDelegate {
     private static let bridgeName = "stickItHost"
     private static let panelWillOpenEventName = "stickit:panel-will-open"
     private static let hotkeyRegistrationStateEventName = "stickit:hotkey-registration-state"
+    private static let launchAtLoginStateEventName = "stickit:launch-at-login-state"
     private static let textColorPanelChangeEventName = "stickit:text-color-panel-change"
     private static let textColorPanelCloseEventName = "stickit:text-color-panel-close"
     private static let notesUpdatedEventName = "stickit:notes-updated"
@@ -155,6 +156,12 @@ final class WebViewController: NSViewController, WKNavigationDelegate {
 
         webView.evaluateJavaScript(
             "window.dispatchEvent(new CustomEvent('\(Self.hotkeyRegistrationStateEventName)', { detail: \(json) }));"
+        )
+    }
+
+    func emitLaunchAtLoginState(_ enabled: Bool) {
+        webView.evaluateJavaScript(
+            "window.dispatchEvent(new CustomEvent('\(Self.launchAtLoginStateEventName)', { detail: { enabled: \(enabled ? "true" : "false") } }));"
         )
     }
 

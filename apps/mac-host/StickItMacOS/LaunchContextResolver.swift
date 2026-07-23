@@ -25,11 +25,15 @@ struct LaunchContextResolver {
         receivedDeepLink = true
     }
 
-    mutating func shouldShowAtDidFinish(isApplicationActive: Bool) -> Bool {
+    mutating func shouldShowAtDidFinish(isApplicationActive: Bool, launchAtLoginEnabled: Bool) -> Bool {
         guard !receivedDeepLink else { return false }
 
         switch explicitContext {
         case .loginItem:
+            guard launchAtLoginEnabled else {
+                consumedInitialActivation = true
+                return true
+            }
             consumedInitialActivation = true
             return false
         case .user:
@@ -42,11 +46,29 @@ struct LaunchContextResolver {
         }
     }
 
-    mutating func shouldShowForActivation() -> Bool {
+    mutating func shouldShowForActivation(launchAtLoginEnabled: Bool) -> Bool {
         guard !receivedDeepLink, !consumedInitialActivation else {
+            return false
+        }
+        if explicitContext == .loginItem, launchAtLoginEnabled {
+            consumedInitialActivation = true
             return false
         }
         consumedInitialActivation = true
         return true
+    }
+}
+
+struct LaunchAtLoginPromptPolicy {
+    static func shouldPresent(
+        isUserInitiatedPresentation: Bool,
+        launchAtLoginEnabled: Bool,
+        isSuppressed: Bool,
+        hasPresentedThisRun: Bool
+    ) -> Bool {
+        isUserInitiatedPresentation
+            && !launchAtLoginEnabled
+            && !isSuppressed
+            && !hasPresentedThisRun
     }
 }

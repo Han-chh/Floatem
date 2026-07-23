@@ -28,6 +28,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private weak var mainMenuSelectAllItem: NSMenuItem?
     private var languageObserver: NSObjectProtocol?
     private var launchContextResolver = LaunchContextResolver()
+    private let suppressLaunchAtLoginPromptKey = "stickit.suppressLaunchAtLoginPrompt"
+    private var didPresentLaunchAtLoginPrompt = false
 
     private var localization: StickItLocalization {
         currentLanguage.localization
@@ -94,37 +96,40 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             // Login-item launches stay in the background. Direct user launches
             // present on the initial activation, while deep links present only
             // their requested destination.
-            if self.launchContextResolver.shouldShowAtDidFinish(isApplicationActive: NSApp.isActive) {
-                self.mainWindowController.showMainWindow()
+            if self.launchContextResolver.shouldShowAtDidFinish(
+                isApplicationActive: NSApp.isActive,
+                launchAtLoginEnabled: self.launchAtLoginManager.isEnabled
+            ) {
+                self.showMainWindowForUserAction()
             }
         }
     }
 
     func applicationDidBecomeActive(_ notification: Notification) {
-        if launchContextResolver.shouldShowForActivation() {
-            mainWindowController.showMainWindow()
+        if launchContextResolver.shouldShowForActivation(launchAtLoginEnabled: launchAtLoginManager.isEnabled) {
+            showMainWindowForUserAction()
         }
     }
 
     func applicationShouldHandleReopen(_ sender: NSApplication, hasVisibleWindows flag: Bool) -> Bool {
-        mainWindowController.showMainWindow()
+        showMainWindowForUserAction()
         return true
     }
 
     func application(_ application: NSApplication, open urls: [URL]) {
         launchContextResolver.markDeepLinkReceived()
+        showMainWindowForUserAction()
         for url in urls {
             guard let deepLink = StickItDeepLink(url: url) else { continue }
             switch deepLink.destination {
             case .mainWindow:
-                mainWindowController.showMainWindow()
+                break
             case let .floatingCard(reference):
                 do {
-                    if try !mainWindowController.openFloatingCard(reference: reference) {
-                        mainWindowController.showMainWindow()
-                    }
+                    _ = try mainWindowController.openFloatingCard(reference: reference)
                 } catch {
-                    mainWindowController.showMainWindow()
+                    // The main window is already visible and lets the user recover
+                    // when the requested card no longer exists.
                 }
             }
         }
@@ -325,5 +330,65 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         mainMenuCopyItem?.title = localization.menuCopy
         mainMenuPasteItem?.title = localization.menuPaste
         mainMenuSelectAllItem?.title = localization.menuSelectAll
+    }
+
+    private func showMainWindowForUserAction() {
+        mainWindowController.showMainWindow()
+        presentLaunchAtLoginPromptIfNeeded()
+    }
+
+    private func presentLaunchAtLoginPromptIfNeeded() {
+        let defaults = UserDefaults.standard
+        guard LaunchAtLoginPromptPolicy.shouldPresent(
+            isUserInitiatedPresentation: true,
+            launchAtLoginEnabled: launchAtLoginManager.isEnabled,
+            isSuppressed: defaults.bool(forKey: suppressLaunchAtLoginPromptKey),
+            hasPresentedThisRun: didPresentLaunchAtLoginPrompt
+        ) else {
+            return
+        }
+
+        didPresentLaunchAtLoginPrompt = true
+
+        let alert = NSAlert()
+        alert.alertStyle = .informational
+        alert.messageText = localization.launchAtLoginPromptTitle
+        alert.informativeText = localization.launchAtLoginPromptDetail
+        alert.addButton(withTitle: localization.launchAtLoginPromptEnable)
+        alert.addButton(withTitle: localization.launchAtLoginPromptNotNow)
+        alert.showsSuppressionButton = true
+        alert.suppressionButton?.title = localization.launchAtLoginPromptSuppress
+
+        alert.beginSheetModal(for: mainWindowController.presentationWindow) { [weak self, weak alert] response in
+            guard let self else {
+                return
+            }
+
+            if alert?.suppressionButton?.state == .on {
+                defaults.set(true, forKey: self.suppressLaunchAtLoginPromptKey)
+            }
+
+            guard response == .alertFirstButtonReturn else {
+                return
+            }
+
+            do {
+                try self.launchAtLoginManager.setEnabled(true)
+                let enabled = self.launchAtLoginManager.isEnabled
+                try self.storage.updateLaunchAtLogin(enabled)
+                self.mainWindowController.emitLaunchAtLoginState(enabled)
+            } catch {
+                self.presentLaunchAtLoginFailure(error)
+            }
+        }
+    }
+
+    private func presentLaunchAtLoginFailure(_ error: Error) {
+        let alert = NSAlert()
+        alert.alertStyle = .warning
+        alert.messageText = localization.launchAtLoginFailureTitle
+        alert.informativeText = "\(localization.launchAtLoginFailureDetail)\n\n\(error.localizedDescription)"
+        alert.addButton(withTitle: localization.alertOK)
+        alert.beginSheetModal(for: mainWindowController.presentationWindow)
     }
 }

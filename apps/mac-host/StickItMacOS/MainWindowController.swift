@@ -63,6 +63,10 @@ final class MainWindowController: NSObject, NSWindowDelegate, StickItNativeBridg
         panel.isVisible
     }
 
+    var presentationWindow: NSWindow {
+        panel
+    }
+
     init(
         storage: AppStorage,
         hotKeyManager: GlobalHotKeyManager,
@@ -241,6 +245,10 @@ final class MainWindowController: NSObject, NSWindowDelegate, StickItNativeBridg
 
     func currentLaunchAtLoginStatus() -> [String: Any] {
         ["enabled": launchAtLoginManager.isEnabled]
+    }
+
+    func emitLaunchAtLoginState(_ enabled: Bool) {
+        webViewController.emitLaunchAtLoginState(enabled)
     }
 
     func saveNotes(_ notes: Any) throws {

@@ -33,13 +33,13 @@ final class LaunchAtLoginManager {
             }
         }
 
+        promptForApprovalIfNeeded(enabled: enabled)
         logger.info("Launch-at-login preference synchronized. enabled=\(enabled, privacy: .public) status=\(String(describing: self.service.status), privacy: .public)")
     }
 
     func configureOnLaunch(enabled: Bool) {
         do {
             try setEnabled(enabled)
-            promptForApprovalIfNeeded(enabled: enabled)
         } catch {
             logger.error("Failed to synchronize launch-at-login during startup. error=\(error.localizedDescription, privacy: .public)")
         }
