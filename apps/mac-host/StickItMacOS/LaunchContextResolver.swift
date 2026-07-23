@@ -25,6 +25,13 @@ struct LaunchContextResolver {
         receivedDeepLink = true
     }
 
+    mutating func recordInitialOpenEvent(launchedAsLoginItem: Bool) {
+        guard explicitContext == .automatic, !consumedInitialActivation else {
+            return
+        }
+        explicitContext = launchedAsLoginItem ? .loginItem : .user
+    }
+
     mutating func shouldShowAtDidFinish(isApplicationActive: Bool, launchAtLoginEnabled: Bool) -> Bool {
         guard !receivedDeepLink, !consumedInitialActivation else { return false }
 

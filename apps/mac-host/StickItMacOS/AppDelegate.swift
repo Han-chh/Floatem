@@ -60,6 +60,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         if ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] != nil {
             return
         }
+        classifyInitialOpenEvent()
         NSApp.setActivationPolicy(.accessory)
         currentLanguage = (try? storage.currentLanguage()) ?? .simplifiedChinese
         notificationManager.configure()
@@ -135,6 +136,15 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     func applicationShouldTerminateAfterLastWindowClosed(_ sender: NSApplication) -> Bool {
         false
+    }
+
+    private func classifyInitialOpenEvent() {
+        guard let event = NSAppleEventManager.shared().currentAppleEvent,
+              event.eventID == kAEOpenApplication else {
+            return
+        }
+        let launchedAsLoginItem = event.paramDescriptor(forKeyword: keyAELaunchedAsLogInItem) != nil
+        launchContextResolver.recordInitialOpenEvent(launchedAsLoginItem: launchedAsLoginItem)
     }
 
     deinit {

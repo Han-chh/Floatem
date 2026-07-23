@@ -245,13 +245,20 @@ final class StickItCoreTests: XCTestCase {
         XCTAssertFalse(backgroundLogin.consumedInitialActivation)
 
         var firstFinderDoubleClick = LaunchContextResolver(arguments: ["StickIt"], environment: [:])
-        XCTAssertFalse(firstFinderDoubleClick.shouldShowAtDidFinish(isApplicationActive: false, launchAtLoginEnabled: true))
-        XCTAssertTrue(firstFinderDoubleClick.shouldShowForActivation(launchAtLoginEnabled: true))
+        firstFinderDoubleClick.recordInitialOpenEvent(launchedAsLoginItem: false)
+        XCTAssertTrue(firstFinderDoubleClick.shouldShowAtDidFinish(isApplicationActive: false, launchAtLoginEnabled: true))
+        XCTAssertFalse(firstFinderDoubleClick.shouldShowForActivation(launchAtLoginEnabled: true))
         XCTAssertFalse(firstFinderDoubleClick.shouldShowAtDidFinish(isApplicationActive: true, launchAtLoginEnabled: true))
 
         var firstSpotlightLaunch = LaunchContextResolver(arguments: ["StickIt"], environment: [:])
-        XCTAssertFalse(firstSpotlightLaunch.shouldShowAtDidFinish(isApplicationActive: false, launchAtLoginEnabled: true))
-        XCTAssertTrue(firstSpotlightLaunch.shouldShowForActivation(launchAtLoginEnabled: true))
+        firstSpotlightLaunch.recordInitialOpenEvent(launchedAsLoginItem: false)
+        XCTAssertTrue(firstSpotlightLaunch.shouldShowAtDidFinish(isApplicationActive: false, launchAtLoginEnabled: true))
+        XCTAssertFalse(firstSpotlightLaunch.shouldShowForActivation(launchAtLoginEnabled: true))
+
+        var systemLoginItem = LaunchContextResolver(arguments: ["StickIt"], environment: [:])
+        systemLoginItem.recordInitialOpenEvent(launchedAsLoginItem: true)
+        XCTAssertFalse(systemLoginItem.shouldShowAtDidFinish(isApplicationActive: false, launchAtLoginEnabled: true))
+        XCTAssertFalse(systemLoginItem.shouldShowForActivation(launchAtLoginEnabled: true))
 
         var alreadyActive = LaunchContextResolver(arguments: ["StickIt"], environment: [:])
         XCTAssertTrue(alreadyActive.shouldShowAtDidFinish(isApplicationActive: true, launchAtLoginEnabled: false))
