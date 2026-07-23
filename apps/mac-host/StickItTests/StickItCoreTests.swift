@@ -240,9 +240,18 @@ final class StickItCoreTests: XCTestCase {
         XCTAssertFalse(automatic.shouldShowAtDidFinish(isApplicationActive: false, launchAtLoginEnabled: false))
         XCTAssertTrue(automatic.shouldShowForActivation(launchAtLoginEnabled: false))
 
-        var automaticLogin = LaunchContextResolver(arguments: ["StickIt"], environment: [:])
-        XCTAssertFalse(automaticLogin.shouldShowAtDidFinish(isApplicationActive: false, launchAtLoginEnabled: true))
-        XCTAssertFalse(automaticLogin.shouldShowForActivation(launchAtLoginEnabled: true))
+        var backgroundLogin = LaunchContextResolver(arguments: ["StickIt"], environment: [:])
+        XCTAssertFalse(backgroundLogin.shouldShowAtDidFinish(isApplicationActive: false, launchAtLoginEnabled: true))
+        XCTAssertFalse(backgroundLogin.consumedInitialActivation)
+
+        var firstFinderDoubleClick = LaunchContextResolver(arguments: ["StickIt"], environment: [:])
+        XCTAssertFalse(firstFinderDoubleClick.shouldShowAtDidFinish(isApplicationActive: false, launchAtLoginEnabled: true))
+        XCTAssertTrue(firstFinderDoubleClick.shouldShowForActivation(launchAtLoginEnabled: true))
+        XCTAssertFalse(firstFinderDoubleClick.shouldShowAtDidFinish(isApplicationActive: true, launchAtLoginEnabled: true))
+
+        var firstSpotlightLaunch = LaunchContextResolver(arguments: ["StickIt"], environment: [:])
+        XCTAssertFalse(firstSpotlightLaunch.shouldShowAtDidFinish(isApplicationActive: false, launchAtLoginEnabled: true))
+        XCTAssertTrue(firstSpotlightLaunch.shouldShowForActivation(launchAtLoginEnabled: true))
 
         var alreadyActive = LaunchContextResolver(arguments: ["StickIt"], environment: [:])
         XCTAssertTrue(alreadyActive.shouldShowAtDidFinish(isApplicationActive: true, launchAtLoginEnabled: false))

@@ -26,7 +26,7 @@ struct LaunchContextResolver {
     }
 
     mutating func shouldShowAtDidFinish(isApplicationActive: Bool, launchAtLoginEnabled: Bool) -> Bool {
-        guard !receivedDeepLink else { return false }
+        guard !receivedDeepLink, !consumedInitialActivation else { return false }
 
         switch explicitContext {
         case .loginItem:
@@ -42,13 +42,10 @@ struct LaunchContextResolver {
         case .automatic:
             guard isApplicationActive else {
                 // SMAppService.mainApp launches the same executable without a
-                // login-item argument. A background launch while the service is
-                // enabled is therefore the reliable login-launch signal. Consume
-                // its first activation so a later workspace activation does not
-                // unexpectedly present the main window.
-                if launchAtLoginEnabled {
-                    consumedInitialActivation = true
-                }
+                // login-item argument. Both login launches and a first Finder or
+                // Spotlight launch can still be inactive at did-finish time.
+                // Leave the activation unconsumed: a user launch will immediately
+                // become active, while an actual background login launch will not.
                 return false
             }
             consumedInitialActivation = true
@@ -60,7 +57,7 @@ struct LaunchContextResolver {
         guard !receivedDeepLink, !consumedInitialActivation else {
             return false
         }
-        if (explicitContext == .loginItem || explicitContext == .automatic), launchAtLoginEnabled {
+        if explicitContext == .loginItem, launchAtLoginEnabled {
             consumedInitialActivation = true
             return false
         }
