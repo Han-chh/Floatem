@@ -640,7 +640,7 @@ final class FloatingNoteWindowController: NSObject, WKNavigationDelegate, WKScri
         replacement.isReleasedWhenClosed = false
         replacement.backgroundColor = .clear
         replacement.isOpaque = false
-        replacement.alphaValue = previousPanel.alphaValue
+        replacement.alphaValue = isContentReady ? 1 : previousPanel.alphaValue
         replacement.hasShadow = false
         replacement.hidesOnDeactivate = false
         replacement.isFloatingPanel = true
@@ -649,13 +649,16 @@ final class FloatingNoteWindowController: NSObject, WKNavigationDelegate, WKScri
         replacement.contentView = contentView
         replacement.setFrame(previousPanel.frame, display: false)
 
-        let wasVisible = previousPanel.isVisible
+        // AppKit can briefly report a desktop-level panel as hidden while it
+        // changes spaces or activation. A ready floating card must remain
+        // presented throughout a pin-mode transition.
+        let shouldRemainVisible = previousPanel.isVisible || isContentReady
         previousPanel.delegate = nil
         previousPanel.orderOut(nil)
         previousPanel.close()
         panel = replacement
 
-        if wasVisible {
+        if shouldRemainVisible {
             replacement.orderFrontRegardless()
             if isContentReady {
                 replacement.makeKey()

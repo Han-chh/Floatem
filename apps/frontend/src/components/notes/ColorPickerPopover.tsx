@@ -281,6 +281,20 @@ export function ColorPickerPopover({
   }, [anchorRef, isOpen, onClose]);
 
   useEffect(() => {
+    if (!isOpen || !dataGuideId || typeof window === "undefined") {
+      return;
+    }
+    const handleGuideClose = (event: Event) => {
+      const guideId = (event as CustomEvent<{ id?: string }>).detail?.id;
+      if (guideId === dataGuideId) {
+        closeColorPalette();
+      }
+    };
+    window.addEventListener("stickit:guide-close-color-picker", handleGuideClose);
+    return () => window.removeEventListener("stickit:guide-close-color-picker", handleGuideClose);
+  }, [dataGuideId, isOpen, onClose]);
+
+  useEffect(() => {
     if (!isOpen) {
       setColorPaletteMode("compact");
       setColorPaletteStyle(null);

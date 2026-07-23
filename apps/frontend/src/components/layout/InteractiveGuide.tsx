@@ -187,43 +187,11 @@ export function InteractiveGuide({
       stepItem("命名 Todo 分组", "Name the todo group", "输入一个分组名称", "Enter a group name", () => queryTarget('[data-guide="todo-group-name"]'), { advanceOn: "input" }),
       stepItem("打开颜色选择", "Open the color picker", "点击调色板按钮", "Click the palette button", () => queryTarget('[data-guide="todo-group-color"]')),
       stepItem(
-        paletteGuideStage === "compact"
-          ? "发现更多颜色"
-          : paletteGuideStage === "expanded"
-            ? "打开高级调色盘"
-            : paletteGuideStage === "advanced"
-              ? "调出自定义颜色"
-              : "保存自定义颜色",
-        paletteGuideStage === "compact"
-          ? "Discover more colors"
-          : paletteGuideStage === "expanded"
-            ? "Open the advanced palette"
-            : paletteGuideStage === "advanced"
-              ? "Create a custom color"
-              : "Save the custom color",
-        paletteGuideStage === "compact"
-          ? "点击彩色调色盘入口"
-          : paletteGuideStage === "expanded"
-            ? "点击“显示颜色面板”"
-            : paletteGuideStage === "advanced"
-              ? "在色彩区域中点击或拖动"
-              : "保存刚刚调出的颜色",
-        paletteGuideStage === "compact"
-          ? "Click the multicolor palette"
-          : paletteGuideStage === "expanded"
-            ? "Click Show Colors"
-            : paletteGuideStage === "advanced"
-              ? "Click or drag in the color field"
-              : "Save the color you just created",
-        () => queryTarget(`[data-guide="todo-group-${
-          paletteGuideStage === "compact"
-            ? "more-colors"
-            : paletteGuideStage === "expanded"
-              ? "advanced-open"
-              : paletteGuideStage === "advanced"
-                ? "advanced-surface"
-                : "advanced-save"
-        }"]`),
+        "Todo 也支持更多颜色",
+        "More colors work for Todos too",
+        "Todo 分组可使用与便签相同的更多颜色和高级调色盘",
+        "Todo groups support the same extra colors and advanced palette",
+        () => queryTarget('[data-guide="todo-group-color-options"]'),
       ),
       stepItem("创建 Todo 分组", "Create the todo group", "点击创建分组", "Click Create group", () => queryTarget('[data-guide="todo-group-create"]')),
       stepItem("应用新分组", "Apply the new group", "选择刚创建的分组", "Choose the group you just created", () => runtimeRef.current?.todoGroupId ? queryGroupTarget(runtimeRef.current.todoGroupId) : null),
@@ -329,15 +297,26 @@ export function InteractiveGuide({
     }
     const handlePaletteStage = (event: Event) => {
       const detail = (event as CustomEvent<{ id?: string; stage?: PaletteGuideStage }>).detail;
-      const isCurrentPalette =
-        (step === 7 && detail?.id === "note-group")
-        || (step === 37 && detail?.id === "todo-group");
+      const isCurrentPalette = step === 7 && detail?.id === "note-group";
       if (isCurrentPalette && detail?.stage && detail.stage !== "compact") {
         setPaletteGuideStage(detail.stage);
       }
     };
     window.addEventListener("stickit:guide-palette-stage", handlePaletteStage);
     return () => window.removeEventListener("stickit:guide-palette-stage", handlePaletteStage);
+  }, [isOpen, step]);
+
+  useEffect(() => {
+    if (!isOpen || step !== 37) {
+      return;
+    }
+    const timer = window.setTimeout(() => {
+      window.dispatchEvent(
+        new CustomEvent("stickit:guide-close-color-picker", { detail: { id: "todo-group" } }),
+      );
+      setStep(38);
+    }, 1_800);
+    return () => window.clearTimeout(timer);
   }, [isOpen, step]);
 
   useEffect(() => {
@@ -485,20 +464,40 @@ export function InteractiveGuide({
       setTargetRect(null);
       return;
     }
+    let animationFrame = 0;
+    let didScrollTarget = false;
+    let lastRect: { height: number; left: number; top: number; width: number } | null = null;
     const update = () => {
       const target = currentStep.target();
-      setTargetRect(target?.getBoundingClientRect() ?? null);
-      target?.scrollIntoView?.({ block: "nearest", behavior: "smooth" });
+      const nextRect = target?.getBoundingClientRect() ?? null;
+      const didRectChange =
+        nextRect === null
+          ? lastRect !== null
+          : lastRect === null
+            || nextRect.height !== lastRect.height
+            || nextRect.left !== lastRect.left
+            || nextRect.top !== lastRect.top
+            || nextRect.width !== lastRect.width;
+      if (didRectChange) {
+        lastRect = nextRect
+          ? {
+              height: nextRect.height,
+              left: nextRect.left,
+              top: nextRect.top,
+              width: nextRect.width,
+            }
+          : null;
+        setTargetRect(nextRect);
+      }
+      if (target && !didScrollTarget) {
+        didScrollTarget = true;
+        target.scrollIntoView?.({ block: "nearest", behavior: "smooth" });
+      }
+      animationFrame = window.requestAnimationFrame(update);
     };
     update();
-    const observer = new MutationObserver(update);
-    observer.observe(document.body, { childList: true, subtree: true });
-    window.addEventListener("resize", update);
-    window.addEventListener("scroll", update, true);
     return () => {
-      observer.disconnect();
-      window.removeEventListener("resize", update);
-      window.removeEventListener("scroll", update, true);
+      window.cancelAnimationFrame(animationFrame);
     };
   }, [currentStep, isOpen, step]);
 
@@ -581,21 +580,26 @@ export function InteractiveGuide({
               key={`highlight-${step}`}
               data-guide-highlight
               className="pointer-events-none fixed z-[196] rounded-[16px] border-2 border-[#ff7a59] shadow-[0_0_0_5px_rgba(255,122,89,0.18),0_12px_32px_rgba(61,49,34,0.14)]"
-              initial={{ opacity: 0, scale: 0.92 }}
+              initial={{ opacity: 0 }}
               animate={{
                 height: targetRect.height + 10,
                 left: targetRect.left - 5,
                 opacity: [0.7, 1, 0.7],
-                scale: [0.97, 1.025, 0.97],
+                boxShadow: [
+                  "0 0 0 4px rgba(255,122,89,0.18), 0 12px 32px rgba(61,49,34,0.14)",
+                  "0 0 0 7px rgba(255,122,89,0.28), 0 12px 32px rgba(61,49,34,0.2)",
+                  "0 0 0 4px rgba(255,122,89,0.18), 0 12px 32px rgba(61,49,34,0.14)",
+                ],
+                scale: 1,
                 top: targetRect.top - 5,
                 width: targetRect.width + 10,
               }}
-              exit={{ opacity: 0, scale: 0.94 }}
+              exit={{ opacity: 0 }}
               transition={{
                 height: { duration: 0.2 },
                 left: { duration: 0.2 },
                 opacity: { duration: 1.25, repeat: Infinity },
-                scale: { duration: 1.25, repeat: Infinity },
+                boxShadow: { duration: 1.25, repeat: Infinity },
                 top: { duration: 0.2 },
                 width: { duration: 0.2 },
               }}
