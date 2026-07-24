@@ -15,9 +15,9 @@
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "A00000000000000000000010"
-               BuildableName = "StickIt.app"
-               BlueprintName = "StickIt"
-               ReferencedContainer = "container:StickIt.xcodeproj">
+               BuildableName = "Floatem.app"
+               BlueprintName = "Floatem"
+               ReferencedContainer = "container:Floatem.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
          <BuildActionEntry
@@ -29,9 +29,9 @@
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "A00000000000000000000025"
-               BuildableName = "StickItTests.xctest"
-               BlueprintName = "StickItTests"
-               ReferencedContainer = "container:StickIt.xcodeproj">
+               BuildableName = "FloatemTests.xctest"
+               BlueprintName = "FloatemTests"
+               ReferencedContainer = "container:Floatem.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
       </BuildActionEntries>
@@ -45,9 +45,9 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "A00000000000000000000010"
-            BuildableName = "StickIt.app"
-            BlueprintName = "StickIt"
-            ReferencedContainer = "container:StickIt.xcodeproj">
+            BuildableName = "Floatem.app"
+            BlueprintName = "Floatem"
+            ReferencedContainer = "container:Floatem.xcodeproj">
          </BuildableReference>
       </MacroExpansion>
       <Testables>
@@ -56,9 +56,9 @@
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "A00000000000000000000025"
-               BuildableName = "StickItTests.xctest"
-               BlueprintName = "StickItTests"
-               ReferencedContainer = "container:StickIt.xcodeproj">
+               BuildableName = "FloatemTests.xctest"
+               BlueprintName = "FloatemTests"
+               ReferencedContainer = "container:Floatem.xcodeproj">
             </BuildableReference>
          </TestableReference>
       </Testables>
@@ -78,9 +78,9 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "A00000000000000000000010"
-            BuildableName = "StickIt.app"
-            BlueprintName = "StickIt"
-            ReferencedContainer = "container:StickIt.xcodeproj">
+            BuildableName = "Floatem.app"
+            BlueprintName = "Floatem"
+            ReferencedContainer = "container:Floatem.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
    </LaunchAction>
@@ -95,9 +95,9 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "A00000000000000000000010"
-            BuildableName = "StickIt.app"
-            BlueprintName = "StickIt"
-            ReferencedContainer = "container:StickIt.xcodeproj">
+            BuildableName = "Floatem.app"
+            BlueprintName = "Floatem"
+            ReferencedContainer = "container:Floatem.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
    </ProfileAction>

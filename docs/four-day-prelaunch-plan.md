@@ -1,4 +1,6 @@
-# StickIt 四天上架前冲刺计划
+# Floatem 四天上架前冲刺计划
+
+> 历史计划与当前状态（更新于 v1.0.8 build 46）：代码身份、自动签名、App Group、完整前端/原生测试、Release Archive 和 App Store Connect `.pkg` 导出已经完成。v1.0.8 build 46 尚未上传 App Store Connect/TestFlight，Xcode Validate、上传后 TestFlight 安装验证、商店资料终审和正式提交仍属于待办。以下 Day 3–Day 6 内容保留为发布过程与人工验收依据，不表示所有条目均已完成。
 
 ## 计划基线
 
@@ -14,7 +16,7 @@
 以下项目必须全部满足，才能视为“已做好上架前准备”：
 
 - 正式名称、Bundle ID、版本号、Build 号、应用图标在代码、Xcode 工程、应用包和商店资料中一致。
-- Release 配置使用正确的 Apple Distribution 签名、团队、Provisioning Profile、App Sandbox 和 Hardened Runtime；不存在开发证书或临时 Bundle ID 残留。
+- App Store Connect 导出包使用正确的 Apple Distribution 签名、团队、商店 Provisioning Profile、App Sandbox 和 Hardened Runtime；允许 Xcode Archive 阶段采用自动管理的开发签名，但最终 `.pkg` 不得残留开发 Profile 或临时 Bundle ID。
 - Release Archive 能成功生成、通过 Xcode Validate App，并能上传到 App Store Connect/TestFlight。
 - “开机自启动”可由用户在设置中开启和关闭，基于 `SMAppService` 实现，状态能正确回显；失败时有可理解的提示。
 - 自动化测试、原生冒烟测试、全新安装/升级测试、登录重启测试和签名检查全部通过。
@@ -33,7 +35,7 @@
    - Xcode target 的 `PRODUCT_NAME`、`PRODUCT_BUNDLE_IDENTIFIER`、`MARKETING_VERSION`、`CURRENT_PROJECT_VERSION`
    - `Info.plist`、应用内 About/帮助文本、菜单栏和通知显示名称
 4. 替换正式图标源文件，生成完整 macOS App Icon 资源；检查 Dock、Finder、菜单栏、通知和浅色/深色背景下的辨识度。
-5. 明确旧 Bundle ID 数据迁移策略。若正式 Bundle ID 与 `com.stickit.app` 不同，必须增加一次性数据迁移或明确接受全新数据目录，禁止静默丢失既有用户数据。
+5. 明确旧 Bundle ID 数据迁移策略。若正式 Bundle ID 与 `com.floatem.app` 不同，必须增加一次性数据迁移或明确接受全新数据目录，禁止静默丢失既有用户数据。
 6. 分别构建 Debug 与 Release，检查产物中的名称、Bundle ID、版本和图标，不只检查源码配置。
 
 ### 当日验收
@@ -70,10 +72,10 @@
 ### 工作内容
 
 1. 固化 Release 签名与能力配置：
-   - Apple Distribution 证书和正确 Team。
-   - App Store Provisioning Profile/自动签名结果正确。
+   - Archive 阶段使用正确 Team 与 Automatic Signing；App Store Connect export 阶段使用 Apple Distribution 证书。
+   - 导出包中的 App Store Provisioning Profile/自动签名结果正确。
    - App Sandbox、Hardened Runtime 和实际所需 entitlements 最小化。
-   - Release 构建不得继续使用当前工程中的 `Apple Development` 身份。
+   - 最终上传 `.pkg` 不得继续使用 `Apple Development` 身份。
 2. 建立可重复的 Release Archive 流程，确保前端资源随 Archive 一起打包，禁止引用开发服务器或本机绝对路径。
 3. 执行自动化回归：TypeScript/前端构建、Vitest、Playwright 布局测试、macOS Release 构建。
 4. 执行原生功能矩阵：首次启动、菜单栏、主窗口、全局快捷键、Notes、Todos、浮动卡片、通知、剪贴板、数据持久化、开机自启动、退出与再次启动。

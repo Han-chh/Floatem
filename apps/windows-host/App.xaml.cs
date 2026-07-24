@@ -3,7 +3,7 @@ using System.Runtime.InteropServices;
 using System.Windows;
 using System.Windows.Threading;
 
-namespace StickIt.Windows;
+namespace Floatem.Windows;
 
 public partial class App : System.Windows.Application
 {
@@ -43,7 +43,7 @@ public partial class App : System.Windows.Application
         {
             var folder = Path.Combine(
                 Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-                "StickIt");
+                "Floatem");
             Directory.CreateDirectory(folder);
             File.AppendAllText(
                 Path.Combine(folder, "startup-error.log"),

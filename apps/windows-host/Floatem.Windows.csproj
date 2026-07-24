@@ -10,8 +10,8 @@
     <WindowsPackageType>None</WindowsPackageType>
     <WindowsAppSDKSelfContained>false</WindowsAppSDKSelfContained>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-    <AssemblyName>StickIt.Windows</AssemblyName>
-    <RootNamespace>StickIt.Windows</RootNamespace>
+    <AssemblyName>Floatem.Windows</AssemblyName>
+    <RootNamespace>Floatem.Windows</RootNamespace>
     <WebView2PackageVersion>1.0.3351.48</WebView2PackageVersion>
     <ApplicationIcon Condition="Exists('Assets\AppIcon.ico')">Assets\AppIcon.ico</ApplicationIcon>
   </PropertyGroup>

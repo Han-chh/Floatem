@@ -1,13 +1,13 @@
-import { getStickItBridge, isNativeStickItHost } from "./nativeBridge";
+import { getFloatemBridge, isNativeFloatemHost } from "./nativeBridge";
 
 export async function writePlainTextToClipboard(text: string) {
   if (!text) {
     return false;
   }
 
-  if (isNativeStickItHost()) {
+  if (isNativeFloatemHost()) {
     try {
-      await getStickItBridge().writeClipboardText(text);
+      await getFloatemBridge().writeClipboardText(text);
       return true;
     } catch {
       // Fall through to the browser clipboard helpers.
@@ -46,9 +46,9 @@ export async function writePlainTextToClipboard(text: string) {
 }
 
 export async function readPlainTextFromClipboard() {
-  if (isNativeStickItHost()) {
+  if (isNativeFloatemHost()) {
     try {
-      return await getStickItBridge().readClipboardText();
+      return await getFloatemBridge().readClipboardText();
     } catch {
       // Fall through to the browser clipboard helpers.
     }

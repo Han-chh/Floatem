@@ -5,7 +5,7 @@
 	<key>CFBundleDevelopmentRegion</key>
 	<string>$(DEVELOPMENT_LANGUAGE)</string>
 	<key>CFBundleDisplayName</key>
-	<string>StickIt</string>
+	<string>Floatem</string>
 	<key>CFBundleExecutable</key>
 	<string>$(EXECUTABLE_NAME)</string>
 	<key>CFBundleIconFile</key>
@@ -15,7 +15,7 @@
 	<key>CFBundleInfoDictionaryVersion</key>
 	<string>6.0</string>
 	<key>CFBundleName</key>
-	<string>StickIt</string>
+	<string>Floatem</string>
 	<key>CFBundlePackageType</key>
 	<string>APPL</string>
 	<key>CFBundleShortVersionString</key>
@@ -26,10 +26,10 @@
 	<array>
 		<dict>
 			<key>CFBundleURLName</key>
-			<string>com.hankch.stickit.entity</string>
+			<string>com.hankch.floatem.entity</string>
 			<key>CFBundleURLSchemes</key>
 			<array>
-				<string>stickit</string>
+				<string>floatem</string>
 			</array>
 		</dict>
 	</array>
@@ -39,6 +39,8 @@
 	<true/>
 	<key>LSMinimumSystemVersion</key>
 	<string>$(MACOSX_DEPLOYMENT_TARGET)</string>
+	<key>ITSAppUsesNonExemptEncryption</key>
+	<false/>
 	<key>NSHighResolutionCapable</key>
 	<true/>
 	<key>NSHumanReadableCopyright</key>

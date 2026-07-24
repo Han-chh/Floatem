@@ -25,7 +25,11 @@ describe("PanelShell", () => {
 
     const afterglow = screen.getByRole("button", { name: "Afterglow" });
     expect(afterglow).toBeInTheDocument();
-    expect(screen.getByText("Choose one fixed light theme for StickIt.")).toBeInTheDocument();
+    expect(screen.getByTestId("theme-swatch-afterglow")).toHaveStyle({
+      background: "linear-gradient(135deg,#f0bd58 0%,#e8756c 38%,#9c74b5 69%,#73aab9 100%)",
+    });
+    expect(screen.getByTestId("theme-swatch-afterglow")).toBeEmptyDOMElement();
+    expect(screen.getByText("Choose one fixed light theme for Floatem.")).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Night" })).not.toBeInTheDocument();
     expect(screen.queryByText("Follow system appearance")).not.toBeInTheDocument();
     expect(screen.getAllByRole("button").filter((button) => button.hasAttribute("aria-pressed"))).toEqual([
@@ -43,9 +47,9 @@ describe("PanelShell", () => {
   });
 
   it("shows launch at login as disabled when macOS reports that the login item was turned off", async () => {
-    const originalBridge = window.stickItHost;
+    const originalBridge = window.floatemHost;
     const getLaunchAtLoginStatus = vi.fn(async () => ({ enabled: false }));
-    window.stickItHost = { getLaunchAtLoginStatus } as unknown as NonNullable<typeof window.stickItHost>;
+    window.floatemHost = { getLaunchAtLoginStatus } as unknown as NonNullable<typeof window.floatemHost>;
     HTMLElement.prototype.scrollTo = vi.fn();
     useSettingsStore.setState({ language: "en", launchAtLogin: true });
     const user = userEvent.setup();
@@ -61,7 +65,7 @@ describe("PanelShell", () => {
       });
       expect(useSettingsStore.getState().launchAtLogin).toBe(false);
     } finally {
-      window.stickItHost = originalBridge;
+      window.floatemHost = originalBridge;
     }
   });
 
@@ -71,9 +75,9 @@ describe("PanelShell", () => {
     useSettingsStore.setState({ language: "zh-CN" });
     render(<SettingsPanel onClose={vi.fn()} />);
 
-    await user.click(screen.getByRole("button", { name: /关于 StickIt/ }));
+    await user.click(screen.getByRole("button", { name: /关于 Floatem/ }));
 
-    expect(screen.getByText("Capture first. Organize later.")).toBeInTheDocument();
+    expect(screen.getByText("Don't lose thoughts. Float'em.")).toBeInTheDocument();
     expect(screen.getByText(/Version 1\.0\.\d+ \(Build \d+\)/)).toBeInTheDocument();
     const copyrightFooter = screen.getByTestId("about-copyright-footer");
     expect(within(copyrightFooter).getByText("Designed and developed by Hank Chen")).toBeInTheDocument();
@@ -87,10 +91,10 @@ describe("PanelShell", () => {
     expect(screen.queryByText(/package\.json/)).not.toBeInTheDocument();
   });
 
-  it("opens global StickIt help from the header", async () => {
+  it("opens global Floatem help from the header", async () => {
     const user = userEvent.setup();
     useSettingsStore.setState({ language: "en", theme: "afterglow" });
-    document.documentElement.dataset.stickitTheme = "afterglow";
+    document.documentElement.dataset.floatemTheme = "afterglow";
 
     render(
       <PanelShell
@@ -106,16 +110,35 @@ describe("PanelShell", () => {
       </PanelShell>,
     );
 
-    const helpButton = screen.getByRole("button", { name: "StickIt help" });
+    expect(screen.getByText("Don't lose thoughts. Float'em.")).toHaveClass(
+      "floatem-slogan",
+      "text-[#744a38]",
+      "opacity-80",
+    );
+    const helpButton = screen.getByRole("button", { name: "Floatem help" });
+    expect(screen.getByTestId("header-actions")).toHaveClass("h-[30px]", "items-center");
+    expect(screen.getByTestId("help-action-slot")).toHaveClass(
+      "h-[30px]",
+      "w-[30px]",
+      "items-center",
+      "justify-center",
+    );
+    expect(screen.getByTestId("settings-action-slot")).toHaveClass(
+      "h-[30px]",
+      "w-[30px]",
+      "items-center",
+      "justify-center",
+    );
+    expect(screen.getByRole("button", { name: "Settings" })).not.toHaveClass("mt-1.5");
     expect(helpButton).toHaveClass("outline-none", "focus-visible:outline-none");
     await user.click(helpButton);
 
-    const dialog = screen.getByRole("dialog", { name: "StickIt guide" });
+    const dialog = screen.getByRole("dialog", { name: "Floatem guide" });
     const scrollRegion = screen.getByTestId("help-scroll-region");
 
     expect(dialog).toBeInTheDocument();
-    expect(dialog.parentElement).toHaveClass("stickit-modal-backdrop", "fixed", "z-[95]");
-    expect(scrollRegion).toContainElement(screen.getByText("StickIt guide"));
+    expect(dialog.parentElement).toHaveClass("floatem-modal-backdrop", "fixed", "z-[95]");
+    expect(scrollRegion).toContainElement(screen.getByText("Floatem guide"));
     expect(scrollRegion).toContainElement(screen.getByText("Overview"));
     expect(scrollRegion).toContainElement(screen.getByRole("button", { name: /Notes/i }));
     expect(scrollRegion).toHaveClass("overflow-y-auto");
@@ -138,6 +161,95 @@ describe("PanelShell", () => {
     ).toBeInTheDocument();
   });
 
+  it("highlights the help entry once on a fresh installation", async () => {
+    const user = userEvent.setup();
+    useSettingsStore.getState().reset();
+    useSettingsStore.getState().hydrateSettings({
+      language: "en",
+      hasSeenHelpEntryHint: false,
+    });
+
+    const view = render(
+      <PanelShell
+        activeTab="notes"
+        animationSpeed="mediate"
+        onTabChange={vi.fn()}
+        onToggleSettings={vi.fn()}
+        settingsPanel={<div>Settings panel</div>}
+        showSettings={false}
+        transitionStyle="lift"
+      >
+        <div>Panel body</div>
+      </PanelShell>,
+    );
+
+    expect(screen.getByTestId("first-launch-help-highlight")).toBeInTheDocument();
+    expect(
+      screen.getByRole("dialog", { name: "Your guide is right here" }),
+    ).toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: "Open guide" }));
+
+    expect(useSettingsStore.getState().hasSeenHelpEntryHint).toBe(true);
+    await waitFor(() => {
+      expect(
+        screen.queryByRole("dialog", { name: "Your guide is right here" }),
+      ).not.toBeInTheDocument();
+    });
+    expect(screen.getByRole("dialog", { name: "Floatem guide" })).toBeInTheDocument();
+
+    view.unmount();
+    render(
+      <PanelShell
+        activeTab="notes"
+        animationSpeed="mediate"
+        onTabChange={vi.fn()}
+        onToggleSettings={vi.fn()}
+        settingsPanel={<div>Settings panel</div>}
+        showSettings={false}
+        transitionStyle="lift"
+      >
+        <div>Panel body</div>
+      </PanelShell>,
+    );
+
+    expect(screen.queryByTestId("first-launch-help-highlight")).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("dialog", { name: "Your guide is right here" }),
+    ).not.toBeInTheDocument();
+  });
+
+  it("dismisses the first-install help hint without opening help", async () => {
+    const user = userEvent.setup();
+    useSettingsStore.getState().reset();
+    useSettingsStore.getState().hydrateSettings({
+      language: "zh-CN",
+      hasSeenHelpEntryHint: false,
+    });
+
+    render(
+      <PanelShell
+        activeTab="notes"
+        animationSpeed="mediate"
+        onTabChange={vi.fn()}
+        onToggleSettings={vi.fn()}
+        settingsPanel={<div>设置面板</div>}
+        showSettings={false}
+        transitionStyle="lift"
+      >
+        <div>面板内容</div>
+      </PanelShell>,
+    );
+
+    await user.click(screen.getByRole("button", { name: "稍后" }));
+
+    expect(useSettingsStore.getState().hasSeenHelpEntryHint).toBe(true);
+    await waitFor(() => {
+      expect(screen.queryByRole("dialog", { name: "用户指引就在这里" })).not.toBeInTheDocument();
+    });
+    expect(screen.queryByRole("dialog", { name: "Floatem 指引" })).not.toBeInTheDocument();
+  });
+
   it("runs the interactive guide over the real panel with a lightweight floating dialog", async () => {
     const user = userEvent.setup();
     useSettingsStore.setState({ language: "en", timeFormat: "24h" });
@@ -156,11 +268,11 @@ describe("PanelShell", () => {
       </PanelShell>,
     );
 
-    await user.click(screen.getByRole("button", { name: "StickIt help" }));
+    await user.click(screen.getByRole("button", { name: "Floatem help" }));
     expect(screen.getByText(/Explore 7 complete feature workflows in the real app/)).toBeInTheDocument();
 
     await user.click(screen.getByRole("button", { name: "Start interactive guide" }));
-    const guide = screen.getByRole("dialog", { name: "StickIt interactive guide" });
+    const guide = screen.getByRole("dialog", { name: "Floatem interactive guide" });
     expect(within(guide).getByText("Feature 1 of 7 · Step 1 of 1")).toBeInTheDocument();
     expect(guide).toHaveClass("fixed", "w-[min(268px,calc(100vw-28px))]");
     expect(screen.getByText("Original panel body")).toBeInTheDocument();
@@ -176,11 +288,11 @@ describe("PanelShell", () => {
     expect(within(guide).getByRole("button", { name: "Previous feature" })).toBeEnabled();
     expect(within(guide).getByRole("button", { name: "Next feature" })).toBeEnabled();
 
-    const originalBridge = window.stickItHost;
+    const originalBridge = window.floatemHost;
     const setFloatingCardGuide = vi.fn(async (_card: unknown, _guide: unknown) => {});
-    window.stickItHost = {
+    window.floatemHost = {
       setFloatingCardGuide,
-    } as unknown as NonNullable<typeof window.stickItHost>;
+    } as unknown as NonNullable<typeof window.floatemHost>;
     const draggedGuideCard = document.createElement("button");
     try {
       await user.click(within(guide).getByRole("button", { name: "Next feature" }));
@@ -220,7 +332,7 @@ describe("PanelShell", () => {
       expect(setFloatingCardGuide.mock.calls.some(([, state]) => state === null)).toBe(false);
     } finally {
       draggedGuideCard.remove();
-      window.stickItHost = originalBridge;
+      window.floatemHost = originalBridge;
     }
 
     for (const chapter of [4, 5, 6, 7]) {
@@ -241,7 +353,7 @@ describe("PanelShell", () => {
 
     await user.click(within(guide).getByRole("button", { name: "Exit guide" }));
     await waitFor(() => {
-      expect(screen.queryByRole("dialog", { name: "StickIt interactive guide" })).not.toBeInTheDocument();
+      expect(screen.queryByRole("dialog", { name: "Floatem interactive guide" })).not.toBeInTheDocument();
       expect(document.querySelector("[data-guide-highlight]")).not.toBeInTheDocument();
     });
     expect(
@@ -309,11 +421,11 @@ describe("PanelShell", () => {
       "Shortcuts",
       "Motion and feedback",
       "Notifications",
-      "About StickIt",
+      "About Floatem",
     ]) {
       expect(within(overview).getByRole("heading", { name: title })).toBeInTheDocument();
     }
-    expect(within(overview).getByText(/Restore defaults and Quit StickIt/)).toBeInTheDocument();
+    expect(within(overview).getByText(/Restore defaults and Quit Floatem/)).toBeInTheDocument();
     expect(within(overview).queryByRole("button", { name: "Previous feature" })).not.toBeInTheDocument();
 
     await act(async () => {
@@ -331,7 +443,7 @@ describe("PanelShell", () => {
     expect(document.documentElement.scrollTop).toBe(0);
     expect(document.body.scrollTop).toBe(0);
 
-    await user.click(within(completion).getByRole("button", { name: "Return to StickIt" }));
+    await user.click(within(completion).getByRole("button", { name: "Return to Floatem" }));
     await waitFor(() => {
       expect(
         screen.queryByRole("dialog", {
@@ -360,7 +472,7 @@ describe("PanelShell", () => {
       </PanelShell>,
     );
 
-    await user.click(screen.getByRole("button", { name: "StickIt help" }));
+    await user.click(screen.getByRole("button", { name: "Floatem help" }));
     await user.click(screen.getByRole("button", { name: "Start interactive guide" }));
     await user.click(screen.getByRole("button", { name: "Collapse navigation" }));
     await waitFor(() => expect(screen.getByText("Create the first note")).toBeInTheDocument());
@@ -370,7 +482,7 @@ describe("PanelShell", () => {
     const guideNoteId = useNotesStore.getState().cards[0]?.id;
     const guideNote = document.querySelector(`[data-note-card-id="${guideNoteId}"]`);
     expect(guideNote).not.toBeNull();
-    await user.type(within(guideNote as HTMLElement).getByRole("textbox", { name: "Note title" }), "StickIt guide note");
+    await user.type(within(guideNote as HTMLElement).getByRole("textbox", { name: "Note title" }), "Floatem guide note");
     await waitFor(() => expect(screen.getByText("Write rich text")).toBeInTheDocument());
 
     const editor = guideNote?.querySelector<HTMLElement>('[data-action="note-rich-editor"]');

@@ -2,7 +2,7 @@ import AppKit
 import OSLog
 
 @MainActor
-final class MainWindowController: NSObject, NSWindowDelegate, StickItNativeBridgeHandling {
+final class MainWindowController: NSObject, NSWindowDelegate, FloatemNativeBridgeHandling {
     private static let defaultPanelSize = NSSize(width: 400, height: 680)
     private static let minimumPanelSize = NSSize(width: 320, height: 480)
     static let overlayPanelLevel = NSWindow.Level.statusBar
@@ -39,11 +39,11 @@ final class MainWindowController: NSObject, NSWindowDelegate, StickItNativeBridg
     private let panel: FloatingPanel
     private let webViewController: WebViewController
     private let dragPreviewWindowController = DragPreviewWindowController()
-    private let logger = Logger(subsystem: "com.stickit.app", category: "Window")
-    private static let lifecycle = Logger(subsystem: "com.stickit.floating", category: "Lifecycle")
-    private static let pipeline = Logger(subsystem: "com.stickit.floating", category: "Pipeline")
+    private let logger = Logger(subsystem: "com.floatem.app", category: "Window")
+    private static let lifecycle = Logger(subsystem: "com.floatem.floating", category: "Lifecycle")
+    private static let pipeline = Logger(subsystem: "com.floatem.floating", category: "Pipeline")
 
-    /// When enabled (via `defaults write com.stickit.app DEBUG_FLOATING_LIFECYCLE -bool true`),
+    /// When enabled (via `defaults write com.floatem.app DEBUG_FLOATING_LIFECYCLE -bool true`),
     /// lifecycle events are logged at info level so you can trace create/destroy/deinit through every drag cycle.
     private nonisolated static let debugLifecycle: Bool = {
         DebugFlags.isEnabled("DEBUG_FLOATING_LIFECYCLE")
@@ -111,7 +111,7 @@ final class MainWindowController: NSObject, NSWindowDelegate, StickItNativeBridg
         panel.level = Self.overlayPanelLevel
         panel.isFloatingPanel = true
         panel.becomesKeyOnlyIfNeeded = false
-        panel.title = "StickIt"
+        panel.title = "Floatem"
         panel.titleVisibility = .hidden
         panel.titlebarAppearsTransparent = true
         panel.collectionBehavior = Self.overlayCollectionBehavior
@@ -266,7 +266,7 @@ final class MainWindowController: NSObject, NSWindowDelegate, StickItNativeBridg
 
     func saveSettings(_ settings: Any) throws {
         guard var settingsDictionary = settings as? [String: Any] else {
-            throw StickItBridgeError.invalidParameters("StickIt expected settings to be a JSON object.")
+            throw FloatemBridgeError.invalidParameters("Floatem expected settings to be a JSON object.")
         }
 
         let fallbackShortcut = hotKeyManager.registeredShortcut ?? (try? storage.currentHotkey()) ?? GlobalHotKeyManager.defaultShortcut
@@ -313,10 +313,10 @@ final class MainWindowController: NSObject, NSWindowDelegate, StickItNativeBridg
             return
         }
 
-        throw StickItBridgeError.invalidParameters(language.localization.notificationOpenSettingsFailedMessage)
+        throw FloatemBridgeError.invalidParameters(language.localization.notificationOpenSettingsFailedMessage)
     }
 
-    func checkNotificationPermission(language: StickItLanguage) async throws -> Bool {
+    func checkNotificationPermission(language: FloatemLanguage) async throws -> Bool {
         try await notificationManager.checkAuthorization(language: language)
     }
 
@@ -399,7 +399,7 @@ final class MainWindowController: NSObject, NSWindowDelegate, StickItNativeBridg
         return nil
     }
 
-    func testReminderNotification(soundEnabled: Bool, language: StickItLanguage) async throws {
+    func testReminderNotification(soundEnabled: Bool, language: FloatemLanguage) async throws {
         try await notificationManager.scheduleTestNotification(
             soundEnabled: soundEnabled,
             language: language
@@ -468,7 +468,7 @@ final class MainWindowController: NSObject, NSWindowDelegate, StickItNativeBridg
         guard let payloadDictionary = payload as? [String: Any],
               let session = DragPreviewSession(payload: payloadDictionary)
         else {
-            throw StickItBridgeError.invalidParameters("StickIt expected a valid drag preview payload from JavaScript.")
+            throw FloatemBridgeError.invalidParameters("Floatem expected a valid drag preview payload from JavaScript.")
         }
 
         if Self.debugPipeline {
@@ -525,7 +525,7 @@ final class MainWindowController: NSObject, NSWindowDelegate, StickItNativeBridg
             let cardID = Self.floatingCardID(from: payloadDictionary, kind: kind),
             let session = DragPreviewSession(payload: payloadDictionary)
         else {
-            throw StickItBridgeError.invalidParameters("StickIt expected a valid floating card payload from JavaScript.")
+            throw FloatemBridgeError.invalidParameters("Floatem expected a valid floating card payload from JavaScript.")
         }
 
         let mouseLocation = NSEvent.mouseLocation
@@ -565,7 +565,7 @@ final class MainWindowController: NSObject, NSWindowDelegate, StickItNativeBridg
             return try self.getDesktopWidgetStateFromBridge(kind: itemKind, id: id)
         }
         controller.onFrameChange = { [weak self, weak controller] frame in
-            guard let self, let entityKind = StickItEntityKind(rawValue: kind) else { return }
+            guard let self, let entityKind = FloatemEntityKind(rawValue: kind) else { return }
             let state = ScreenPlacementResolver.state(
                 for: WidgetEntityReference(entityKind: entityKind, entityID: cardID),
                 frame: frame,
@@ -664,11 +664,11 @@ final class MainWindowController: NSObject, NSWindowDelegate, StickItNativeBridg
 
     func setFloatingCardDesktopPinnedFromBridge(kind: String, id: String, pinned: Bool) throws -> [String: Any] {
         guard
-            StickItEntityKind(rawValue: kind) != nil,
+            FloatemEntityKind(rawValue: kind) != nil,
             !id.isEmpty,
             let controller = floatingCardWindowControllers[Self.floatingCardKey(kind: kind, id: id)]
         else {
-            throw StickItBridgeError.invalidParameters("StickIt could not find the requested floating card.")
+            throw FloatemBridgeError.invalidParameters("Floatem could not find the requested floating card.")
         }
 
         controller.setDesktopPinned(pinned)
@@ -728,8 +728,8 @@ final class MainWindowController: NSObject, NSWindowDelegate, StickItNativeBridg
     }
 
     func getDesktopWidgetStateFromBridge(kind: String, id: String) throws -> [String: Any] {
-        guard let entityKind = StickItEntityKind(rawValue: kind), !id.isEmpty else {
-            throw StickItBridgeError.invalidParameters("StickIt expected a valid desktop card reference.")
+        guard let entityKind = FloatemEntityKind(rawValue: kind), !id.isEmpty else {
+            throw FloatemBridgeError.invalidParameters("Floatem expected a valid desktop card reference.")
         }
         let requested = try storage.desktopPanelStates().contains {
             $0.entityKind == entityKind && $0.entityID == id
@@ -915,7 +915,7 @@ final class MainWindowController: NSObject, NSWindowDelegate, StickItNativeBridg
 
     func startWindowDragFromBridge() throws {
         guard let currentEvent = NSApp.currentEvent else {
-            throw StickItBridgeError.invalidParameters("StickIt could not access the current mouse event for dragging.")
+            throw FloatemBridgeError.invalidParameters("Floatem could not access the current mouse event for dragging.")
         }
 
         panel.performDrag(with: currentEvent)
@@ -1082,7 +1082,7 @@ final class MainWindowController: NSObject, NSWindowDelegate, StickItNativeBridg
         floatingCardPayloads.removeValue(forKey: key)
         floatingCardGuideStates.removeValue(forKey: key)
         removePersistedDesktopCard(kind: kind, id: id)
-        if let entityKind = StickItEntityKind(rawValue: kind) {
+        if let entityKind = FloatemEntityKind(rawValue: kind) {
             try? storage.removeFloatingWindowState(kind: entityKind, id: id)
         }
 
@@ -1107,7 +1107,7 @@ final class MainWindowController: NSObject, NSWindowDelegate, StickItNativeBridg
     }
 
     private func persistDesktopCard(kind: String, id: String, frame: NSRect) {
-        guard let entityKind = StickItEntityKind(rawValue: kind) else { return }
+        guard let entityKind = FloatemEntityKind(rawValue: kind) else { return }
         let windowState = ScreenPlacementResolver.state(
             for: WidgetEntityReference(entityKind: entityKind, entityID: id),
             frame: frame,
@@ -1121,7 +1121,7 @@ final class MainWindowController: NSObject, NSWindowDelegate, StickItNativeBridg
     }
 
     private func removePersistedDesktopCard(kind: String, id: String) {
-        if let entityKind = StickItEntityKind(rawValue: kind) {
+        if let entityKind = FloatemEntityKind(rawValue: kind) {
             try? storage.removeDesktopPanelState(kind: entityKind, id: id)
         }
 
@@ -1142,7 +1142,7 @@ final class MainWindowController: NSObject, NSWindowDelegate, StickItNativeBridg
         for record in (try? storage.loadDesktopCards()) ?? [] {
             guard
                 let kindValue = record["kind"] as? String,
-                let kind = StickItEntityKind(rawValue: kindValue),
+                let kind = FloatemEntityKind(rawValue: kindValue),
                 let id = record["id"] as? String,
                 !id.isEmpty
             else { continue }
@@ -1195,7 +1195,7 @@ final class MainWindowController: NSObject, NSWindowDelegate, StickItNativeBridg
         return states
     }
 
-    private func defaultDesktopPanelFrame(for kind: StickItEntityKind) -> NSRect {
+    private func defaultDesktopPanelFrame(for kind: FloatemEntityKind) -> NSRect {
         let size = kind == .note ? NSSize(width: 420, height: 300) : NSSize(width: 360, height: 120)
         let visibleFrame = activeScreen()?.visibleFrame ?? NSRect(x: 0, y: 0, width: 1_440, height: 900)
         return NSRect(
@@ -1576,7 +1576,7 @@ final class MainWindowController: NSObject, NSWindowDelegate, StickItNativeBridg
             }
 
             let soundEnabled = (settings["enableReminderSound"] as? Bool) ?? true
-            let language = StickItLanguage(storedValue: settings["language"])
+            let language = FloatemLanguage(storedValue: settings["language"])
             let deliveredTodoIDs = await self.notificationManager.consumeDeliveredTodoReminderIdentifiers()
             let effectiveTodos = self.reconcileReminderState(
                 from: todos,
@@ -1603,7 +1603,7 @@ final class MainWindowController: NSObject, NSWindowDelegate, StickItNativeBridg
 
     private func reminderDescriptors(
         from todos: Any,
-        language: StickItLanguage
+        language: FloatemLanguage
     ) -> [TodoReminderDescriptor] {
         let rawTodos = todoItems(from: todos)
 

@@ -7,9 +7,9 @@ import rootPackage from "../../package.json";
 
 export default defineConfig(({ mode }) => {
   const frontendRoot = fileURLToPath(new URL(".", import.meta.url));
-  const buildInput: Record<string, string> = mode === "stickit-main"
+  const buildInput: Record<string, string> = mode === "floatem-main"
     ? { main: resolve(frontendRoot, "index.html") }
-    : mode === "stickit-floating"
+    : mode === "floatem-floating"
       ? { floating: resolve(frontendRoot, "floating.html") }
       : {
           main: resolve(frontendRoot, "index.html"),
@@ -22,18 +22,18 @@ export default defineConfig(({ mode }) => {
     plugins: [react(), tailwindcss()],
     clearScreen: false,
     define: {
-      __STICKIT_VERSION__: JSON.stringify(rootPackage.version),
-      __STICKIT_BUILD__: JSON.stringify(String(rootPackage.buildNumber)),
+      __FLOATEM_VERSION__: JSON.stringify(rootPackage.version),
+      __FLOATEM_BUILD__: JSON.stringify(String(rootPackage.buildNumber)),
     },
     resolve: {
       alias: {
-        "@stickit/branding": fileURLToPath(new URL("../../packages/branding/src", import.meta.url)),
-        "@stickit/native-bridge": fileURLToPath(new URL("../../packages/native-bridge/src", import.meta.url)),
+        "@floatem/branding": fileURLToPath(new URL("../../packages/branding/src", import.meta.url)),
+        "@floatem/native-bridge": fileURLToPath(new URL("../../packages/native-bridge/src", import.meta.url)),
       },
     },
     build: {
       outDir: "dist",
-      emptyOutDir: mode !== "stickit-floating",
+      emptyOutDir: mode !== "floatem-floating",
       rollupOptions: {
         input: buildInput,
       },

@@ -95,7 +95,7 @@ class FrontendErrorBoundary extends Component<FrontendErrorBoundaryProps, Fronte
     if (this.state.hasError) {
       return (
         <div className="paper-card flex h-full items-center justify-center rounded-[26px] text-[13px] font-medium text-[var(--muted)]">
-          StickIt encountered an internal rendering error.
+          Floatem encountered an internal rendering error.
         </div>
       );
     }
@@ -120,34 +120,47 @@ function isEditableTarget(target: EventTarget | null) {
   );
 }
 
-function StickItApp() {
+function FloatemApp() {
   const { t } = useI18n();
   const activeTab = useSettingsStore((state) => state.activeTab);
   const hotkey = useSettingsStore((state) => state.hotkey);
   const hotkeyRegistrationState = useSettingsStore((state) => state.hotkeyRegistrationState);
   const transitionStyle = useSettingsStore((state) => state.transitionStyle);
   const animationSpeed = useSettingsStore((state) => state.animationSpeed);
+  const isSettingsLoaded = useSettingsStore((state) => state.isLoaded);
+  const hasSeenHelpEntryHint = useSettingsStore((state) => state.hasSeenHelpEntryHint);
   const setActiveTab = useSettingsStore((state) => state.setActiveTab);
   const noteCards = useNotesStore((state) => state.cards);
   const todoItems = useTodosStore((state) => state.todos);
   const [isBooting, setIsBooting] = useState(true);
   const [showSettings, setShowSettings] = useState(false);
+  const [showLaunchAtLoginPromptThisSession, setShowLaunchAtLoginPromptThisSession] = useState(false);
   const [activeDockZoneTarget, setActiveDockZoneTarget] = useState<DockZoneEventDetail | null>(null);
   const isNativeTextColorPanelOpenRef = useRef(false);
+  const didResolveFirstRunPromptsRef = useRef(false);
   const isDockZoneActive = activeDockZoneTarget !== null;
 
   useAutoSave();
   useHotkey(hotkey);
 
   useEffect(() => {
+    if (!isSettingsLoaded || didResolveFirstRunPromptsRef.current) {
+      return;
+    }
+
+    didResolveFirstRunPromptsRef.current = true;
+    setShowLaunchAtLoginPromptThisSession(hasSeenHelpEntryHint);
+  }, [hasSeenHelpEntryHint, isSettingsLoaded]);
+
+  useEffect(() => {
     if (typeof document === "undefined") {
       return;
     }
 
-    document.documentElement.dataset.stickitFrontendState = "mounted";
+    document.documentElement.dataset.floatemFrontendState = "mounted";
 
     return () => {
-      delete document.documentElement.dataset.stickitFrontendState;
+      delete document.documentElement.dataset.floatemFrontendState;
     };
   }, []);
 
@@ -177,7 +190,7 @@ function StickItApp() {
         settingsStore.setHotkeyRegistrationState(state);
       })
       .catch((error) => {
-        console.error("StickIt failed to read the current hotkey registration state.", error);
+        console.error("Floatem failed to read the current hotkey registration state.", error);
       });
 
     return unsubscribe;
@@ -407,9 +420,9 @@ function StickItApp() {
       })
       .catch((error) => {
         const message = error instanceof Error ? error.message : String(error);
-        console.error("StickIt failed to load initial data.", error);
+        console.error("Floatem failed to load initial data.", error);
         if (typeof document !== "undefined") {
-          document.documentElement.dataset.stickitFrontendState = "error";
+          document.documentElement.dataset.floatemFrontendState = "error";
         }
         void reportFrontendError(`Initial data load failed: ${message}`, "loadAllData");
       });
@@ -422,13 +435,13 @@ function StickItApp() {
   useEffect(() => {
     if (isBooting) {
       if (typeof document !== "undefined") {
-        document.documentElement.dataset.stickitFrontendState = "booting";
+        document.documentElement.dataset.floatemFrontendState = "booting";
       }
       return;
     }
 
     if (typeof document !== "undefined") {
-      document.documentElement.dataset.stickitFrontendState = "ready";
+      document.documentElement.dataset.floatemFrontendState = "ready";
     }
 
     void reportFrontendReady();
@@ -509,7 +522,7 @@ function StickItApp() {
         </div>
       )}
       </PanelShell>
-      <LaunchAtLoginDialog />
+      {showLaunchAtLoginPromptThisSession ? <LaunchAtLoginDialog /> : null}
       <TooltipLayer />
     </FrontendErrorBoundary>
   );
@@ -541,7 +554,7 @@ function App() {
     );
   }
 
-  return <StickItApp />;
+  return <FloatemApp />;
 }
 
 export default App;

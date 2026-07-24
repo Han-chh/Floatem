@@ -117,7 +117,7 @@
     serif;
 }
 
-:root[data-stickit-theme="forest"] {
+:root[data-floatem-theme="forest"] {
   --base-bg: #dce8df;
   --base-bg-deep: #c6d8ca;
   --cream: #f1f7f2;
@@ -160,7 +160,7 @@
   --shadow-button: 0 12px 24px rgba(34, 62, 43, 0.08);
 }
 
-:root[data-stickit-theme="orchid"] {
+:root[data-floatem-theme="orchid"] {
   --base-bg: #eef5eb;
   --base-bg-deep: #dbe8d8;
   --cream: #fbfdf9;
@@ -203,7 +203,7 @@
   --shadow-button: 0 12px 24px rgba(45, 72, 43, 0.07);
 }
 
-:root[data-stickit-theme="plum"] {
+:root[data-floatem-theme="plum"] {
   --base-bg: #f4e1e5;
   --base-bg-deep: #e7c7ce;
   --cream: #fff7f8;
@@ -246,7 +246,7 @@
   --shadow-button: 0 12px 24px rgba(93, 30, 47, 0.08);
 }
 
-:root[data-stickit-theme="chrysanthemum"] {
+:root[data-floatem-theme="chrysanthemum"] {
   --base-bg: #f5edcf;
   --base-bg-deep: #e8d99f;
   --cream: #fffaf0;
@@ -289,7 +289,7 @@
   --shadow-button: 0 12px 24px rgba(85, 64, 20, 0.08);
 }
 
-:root[data-stickit-theme="afterglow"] {
+:root[data-floatem-theme="afterglow"] {
   --afterglow-background-primary: #f3e8dc;
   --afterglow-background-secondary: #fff1dc;
   --afterglow-background-apricot: #f1c9b4;
@@ -361,7 +361,7 @@
 }
 
 @media (prefers-contrast: more) {
-  :root[data-stickit-theme="afterglow"] {
+  :root[data-floatem-theme="afterglow"] {
     --theme-border: rgba(139, 93, 80, 0.52);
     --muted: #6e5953;
   }

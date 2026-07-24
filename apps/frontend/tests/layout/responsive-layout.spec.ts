@@ -55,7 +55,7 @@ async function bootPreview(page: Page) {
 
 async function seedNotes(page: Page, notes: unknown) {
   await page.addInitScript((seed) => {
-    window.localStorage.setItem("stickit.notes", JSON.stringify(seed));
+    window.localStorage.setItem("floatem.notes", JSON.stringify(seed));
   }, notes);
 }
 
@@ -329,7 +329,7 @@ for (const viewport of VIEWPORTS) {
 
       await expectWithinViewport(page, closeButton);
       await expectWithinViewport(page, panel.getByRole("button", { name: "Shortcuts and launch" }));
-      await expectWithinViewport(page, panel.getByRole("button", { name: /^About StickIt\b/ }));
+      await expectWithinViewport(page, panel.getByRole("button", { name: /^About Floatem\b/ }));
       await panel.getByRole("button", { name: "Shortcuts and launch" }).click();
       await expectWithinViewport(page, panel.getByRole("heading", { name: "Shortcuts and launch" }));
       await expectWithinViewport(page, panel.getByTestId("settings-category-title-frame"));
@@ -342,8 +342,8 @@ for (const viewport of VIEWPORTS) {
       await panel.getByRole("button", { name: "Cancel" }).click();
       await expect(dialog).toBeHidden();
       await panel.getByRole("button", { name: "All settings" }).click();
-      await panel.getByRole("button", { name: /^About StickIt\b/ }).click();
-      await expectWithinViewport(page, panel.getByRole("heading", { name: "About StickIt" }));
+      await panel.getByRole("button", { name: /^About Floatem\b/ }).click();
+      await expectWithinViewport(page, panel.getByRole("heading", { name: "About Floatem" }));
       await expectWithinViewport(page, panel.getByRole("heading", { name: "Data scope" }));
       await panel.getByRole("button", { name: "All settings" }).click();
       await expectWithinViewport(page, panel.getByRole("button", { name: "Restore defaults" }));

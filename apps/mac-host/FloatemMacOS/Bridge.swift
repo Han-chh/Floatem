@@ -2,8 +2,8 @@ import Foundation
 
 enum DebugFlags {
     private static let supportedDomains = [
-        "com.stickit.app",
-        "com.stickit.floating",
+        "com.floatem.app",
+        "com.floatem.floating",
     ]
 
     static func isEnabled(_ key: String) -> Bool {
@@ -43,7 +43,7 @@ enum DebugFlags {
 }
 
 @MainActor
-protocol StickItNativeBridgeHandling: AnyObject {
+protocol FloatemNativeBridgeHandling: AnyObject {
     func loadAllData() throws -> [String: Any]
     func saveNotes(_ notes: Any) throws
     func saveTodos(_ todos: Any) throws
@@ -51,12 +51,12 @@ protocol StickItNativeBridgeHandling: AnyObject {
     func currentLaunchAtLoginStatus() -> [String: Any]
     func showMainWindowFromBridge()
     func openNotificationSettings() throws
-    func checkNotificationPermission(language: StickItLanguage) async throws -> Bool
+    func checkNotificationPermission(language: FloatemLanguage) async throws -> Bool
     func sendNotification(id: String?, title: String, body: String, soundEnabled: Bool) async throws
     func scheduleNotification(id: String?, title: String, body: String, scheduledAt: Date?, soundEnabled: Bool) async throws
     func openTextColorPanel(requestID: String, colorHex: String?) throws
     func pickScreenColor() async throws -> String?
-    func testReminderNotification(soundEnabled: Bool, language: StickItLanguage) async throws
+    func testReminderNotification(soundEnabled: Bool, language: FloatemLanguage) async throws
     func currentHotKeyRegistrationState() -> [String: Any]
     func currentFloatingCardState() -> [String: [String]]
     func readClipboardText() -> String
@@ -86,7 +86,7 @@ protocol StickItNativeBridgeHandling: AnyObject {
     func startWindowDragFromBridge() throws
 }
 
-enum StickItLanguage: String {
+enum FloatemLanguage: String {
     case english = "en"
     case simplifiedChinese = "zh-CN"
 
@@ -98,14 +98,14 @@ enum StickItLanguage: String {
         }
     }
 
-    var localization: StickItLocalization {
+    var localization: FloatemLocalization {
         switch self {
         case .english:
-            return StickItLocalization(
+            return FloatemLocalization(
                 menuToggle: "Toggle",
-                menuToggleApp: "Toggle StickIt",
+                menuToggleApp: "Toggle Floatem",
                 menuQuit: "Quit",
-                menuQuitApp: "Quit StickIt",
+                menuQuitApp: "Quit Floatem",
                 menuEdit: "Edit",
                 menuUndo: "Undo",
                 menuRedo: "Redo",
@@ -113,33 +113,33 @@ enum StickItLanguage: String {
                 menuCopy: "Copy",
                 menuPaste: "Paste",
                 menuSelectAll: "Select All",
-                loadingTitle: "Loading StickIt...",
+                loadingTitle: "Loading Floatem...",
                 loadingDetail: "Preparing the local app interface.",
-                missingInterfaceTitle: "StickIt couldn't load its interface.",
+                missingInterfaceTitle: "Floatem couldn't load its interface.",
                 missingInterfaceDetail: "The bundled frontend assets are missing from the app resources.",
-                reconnectingTitle: "Reconnecting StickIt...",
+                reconnectingTitle: "Reconnecting Floatem...",
                 reconnectingDetail: "The embedded WebView process terminated. Retrying once.",
-                recoverWindowTitle: "StickIt couldn't recover the window content.",
+                recoverWindowTitle: "Floatem couldn't recover the window content.",
                 recoverWindowDetail: "The embedded WebView process terminated twice. Check the Xcode console for details.",
-                finishLoadingTitle: "StickIt couldn't finish loading.",
-                loadWindowContentTitle: "StickIt couldn't load its window content.",
-                slowStartupTitle: "StickIt is taking longer than expected to appear.",
+                finishLoadingTitle: "Floatem couldn't finish loading.",
+                loadWindowContentTitle: "Floatem couldn't load its window content.",
+                slowStartupTitle: "Floatem is taking longer than expected to appear.",
                 slowStartupDetail: "The web interface loaded but did not confirm startup. Check the Xcode console for WebView diagnostics.",
-                notificationOpenSettingsFailedMessage: "StickIt couldn't open System Settings. Open Apple menu > System Settings > Notifications, then select StickIt.",
-                notificationPermissionDeniedMessage: "StickIt is not allowed to send notifications. Enable alerts and sounds for StickIt in System Settings > Notifications.",
-                notificationTestBody: "This is a StickIt test reminder.",
-                notificationTestTitle: "StickIt test",
+                notificationOpenSettingsFailedMessage: "Floatem couldn't open System Settings. Open Apple menu > System Settings > Notifications, then select Floatem.",
+                notificationPermissionDeniedMessage: "Floatem is not allowed to send notifications. Enable alerts and sounds for Floatem in System Settings > Notifications.",
+                notificationTestBody: "This is a Floatem test reminder.",
+                notificationTestTitle: "Floatem test",
                 reminderNotificationTitle: "Todo reminder",
-                reminderNotificationFallbackBody: "Open StickIt to review this todo.",
-                missingBundleHeading: "StickIt frontend bundle is missing",
+                reminderNotificationFallbackBody: "Open Floatem to review this todo.",
+                missingBundleHeading: "Floatem frontend bundle is missing",
                 missingBundleBody: "Run pnpm install, then build the app again so the WKWebView host can copy the Vite output into the application bundle."
             )
         case .simplifiedChinese:
-            return StickItLocalization(
+            return FloatemLocalization(
                 menuToggle: "显示或隐藏",
-                menuToggleApp: "显示或隐藏 StickIt",
+                menuToggleApp: "显示或隐藏 Floatem",
                 menuQuit: "退出",
-                menuQuitApp: "退出 StickIt",
+                menuQuitApp: "退出 Floatem",
                 menuEdit: "编辑",
                 menuUndo: "撤销",
                 menuRedo: "重做",
@@ -147,25 +147,25 @@ enum StickItLanguage: String {
                 menuCopy: "复制",
                 menuPaste: "粘贴",
                 menuSelectAll: "全选",
-                loadingTitle: "正在加载 StickIt...",
+                loadingTitle: "正在加载 Floatem...",
                 loadingDetail: "正在准备本地应用界面。",
-                missingInterfaceTitle: "StickIt 无法加载界面。",
+                missingInterfaceTitle: "Floatem 无法加载界面。",
                 missingInterfaceDetail: "应用资源中缺少打包后的前端文件。",
-                reconnectingTitle: "正在重新连接 StickIt...",
+                reconnectingTitle: "正在重新连接 Floatem...",
                 reconnectingDetail: "内嵌 WebView 进程已终止，正在重试一次。",
-                recoverWindowTitle: "StickIt 无法恢复窗口内容。",
+                recoverWindowTitle: "Floatem 无法恢复窗口内容。",
                 recoverWindowDetail: "内嵌 WebView 进程已连续两次终止。请检查 Xcode 控制台获取详情。",
-                finishLoadingTitle: "StickIt 无法完成加载。",
-                loadWindowContentTitle: "StickIt 无法加载窗口内容。",
-                slowStartupTitle: "StickIt 显示时间比预期更长。",
+                finishLoadingTitle: "Floatem 无法完成加载。",
+                loadWindowContentTitle: "Floatem 无法加载窗口内容。",
+                slowStartupTitle: "Floatem 显示时间比预期更长。",
                 slowStartupDetail: "网页界面已经加载，但还没有确认启动完成。请检查 Xcode 控制台中的 WebView 诊断信息。",
-                notificationOpenSettingsFailedMessage: "StickIt 无法打开系统设置。请手动前往“苹果菜单 > 系统设置 > 通知”，然后选择 StickIt。",
-                notificationPermissionDeniedMessage: "StickIt 当前没有通知权限。请在“系统设置 > 通知”里为 StickIt 开启提醒和声音。",
-                notificationTestBody: "这是一条来自 StickIt 的测试提醒。",
-                notificationTestTitle: "StickIt 测试通知",
+                notificationOpenSettingsFailedMessage: "Floatem 无法打开系统设置。请手动前往“苹果菜单 > 系统设置 > 通知”，然后选择 Floatem。",
+                notificationPermissionDeniedMessage: "Floatem 当前没有通知权限。请在“系统设置 > 通知”里为 Floatem 开启提醒和声音。",
+                notificationTestBody: "这是一条来自 Floatem 的测试提醒。",
+                notificationTestTitle: "Floatem 测试通知",
                 reminderNotificationTitle: "待办提醒",
-                reminderNotificationFallbackBody: "打开 StickIt 查看这条待办。",
-                missingBundleHeading: "StickIt 前端资源包缺失",
+                reminderNotificationFallbackBody: "打开 Floatem 查看这条待办。",
+                missingBundleHeading: "Floatem 前端资源包缺失",
                 missingBundleBody: "请先运行 pnpm install，然后重新构建应用，以便 WKWebView 宿主把 Vite 构建产物复制进应用包。"
             )
         }
@@ -181,7 +181,7 @@ enum StickItLanguage: String {
     }
 }
 
-struct StickItLocalization {
+struct FloatemLocalization {
     let menuToggle: String
     let menuToggleApp: String
     let menuQuit: String
@@ -216,10 +216,10 @@ struct StickItLocalization {
 }
 
 extension Notification.Name {
-    static let stickItLanguageDidChange = Notification.Name("StickItLanguageDidChange")
+    static let floatemLanguageDidChange = Notification.Name("FloatemLanguageDidChange")
 }
 
-enum StickItBridgeError: LocalizedError {
+enum FloatemBridgeError: LocalizedError {
     case invalidParameters(String)
     case invalidJSON(String)
     case missingFrontendBundle
@@ -231,7 +231,7 @@ enum StickItBridgeError: LocalizedError {
         case let .invalidJSON(message):
             return message
         case .missingFrontendBundle:
-            return "StickIt could not find the bundled frontend assets."
+            return "Floatem could not find the bundled frontend assets."
         }
     }
 }

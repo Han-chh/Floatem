@@ -11,8 +11,8 @@
     "moduleResolution": "bundler",
     "baseUrl": ".",
     "paths": {
-      "@stickit/branding": ["../../packages/branding/src"],
-      "@stickit/native-bridge": ["../../packages/native-bridge/src"]
+      "@floatem/branding": ["../../packages/branding/src"],
+      "@floatem/native-bridge": ["../../packages/native-bridge/src"]
     },
     "allowImportingTsExtensions": true,
     "resolveJsonModule": true,

@@ -1,4 +1,4 @@
-import type { DragPreviewPayload, FloatingCardScreenPlacement } from "@stickit/native-bridge";
+import type { DragPreviewPayload, FloatingCardScreenPlacement } from "@floatem/native-bridge";
 import { motion } from "framer-motion";
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
@@ -35,8 +35,8 @@ import { FloatingTodoItem, TodoItemPreview } from "../todos/TodoItem";
 
 declare global {
   interface Window {
-    __STICKIT_FLOATING_CARD_STATE__?: DragPreviewPayload | null;
-    __STICKIT_FLOATING_CARD_GUIDE__?: FloatingCardGuideState | null;
+    __FLOATEM_FLOATING_CARD_STATE__?: DragPreviewPayload | null;
+    __FLOATEM_FLOATING_CARD_GUIDE__?: FloatingCardGuideState | null;
   }
 }
 
@@ -47,9 +47,9 @@ const FLOATING_DIALOG_VIEWPORT_SIZE = {
 };
 const FLOATING_DIALOG_GAP_PX = 12;
 const MAX_FLOATING_CARD_CONTENT_SCALE = 1.65;
-const FLOATING_DIALOG_BACKDROP_SELECTOR = ".stickit-modal-backdrop";
+const FLOATING_DIALOG_BACKDROP_SELECTOR = ".floatem-modal-backdrop";
 const EDITABLE_TARGET_SELECTOR = 'input,textarea,select,[contenteditable="true"],[role="textbox"]';
-const FLOATING_CARD_GUIDE_EVENT = "stickit:floating-card-guide";
+const FLOATING_CARD_GUIDE_EVENT = "floatem:floating-card-guide";
 type FloatingDialogSide = "left" | "right";
 
 function FloatingCardGuideOverlay({
@@ -181,7 +181,7 @@ function readInitialState() {
     return null;
   }
 
-  return window.__STICKIT_FLOATING_CARD_STATE__ ?? null;
+  return window.__FLOATEM_FLOATING_CARD_STATE__ ?? null;
 }
 
 function isEditableTarget(target: EventTarget | null) {
@@ -277,7 +277,7 @@ export function FloatingNoteApp() {
   const [dialogSide, setDialogSide] = useState<FloatingDialogSide>("right");
   const [isHydrated, setIsHydrated] = useState(false);
   const [floatingGuide, setFloatingGuide] = useState<FloatingCardGuideState | null>(
-    () => window.__STICKIT_FLOATING_CARD_GUIDE__ ?? null,
+    () => window.__FLOATEM_FLOATING_CARD_GUIDE__ ?? null,
   );
   const contentRef = useRef<HTMLElement | null>(null);
   const syncedFrameSizeRef = useRef(frameSize);
@@ -398,7 +398,7 @@ export function FloatingNoteApp() {
     const body = document.body;
     const root = document.getElementById("root");
 
-    html.dataset.stickitFloatingCardWindow = "true";
+    html.dataset.floatemFloatingCardWindow = "true";
     html.style.overflow = "hidden";
     body.style.overflow = "hidden";
     body.style.margin = "0";
@@ -408,7 +408,7 @@ export function FloatingNoteApp() {
     }
 
     return () => {
-      delete html.dataset.stickitFloatingCardWindow;
+      delete html.dataset.floatemFloatingCardWindow;
       html.style.overflow = "";
       body.style.overflow = "";
       body.style.margin = "";
@@ -422,7 +422,7 @@ export function FloatingNoteApp() {
   useEffect(() => {
     const handleGuideState = (event: Event) => {
       const guide = (event as CustomEvent<FloatingCardGuideState | null>).detail ?? null;
-      window.__STICKIT_FLOATING_CARD_GUIDE__ = guide;
+      window.__FLOATEM_FLOATING_CARD_GUIDE__ = guide;
       setFloatingGuide(guide);
     };
     window.addEventListener(FLOATING_CARD_GUIDE_EVENT, handleGuideState as EventListener);
@@ -576,16 +576,16 @@ export function FloatingNoteApp() {
     }
 
     const html = document.documentElement;
-    html.dataset.stickitFloatingDialogSide = dialogSide;
-    html.style.setProperty("--stickit-floating-card-width", `${cardSize.width}px`);
-    html.style.setProperty("--stickit-floating-dialog-width", `${FLOATING_DIALOG_VIEWPORT_SIZE.width}px`);
-    html.style.setProperty("--stickit-floating-dialog-gap", `${FLOATING_DIALOG_GAP_PX}px`);
+    html.dataset.floatemFloatingDialogSide = dialogSide;
+    html.style.setProperty("--floatem-floating-card-width", `${cardSize.width}px`);
+    html.style.setProperty("--floatem-floating-dialog-width", `${FLOATING_DIALOG_VIEWPORT_SIZE.width}px`);
+    html.style.setProperty("--floatem-floating-dialog-gap", `${FLOATING_DIALOG_GAP_PX}px`);
 
     return () => {
-      delete html.dataset.stickitFloatingDialogSide;
-      html.style.removeProperty("--stickit-floating-card-width");
-      html.style.removeProperty("--stickit-floating-dialog-width");
-      html.style.removeProperty("--stickit-floating-dialog-gap");
+      delete html.dataset.floatemFloatingDialogSide;
+      html.style.removeProperty("--floatem-floating-card-width");
+      html.style.removeProperty("--floatem-floating-dialog-width");
+      html.style.removeProperty("--floatem-floating-dialog-gap");
     };
   }, [cardSize.width, dialogSide]);
 
@@ -596,7 +596,7 @@ export function FloatingNoteApp() {
 
     const handleState = (event: Event) => {
       const detail = (event as CustomEvent<DragPreviewPayload | null>).detail;
-      setPayload(detail ?? window.__STICKIT_FLOATING_CARD_STATE__ ?? null);
+      setPayload(detail ?? window.__FLOATEM_FLOATING_CARD_STATE__ ?? null);
     };
 
     window.addEventListener(FLOATING_CARD_STATE_EVENT, handleState as EventListener);
@@ -679,7 +679,7 @@ export function FloatingNoteApp() {
         setIsHydrated(true);
       })
       .catch((error) => {
-        console.error("StickIt failed to load floating card data.", error);
+        console.error("Floatem failed to load floating card data.", error);
         if (isCancelled) {
           return;
         }
@@ -795,9 +795,9 @@ export function FloatingNoteApp() {
       const confirmedPinned = Boolean(result.pinned);
       confirmedDesktopPinRef.current = confirmedPinned;
       setIsDesktopPinned(confirmedPinned);
-      if (window.__STICKIT_FLOATING_CARD_STATE__) {
-        window.__STICKIT_FLOATING_CARD_STATE__ = {
-          ...window.__STICKIT_FLOATING_CARD_STATE__,
+      if (window.__FLOATEM_FLOATING_CARD_STATE__) {
+        window.__FLOATEM_FLOATING_CARD_STATE__ = {
+          ...window.__FLOATEM_FLOATING_CARD_STATE__,
           desktopPinned: confirmedPinned,
         };
       }
@@ -973,7 +973,7 @@ export function FloatingNoteApp() {
         {showDesktopBackgroundGuide && typeof document !== "undefined"
           ? createPortal(
               <div
-                className="stickit-modal-backdrop fixed inset-0 z-[120] flex items-center justify-center bg-[rgba(30,25,21,0.28)] p-5"
+                className="floatem-modal-backdrop fixed inset-0 z-[120] flex items-center justify-center bg-[rgba(30,25,21,0.28)] p-5"
                 role="presentation"
               >
                 <div

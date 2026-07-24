@@ -1,13 +1,13 @@
 using System.IO;
 using System.Text.Json;
 
-namespace StickIt.Windows;
+namespace Floatem.Windows;
 
 internal static class Branding
 {
-    public static string DisplayName { get; } = LoadValue("displayName", "StickIt");
-    public static string ProductName { get; } = LoadValue("productName", "StickIt");
-    public static string AppUserModelId { get; } = LoadValue("windowsAppUserModelId", "com.stickit.app");
+    public static string DisplayName { get; } = LoadValue("displayName", "Floatem");
+    public static string ProductName { get; } = LoadValue("productName", "Floatem");
+    public static string AppUserModelId { get; } = LoadValue("windowsAppUserModelId", "com.floatem.app");
 
     private static string LoadValue(string propertyName, string fallback)
     {

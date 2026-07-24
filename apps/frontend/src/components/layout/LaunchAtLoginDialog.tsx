@@ -2,7 +2,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import { useI18n } from "../../lib/i18n";
-import { isNativeStickItHost } from "../../lib/nativeBridge";
+import { isNativeFloatemHost } from "../../lib/nativeBridge";
 import { useSettingsStore } from "../../store/settingsStore";
 import { SparklesIcon } from "../icons/AppIcons";
 
@@ -14,7 +14,7 @@ export function LaunchAtLoginDialog() {
   const [suppress, setSuppress] = useState(false);
   const [dismissedThisRun, setDismissedThisRun] = useState(false);
   const isOpen =
-    isNativeStickItHost() &&
+    isNativeFloatemHost() &&
     isLoaded &&
     !launchAtLogin &&
     !suppressLaunchAtLoginPrompt &&
@@ -54,7 +54,7 @@ export function LaunchAtLoginDialog() {
       {isOpen ? (
         <motion.div
           data-no-window-drag="true"
-          className="stickit-modal-backdrop fixed inset-0 z-[110] flex items-center justify-center bg-[rgba(30,25,21,0.24)] px-4 py-5"
+          className="floatem-modal-backdrop fixed inset-0 z-[110] flex items-center justify-center bg-[rgba(30,25,21,0.24)] px-4 py-5"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}

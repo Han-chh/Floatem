@@ -290,8 +290,8 @@ export function ColorPickerPopover({
         closeColorPalette();
       }
     };
-    window.addEventListener("stickit:guide-close-color-picker", handleGuideClose);
-    return () => window.removeEventListener("stickit:guide-close-color-picker", handleGuideClose);
+    window.addEventListener("floatem:guide-close-color-picker", handleGuideClose);
+    return () => window.removeEventListener("floatem:guide-close-color-picker", handleGuideClose);
   }, [dataGuideId, isOpen, onClose]);
 
   useEffect(() => {
@@ -373,14 +373,14 @@ export function ColorPickerPopover({
   const applyColor = (color: string) => {
     onApplyColor(color);
     if (dataGuideId && typeof window !== "undefined") {
-      window.dispatchEvent(new CustomEvent("stickit:guide-color-selected", { detail: { id: dataGuideId } }));
+      window.dispatchEvent(new CustomEvent("floatem:guide-color-selected", { detail: { id: dataGuideId } }));
     }
   };
 
   const emitGuidePaletteStage = (stage: "expanded" | "advanced" | "save") => {
     if (dataGuideId && typeof window !== "undefined") {
       window.dispatchEvent(
-        new CustomEvent("stickit:guide-palette-stage", { detail: { id: dataGuideId, stage } }),
+        new CustomEvent("floatem:guide-palette-stage", { detail: { id: dataGuideId, stage } }),
       );
     }
   };

@@ -1,4 +1,5 @@
 import { AnimatePresence, motion } from "framer-motion";
+import { floatemBranding } from "@floatem/branding";
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { getLaunchAtLoginStatus, registerHotkey } from "../../hooks/usePlatform";
 import { captureShortcutFromKeyEvent, getShortcutDisplayLabel } from "../../lib/hotkeyCapture";
@@ -11,7 +12,7 @@ import {
   type ThemeId,
   type TimeFormat,
 } from "../../lib/models";
-import { getStickItBridge, isNativeStickItHost } from "../../lib/nativeBridge";
+import { getFloatemBridge, isNativeFloatemHost } from "../../lib/nativeBridge";
 import { formatTimeInTimeZone } from "../../lib/timeZoneDate";
 import { getSettingsMenuMotionConfig, type TransitionDirection } from "../../lib/transitionMotion";
 import { useSettingsStore } from "../../store/settingsStore";
@@ -474,7 +475,7 @@ export function SettingsPanel({ onClose }: SettingsPanelProps) {
         icon: <NotebookPenIcon size={18} />,
         title: t.settings.categoryAboutTitle,
         description: t.settings.categoryAboutDescription,
-        meta: `${t.settings.appVersionTitle} ${__STICKIT_VERSION__}`,
+        meta: `${t.settings.appVersionTitle} ${__FLOATEM_VERSION__}`,
       },
     ],
     [enableReminderSound, hotkey, language, t, theme, timeZone, transitionStyle],
@@ -589,7 +590,7 @@ export function SettingsPanel({ onClose }: SettingsPanelProps) {
       return;
     }
 
-    if (!isNativeStickItHost()) {
+    if (!isNativeFloatemHost()) {
       setNotificationFeedback({
         text: t.settings.reminderTestUnsupported,
         tone: "info",
@@ -601,7 +602,7 @@ export function SettingsPanel({ onClose }: SettingsPanelProps) {
     setNotificationFeedback(null);
 
     try {
-      await getStickItBridge().testReminderNotification({
+      await getFloatemBridge().testReminderNotification({
         soundEnabled: enableReminderSound,
         language,
       });
@@ -625,7 +626,7 @@ export function SettingsPanel({ onClose }: SettingsPanelProps) {
       return;
     }
 
-    if (!isNativeStickItHost()) {
+    if (!isNativeFloatemHost()) {
       setNotificationFeedback({
         text: t.settings.notificationOpenSettingsUnsupported,
         tone: "info",
@@ -636,7 +637,7 @@ export function SettingsPanel({ onClose }: SettingsPanelProps) {
     setIsOpeningNotificationSettings(true);
 
     try {
-      await getStickItBridge().openNotificationSettings();
+      await getFloatemBridge().openNotificationSettings();
     } catch (error) {
       const message = error instanceof Error ? error.message : t.settings.notificationOpenSettingsFailed;
       setNotificationFeedback({
@@ -653,7 +654,7 @@ export function SettingsPanel({ onClose }: SettingsPanelProps) {
       return;
     }
 
-    if (!isNativeStickItHost()) {
+    if (!isNativeFloatemHost()) {
       setSystemFeedback({
         text: t.settings.quitApplicationFailed,
         tone: "info",
@@ -664,7 +665,7 @@ export function SettingsPanel({ onClose }: SettingsPanelProps) {
     setIsQuittingApplication(true);
 
     try {
-      await getStickItBridge().quitApplication();
+      await getFloatemBridge().quitApplication();
     } catch (error) {
       const message = error instanceof Error ? error.message : t.settings.quitApplicationFailed;
       setSystemFeedback({
@@ -803,7 +804,7 @@ export function SettingsPanel({ onClose }: SettingsPanelProps) {
                 ) : null}
 
                 {activeCategory === "about" ? (
-                  <AboutStickItSettings />
+                  <AboutFloatemSettings />
                 ) : null}
               </div>
             </motion.div>
@@ -829,7 +830,7 @@ export function SettingsPanel({ onClose }: SettingsPanelProps) {
                     <span className="status-chip" data-tone="neutral">{t.app.localOnly}</span>
                   </div>
                   <h2 className="font-display text-[26px] font-semibold tracking-normal text-[var(--brown-strong)]">
-                    StickIt
+                    Floatem
                   </h2>
                   <p className="mt-2 max-w-[58ch] text-[13px] leading-6 text-[var(--muted)]">
                     {t.settings.appIntro}
@@ -899,7 +900,7 @@ export function SettingsPanel({ onClose }: SettingsPanelProps) {
         {hotkeyDialogOpen ? (
           <motion.div
             data-no-window-drag="true"
-            className="stickit-modal-backdrop absolute inset-0 z-40 flex items-center justify-center bg-[rgba(30,25,21,0.24)] px-5 py-8"
+            className="floatem-modal-backdrop absolute inset-0 z-40 flex items-center justify-center bg-[rgba(30,25,21,0.24)] px-5 py-8"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
@@ -1013,7 +1014,12 @@ const THEME_PREVIEWS: Record<ThemeId, { background: string; surface: string; acc
   orchid: { background: "#dfeadd", surface: "#fbfdf9", accent: "#73906b", text: "#1f2d20" },
   plum: { background: "#e9cbd2", surface: "#fff7f8", accent: "#a43f5c", text: "#421c26" },
   chrysanthemum: { background: "#eadca8", surface: "#fffaf0", accent: "#ad7f1d", text: "#352c16" },
-  afterglow: { background: "linear-gradient(135deg,#fff1dc 0%,#f1c9b4 48%,#d9b8cf 76%,#9fc4cf 100%)", surface: "rgba(255,250,243,0.9)", accent: "#e98770", text: "#403632" },
+  afterglow: {
+    background: "linear-gradient(135deg,#fff1dc 0%,#f1c9b4 48%,#d9b8cf 76%,#9fc4cf 100%)",
+    surface: "rgba(255,250,243,0.9)",
+    accent: "linear-gradient(135deg,#f0bd58 0%,#e8756c 38%,#9c74b5 69%,#73aab9 100%)",
+    text: "#403632",
+  },
 };
 
 function getThemeLabel(theme: ThemeId, t: ReturnType<typeof useI18n>["t"]) {
@@ -1071,13 +1077,11 @@ function ThemeChoice({
         ) : null}
         <span className="mb-5 flex items-center justify-between">
           <span className="h-2.5 w-12 rounded-full opacity-70" style={{ background: preview.text }} />
-          {theme === "afterglow" ? (
-            <span className="relative inline-flex h-5 w-5 items-center justify-center rounded-full border border-white/70" style={{ background: preview.accent }}>
-              <span className="h-1.5 w-2.5 rotate-[-45deg] border-b border-l border-white" />
-            </span>
-          ) : (
-            <span className="h-5 w-5 rounded-full" style={{ background: preview.accent }} />
-          )}
+          <span
+            data-testid={`theme-swatch-${theme}`}
+            className="h-5 w-5 rounded-full"
+            style={{ background: preview.accent }}
+          />
         </span>
         <span className="block text-[12px] font-semibold" style={{ color: preview.text }}>
           {getThemeLabel(theme, t)}
@@ -1290,15 +1294,15 @@ function TimeZoneSettings({
           </div>
 
           <div ref={timeZoneMenuRef} className="relative mt-3">
-            <p className="mb-1 block text-[11px] font-semibold text-[var(--muted)]" id="stickit-time-zone-label">
+            <p className="mb-1 block text-[11px] font-semibold text-[var(--muted)]" id="floatem-time-zone-label">
               {t.settings.timeZoneSelectLabel}
             </p>
             <button
               type="button"
-              id="stickit-time-zone"
+              id="floatem-time-zone"
               aria-expanded={isTimeZoneMenuOpen}
               aria-haspopup="listbox"
-              aria-labelledby="stickit-time-zone-label stickit-time-zone"
+              aria-labelledby="floatem-time-zone-label floatem-time-zone"
               data-no-window-drag="true"
               data-tooltip={t.settings.timeZoneSelectLabel}
               className="flex w-full items-center justify-between gap-3 rounded-[16px] border border-[rgba(213,198,180,0.88)] bg-white/92 px-3 py-2.5 text-left text-[12px] font-semibold text-[var(--brown-strong)] outline-none focus:border-[rgba(47,107,255,0.45)]"
@@ -1310,7 +1314,7 @@ function TimeZoneSettings({
             {isTimeZoneMenuOpen ? (
               <div
                 role="listbox"
-                aria-labelledby="stickit-time-zone-label"
+                aria-labelledby="floatem-time-zone-label"
                 className="absolute left-0 right-0 top-[calc(100%+6px)] z-50 max-h-64 overflow-y-auto rounded-[18px] border border-[rgba(213,198,180,0.92)] bg-white p-1.5 shadow-[0_18px_36px_rgba(30,25,21,0.14)]"
               >
                 {timeZoneOptions.map((option) => {
@@ -1369,7 +1373,7 @@ function ShortcutSettings({
   hotkey: string;
   defaultOpenSection: "last" | "notes" | "todos";
   lastActiveTab: "notes" | "todos";
-  hotkeyRegistrationState: import("@stickit/native-bridge").HotkeyRegistrationState | null;
+  hotkeyRegistrationState: import("@floatem/native-bridge").HotkeyRegistrationState | null;
   hotkeyFeedback: HotkeyFeedback | null;
   openHotkeyDialog: () => void;
   setDefaultOpenSection: (section: "last" | "notes" | "todos") => void;
@@ -1604,7 +1608,7 @@ function NotificationSettings({
   );
 }
 
-function AboutStickItSettings() {
+function AboutFloatemSettings() {
   const { t } = useI18n();
 
   return (
@@ -1616,13 +1620,13 @@ function AboutStickItSettings() {
             className="overflow-hidden rounded-[24px] border border-[rgba(213,198,180,0.9)] bg-[linear-gradient(145deg,rgba(255,255,255,0.92),rgba(255,246,236,0.84))] px-5 py-5 shadow-[0_14px_28px_rgba(61,49,34,0.08)]"
           >
             <p className="font-display text-[25px] font-semibold tracking-[-0.045em] text-[var(--brown-strong)]">
-              StickIt
+              {floatemBranding.displayName}
             </p>
             <p className="mt-1 text-[12px] font-semibold text-[#8f553d]">
-              Capture first. Organize later.
+              {floatemBranding.slogan}
             </p>
             <div className="mt-4 space-y-1 text-[11.5px] leading-5 text-[var(--muted)]">
-              <p>Version {__STICKIT_VERSION__} (Build {__STICKIT_BUILD__})</p>
+              <p>Version {__FLOATEM_VERSION__} (Build {__FLOATEM_BUILD__})</p>
             </div>
           </div>
           <SettingRow icon={<NotebookPenIcon size={15} />} title={t.settings.aboutNotesTitle} description={t.settings.aboutNotesBody} />

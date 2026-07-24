@@ -230,7 +230,7 @@ export function TooltipLayer() {
       {tooltipState ? (
         <motion.div
           ref={tooltipRef}
-          className="stickit-tooltip-bubble"
+          className="floatem-tooltip-bubble"
           initial={{ opacity: 0, y: tooltipState.placement === "bottom" ? -4 : 4 }}
           animate={{ opacity: position ? 1 : 0, x: 0, y: 0 }}
           exit={{ opacity: 0, y: tooltipState.placement === "bottom" ? -4 : 4 }}

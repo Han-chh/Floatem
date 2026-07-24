@@ -3,7 +3,7 @@ import { useEffect, useId, useMemo, useRef, useState, type Ref } from "react";
 import { createPortal } from "react-dom";
 import { useI18n } from "../../lib/i18n";
 import { getSystemTimeZone, type TimeFormat } from "../../lib/models";
-import { getStickItBridge } from "../../lib/nativeBridge";
+import { getFloatemBridge } from "../../lib/nativeBridge";
 import {
   buildReminderTimestamp,
   isFutureReminderTimestamp,
@@ -373,7 +373,7 @@ export function ReminderPicker({
     setIsOpen(false);
 
     try {
-      const checkPermission = getStickItBridge().checkNotificationPermission;
+      const checkPermission = getFloatemBridge().checkNotificationPermission;
       const permission = checkPermission ? await checkPermission({ language }) : { allowed: false };
       setShowPermissionWarning(!permission.allowed && !document.querySelector("[data-guide-dialog]"));
     } catch {
@@ -417,7 +417,7 @@ export function ReminderPicker({
               {isOpen ? (
                 <motion.div
                   data-no-window-drag="true"
-                  className="stickit-modal-backdrop fixed inset-0 z-[90] flex items-center justify-center bg-[rgba(30,25,21,0.24)] px-4 py-3"
+                  className="floatem-modal-backdrop fixed inset-0 z-[90] flex items-center justify-center bg-[rgba(30,25,21,0.24)] px-4 py-3"
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   exit={{ opacity: 0 }}
@@ -611,7 +611,7 @@ export function ReminderPicker({
             <AnimatePresence>
               {showPermissionWarning ? (
                 <motion.div
-                  className="stickit-modal-backdrop fixed inset-0 z-[100] flex items-center justify-center bg-[rgba(30,25,21,0.24)] px-4 py-3"
+                  className="floatem-modal-backdrop fixed inset-0 z-[100] flex items-center justify-center bg-[rgba(30,25,21,0.24)] px-4 py-3"
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   exit={{ opacity: 0 }}
@@ -645,7 +645,7 @@ export function ReminderPicker({
                         type="button"
                         className="paper-button rounded-[13px] px-3.5 py-2 text-[12px] font-semibold text-[var(--accent-cobalt)]"
                         onClick={() => {
-                          void getStickItBridge().openNotificationSettings();
+                          void getFloatemBridge().openNotificationSettings();
                           setShowPermissionWarning(false);
                         }}
                       >

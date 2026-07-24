@@ -1,6 +1,6 @@
 import { create } from "zustand";
 import { subscribeWithSelector } from "zustand/middleware";
-import type { HotkeyRegistrationState } from "@stickit/native-bridge";
+import type { HotkeyRegistrationState } from "@floatem/native-bridge";
 import {
   DEFAULT_SETTINGS,
   type AnimationSpeed,
@@ -38,6 +38,7 @@ type SettingsState = AppSettings & {
   setAnimationSpeed: (animationSpeed: AnimationSpeed) => void;
   setLaunchAtLogin: (launchAtLogin: boolean) => void;
   setSuppressLaunchAtLoginPrompt: (suppress: boolean) => void;
+  setHasSeenHelpEntryHint: (hasSeen: boolean) => void;
   setEnableParticles: (enableParticles: boolean) => void;
   setEnableReminderSound: (enableReminderSound: boolean) => void;
   reset: () => void;
@@ -66,11 +67,12 @@ export const useSettingsStore = create<SettingsState>()(
       });
     },
     restoreDefaults: () => {
-      set({
+      set((state) => ({
         ...createDefaultSettings(),
+        hasSeenHelpEntryHint: state.hasSeenHelpEntryHint,
         hotkeyRegistrationState: null,
         isLoaded: true,
-      });
+      }));
     },
     setHotkeyRegistrationState: (hotkeyRegistrationState) => {
       set({ hotkeyRegistrationState });
@@ -125,6 +127,9 @@ export const useSettingsStore = create<SettingsState>()(
     },
     setSuppressLaunchAtLoginPrompt: (suppressLaunchAtLoginPrompt) => {
       set({ suppressLaunchAtLoginPrompt });
+    },
+    setHasSeenHelpEntryHint: (hasSeenHelpEntryHint) => {
+      set({ hasSeenHelpEntryHint });
     },
     setEnableParticles: (enableParticles) => {
       set({ enableParticles });

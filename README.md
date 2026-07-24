@@ -1,19 +1,40 @@
-# StickIt
+# Floatem
 
-StickIt is a cross-platform desktop app with a shared React frontend and isolated native host layers.
+> Current release: **Floatem 1.0.8 (macOS build 46)**. The signed macOS archive and App Store Connect package have been generated successfully; build 46 has not yet been uploaded to App Store Connect/TestFlight. The Windows host remains a developer-preview target rather than part of the current Mac App Store release.
+
+Floatem is a lightweight, local-first desktop notes and todos app designed to capture and organize thoughts without interrupting the current workflow. The macOS app can be summoned with a global shortcut, float editable cards above other work, and pin app-owned cards at the desktop level.
+
+“Don't lose thoughts. Float'em.”
+
+## Product capabilities
+
+- Rich-text notes and dated todos with local groups, filters, colors, reminders, and reordering.
+- A global shortcut and menu-bar controls for summoning or hiding the app.
+- Editable floating Note/Todo cards on macOS, including resize, always-on-top behavior, and drag-back.
+- Desktop-pinned macOS cards restored from local state when Floatem is running; enabling **Open Floatem at login** restores them after login without opening the Main Window.
+- English and Simplified Chinese UI, six themes, motion controls, time-zone/time-format controls, and reminder sound settings.
+- Bilingual help plus a seven-workflow interactive guide. On a fresh v1.0.8 installation, Floatem highlights the upper-right help entry once and asks the user to open the guide.
+- Local persistence only. macOS data is stored in the Floatem App Group container; the app has no account or cloud-sync feature.
+
+## Repository status
+
+Floatem uses a shared React frontend with isolated native host layers:
 
 - `apps/frontend`: shared React/Vite UI.
 - `apps/mac-host`: AppKit/WKWebView host.
-- `apps/windows-host`: C# WPF/WebView2 host using Win32 APIs for global hotkeys and topmost behavior.
+- `apps/windows-host`: C# WPF/WebView2 developer-preview host using Win32 APIs for global hotkeys and topmost behavior.
 - `packages/native-bridge`: typed frontend/host bridge contract.
 - `packages/branding`: shared app identity metadata.
 
 ## Docs
 
+- [v1.0.8 release state and release notes](docs/releases/v1.0.8.md)
+- [v1.0.8 manual release checklist](docs/releases/v1.0.8-manual-test-checklist.md)
 - [Architecture](docs/architecture.md)
-- [Four-day macOS prelaunch plan](docs/four-day-prelaunch-plan.md)
+- [Historical macOS prelaunch plan and current completion status](docs/four-day-prelaunch-plan.md)
 - [macOS setup](docs/macos-setup.md)
 - [macOS desktop-card migration and regression guide](docs/macos-widget-migration.md)
+- [Platform support](docs/platform-support.md)
 - [Windows setup (host features)](docs/windows-setup.md)
 - [Windows dev environment](docs/windows-dev-setup.md)
 
@@ -51,4 +72,8 @@ pnpm windows:run
 - **Floating Editing Card**: AppKit `NSPanel` + lightweight Web UI for full Note/Todo editing, resize, IME, clipboard, formatting, and drag-back.
 - **Desktop-pinned Card**: an app-owned `DesktopCardPanel` placed near the desktop window level and restored from typed entity/placement state.
 
-Desktop-pinned cards require StickIt to remain running. Enabling **Open StickIt at login** lets the silent Login Item launch recreate them after a Mac restart without opening the Main Window.
+Desktop-pinned cards require Floatem to remain running. Enabling **Open Floatem at login** lets the silent Login Item launch recreate them after a Mac restart without opening the Main Window.
+
+## Release artifacts
+
+Build outputs under `build/` and Xcode archives under `~/Library/Developer/Xcode/Archives/` are intentionally not tracked by Git. A fresh clone or a moved working directory must regenerate them; see [macOS setup](docs/macos-setup.md).

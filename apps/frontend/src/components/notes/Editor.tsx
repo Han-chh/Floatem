@@ -6,7 +6,7 @@ import type { RenderElementProps, RenderLeafProps } from "slate-react";
 import { useEffect, useRef, useState } from "react";
 import { isPrimaryShortcut } from "../../lib/isPrimaryShortcut";
 import { useI18n } from "../../lib/i18n";
-import { isNativeStickItHost } from "../../lib/nativeBridge";
+import { isNativeFloatemHost } from "../../lib/nativeBridge";
 import { readPlainTextFromClipboard, writePlainTextToClipboard } from "../../lib/plainTextClipboard";
 import { cloneNoteContent } from "../../lib/models";
 import { withColorMark } from "../../lib/slate-plugins/withColorMark";
@@ -337,7 +337,7 @@ export function Editor({ content, onChange, instantToolbar = false, attachedTool
             }
 
             event.preventDefault();
-            if (isNativeStickItHost()) {
+            if (isNativeFloatemHost()) {
               void handleCopy("selection-or-all");
               return;
             }
@@ -353,7 +353,7 @@ export function Editor({ content, onChange, instantToolbar = false, attachedTool
               return;
             }
 
-            if (isNativeStickItHost()) {
+            if (isNativeFloatemHost()) {
               void handlePaste();
             }
           }}

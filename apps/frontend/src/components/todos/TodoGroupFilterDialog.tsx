@@ -5,7 +5,7 @@ import { useI18n } from "../../lib/i18n";
 import { useTodosStore } from "../../store/todosStore";
 import { GroupFilterIcon, XIcon } from "../icons/AppIcons";
 
-export const TODO_FILTER_UNGROUPED_KEY = "@@stickit/todo-no-group";
+export const TODO_FILTER_UNGROUPED_KEY = "@@floatem/todo-no-group";
 
 type TodoGroupFilterDialogProps = {
   isOpen: boolean;
@@ -133,7 +133,7 @@ export function TodoGroupFilterDialog({
     <AnimatePresence>
       {isOpen ? (
         <motion.div
-          className="stickit-modal-backdrop fixed inset-0 z-[90] flex items-start justify-center overflow-y-auto bg-[rgba(30,25,21,0.16)] px-4 py-4"
+          className="floatem-modal-backdrop fixed inset-0 z-[90] flex items-start justify-center overflow-y-auto bg-[rgba(30,25,21,0.16)] px-4 py-4"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}

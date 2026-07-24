@@ -69,7 +69,7 @@ function buildEnglishHelpContent(context: HelpContentContext): HelpDialogContent
             id: "overview-panel",
             eyebrow: "Start here",
             title: "Panel flow and current setup",
-            summary: "StickIt is a lightweight floating space for notes and date-based todos.",
+            summary: "Floatem is a lightweight floating space for notes and date-based todos.",
             highlights: [context.hotkey, context.defaultSectionLabel, context.timeZoneLabel],
             groups: [
               {
@@ -176,7 +176,7 @@ function buildEnglishHelpContent(context: HelpContentContext): HelpDialogContent
           {
             id: "settings-workflow",
             eyebrow: "Settings",
-            title: "Adjust how StickIt opens and feels",
+            title: "Adjust how Floatem opens and feels",
             summary: "Settings keep behavior, localization, and motion controls in one place.",
             highlights: [context.motionLabel, context.reminderSoundLabel],
             groups: [
@@ -184,8 +184,8 @@ function buildEnglishHelpContent(context: HelpContentContext): HelpDialogContent
                 id: "settings-general",
                 title: "General",
                 items: [
-                  "On macOS, choose whether StickIt launches automatically when you sign in.",
-                  "Choose whether StickIt opens to the last section, Notes, or Todos.",
+                  "On macOS, choose whether Floatem launches automatically when you sign in.",
+                  "Choose whether Floatem opens to the last section, Notes, or Todos.",
                   "Switch language, timezone, and time format independently from the system.",
                   "Choose Classic, Afterglow, Plum, Orchid, Forest, or Chrysanthemum; note and todo cards keep their classic initial color until grouped.",
                 ],
@@ -213,7 +213,7 @@ function buildEnglishHelpContent(context: HelpContentContext): HelpDialogContent
             id: "shortcuts-core",
             eyebrow: "Shortcuts",
             title: "Key shortcuts",
-            summary: "StickIt keeps its keyboard actions compact and predictable.",
+            summary: "Floatem keeps its keyboard actions compact and predictable.",
             highlights: ["Cmd/Ctrl+B", "Cmd/Ctrl+Z", "Enter", "Escape"],
             groups: [
               {
@@ -310,10 +310,10 @@ function buildEnglishFloatingCardsSection(context: HelpContentContext): HelpSect
               title: "Move, dock, and close",
               items: [
                 "Drag a floating card by its non-editing surface to move it around the screen.",
-                "Drag it back onto the StickIt panel; the panel highlights as a dock zone, then release inside to dock it.",
+                "Drag it back onto the Floatem panel; the panel highlights as a dock zone, then release inside to dock it.",
                 "Click the close control on the floating card to dock it back into the main panel without deleting it.",
                 "Use the diagonal pin control to keep a card on the desktop; pinned cards and their custom sizes are restored after relaunch.",
-                "Desktop-pinned cards are StickIt windows, so StickIt must keep running in the background. Enable Open StickIt at login to restore them after restarting your Mac.",
+                "Desktop-pinned cards are Floatem windows, so Floatem must keep running in the background. Enable Open Floatem at login to restore them after restarting your Mac.",
                 "Resize horizontally, vertically, or diagonally from the expanded lower-right drag area; card text and controls adapt to the new size.",
               ],
             },
@@ -370,7 +370,7 @@ function buildChineseHelpContent(context: HelpContentContext): HelpDialogContent
             id: "overview-panel",
             eyebrow: "先看这里",
             title: "面板流转与当前配置",
-            summary: "StickIt 是一个用于快速记录便签和日期待办的悬浮工作区。",
+            summary: "Floatem 是一个用于快速记录便签和日期待办的悬浮工作区。",
             highlights: [context.hotkey, context.defaultSectionLabel, context.timeZoneLabel],
             groups: [
               {
@@ -475,7 +475,7 @@ function buildChineseHelpContent(context: HelpContentContext): HelpDialogContent
           {
             id: "settings-workflow",
             eyebrow: "设置选项",
-            title: "调整 StickIt 的打开方式与体验",
+            title: "调整 Floatem 的打开方式与体验",
             summary: "设置集中管理行为、语言与动效控制。",
             highlights: [context.motionLabel, context.reminderSoundLabel],
             groups: [
@@ -483,7 +483,7 @@ function buildChineseHelpContent(context: HelpContentContext): HelpDialogContent
                 id: "settings-general",
                 title: "基础设置",
                 items: [
-                  "macOS 可设置登录系统时自动启动 StickIt。",
+                  "macOS 可设置登录系统时自动启动 Floatem。",
                   "可以设置打开时进入上次分区、Notes 或 Todos。",
                   "可以独立切换语言、时区和时间格式。",
                   "主题可选择经典、浮光、梅、兰、竹、菊；未分组的 note 与 todo 初始卡片色保持经典色。",
@@ -512,7 +512,7 @@ function buildChineseHelpContent(context: HelpContentContext): HelpDialogContent
             id: "shortcuts-core",
             eyebrow: "快捷键",
             title: "关键快捷键",
-            summary: "StickIt 的快捷键尽量保持少而稳定。",
+            summary: "Floatem 的快捷键尽量保持少而稳定。",
             highlights: ["Cmd/Ctrl+B", "Cmd/Ctrl+Z", "Enter", "Escape"],
             groups: [
               {
@@ -609,10 +609,10 @@ function buildChineseFloatingCardsSection(context: HelpContentContext): HelpSect
               title: "移动、收回与关闭",
               items: [
                 "按住悬浮卡片的非编辑区域可以在屏幕上移动卡片。",
-                "把悬浮卡片拖回 StickIt 主面板时，面板会显示收纳区域；在面板内松开即可收回。",
+                "把悬浮卡片拖回 Floatem 主面板时，面板会显示收纳区域；在面板内松开即可收回。",
                 "点击悬浮卡片上的关闭按钮会把卡片收回主面板，不会删除对应 note 或 todo。",
                 "点击斜向图钉可把卡片固定在桌面；重新启动应用后会恢复固定卡片及其自定义尺寸。",
-                "桌面置顶卡片是 StickIt 创建的窗口，必须让 StickIt 在后台保持运行；开启“登录时打开 StickIt”后，重新启动 Mac 会自动恢复这些卡片。",
+                "桌面置顶卡片是 Floatem 创建的窗口，必须让 Floatem 在后台保持运行；开启“登录时打开 Floatem”后，重新启动 Mac 会自动恢复这些卡片。",
                 "通过右下角扩大的拖动区域横向、纵向或斜向调整尺寸，文字、按钮和组件会随新尺寸自适应。",
               ],
             },

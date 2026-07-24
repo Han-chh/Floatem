@@ -4,7 +4,7 @@ using System.Security.Principal;
 using Microsoft.Windows.AppNotifications;
 using Microsoft.Windows.AppNotifications.Builder;
 
-namespace StickIt.Windows;
+namespace Floatem.Windows;
 
 internal sealed class NotificationScheduler : IDisposable
 {
@@ -62,11 +62,11 @@ internal sealed class NotificationScheduler : IDisposable
         var setting = manager.Setting;
         if (setting != AppNotificationSetting.Enabled)
         {
-            throw new InvalidOperationException($"Windows app notifications are not enabled for StickIt ({setting}).");
+            throw new InvalidOperationException($"Windows app notifications are not enabled for Floatem ({setting}).");
         }
 
         var builder = new AppNotificationBuilder()
-            .AddArgument("source", "stickit")
+            .AddArgument("source", "floatem")
             .AddText(title);
 
         if (!string.IsNullOrWhiteSpace(body))
@@ -119,13 +119,13 @@ internal sealed class NotificationScheduler : IDisposable
         if (registrationError is not null)
         {
             throw new InvalidOperationException(
-                $"StickIt could not register Windows app notifications: {registrationError.Message}",
+                $"Floatem could not register Windows app notifications: {registrationError.Message}",
                 registrationError);
         }
 
         if (registrationAttempted)
         {
-            throw new InvalidOperationException("StickIt could not register Windows app notifications.");
+            throw new InvalidOperationException("Floatem could not register Windows app notifications.");
         }
 
         registrationAttempted = true;
@@ -154,7 +154,7 @@ internal sealed class NotificationScheduler : IDisposable
             registrationError = error;
 
             throw new InvalidOperationException(
-                $"StickIt could not register Windows app notifications: {error.Message}",
+                $"Floatem could not register Windows app notifications: {error.Message}",
                 error);
         }
     }
@@ -191,8 +191,8 @@ internal sealed class NotificationScheduler : IDisposable
                 {
                     if (completion is not null)
                     {
-                        var tag = $"stickit.test.{Guid.NewGuid():N}";
-                        ShowAndConfirmAsync(title, body, soundEnabled, tag, "stickit.test").GetAwaiter().GetResult();
+                        var tag = $"floatem.test.{Guid.NewGuid():N}";
+                        ShowAndConfirmAsync(title, body, soundEnabled, tag, "floatem.test").GetAwaiter().GetResult();
                     }
                     else
                     {
@@ -202,7 +202,7 @@ internal sealed class NotificationScheduler : IDisposable
                 }
                 catch (Exception error)
                 {
-                    Debug.WriteLine($"StickIt failed to show scheduled notification '{id}': {error.Message}");
+                    Debug.WriteLine($"Floatem failed to show scheduled notification '{id}': {error.Message}");
                     completion?.TrySetException(error);
                 }
             },
@@ -244,7 +244,7 @@ internal sealed class NotificationScheduler : IDisposable
             }
 
             var fireDate = DateTimeOffset.FromUnixTimeMilliseconds(reminderAt.Value);
-            Schedule($"stickit.todo.reminder.{id}", "Todo reminder", text, fireDate, soundEnabled);
+            Schedule($"floatem.todo.reminder.{id}", "Todo reminder", text, fireDate, soundEnabled);
         }
     }
 
@@ -327,7 +327,7 @@ internal sealed class NotificationScheduler : IDisposable
         }
 
         throw new InvalidOperationException(
-            "Windows accepted the StickIt notification request, but the notification did not appear in Notification Center. Check Windows notification settings, Focus Assist/Do Not Disturb, and whether banner notifications are disabled for StickIt.");
+            "Windows accepted the Floatem notification request, but the notification did not appear in Notification Center. Check Windows notification settings, Focus Assist/Do Not Disturb, and whether banner notifications are disabled for Floatem.");
     }
 
     private static long? ReadNullableLong(JsonNode? node)

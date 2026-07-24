@@ -25,11 +25,11 @@
 		A00000000000000000000216 /* LaunchAtLoginManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = A00000000000000000000120 /* LaunchAtLoginManager.swift */; };
 		A00000000000000000000217 /* SharedModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = A00000000000000000000121 /* SharedModels.swift */; };
 		A00000000000000000000218 /* SharedDataStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = A00000000000000000000122 /* SharedDataStore.swift */; };
-		A00000000000000000000219 /* StickItDeepLink.swift in Sources */ = {isa = PBXBuildFile; fileRef = A00000000000000000000124 /* StickItDeepLink.swift */; };
+		A00000000000000000000219 /* FloatemDeepLink.swift in Sources */ = {isa = PBXBuildFile; fileRef = A00000000000000000000124 /* FloatemDeepLink.swift */; };
 		A00000000000000000000228 /* FloatingWebViewFactory.swift in Sources */ = {isa = PBXBuildFile; fileRef = A00000000000000000000133 /* FloatingWebViewFactory.swift */; };
 		A00000000000000000000229 /* LaunchContextResolver.swift in Sources */ = {isa = PBXBuildFile; fileRef = A00000000000000000000134 /* LaunchContextResolver.swift */; };
 		A00000000000000000000230 /* ScreenPlacementResolver.swift in Sources */ = {isa = PBXBuildFile; fileRef = A00000000000000000000135 /* ScreenPlacementResolver.swift */; };
-		A00000000000000000000231 /* StickItCoreTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A00000000000000000000136 /* StickItCoreTests.swift */; };
+		A00000000000000000000231 /* FloatemCoreTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A00000000000000000000136 /* FloatemCoreTests.swift */; };
 		A00000000000000000000232 /* XCTest.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A00000000000000000000138 /* XCTest.framework */; };
 /* End PBXBuildFile section */
 
@@ -39,7 +39,7 @@
 			containerPortal = A00000000000000000000001 /* Project object */;
 			proxyType = 1;
 			remoteGlobalIDString = A00000000000000000000010;
-			remoteInfo = StickIt;
+			remoteInfo = Floatem;
 		};
 /* End PBXContainerItemProxy section */
 
@@ -58,7 +58,7 @@
 		A00000000000000000000112 /* AppKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AppKit.framework; path = System/Library/Frameworks/AppKit.framework; sourceTree = SDKROOT; };
 		A00000000000000000000113 /* WebKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = WebKit.framework; path = System/Library/Frameworks/WebKit.framework; sourceTree = SDKROOT; };
 		A00000000000000000000114 /* Carbon.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Carbon.framework; path = System/Library/Frameworks/Carbon.framework; sourceTree = SDKROOT; };
-		A00000000000000000000115 /* StickIt.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = StickIt.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		A00000000000000000000115 /* Floatem.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Floatem.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		A00000000000000000000116 /* main.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = main.swift; sourceTree = "<group>"; };
 		A00000000000000000000117 /* NotificationManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationManager.swift; sourceTree = "<group>"; };
 		A00000000000000000000118 /* DragPreviewWindowController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DragPreviewWindowController.swift; sourceTree = "<group>"; };
@@ -66,13 +66,13 @@
 		A00000000000000000000120 /* LaunchAtLoginManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LaunchAtLoginManager.swift; sourceTree = "<group>"; };
 		A00000000000000000000121 /* SharedModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SharedModels.swift; sourceTree = "<group>"; };
 		A00000000000000000000122 /* SharedDataStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SharedDataStore.swift; sourceTree = "<group>"; };
-		A00000000000000000000123 /* StickIt.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = StickIt.entitlements; sourceTree = "<group>"; };
-		A00000000000000000000124 /* StickItDeepLink.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StickItDeepLink.swift; sourceTree = "<group>"; };
+		A00000000000000000000123 /* Floatem.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = Floatem.entitlements; sourceTree = "<group>"; };
+		A00000000000000000000124 /* FloatemDeepLink.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FloatemDeepLink.swift; sourceTree = "<group>"; };
 		A00000000000000000000133 /* FloatingWebViewFactory.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FloatingWebViewFactory.swift; sourceTree = "<group>"; };
 		A00000000000000000000134 /* LaunchContextResolver.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LaunchContextResolver.swift; sourceTree = "<group>"; };
 		A00000000000000000000135 /* ScreenPlacementResolver.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScreenPlacementResolver.swift; sourceTree = "<group>"; };
-		A00000000000000000000136 /* StickItCoreTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StickItCoreTests.swift; sourceTree = "<group>"; };
-		A00000000000000000000137 /* StickItTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = StickItTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		A00000000000000000000136 /* FloatemCoreTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FloatemCoreTests.swift; sourceTree = "<group>"; };
+		A00000000000000000000137 /* FloatemTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = FloatemTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		A00000000000000000000138 /* XCTest.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = XCTest.framework; path = Developer/Library/Frameworks/XCTest.framework; sourceTree = DEVELOPER_DIR; };
 /* End PBXFileReference section */
 
@@ -101,8 +101,8 @@
 		A00000000000000000000002 = {
 			isa = PBXGroup;
 			children = (
-				A00000000000000000000005 /* StickItMacOS */,
-				A00000000000000000000009 /* StickItTests */,
+				A00000000000000000000005 /* FloatemMacOS */,
+				A00000000000000000000009 /* FloatemTests */,
 				A00000000000000000000006 /* scripts */,
 				A00000000000000000000004 /* Frameworks */,
 				A00000000000000000000003 /* Products */,
@@ -112,8 +112,8 @@
 		A00000000000000000000003 /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				A00000000000000000000115 /* StickIt.app */,
-				A00000000000000000000137 /* StickItTests.xctest */,
+				A00000000000000000000115 /* Floatem.app */,
+				A00000000000000000000137 /* FloatemTests.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -129,7 +129,7 @@
 			name = Frameworks;
 			sourceTree = "<group>";
 		};
-		A00000000000000000000005 /* StickItMacOS */ = {
+		A00000000000000000000005 /* FloatemMacOS */ = {
 			isa = PBXGroup;
 			children = (
 				A00000000000000000000101 /* AppDelegate.swift */,
@@ -144,17 +144,17 @@
 				A00000000000000000000120 /* LaunchAtLoginManager.swift */,
 				A00000000000000000000121 /* SharedModels.swift */,
 				A00000000000000000000122 /* SharedDataStore.swift */,
-				A00000000000000000000124 /* StickItDeepLink.swift */,
+				A00000000000000000000124 /* FloatemDeepLink.swift */,
 				A00000000000000000000133 /* FloatingWebViewFactory.swift */,
 				A00000000000000000000134 /* LaunchContextResolver.swift */,
 				A00000000000000000000135 /* ScreenPlacementResolver.swift */,
 				A00000000000000000000107 /* WebViewController.swift */,
 				A00000000000000000000116 /* main.swift */,
 				A00000000000000000000108 /* Info.plist */,
-				A00000000000000000000123 /* StickIt.entitlements */,
+				A00000000000000000000123 /* Floatem.entitlements */,
 				A00000000000000000000007 /* Resources */,
 			);
-			path = StickItMacOS;
+			path = FloatemMacOS;
 			sourceTree = "<group>";
 		};
 		A00000000000000000000006 /* scripts */ = {
@@ -174,20 +174,20 @@
 			path = Resources;
 			sourceTree = "<group>";
 		};
-		A00000000000000000000009 /* StickItTests */ = {
+		A00000000000000000000009 /* FloatemTests */ = {
 			isa = PBXGroup;
 			children = (
-				A00000000000000000000136 /* StickItCoreTests.swift */,
+				A00000000000000000000136 /* FloatemCoreTests.swift */,
 			);
-			path = StickItTests;
+			path = FloatemTests;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
-		A00000000000000000000010 /* StickIt */ = {
+		A00000000000000000000010 /* Floatem */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = A00000000000000000000012 /* Build configuration list for PBXNativeTarget "StickIt" */;
+			buildConfigurationList = A00000000000000000000012 /* Build configuration list for PBXNativeTarget "Floatem" */;
 			buildPhases = (
 				A00000000000000000000013 /* Sources */,
 				A00000000000000000000014 /* Frameworks */,
@@ -198,14 +198,14 @@
 			);
 			dependencies = (
 			);
-			name = StickIt;
-			productName = StickIt;
-			productReference = A00000000000000000000115 /* StickIt.app */;
+			name = Floatem;
+			productName = Floatem;
+			productReference = A00000000000000000000115 /* Floatem.app */;
 			productType = "com.apple.product-type.application";
 		};
-		A00000000000000000000025 /* StickItTests */ = {
+		A00000000000000000000025 /* FloatemTests */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = A00000000000000000000026 /* Build configuration list for PBXNativeTarget "StickItTests" */;
+			buildConfigurationList = A00000000000000000000026 /* Build configuration list for PBXNativeTarget "FloatemTests" */;
 			buildPhases = (
 				A00000000000000000000022 /* Sources */,
 				A00000000000000000000023 /* Frameworks */,
@@ -216,9 +216,9 @@
 			dependencies = (
 				A00000000000000000000033 /* PBXTargetDependency */,
 			);
-			name = StickItTests;
-			productName = StickItTests;
-			productReference = A00000000000000000000137 /* StickItTests.xctest */;
+			name = FloatemTests;
+			productName = FloatemTests;
+			productReference = A00000000000000000000137 /* FloatemTests.xctest */;
 			productType = "com.apple.product-type.bundle.unit-test";
 		};
 /* End PBXNativeTarget section */
@@ -248,7 +248,7 @@
 					};
 				};
 			};
-			buildConfigurationList = A00000000000000000000011 /* Build configuration list for PBXProject "StickIt" */;
+			buildConfigurationList = A00000000000000000000011 /* Build configuration list for PBXProject "Floatem" */;
 			compatibilityVersion = "Xcode 15.0";
 			developmentRegion = en;
 			hasScannedForEncodings = 0;
@@ -261,8 +261,8 @@
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
-				A00000000000000000000010 /* StickIt */,
-				A00000000000000000000025 /* StickItTests */,
+				A00000000000000000000010 /* Floatem */,
+				A00000000000000000000025 /* FloatemTests */,
 			);
 		};
 /* End PBXProject section */
@@ -320,7 +320,7 @@
 				A00000000000000000000216 /* LaunchAtLoginManager.swift in Sources */,
 				A00000000000000000000217 /* SharedModels.swift in Sources */,
 				A00000000000000000000218 /* SharedDataStore.swift in Sources */,
-				A00000000000000000000219 /* StickItDeepLink.swift in Sources */,
+				A00000000000000000000219 /* FloatemDeepLink.swift in Sources */,
 				A00000000000000000000228 /* FloatingWebViewFactory.swift in Sources */,
 				A00000000000000000000229 /* LaunchContextResolver.swift in Sources */,
 				A00000000000000000000230 /* ScreenPlacementResolver.swift in Sources */,
@@ -333,7 +333,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				A00000000000000000000231 /* StickItCoreTests.swift in Sources */,
+				A00000000000000000000231 /* FloatemCoreTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -342,7 +342,7 @@
 /* Begin PBXTargetDependency section */
 		A00000000000000000000033 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
-			target = A00000000000000000000010 /* StickIt */;
+			target = A00000000000000000000010 /* Floatem */;
 			targetProxy = A00000000000000000000034 /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
@@ -380,26 +380,26 @@
 			buildSettings = {
 				CODE_SIGNING_ALLOWED = YES;
 				CODE_SIGNING_REQUIRED = YES;
-				CODE_SIGN_ENTITLEMENTS = StickItMacOS/StickIt.entitlements;
+				CODE_SIGN_ENTITLEMENTS = FloatemMacOS/Floatem.entitlements;
 				CODE_SIGN_IDENTITY = "Apple Development";
 				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 45;
+				CURRENT_PROJECT_VERSION = 46;
 				DEVELOPMENT_TEAM = 85923Q9JUG;
 				ENABLE_DEBUG_DYLIB = NO;
 				ENABLE_HARDENED_RUNTIME = YES;
 				ENABLE_TESTABILITY = YES;
 				GENERATE_INFOPLIST_FILE = NO;
-				INFOPLIST_FILE = StickItMacOS/Info.plist;
+				INFOPLIST_FILE = FloatemMacOS/Info.plist;
 				INFOPLIST_KEY_NSHumanReadableCopyright = "© 2026 Hank Chen. All rights reserved.";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 14.0;
-				MARKETING_VERSION = 1.0.7;
-				PRODUCT_BUNDLE_IDENTIFIER = com.hankch.stickit;
-				PRODUCT_NAME = StickIt;
+				MARKETING_VERSION = 1.0.8;
+				PRODUCT_BUNDLE_IDENTIFIER = com.hankch.floatem;
+				PRODUCT_NAME = Floatem;
 				PROVISIONING_PROFILE_SPECIFIER = "";
 				REGISTER_APP_GROUPS = YES;
 				SDKROOT = macosx;
@@ -412,24 +412,24 @@
 			buildSettings = {
 				CODE_SIGNING_ALLOWED = YES;
 				CODE_SIGNING_REQUIRED = YES;
-				CODE_SIGN_ENTITLEMENTS = StickItMacOS/StickIt.entitlements;
+				CODE_SIGN_ENTITLEMENTS = FloatemMacOS/Floatem.entitlements;
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 45;
+				CURRENT_PROJECT_VERSION = 46;
 				DEVELOPMENT_TEAM = 85923Q9JUG;
 				ENABLE_DEBUG_DYLIB = NO;
 				ENABLE_HARDENED_RUNTIME = YES;
 				GENERATE_INFOPLIST_FILE = NO;
-				INFOPLIST_FILE = StickItMacOS/Info.plist;
+				INFOPLIST_FILE = FloatemMacOS/Info.plist;
 				INFOPLIST_KEY_NSHumanReadableCopyright = "© 2026 Hank Chen. All rights reserved.";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 14.0;
-				MARKETING_VERSION = 1.0.7;
-				PRODUCT_BUNDLE_IDENTIFIER = com.hankch.stickit;
-				PRODUCT_NAME = StickIt;
+				MARKETING_VERSION = 1.0.8;
+				PRODUCT_BUNDLE_IDENTIFIER = com.hankch.floatem;
+				PRODUCT_NAME = Floatem;
 				PROVISIONING_PROFILE_SPECIFIER = "";
 				REGISTER_APP_GROUPS = YES;
 				SDKROOT = macosx;
@@ -446,10 +446,10 @@
 				DEVELOPMENT_TEAM = 85923Q9JUG;
 				GENERATE_INFOPLIST_FILE = YES;
 				MACOSX_DEPLOYMENT_TARGET = 14.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.hankch.stickit.tests;
+				PRODUCT_BUNDLE_IDENTIFIER = com.hankch.floatem.tests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_VERSION = 5.0;
-				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/StickIt.app/Contents/MacOS/StickIt";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Floatem.app/Contents/MacOS/Floatem";
 			};
 			name = Debug;
 		};
@@ -462,17 +462,17 @@
 				DEVELOPMENT_TEAM = 85923Q9JUG;
 				GENERATE_INFOPLIST_FILE = YES;
 				MACOSX_DEPLOYMENT_TARGET = 14.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.hankch.stickit.tests;
+				PRODUCT_BUNDLE_IDENTIFIER = com.hankch.floatem.tests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_VERSION = 5.0;
-				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/StickIt.app/Contents/MacOS/StickIt";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Floatem.app/Contents/MacOS/Floatem";
 			};
 			name = Release;
 		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		A00000000000000000000011 /* Build configuration list for PBXProject "StickIt" */ = {
+		A00000000000000000000011 /* Build configuration list for PBXProject "Floatem" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				A00000000000000000000301 /* Debug */,
@@ -481,7 +481,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		A00000000000000000000012 /* Build configuration list for PBXNativeTarget "StickIt" */ = {
+		A00000000000000000000012 /* Build configuration list for PBXNativeTarget "Floatem" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				A00000000000000000000303 /* Debug */,
@@ -490,7 +490,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Debug;
 		};
-		A00000000000000000000026 /* Build configuration list for PBXNativeTarget "StickItTests" */ = {
+		A00000000000000000000026 /* Build configuration list for PBXNativeTarget "FloatemTests" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				A00000000000000000000307 /* Debug */,

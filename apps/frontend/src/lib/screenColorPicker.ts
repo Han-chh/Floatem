@@ -1,5 +1,5 @@
-import type { ScreenColorPickResult } from "@stickit/native-bridge";
-import { getStickItBridge, isNativeStickItHost, type StickItNativeBridge } from "./nativeBridge";
+import type { ScreenColorPickResult } from "@floatem/native-bridge";
+import { getFloatemBridge, isNativeFloatemHost, type FloatemNativeBridge } from "./nativeBridge";
 
 type BrowserScreenColorPicker = {
   open: () => Promise<ScreenColorPickResult>;
@@ -16,11 +16,11 @@ declare global {
 }
 
 function getNativeScreenColorPicker() {
-  if (!isNativeStickItHost()) {
+  if (!isNativeFloatemHost()) {
     return null;
   }
 
-  const bridge = getStickItBridge() as Partial<StickItNativeBridge>;
+  const bridge = getFloatemBridge() as Partial<FloatemNativeBridge>;
   return typeof bridge.pickScreenColor === "function" ? bridge.pickScreenColor.bind(bridge) : null;
 }
 

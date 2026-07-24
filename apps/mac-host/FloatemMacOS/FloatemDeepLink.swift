@@ -1,6 +1,6 @@
 import Foundation
 
-struct StickItDeepLink: Equatable, Sendable {
+struct FloatemDeepLink: Equatable, Sendable {
     enum Destination: Equatable, Sendable {
         case mainWindow
         case floatingCard(WidgetEntityReference)
@@ -10,7 +10,7 @@ struct StickItDeepLink: Equatable, Sendable {
 
     init?(url: URL) {
         guard
-            url.scheme?.lowercased() == "stickit",
+            url.scheme?.lowercased() == "floatem",
             url.host?.lowercased() == "open",
             let components = URLComponents(url: url, resolvingAgainstBaseURL: false)
         else { return nil }
@@ -28,7 +28,7 @@ struct StickItDeepLink: Equatable, Sendable {
         guard
             values["mode"] == nil || values["mode"] == "floating",
             let kindValue = values["kind"],
-            let kind = StickItEntityKind(rawValue: kindValue),
+            let kind = FloatemEntityKind(rawValue: kindValue),
             let id = values["id"]?.trimmingCharacters(in: .whitespacesAndNewlines),
             !id.isEmpty,
             id.count <= 256,
@@ -40,7 +40,7 @@ struct StickItDeepLink: Equatable, Sendable {
 
     static func url(for reference: WidgetEntityReference) -> URL? {
         var components = URLComponents()
-        components.scheme = "stickit"
+        components.scheme = "floatem"
         components.host = "open"
         components.queryItems = [
             URLQueryItem(name: "kind", value: reference.entityKind.rawValue),

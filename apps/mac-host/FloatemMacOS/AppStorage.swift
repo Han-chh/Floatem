@@ -7,20 +7,17 @@ final class AppStorage {
     private let appSupportDirectory: URL
     private let legacyAppSupportDirectory: URL
     private let sharedStore: SharedDataStore
-    private let logger = Logger(subsystem: "com.hankch.stickit", category: "Storage")
+    private let logger = Logger(subsystem: "com.hankch.floatem", category: "Storage")
 
-    init(bundleIdentifier: String = Bundle.main.bundleIdentifier ?? "com.hankch.stickit") {
+    init(bundleIdentifier: String = Bundle.main.bundleIdentifier ?? "com.hankch.floatem") {
         let baseDirectory = fileManager.urls(for: .applicationSupportDirectory, in: .userDomainMask).first!
         legacyAppSupportDirectory = baseDirectory.appendingPathComponent(bundleIdentifier, isDirectory: true)
-        let preferredDirectory = StickItSharedContainer.sharedDataURL(fileManager: fileManager)
+        let preferredDirectory = FloatemSharedContainer.sharedDataURL(fileManager: fileManager)
             ?? legacyAppSupportDirectory
         appSupportDirectory = preferredDirectory
         sharedStore = SharedDataStore(directoryURL: preferredDirectory, fileManager: fileManager)
 
-        let previousAppSupportDirectory = baseDirectory.appendingPathComponent("com.stickit.app", isDirectory: true)
-        let previousSharedDirectory = fileManager.homeDirectoryForCurrentUser
-            .appendingPathComponent("Library/Group Containers/group.com.hankch.stickit/SharedData", isDirectory: true)
-        let migrationSources = [previousSharedDirectory, previousAppSupportDirectory, legacyAppSupportDirectory]
+        let migrationSources = [legacyAppSupportDirectory]
             .filter { $0.standardizedFileURL != preferredDirectory.standardizedFileURL }
 
         for migrationSource in migrationSources where fileManager.fileExists(atPath: migrationSource.path) {
@@ -57,6 +54,9 @@ final class AppStorage {
             for (key, value) in savedSettings {
                 settings[key] = value
             }
+            if savedSettings["hasSeenHelpEntryHint"] == nil {
+                settings["hasSeenHelpEntryHint"] = true
+            }
         }
 
         if let hotkey = settings["hotkey"] as? String {
@@ -69,7 +69,7 @@ final class AppStorage {
             settings["panelPosition"] = NSNull()
         }
 
-        let language = StickItLanguage(storedValue: settings["language"])
+        let language = FloatemLanguage(storedValue: settings["language"])
         settings["language"] = language.rawValue
 
         try saveJSONObject(settings, to: settingsURL)
@@ -81,9 +81,9 @@ final class AppStorage {
         return settings["hotkey"] as? String ?? GlobalHotKeyManager.defaultShortcut
     }
 
-    func currentLanguage() throws -> StickItLanguage {
+    func currentLanguage() throws -> FloatemLanguage {
         let settings = try loadSettings()
-        return StickItLanguage(storedValue: settings["language"])
+        return FloatemLanguage(storedValue: settings["language"])
     }
 
     func currentLaunchAtLogin() throws -> Bool {
@@ -140,14 +140,14 @@ final class AppStorage {
             mergedSettings["hotkey"] = GlobalHotKeyManager.defaultShortcut
         }
 
-        let language = StickItLanguage(storedValue: mergedSettings["language"])
+        let language = FloatemLanguage(storedValue: mergedSettings["language"])
         mergedSettings["language"] = language.rawValue
 
         try saveJSONObject(mergedSettings, to: settingsURL)
 
         if previousLanguage != language {
             NotificationCenter.default.post(
-                name: .stickItLanguageDidChange,
+                name: .floatemLanguageDidChange,
                 object: self,
                 userInfo: ["language": language.rawValue]
             )
@@ -166,7 +166,7 @@ final class AppStorage {
         try sharedStore.widgetPreferences()
     }
 
-    func setWidgetPreference(kind: StickItEntityKind, id: String, requested: Bool) throws {
+    func setWidgetPreference(kind: FloatemEntityKind, id: String, requested: Bool) throws {
         try sharedStore.setWidgetPreference(
             WidgetEntityReference(entityKind: kind, entityID: id),
             requested: requested
@@ -181,7 +181,7 @@ final class AppStorage {
         try sharedStore.saveDesktopPanelState(state)
     }
 
-    func removeDesktopPanelState(kind: StickItEntityKind, id: String) throws {
+    func removeDesktopPanelState(kind: FloatemEntityKind, id: String) throws {
         try sharedStore.removeDesktopPanelState(
             WidgetEntityReference(entityKind: kind, entityID: id)
         )
@@ -195,7 +195,7 @@ final class AppStorage {
         try sharedStore.todoSnapshots()
     }
 
-    func floatingCardPayload(kind: StickItEntityKind, id: String) throws -> [String: Any]? {
+    func floatingCardPayload(kind: FloatemEntityKind, id: String) throws -> [String: Any]? {
         let settings = try loadSettings()
         let desktopRequested = try desktopPanelStates().contains {
             $0.entityKind == kind && $0.entityID == id
@@ -244,7 +244,7 @@ final class AppStorage {
         try sharedStore.saveFloatingWindowState(state)
     }
 
-    func removeFloatingWindowState(kind: StickItEntityKind, id: String) throws {
+    func removeFloatingWindowState(kind: FloatemEntityKind, id: String) throws {
         try sharedStore.removeFloatingWindowState(WidgetEntityReference(entityKind: kind, entityID: id))
     }
 
@@ -288,6 +288,7 @@ final class AppStorage {
             "animationSpeed": "mediate",
             "launchAtLogin": false,
             "suppressLaunchAtLoginPrompt": false,
+            "hasSeenHelpEntryHint": false,
             "enableParticles": true,
             "enableReminderSound": true,
         ]
@@ -303,7 +304,7 @@ final class AppStorage {
         }
 
         guard let array = json as? [Any] else {
-            throw StickItBridgeError.invalidJSON("Expected a JSON array at \(url.lastPathComponent).")
+            throw FloatemBridgeError.invalidJSON("Expected a JSON array at \(url.lastPathComponent).")
         }
 
         return array
@@ -320,7 +321,7 @@ final class AppStorage {
 
     private func saveJSONObject(_ object: Any, to url: URL) throws {
         guard JSONSerialization.isValidJSONObject(object) else {
-            throw StickItBridgeError.invalidJSON("StickIt received data that cannot be encoded to JSON.")
+            throw FloatemBridgeError.invalidJSON("Floatem received data that cannot be encoded to JSON.")
         }
 
         try ensureAppSupportDirectoryExists()

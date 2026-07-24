@@ -4,12 +4,12 @@ import { LaunchAtLoginDialog } from "../../src/components/layout/LaunchAtLoginDi
 import { useSettingsStore } from "../../src/store/settingsStore";
 
 describe("LaunchAtLoginDialog", () => {
-  const originalBridge = window.stickItHost;
+  const originalBridge = window.floatemHost;
 
   beforeEach(() => {
-    window.stickItHost = {
+    window.floatemHost = {
       loadAllData: async () => ({ notes: [], todos: [], settings: {} }),
-    } as unknown as NonNullable<typeof window.stickItHost>;
+    } as unknown as NonNullable<typeof window.floatemHost>;
     useSettingsStore.getState().reset();
     useSettingsStore.getState().hydrateSettings({
       language: "en",
@@ -19,12 +19,12 @@ describe("LaunchAtLoginDialog", () => {
   });
 
   afterEach(() => {
-    window.stickItHost = originalBridge;
+    window.floatemHost = originalBridge;
   });
 
-  it("uses the StickIt dialog surface and repeats after Not Now when unsuppressed", async () => {
+  it("uses the Floatem dialog surface and repeats after Not Now when unsuppressed", async () => {
     const firstRender = render(<LaunchAtLoginDialog />);
-    expect(screen.getByRole("dialog", { name: "Open StickIt at login?" })).toHaveClass("paper-panel");
+    expect(screen.getByRole("dialog", { name: "Open Floatem at login?" })).toHaveClass("paper-panel");
 
     fireEvent.click(screen.getByRole("button", { name: "Not Now" }));
     await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
@@ -32,7 +32,7 @@ describe("LaunchAtLoginDialog", () => {
 
     firstRender.unmount();
     render(<LaunchAtLoginDialog />);
-    expect(screen.getByRole("dialog", { name: "Open StickIt at login?" })).toBeInTheDocument();
+    expect(screen.getByRole("dialog", { name: "Open Floatem at login?" })).toBeInTheDocument();
   });
 
   it("persists suppression and enables launch at login from the primary action", async () => {

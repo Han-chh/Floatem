@@ -1,5 +1,15 @@
 # macOS Host Setup
 
+Current release identity:
+
+```text
+Version: 1.0.8
+Build: 46
+Bundle ID: com.hankch.floatem
+App Group: group.com.hankch.floatem
+Team: 85923Q9JUG
+```
+
 ## Requirements
 
 - macOS with Xcode command line tools
@@ -14,10 +24,10 @@ pnpm install
 pnpm macos:run
 ```
 
-This builds the shared frontend from `apps/frontend`, compiles `apps/mac-host/StickIt.xcodeproj`, and opens:
+This builds the shared frontend from `apps/frontend`, compiles `apps/mac-host/Floatem.xcodeproj`, and opens:
 
 ```text
-build/DerivedData/Build/Products/Debug/StickIt.app
+build/DerivedData/Build/Products/Debug/Floatem.app
 ```
 
 ## Build Only
@@ -32,25 +42,25 @@ The Xcode build phase calls `scripts/build-web-assets.sh`, which rebuilds the fr
 
 ```bash
 pnpm frontend:build
-open apps/mac-host/StickIt.xcodeproj
+open apps/mac-host/Floatem.xcodeproj
 ```
 
-Then run the `StickIt` scheme.
+Then run the `Floatem` scheme.
 
 ## Native Capabilities
 
 - AppKit owns app lifecycle, menu bar item, status menu, window levels, and overlay behavior.
 - Carbon hotkeys provide the global shortcut.
 - UserNotifications schedules test notifications and todo reminders.
-- WKWebView injects the shared `stickItHost` bridge into the React frontend.
-- `DesktopCardPanel` provides app-owned desktop-pinned cards. StickIt must stay running; the Login Item silently recreates saved panels after login.
+- WKWebView injects the shared `floatemHost` bridge into the React frontend.
+- `DesktopCardPanel` provides app-owned desktop-pinned cards. Floatem must stay running; the Login Item silently recreates saved panels after login.
 
 ## Signing and App Group
 
-The `StickIt` target requires App Group:
+The `Floatem` target requires App Group:
 
 ```text
-group.com.hankch.stickit
+group.com.hankch.floatem
 ```
 
 Debug builds use the local Apple Development team. Release builds use automatic App Store signing with the Apple Distribution team. Both configurations enable App Sandbox, Hardened Runtime, and the shared App Group above.
@@ -69,3 +79,31 @@ pnpm macos:test
 ```
 
 The Xcode suite avoids initializing production services or touching the real App Group when hosted by XCTest.
+
+## v1.0.8 Archive and export
+
+The verified v1.0.8 workflow is:
+
+```bash
+pnpm install
+pnpm test -- --run
+pnpm macos:test
+
+xcodebuild archive \
+  -project apps/mac-host/Floatem.xcodeproj \
+  -scheme Floatem \
+  -configuration Release \
+  -destination 'generic/platform=macOS' \
+  -archivePath "$HOME/Library/Developer/Xcode/Archives/<date>/Floatem 1.0.8 (46).xcarchive" \
+  -allowProvisioningUpdates
+
+xcodebuild -exportArchive \
+  -archivePath "$HOME/Library/Developer/Xcode/Archives/<date>/Floatem 1.0.8 (46).xcarchive" \
+  -exportPath build/AppStoreExport/Floatem-1.0.8-46 \
+  -exportOptionsPlist apps/mac-host/ExportOptions.plist \
+  -allowProvisioningUpdates
+```
+
+The export must report an Apple Distribution certificate and `Mac Team Store Provisioning Profile: com.hankch.floatem`, with App Group `group.com.hankch.floatem`. `ITSAppUsesNonExemptEncryption` is `false`.
+
+The archive and exported `.pkg` are local artifacts: `build/` is ignored by Git and `~/Library/Developer/Xcode/Archives/` is outside the repository. Moving or recloning the working directory does not move either artifact.

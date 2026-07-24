@@ -9,7 +9,7 @@ final class FloatingWebViewResourcePool: @unchecked Sendable {
     let websiteDataStore = WKWebsiteDataStore.default()
 
     private let lock = NSLock()
-    private let logger = Logger(subsystem: "com.stickit.floating", category: "WebKitResources")
+    private let logger = Logger(subsystem: "com.floatem.floating", category: "WebKitResources")
     private var createdCount = 0
     private var destroyedCount = 0
     private var activeCount = 0

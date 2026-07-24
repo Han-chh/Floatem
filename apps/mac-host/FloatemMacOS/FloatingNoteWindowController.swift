@@ -26,12 +26,12 @@ struct FloatingGuideDeliveryGate {
 
 @MainActor
 final class FloatingNoteWindowController: NSObject, WKNavigationDelegate, WKScriptMessageHandler, NSWindowDelegate {
-    private nonisolated static let diagnostics = Logger(subsystem: "com.stickit.floating", category: "Dock")
-    private nonisolated static let lifecycle = Logger(subsystem: "com.stickit.floating", category: "Lifecycle")
+    private nonisolated static let diagnostics = Logger(subsystem: "com.floatem.floating", category: "Dock")
+    private nonisolated static let lifecycle = Logger(subsystem: "com.floatem.floating", category: "Lifecycle")
     private static let interactiveInputPanelLevel = NSWindow.Level.floating
     private static let textCompositionPanelLevel = NSWindow.Level.normal
 
-    /// When enabled (via `defaults write com.stickit.app DEBUG_FLOATING_LIFECYCLE -bool true`),
+    /// When enabled (via `defaults write com.floatem.app DEBUG_FLOATING_LIFECYCLE -bool true`),
     /// lifecycle events are logged at info level so you can trace create/destroy/deinit through every drag cycle.
     ///
     /// Reads UserDefaults once at class-load time; the stored Bool is safe to read
@@ -40,19 +40,19 @@ final class FloatingNoteWindowController: NSObject, WKNavigationDelegate, WKScri
         DebugFlags.isEnabled("DEBUG_FLOATING_LIFECYCLE")
     }()
 
-    private static let bridgeName = "stickItFloatingHost"
-    private static let floatingCardStateEventName = "stickit:floating-card-state"
-    private static let floatingCardGuideEventName = "stickit:floating-card-guide"
+    private static let bridgeName = "floatemFloatingHost"
+    private static let floatingCardStateEventName = "floatem:floating-card-state"
+    private static let floatingCardGuideEventName = "floatem:floating-card-guide"
     private static let bridgeBootstrapScript = """
     (() => {
-      if (window.stickItFloatingHost) {
+      if (window.floatemFloatingHost) {
         return;
       }
 
       const send = (method, params = {}) => {
-        const id = window.__stickItFloatingNextRequestId++;
+        const id = window.__floatemFloatingNextRequestId++;
         try {
-          window.webkit.messageHandlers.stickItFloatingHost.postMessage({ id, method, params });
+          window.webkit.messageHandlers.floatemFloatingHost.postMessage({ id, method, params });
         } catch (_error) {
           // The native handler was removed (window is closing).
           // Resolve silently — rejecting would trigger unhandled
@@ -61,36 +61,36 @@ final class FloatingNoteWindowController: NSObject, WKNavigationDelegate, WKScri
         }
 
         return new Promise((resolve, reject) => {
-          window.__stickItFloatingPendingRequests.set(id, { resolve, reject });
+          window.__floatemFloatingPendingRequests.set(id, { resolve, reject });
           window.setTimeout(() => {
-            if (!window.__stickItFloatingPendingRequests.has(id)) {
+            if (!window.__floatemFloatingPendingRequests.has(id)) {
               return;
             }
 
-            window.__stickItFloatingPendingRequests.delete(id);
-            reject(new Error(`StickIt floating bridge request timed out: ${method}`));
+            window.__floatemFloatingPendingRequests.delete(id);
+            reject(new Error(`Floatem floating bridge request timed out: ${method}`));
           }, 8000);
         });
       };
 
-      window.__stickItFloatingNextRequestId = 1;
-      window.__stickItFloatingPendingRequests = new Map();
-      window.__stickItFloatingReceive = (id, ok, result) => {
-        const request = window.__stickItFloatingPendingRequests.get(id);
+      window.__floatemFloatingNextRequestId = 1;
+      window.__floatemFloatingPendingRequests = new Map();
+      window.__floatemFloatingReceive = (id, ok, result) => {
+        const request = window.__floatemFloatingPendingRequests.get(id);
         if (!request) {
           return;
         }
 
-        window.__stickItFloatingPendingRequests.delete(id);
+        window.__floatemFloatingPendingRequests.delete(id);
         if (ok) {
           request.resolve(result);
           return;
         }
 
-        request.reject(new Error(String(result || "StickIt floating bridge request failed.")));
+        request.reject(new Error(String(result || "Floatem floating bridge request failed.")));
       };
 
-      window.stickItFloatingHost = {
+      window.floatemFloatingHost = {
         platform: "macos",
         getCapabilities() {
           return send("getCapabilities");
@@ -178,8 +178,8 @@ final class FloatingNoteWindowController: NSObject, WKNavigationDelegate, WKScri
         reportFrontendError() {},
       };
 
-      window.stickItHost = window.stickItFloatingHost;
-      window.stickItNative = window.stickItFloatingHost;
+      window.floatemHost = window.floatemFloatingHost;
+      window.floatemNative = window.floatemFloatingHost;
     })();
     """
     private static let bridgeBootstrapUserScript = WKUserScript(
@@ -206,7 +206,7 @@ final class FloatingNoteWindowController: NSObject, WKNavigationDelegate, WKScri
     var onWriteClipboardText: ((String) -> Void)?
     var onPickScreenColor: (() async throws -> String?)?
     var onOpenNotificationSettings: (() throws -> Void)?
-    var onCheckNotificationPermission: ((StickItLanguage) async throws -> Bool)?
+    var onCheckNotificationPermission: ((FloatemLanguage) async throws -> Bool)?
 
     private var panel: FloatingPanel?
     private let webView: WKWebView
@@ -748,7 +748,7 @@ final class FloatingNoteWindowController: NSObject, WKNavigationDelegate, WKScri
             // Changing from the desktop-icon level to an overlay level is
             // committed asynchronously by WindowServer. Reassert the same
             // floating panel after that commit so it cannot fall behind the
-            // main StickIt panel or disappear from the current desktop.
+            // main Floatem panel or disappear from the current desktop.
             DispatchQueue.main.async { [weak self, weak panel] in
                 guard
                     let self,
@@ -926,7 +926,7 @@ final class FloatingNoteWindowController: NSObject, WKNavigationDelegate, WKScri
                 resolveBridgeRequest(id: requestID, ok: false, result: error.localizedDescription)
             }
         case "checkNotificationPermission":
-            let language = StickItLanguage(storedValue: params["language"])
+            let language = FloatemLanguage(storedValue: params["language"])
             Task { @MainActor [weak self] in
                 guard let self else {
                     return
@@ -995,7 +995,7 @@ final class FloatingNoteWindowController: NSObject, WKNavigationDelegate, WKScri
 
         webView.callAsyncJavaScript(
             """
-            window.__STICKIT_FLOATING_CARD_STATE__ = \(json);
+            window.__FLOATEM_FLOATING_CARD_STATE__ = \(json);
             window.dispatchEvent(new CustomEvent('\(Self.floatingCardStateEventName)', { detail: \(json) }));
             await new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)));
             return true;
@@ -1033,7 +1033,7 @@ final class FloatingNoteWindowController: NSObject, WKNavigationDelegate, WKScri
             : ""
         webView.evaluateJavaScript(
             """
-            window.__STICKIT_FLOATING_CARD_GUIDE__ = \(json);
+            window.__FLOATEM_FLOATING_CARD_GUIDE__ = \(json);
             window.dispatchEvent(new CustomEvent('\(Self.floatingCardGuideEventName)', { detail: \(json) }));
             \(cleanupScript)
             """
@@ -1072,7 +1072,7 @@ final class FloatingNoteWindowController: NSObject, WKNavigationDelegate, WKScri
         }
 
         webView.evaluateJavaScript(
-            "window.__stickItFloatingReceive?.(\(id), \(ok ? "true" : "false"), \(json));"
+            "window.__floatemFloatingReceive?.(\(id), \(ok ? "true" : "false"), \(json));"
         )
     }
 

@@ -312,7 +312,7 @@ export function NoteGroupDialog({ noteId, isOpen, onClose }: NoteGroupDialogProp
       {isOpen ? (
         <>
           <motion.div
-            className="stickit-modal-backdrop fixed inset-0 z-[90] flex items-start justify-center overflow-hidden bg-[rgba(30,25,21,0.24)] px-5 py-4"
+            className="floatem-modal-backdrop fixed inset-0 z-[90] flex items-start justify-center overflow-hidden bg-[rgba(30,25,21,0.24)] px-5 py-4"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
@@ -579,7 +579,7 @@ export function NoteGroupDialog({ noteId, isOpen, onClose }: NoteGroupDialogProp
           <AnimatePresence>
             {isEditorOpen ? (
               <motion.div
-                className="stickit-modal-backdrop fixed inset-0 z-[100] flex items-center justify-center bg-[rgba(30,25,21,0.2)] px-5 py-6"
+                className="floatem-modal-backdrop fixed inset-0 z-[100] flex items-center justify-center bg-[rgba(30,25,21,0.2)] px-5 py-6"
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
@@ -718,7 +718,7 @@ export function NoteGroupDialog({ noteId, isOpen, onClose }: NoteGroupDialogProp
           <AnimatePresence>
             {isNameRequiredDialogOpen ? (
               <motion.div
-                className="stickit-modal-backdrop fixed inset-0 z-[130] flex items-center justify-center bg-[rgba(30,25,21,0.24)] px-5 py-6"
+                className="floatem-modal-backdrop fixed inset-0 z-[130] flex items-center justify-center bg-[rgba(30,25,21,0.24)] px-5 py-6"
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}

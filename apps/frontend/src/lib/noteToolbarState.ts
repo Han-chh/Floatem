@@ -1,5 +1,5 @@
-export const NOTE_TOOLBAR_STATE_EVENT = "stickit:note-toolbar-state";
-export const NOTE_TOOLBAR_STATE_PREFIX = "stickit:note-toolbar-collapsed:";
+export const NOTE_TOOLBAR_STATE_EVENT = "floatem:note-toolbar-state";
+export const NOTE_TOOLBAR_STATE_PREFIX = "floatem:note-toolbar-collapsed:";
 
 export function getNoteToolbarStateKey(noteId: string) {
   return `${NOTE_TOOLBAR_STATE_PREFIX}${noteId}`;

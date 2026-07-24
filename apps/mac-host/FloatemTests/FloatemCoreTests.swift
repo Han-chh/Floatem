@@ -1,7 +1,7 @@
 import XCTest
-@testable import StickIt
+@testable import Floatem
 
-final class StickItCoreTests: XCTestCase {
+final class FloatemCoreTests: XCTestCase {
     @MainActor
     func testDesktopPinTransitionsToStationaryDesktopNSPanelAndBackToOverlay() {
         let controller = FloatingNoteWindowController(cardKind: "note", cardID: "desktop-test")
@@ -146,11 +146,11 @@ final class StickItCoreTests: XCTestCase {
 
     func testDeepLinkParsingEncodingAndValidation() throws {
         let reference = WidgetEntityReference(entityKind: .note, entityID: "note / 中文")
-        let url = try XCTUnwrap(StickItDeepLink.url(for: reference))
-        XCTAssertEqual(StickItDeepLink(url: url)?.destination, .floatingCard(reference))
-        XCTAssertEqual(StickItDeepLink(url: URL(string: "stickit://open")!)?.destination, .mainWindow)
-        XCTAssertNil(StickItDeepLink(url: URL(string: "stickit://open?kind=file&id=/tmp/a&mode=floating")!))
-        XCTAssertNil(StickItDeepLink(url: URL(string: "https://example.com/open?kind=note&id=x")!))
+        let url = try XCTUnwrap(FloatemDeepLink.url(for: reference))
+        XCTAssertEqual(FloatemDeepLink(url: url)?.destination, .floatingCard(reference))
+        XCTAssertEqual(FloatemDeepLink(url: URL(string: "floatem://open")!)?.destination, .mainWindow)
+        XCTAssertNil(FloatemDeepLink(url: URL(string: "floatem://open?kind=file&id=/tmp/a&mode=floating")!))
+        XCTAssertNil(FloatemDeepLink(url: URL(string: "https://example.com/open?kind=note&id=x")!))
     }
 
     @MainActor
@@ -258,54 +258,54 @@ final class StickItCoreTests: XCTestCase {
             entityID: "n1",
             frame: CodableRect(x: 1, y: 2, width: 3, height: 4)
         )
-        XCTAssertEqual(state.schemaVersion, StickItSharedContainer.currentSchemaVersion)
+        XCTAssertEqual(state.schemaVersion, FloatemSharedContainer.currentSchemaVersion)
         XCTAssertNil(state.screenIdentifier)
     }
 
     func testLoginLaunchStaysSilentAndUserLaunchShowsMainWindow() {
-        var login = LaunchContextResolver(arguments: ["StickIt", "--stickit-login-item"], environment: [:])
+        var login = LaunchContextResolver(arguments: ["Floatem", "--floatem-login-item"], environment: [:])
         XCTAssertFalse(login.shouldShowAtDidFinish(isApplicationActive: false, launchAtLoginEnabled: true))
         XCTAssertFalse(login.shouldShowForActivation(launchAtLoginEnabled: true))
 
-        var disabledLogin = LaunchContextResolver(arguments: ["StickIt", "--stickit-login-item"], environment: [:])
+        var disabledLogin = LaunchContextResolver(arguments: ["Floatem", "--floatem-login-item"], environment: [:])
         XCTAssertTrue(disabledLogin.shouldShowAtDidFinish(isApplicationActive: false, launchAtLoginEnabled: false))
 
-        var user = LaunchContextResolver(arguments: ["StickIt", "--stickit-user-launch"], environment: [:])
+        var user = LaunchContextResolver(arguments: ["Floatem", "--floatem-user-launch"], environment: [:])
         XCTAssertTrue(user.shouldShowAtDidFinish(isApplicationActive: false, launchAtLoginEnabled: false))
 
-        var automatic = LaunchContextResolver(arguments: ["StickIt"], environment: [:])
+        var automatic = LaunchContextResolver(arguments: ["Floatem"], environment: [:])
         XCTAssertFalse(automatic.shouldShowAtDidFinish(isApplicationActive: false, launchAtLoginEnabled: false))
         XCTAssertTrue(automatic.shouldShowForActivation(launchAtLoginEnabled: false))
 
-        var backgroundLogin = LaunchContextResolver(arguments: ["StickIt"], environment: [:])
+        var backgroundLogin = LaunchContextResolver(arguments: ["Floatem"], environment: [:])
         XCTAssertFalse(backgroundLogin.shouldShowAtDidFinish(isApplicationActive: false, launchAtLoginEnabled: true))
         XCTAssertFalse(backgroundLogin.consumedInitialActivation)
 
-        var firstFinderDoubleClick = LaunchContextResolver(arguments: ["StickIt"], environment: [:])
+        var firstFinderDoubleClick = LaunchContextResolver(arguments: ["Floatem"], environment: [:])
         firstFinderDoubleClick.recordInitialOpenEvent(launchedAsLoginItem: false)
         XCTAssertTrue(firstFinderDoubleClick.shouldShowAtDidFinish(isApplicationActive: false, launchAtLoginEnabled: true))
         XCTAssertFalse(firstFinderDoubleClick.shouldShowForActivation(launchAtLoginEnabled: true))
         XCTAssertFalse(firstFinderDoubleClick.shouldShowAtDidFinish(isApplicationActive: true, launchAtLoginEnabled: true))
 
-        var firstSpotlightLaunch = LaunchContextResolver(arguments: ["StickIt"], environment: [:])
+        var firstSpotlightLaunch = LaunchContextResolver(arguments: ["Floatem"], environment: [:])
         firstSpotlightLaunch.recordInitialOpenEvent(launchedAsLoginItem: false)
         XCTAssertTrue(firstSpotlightLaunch.shouldShowAtDidFinish(isApplicationActive: false, launchAtLoginEnabled: true))
         XCTAssertFalse(firstSpotlightLaunch.shouldShowForActivation(launchAtLoginEnabled: true))
 
-        var systemLoginItem = LaunchContextResolver(arguments: ["StickIt"], environment: [:])
+        var systemLoginItem = LaunchContextResolver(arguments: ["Floatem"], environment: [:])
         systemLoginItem.recordInitialOpenEvent(launchedAsLoginItem: true)
         XCTAssertFalse(systemLoginItem.shouldShowAtDidFinish(isApplicationActive: false, launchAtLoginEnabled: true))
         XCTAssertFalse(systemLoginItem.shouldShowForActivation(launchAtLoginEnabled: true))
 
-        var alreadyActive = LaunchContextResolver(arguments: ["StickIt"], environment: [:])
+        var alreadyActive = LaunchContextResolver(arguments: ["Floatem"], environment: [:])
         XCTAssertTrue(alreadyActive.shouldShowAtDidFinish(isApplicationActive: true, launchAtLoginEnabled: false))
         XCTAssertFalse(alreadyActive.shouldShowForActivation(launchAtLoginEnabled: false))
 
-        var spotlightOrDoubleClick = LaunchContextResolver(arguments: ["StickIt"], environment: [:])
+        var spotlightOrDoubleClick = LaunchContextResolver(arguments: ["Floatem"], environment: [:])
         XCTAssertTrue(spotlightOrDoubleClick.shouldShowAtDidFinish(isApplicationActive: true, launchAtLoginEnabled: true))
         XCTAssertFalse(spotlightOrDoubleClick.shouldShowForActivation(launchAtLoginEnabled: true))
 
-        var deepLink = LaunchContextResolver(arguments: ["StickIt"], environment: [:])
+        var deepLink = LaunchContextResolver(arguments: ["Floatem"], environment: [:])
         deepLink.markDeepLinkReceived()
         XCTAssertFalse(deepLink.shouldShowAtDidFinish(isApplicationActive: true, launchAtLoginEnabled: false))
     }

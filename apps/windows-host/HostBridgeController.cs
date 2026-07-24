@@ -4,7 +4,7 @@ using System.Diagnostics;
 using Microsoft.Web.WebView2.Core;
 using Microsoft.Web.WebView2.Wpf;
 
-namespace StickIt.Windows;
+namespace Floatem.Windows;
 
 internal sealed class HostBridgeController
 {
@@ -40,18 +40,18 @@ internal sealed class HostBridgeController
 
     public Task EmitPanelWillOpenAsync()
     {
-        return DispatchEventAsync("stickit:panel-will-open");
+        return DispatchEventAsync("floatem:panel-will-open");
     }
 
     public Task EmitShortcutInvokedAsync(string shortcut)
     {
         var detail = new JsonObject { ["shortcut"] = shortcut };
-        return DispatchEventAsync("stickit:shortcut-invoked", detail);
+        return DispatchEventAsync("floatem:shortcut-invoked", detail);
     }
 
     public Task EmitHotkeyRegistrationStateAsync(Native.Win32HotKeyManager.RegistrationState? state = null)
     {
-        return DispatchEventAsync("stickit:hotkey-registration-state", ToHotkeyRegistrationState(state ?? hotKeys.GetRegistrationState()));
+        return DispatchEventAsync("floatem:hotkey-registration-state", ToHotkeyRegistrationState(state ?? hotKeys.GetRegistrationState()));
     }
 
     private async void OnWebMessageReceived(object? sender, CoreWebView2WebMessageReceivedEventArgs e)
@@ -97,7 +97,7 @@ internal sealed class HostBridgeController
                 window.SetTextCompositionActive(parameters["active"]?.GetValue<bool>() ?? false);
                 return null;
             case "reportFrontendError":
-                Debug.WriteLine($"StickIt frontend error ({parameters["source"]?.GetValue<string>() ?? "frontend"}): {parameters["message"]?.GetValue<string>() ?? ""}");
+                Debug.WriteLine($"Floatem frontend error ({parameters["source"]?.GetValue<string>() ?? "frontend"}): {parameters["message"]?.GetValue<string>() ?? ""}");
                 return null;
             case "getCapabilities":
                 return Capabilities();
@@ -157,11 +157,11 @@ internal sealed class HostBridgeController
                 return null;
             case "testReminderNotification":
                 await notifications.ScheduleAndConfirmAsync(
-                    $"stickit.test.notification.{Guid.NewGuid():N}",
+                    $"floatem.test.notification.{Guid.NewGuid():N}",
                     Branding.DisplayName,
                     parameters["language"]?.GetValue<string>() == "zh-CN"
-                        ? "这是一条 StickIt 测试提醒。"
-                        : "This is a StickIt test reminder.",
+                        ? "这是一条 Floatem 测试提醒。"
+                        : "This is a Floatem test reminder.",
                     DateTimeOffset.Now.AddSeconds(2),
                     parameters["soundEnabled"]?.GetValue<bool>() ?? true);
                 return null;
@@ -547,7 +547,7 @@ internal sealed class HostBridgeController
             ["limitations"] = new JsonArray
             {
                 "Topmost windows cannot reliably appear above every fullscreen-exclusive or secure desktop surface on Windows.",
-                "Reminder scheduling is app-managed and runs while StickIt is running; Windows App SDK app notifications are used when a reminder is delivered.",
+                "Reminder scheduling is app-managed and runs while Floatem is running; Windows App SDK app notifications are used when a reminder is delivered.",
             },
         };
     }
@@ -569,7 +569,7 @@ internal sealed class HostBridgeController
         };
 
         response[ok ? "result" : "error"] = payload?.DeepClone();
-        return webView.CoreWebView2.ExecuteScriptAsync($"window.__stickItNativeReceive({response.ToJsonString()});");
+        return webView.CoreWebView2.ExecuteScriptAsync($"window.__floatemNativeReceive({response.ToJsonString()});");
     }
 
     private Task SendResponseAsync(int id, bool ok, string message)
@@ -629,7 +629,7 @@ internal sealed class HostBridgeController
 
     private const string BridgeScript = """
 (() => {
-  if (window.stickItHost) {
+  if (window.floatemHost) {
     return;
   }
 
@@ -646,7 +646,7 @@ internal sealed class HostBridgeController
     chrome.webview.postMessage({ id, method, params });
   });
 
-  window.stickItHost = {
+  window.floatemHost = {
     platform: "windows",
     getCapabilities: () => send("getCapabilities"),
     loadAllData: () => send("loadAllData"),
@@ -686,19 +686,19 @@ internal sealed class HostBridgeController
     hidePanelWindow: () => send("hideWindow"),
   };
 
-  window.stickItNative = window.stickItHost;
+  window.floatemNative = window.floatemHost;
 
   window.addEventListener("error", (event) => {
-    window.stickItHost.reportFrontendError(event.message || "Unhandled frontend error", event.filename || "window.error");
+    window.floatemHost.reportFrontendError(event.message || "Unhandled frontend error", event.filename || "window.error");
   });
 
   window.addEventListener("unhandledrejection", (event) => {
     const reason = event.reason;
     const message = reason && typeof reason.message === "string" ? reason.message : String(reason || "Unhandled promise rejection");
-    window.stickItHost.reportFrontendError(message, "unhandledrejection");
+    window.floatemHost.reportFrontendError(message, "unhandledrejection");
   });
 
-  window.__stickItNativeReceive = (message) => {
+  window.__floatemNativeReceive = (message) => {
     const record = inflight.get(message.id);
     if (!record) {
       return;
@@ -709,7 +709,7 @@ internal sealed class HostBridgeController
     if (message.ok) {
       record.resolve(message.result);
     } else {
-      record.reject(new Error(message.error || "Unknown StickIt host bridge error"));
+      record.reject(new Error(message.error || "Unknown Floatem host bridge error"));
     }
   };
 })();

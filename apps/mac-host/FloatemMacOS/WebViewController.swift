@@ -4,16 +4,16 @@ import WebKit
 
 @MainActor
 final class WebViewController: NSViewController, WKNavigationDelegate {
-    private static let bridgeName = "stickItHost"
-    private static let panelWillOpenEventName = "stickit:panel-will-open"
-    private static let hotkeyRegistrationStateEventName = "stickit:hotkey-registration-state"
-    private static let textColorPanelChangeEventName = "stickit:text-color-panel-change"
-    private static let textColorPanelCloseEventName = "stickit:text-color-panel-close"
-    private static let notesUpdatedEventName = "stickit:notes-updated"
-    private static let todosUpdatedEventName = "stickit:todos-updated"
-    private static let floatingCardsStateEventName = "stickit:floating-cards-state"
-    private static let floatingDockZoneEnterEventName = "stickit:floating-dock-zone-enter"
-    private static let floatingDockZoneLeaveEventName = "stickit:floating-dock-zone-leave"
+    private static let bridgeName = "floatemHost"
+    private static let panelWillOpenEventName = "floatem:panel-will-open"
+    private static let hotkeyRegistrationStateEventName = "floatem:hotkey-registration-state"
+    private static let textColorPanelChangeEventName = "floatem:text-color-panel-change"
+    private static let textColorPanelCloseEventName = "floatem:text-color-panel-close"
+    private static let notesUpdatedEventName = "floatem:notes-updated"
+    private static let todosUpdatedEventName = "floatem:todos-updated"
+    private static let floatingCardsStateEventName = "floatem:floating-cards-state"
+    private static let floatingDockZoneEnterEventName = "floatem:floating-dock-zone-enter"
+    private static let floatingDockZoneLeaveEventName = "floatem:floating-dock-zone-leave"
     private nonisolated static let debugPipeline: Bool = {
         DebugFlags.isEnabled("DEBUG_FLOATING_PIPELINE")
     }()
@@ -26,9 +26,9 @@ final class WebViewController: NSViewController, WKNavigationDelegate {
 
       return {
         bodyTextLength: bodyText.length,
-        frontendState: html?.dataset.stickitFrontendState ?? "",
-        hasBridge: typeof window.stickItHost === "object" && typeof window.stickItHost.loadAllData === "function",
-        hasReceiver: typeof window.__stickItNativeReceive === "function",
+        frontendState: html?.dataset.floatemFrontendState ?? "",
+        hasBridge: typeof window.floatemHost === "object" && typeof window.floatemHost.loadAllData === "function",
+        hasReceiver: typeof window.__floatemNativeReceive === "function",
         readyState: document.readyState,
         rootChildCount: root?.childElementCount ?? 0,
         rootTextLength: rootText.length,
@@ -36,27 +36,27 @@ final class WebViewController: NSViewController, WKNavigationDelegate {
     })();
     """
 
-    weak var bridgeDelegate: StickItNativeBridgeHandling?
+    weak var bridgeDelegate: FloatemNativeBridgeHandling?
 
     private let webView: WKWebView
-    private var currentLanguage: StickItLanguage
+    private var currentLanguage: FloatemLanguage
     private let containerView = NSView()
     private let loadingOverlay = NSView()
-    private let loadingTitleLabel = NSTextField(labelWithString: "Loading StickIt...")
+    private let loadingTitleLabel = NSTextField(labelWithString: "Loading Floatem...")
     private let loadingDetailLabel = NSTextField(labelWithString: "Preparing the local app interface.")
-    private let loadingQuitButton = NSButton(title: "Quit StickIt", target: nil, action: nil)
+    private let loadingQuitButton = NSButton(title: "Quit Floatem", target: nil, action: nil)
     private let scriptMessageProxy = ScriptMessageProxy()
-    private let logger = Logger(subsystem: "com.stickit.app", category: "WebView")
-    private let pipelineLogger = Logger(subsystem: "com.stickit.app", category: "Pipeline")
+    private let logger = Logger(subsystem: "com.floatem.app", category: "WebView")
+    private let pipelineLogger = Logger(subsystem: "com.floatem.app", category: "Pipeline")
     private var hasRetriedAfterTermination = false
     private var frontendProbeAttemptsRemaining = 0
     private var languageObserver: NSObjectProtocol?
 
-    private var localization: StickItLocalization {
+    private var localization: FloatemLocalization {
         currentLanguage.localization
     }
 
-    init(storage: AppStorage, bridgeDelegate: StickItNativeBridgeHandling?) {
+    init(storage: AppStorage, bridgeDelegate: FloatemNativeBridgeHandling?) {
         self.bridgeDelegate = bridgeDelegate
         self.currentLanguage = (try? storage.currentLanguage()) ?? .simplifiedChinese
 
@@ -138,7 +138,7 @@ final class WebViewController: NSViewController, WKNavigationDelegate {
         }
 
         webView.evaluateJavaScript(
-            "window.dispatchEvent(new CustomEvent('stickit:panel-position', { detail: \(json) }));"
+            "window.dispatchEvent(new CustomEvent('floatem:panel-position', { detail: \(json) }));"
         )
     }
 
@@ -298,7 +298,7 @@ final class WebViewController: NSViewController, WKNavigationDelegate {
 
     private func loadFrontend() {
         guard let indexURL = Bundle.main.url(forResource: "index", withExtension: "html", subdirectory: "web") else {
-            logger.error("Missing bundled frontend assets in StickIt.app/Contents/Resources/web.")
+            logger.error("Missing bundled frontend assets in Floatem.app/Contents/Resources/web.")
             showLoadingOverlay(
                 title: localization.missingInterfaceTitle,
                 detail: localization.missingInterfaceDetail
@@ -431,7 +431,7 @@ final class WebViewController: NSViewController, WKNavigationDelegate {
         }
 
         if method == "checkNotificationPermission" {
-            let language = StickItLanguage(storedValue: params["language"])
+            let language = FloatemLanguage(storedValue: params["language"])
 
             Task { @MainActor [weak self] in
                 guard let self else {
@@ -451,7 +451,7 @@ final class WebViewController: NSViewController, WKNavigationDelegate {
 
         if method == "testReminderNotification" {
             let soundEnabled = params["soundEnabled"] as? Bool ?? true
-            let language = StickItLanguage(storedValue: params["language"])
+            let language = FloatemLanguage(storedValue: params["language"])
 
             Task { @MainActor [weak self] in
                 guard let self else {
@@ -528,19 +528,19 @@ final class WebViewController: NSViewController, WKNavigationDelegate {
                 result = bridgeDelegate?.currentLaunchAtLoginStatus() ?? ["enabled": false]
             case "saveNotes":
                 guard let cards = params["cards"] else {
-                    throw StickItBridgeError.invalidParameters("StickIt expected notes data from JavaScript.")
+                    throw FloatemBridgeError.invalidParameters("Floatem expected notes data from JavaScript.")
                 }
                 try bridgeDelegate?.saveNotes(cards)
                 result = NSNull()
             case "saveTodos":
                 guard let todos = params["todos"] else {
-                    throw StickItBridgeError.invalidParameters("StickIt expected todos data from JavaScript.")
+                    throw FloatemBridgeError.invalidParameters("Floatem expected todos data from JavaScript.")
                 }
                 try bridgeDelegate?.saveTodos(todos)
                 result = NSNull()
             case "saveSettings":
                 guard let settings = params["settings"] else {
-                    throw StickItBridgeError.invalidParameters("StickIt expected settings data from JavaScript.")
+                    throw FloatemBridgeError.invalidParameters("Floatem expected settings data from JavaScript.")
                 }
                 try bridgeDelegate?.saveSettings(settings)
                 result = NSNull()
@@ -549,14 +549,14 @@ final class WebViewController: NSViewController, WKNavigationDelegate {
                 result = NSNull()
             case "openTextColorPanel":
                 guard let requestID = params["requestId"] as? String, !requestID.isEmpty else {
-                    throw StickItBridgeError.invalidParameters("StickIt expected a text color panel request id from JavaScript.")
+                    throw FloatemBridgeError.invalidParameters("Floatem expected a text color panel request id from JavaScript.")
                 }
                 let colorHex = params["color"] as? String
                 try bridgeDelegate?.openTextColorPanel(requestID: requestID, colorHex: colorHex)
                 result = NSNull()
             case "registerHotkey", "registerGlobalShortcut":
                 guard let shortcut = params["shortcut"] as? String else {
-                    throw StickItBridgeError.invalidParameters("StickIt expected a shortcut string from JavaScript.")
+                    throw FloatemBridgeError.invalidParameters("Floatem expected a shortcut string from JavaScript.")
                 }
                 try bridgeDelegate?.registerHotKey(shortcut: shortcut)
                 result = NSNull()
@@ -588,7 +588,7 @@ final class WebViewController: NSViewController, WKNavigationDelegate {
                 result = NSNull()
             case "showDragPreview":
                 guard let payload = params["payload"] else {
-                    throw StickItBridgeError.invalidParameters("StickIt expected a drag preview payload from JavaScript.")
+                    throw FloatemBridgeError.invalidParameters("Floatem expected a drag preview payload from JavaScript.")
                 }
                 try bridgeDelegate?.showDragPreviewFromBridge(payload)
                 result = NSNull()
@@ -597,7 +597,7 @@ final class WebViewController: NSViewController, WKNavigationDelegate {
                 result = NSNull()
             case "showFloatingCard":
                 guard let payload = params["payload"] else {
-                    throw StickItBridgeError.invalidParameters("StickIt expected a floating card payload from JavaScript.")
+                    throw FloatemBridgeError.invalidParameters("Floatem expected a floating card payload from JavaScript.")
                 }
                 try bridgeDelegate?.showFloatingCardFromBridge(payload)
                 result = NSNull()
@@ -606,7 +606,7 @@ final class WebViewController: NSViewController, WKNavigationDelegate {
                     let kind = params["kind"] as? String, !kind.isEmpty,
                     let cardID = params["id"] as? String, !cardID.isEmpty
                 else {
-                    throw StickItBridgeError.invalidParameters("StickIt expected a floating card reference from JavaScript.")
+                    throw FloatemBridgeError.invalidParameters("Floatem expected a floating card reference from JavaScript.")
                 }
                 bridgeDelegate?.closeFloatingCardFromBridge(kind: kind, id: cardID)
                 result = NSNull()
@@ -615,7 +615,7 @@ final class WebViewController: NSViewController, WKNavigationDelegate {
                     let kind = params["kind"] as? String, !kind.isEmpty,
                     let cardID = params["id"] as? String, !cardID.isEmpty
                 else {
-                    throw StickItBridgeError.invalidParameters("StickIt expected a floating card reference from JavaScript.")
+                    throw FloatemBridgeError.invalidParameters("Floatem expected a floating card reference from JavaScript.")
                 }
                 try bridgeDelegate?.startFloatingCardDragFromBridge(kind: kind, id: cardID)
                 result = NSNull()
@@ -624,7 +624,7 @@ final class WebViewController: NSViewController, WKNavigationDelegate {
                     let kind = params["kind"] as? String, !kind.isEmpty,
                     let cardID = params["id"] as? String, !cardID.isEmpty
                 else {
-                    throw StickItBridgeError.invalidParameters("StickIt expected a floating card reference from JavaScript.")
+                    throw FloatemBridgeError.invalidParameters("Floatem expected a floating card reference from JavaScript.")
                 }
                 result = try bridgeDelegate?.setFloatingCardDesktopPinnedFromBridge(
                     kind: kind,
@@ -636,7 +636,7 @@ final class WebViewController: NSViewController, WKNavigationDelegate {
                     let kind = params["kind"] as? String, !kind.isEmpty,
                     let cardID = params["id"] as? String, !cardID.isEmpty
                 else {
-                    throw StickItBridgeError.invalidParameters("StickIt expected a floating card reference for its guide.")
+                    throw FloatemBridgeError.invalidParameters("Floatem expected a floating card reference for its guide.")
                 }
                 bridgeDelegate?.setFloatingCardGuideFromBridge(
                     kind: kind,
@@ -649,18 +649,18 @@ final class WebViewController: NSViewController, WKNavigationDelegate {
                 result = NSNull()
             case "requestDesktopWidget":
                 guard let kind = params["kind"] as? String, let cardID = params["id"] as? String else {
-                    throw StickItBridgeError.invalidParameters("StickIt expected a Widget entity reference.")
+                    throw FloatemBridgeError.invalidParameters("Floatem expected a Widget entity reference.")
                 }
                 result = try bridgeDelegate?.requestDesktopWidgetFromBridge(kind: kind, id: cardID) ?? [:]
             case "removeDesktopWidgetAssociation":
                 guard let kind = params["kind"] as? String, let cardID = params["id"] as? String else {
-                    throw StickItBridgeError.invalidParameters("StickIt expected a Widget entity reference.")
+                    throw FloatemBridgeError.invalidParameters("Floatem expected a Widget entity reference.")
                 }
                 try bridgeDelegate?.removeDesktopWidgetAssociationFromBridge(kind: kind, id: cardID)
                 result = NSNull()
             case "getDesktopWidgetState":
                 guard let kind = params["kind"] as? String, let cardID = params["id"] as? String else {
-                    throw StickItBridgeError.invalidParameters("StickIt expected a Widget entity reference.")
+                    throw FloatemBridgeError.invalidParameters("Floatem expected a Widget entity reference.")
                 }
                 result = try bridgeDelegate?.getDesktopWidgetStateFromBridge(kind: kind, id: cardID) ?? [:]
             case "quitApplication":
@@ -675,7 +675,7 @@ final class WebViewController: NSViewController, WKNavigationDelegate {
                 result = NSNull()
             case "sendNotification", "showNotification", "scheduleNotification":
                 let notificationID = params["id"] as? String
-                let title = params["title"] as? String ?? "StickIt"
+                let title = params["title"] as? String ?? "Floatem"
                 let body = params["body"] as? String ?? ""
                 let soundEnabled = params["soundEnabled"] as? Bool ?? true
                 let scheduledAt = (params["scheduledAt"] as? Double ?? (params["scheduledAt"] as? Int).map(Double.init))
@@ -717,7 +717,7 @@ final class WebViewController: NSViewController, WKNavigationDelegate {
                 }
                 result = NSNull()
             default:
-                throw StickItBridgeError.invalidParameters("StickIt does not support the native bridge method '\(method)'.")
+                throw FloatemBridgeError.invalidParameters("Floatem does not support the native bridge method '\(method)'.")
             }
 
             sendResponse(id: id, ok: true, payload: result)
@@ -736,7 +736,7 @@ final class WebViewController: NSViewController, WKNavigationDelegate {
             return
         }
 
-        webView.evaluateJavaScript("window.__stickItNativeReceive(\(json));")
+        webView.evaluateJavaScript("window.__floatemNativeReceive(\(json));")
     }
 
     private func jsonString(for value: Any) -> String? {
@@ -778,7 +778,7 @@ final class WebViewController: NSViewController, WKNavigationDelegate {
         loadingOverlay.addSubview(loadingQuitButton)
 
         loadingQuitButton.translatesAutoresizingMaskIntoConstraints = false
-        loadingQuitButton.title = "Quit StickIt"
+        loadingQuitButton.title = "Quit Floatem"
         loadingQuitButton.bezelStyle = .regularSquare
         loadingQuitButton.isBordered = false
         loadingQuitButton.controlSize = .regular
@@ -791,7 +791,7 @@ final class WebViewController: NSViewController, WKNavigationDelegate {
         loadingQuitButton.layer?.masksToBounds = true
         loadingQuitButton.layer?.backgroundColor = NSColor(calibratedRed: 0.86, green: 0.20, blue: 0.18, alpha: 1).cgColor
         let title = NSAttributedString(
-            string: "Quit StickIt",
+            string: "Quit Floatem",
             attributes: [.foregroundColor: NSColor.white, .font: NSFont.systemFont(ofSize: 13, weight: .semibold)]
         )
         loadingQuitButton.attributedTitle = title
@@ -911,7 +911,7 @@ final class WebViewController: NSViewController, WKNavigationDelegate {
 
     private func installLanguageObserver() {
         languageObserver = NotificationCenter.default.addObserver(
-            forName: .stickItLanguageDidChange,
+            forName: .floatemLanguageDidChange,
             object: nil,
             queue: .main
         ) { [weak self] notification in
@@ -920,7 +920,7 @@ final class WebViewController: NSViewController, WKNavigationDelegate {
                     return
                 }
 
-                self.currentLanguage = StickItLanguage(storedValue: notification.userInfo?["language"])
+                self.currentLanguage = FloatemLanguage(storedValue: notification.userInfo?["language"])
             }
         }
     }
@@ -937,11 +937,11 @@ final class WebViewController: NSViewController, WKNavigationDelegate {
 
         return """
     (() => {
-      if (window.stickItHost) {
+      if (window.floatemHost) {
         return;
       }
 
-      const STICKIT_DEBUG_PIPELINE = \(debugPipelineLiteral);
+      const FLOATEM_DEBUG_PIPELINE = \(debugPipelineLiteral);
 
       const inflight = new Map();
       let nextId = 1;
@@ -951,9 +951,9 @@ final class WebViewController: NSViewController, WKNavigationDelegate {
       const sendWithoutReply = (method, params = {}) => {
         lastBridgeAction = `${method}:${safeStringify(params)}`;
         try {
-          window.webkit.messageHandlers.stickItHost.postMessage({ method, params });
+          window.webkit.messageHandlers.floatemHost.postMessage({ method, params });
         } catch (error) {
-          console.error("StickIt failed to post a bridge message without reply.", error);
+          console.error("Floatem failed to post a bridge message without reply.", error);
         }
       };
 
@@ -961,10 +961,10 @@ final class WebViewController: NSViewController, WKNavigationDelegate {
         const id = nextId++;
         lastBridgeAction = `${method}:${safeStringify(params)}`;
         inflight.set(id, { resolve, reject });
-        window.webkit.messageHandlers.stickItHost.postMessage({ id, method, params });
+        window.webkit.messageHandlers.floatemHost.postMessage({ id, method, params });
       });
 
-      window.stickItHost = {
+      window.floatemHost = {
         platform: "macos",
         getCapabilities() {
           return send("getCapabilities");
@@ -1125,7 +1125,7 @@ final class WebViewController: NSViewController, WKNavigationDelegate {
         },
       };
 
-      window.stickItNative = window.stickItHost;
+      window.floatemNative = window.floatemHost;
 
       const describeActiveElement = () => {
         const element = document.activeElement;
@@ -1156,25 +1156,25 @@ final class WebViewController: NSViewController, WKNavigationDelegate {
       };
 
       const emitDebug = (source, message) => {
-        if (!STICKIT_DEBUG_PIPELINE) {
+        if (!FLOATEM_DEBUG_PIPELINE) {
           return;
         }
 
-        window.stickItHost.reportFrontendDebug(String(message), source);
+        window.floatemHost.reportFrontendDebug(String(message), source);
       };
 
-      if (STICKIT_DEBUG_PIPELINE) {
+      if (FLOATEM_DEBUG_PIPELINE) {
         emitDebug("bootstrap", `url=${location.href} readyState=${document.readyState} visibility=${document.visibilityState} active=${describeActiveElement()}`);
 
-        window.addEventListener("stickit:floating-cards-state", (event) => {
+        window.addEventListener("floatem:floating-cards-state", (event) => {
           emitDebug("event.floatingCardsState", `detail=${safeStringify(event.detail)} active=${describeActiveElement()} visibility=${document.visibilityState}`);
         });
 
-        window.addEventListener("stickit:floating-dock-zone-enter", (event) => {
+        window.addEventListener("floatem:floating-dock-zone-enter", (event) => {
           emitDebug("event.floatingDockZoneEnter", `detail=${safeStringify(event.detail)} active=${describeActiveElement()} visibility=${document.visibilityState}`);
         });
 
-        window.addEventListener("stickit:floating-dock-zone-leave", (event) => {
+        window.addEventListener("floatem:floating-dock-zone-leave", (event) => {
           emitDebug("event.floatingDockZoneLeave", `detail=${safeStringify(event.detail)} active=${describeActiveElement()} visibility=${document.visibilityState}`);
         });
 
@@ -1191,15 +1191,15 @@ final class WebViewController: NSViewController, WKNavigationDelegate {
         });
       }
 
-      window.addEventListener("stickit:floating-cards-state", (event) => {
+      window.addEventListener("floatem:floating-cards-state", (event) => {
         lastHostEvent = `floating-cards-state:${safeStringify(event.detail)}`;
       });
 
-      window.addEventListener("stickit:floating-dock-zone-enter", (event) => {
+      window.addEventListener("floatem:floating-dock-zone-enter", (event) => {
         lastHostEvent = `floating-dock-zone-enter:${safeStringify(event.detail)}`;
       });
 
-      window.addEventListener("stickit:floating-dock-zone-leave", (event) => {
+      window.addEventListener("floatem:floating-dock-zone-leave", (event) => {
         lastHostEvent = `floating-dock-zone-leave:${safeStringify(event.detail)}`;
       });
 
@@ -1219,7 +1219,7 @@ final class WebViewController: NSViewController, WKNavigationDelegate {
                 : "";
         const contextPart = ` [readyState=${document.readyState} visibility=${document.visibilityState} active=${describeActiveElement()} lastBridgeAction=${lastBridgeAction} lastHostEvent=${lastHostEvent}${resourceTarget}]`;
         const message = `${baseMessage}${locationPart}${contextPart}`;
-        window.stickItHost.reportFrontendError(message, "window.error");
+        window.floatemHost.reportFrontendError(message, "window.error");
       });
 
       window.addEventListener("unhandledrejection", (event) => {
@@ -1238,10 +1238,10 @@ final class WebViewController: NSViewController, WKNavigationDelegate {
           }
         }
 
-        window.stickItHost.reportFrontendError(message || "Unhandled promise rejection", "unhandledrejection");
+        window.floatemHost.reportFrontendError(message || "Unhandled promise rejection", "unhandledrejection");
       });
 
-      window.__stickItNativeReceive = (message) => {
+      window.__floatemNativeReceive = (message) => {
         lastHostEvent = `bridge-response:${safeStringify({ id: message.id, ok: message.ok, keys: Object.keys(message || {}) })}`;
         const record = inflight.get(message.id);
         if (!record) {
@@ -1255,13 +1255,13 @@ final class WebViewController: NSViewController, WKNavigationDelegate {
           return;
         }
 
-        record.reject(new Error(message.error || "Unknown StickIt native bridge error"));
+        record.reject(new Error(message.error || "Unknown Floatem native bridge error"));
       };
     })();
     """
     }()
 
-    private static func missingBundleHTML(for language: StickItLanguage) -> String {
+    private static func missingBundleHTML(for language: FloatemLanguage) -> String {
         let localization = language.localization
 
         return """
@@ -1269,7 +1269,7 @@ final class WebViewController: NSViewController, WKNavigationDelegate {
     <html lang="\(language.htmlLanguageCode)">
       <head>
         <meta charset="utf-8" />
-        <title>StickIt</title>
+        <title>Floatem</title>
         <style>
           body {
             margin: 0;

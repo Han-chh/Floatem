@@ -12,9 +12,9 @@ struct LaunchContextResolver {
     private(set) var consumedInitialActivation = false
 
     init(arguments: [String] = ProcessInfo.processInfo.arguments, environment: [String: String] = ProcessInfo.processInfo.environment) {
-        if arguments.contains("--stickit-login-item") || environment["STICKIT_LAUNCH_CONTEXT"] == "login" {
+        if arguments.contains("--floatem-login-item") || environment["FLOATEM_LAUNCH_CONTEXT"] == "login" {
             explicitContext = .loginItem
-        } else if arguments.contains("--stickit-user-launch") || environment["STICKIT_LAUNCH_CONTEXT"] == "user" {
+        } else if arguments.contains("--floatem-user-launch") || environment["FLOATEM_LAUNCH_CONTEXT"] == "user" {
             explicitContext = .user
         } else {
             explicitContext = .automatic

@@ -9,11 +9,11 @@ cd "$REPO_ROOT"
 pnpm frontend:build
 
 xcodebuild \
-  -project apps/mac-host/StickIt.xcodeproj \
-  -scheme StickIt \
+  -project apps/mac-host/Floatem.xcodeproj \
+  -scheme Floatem \
   -configuration Debug \
   -derivedDataPath build/DerivedData \
   CODE_SIGNING_ALLOWED=NO \
   build
 
-open "$REPO_ROOT/build/DerivedData/Build/Products/Debug/StickIt.app"
+open "$REPO_ROOT/build/DerivedData/Build/Products/Debug/Floatem.app"

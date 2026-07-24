@@ -1,6 +1,8 @@
 # Windows 开发环境 setup
 
-面向在 Windows 上从零接手 StickIt 的开发者：环境要求、安装、验证与常见问题。功能级说明（宿主能力、限制）见 [windows-setup.md](./windows-setup.md)。
+> v1.0.8 状态：Windows 宿主是持续维护的开发预览目标，共用 v1.0.8 前端，但不属于当前 macOS App Store/TestFlight 正式包；Windows 悬浮卡片与桌面置顶卡片仍被禁用。
+
+面向在 Windows 上从零接手 Floatem 的开发者：环境要求、安装、验证与常见问题。功能级说明（宿主能力、限制）见 [windows-setup.md](./windows-setup.md)。
 
 ## 架构速览（与本机相关部分）
 
@@ -9,7 +11,7 @@
 | 共享前端 | `apps/frontend` | React + Vite，不硬编码 macOS/Windows 宿主逻辑 |
 | Windows 宿主 | `apps/windows-host` | .NET 8 WPF + WebView2 + Win32 互操作 |
 | Bridge 契约 | `packages/native-bridge` | `HostBridge` 类型与事件名 |
-| 前端 bridge 入口 | `apps/frontend/src/lib/nativeBridge.ts` | `window.stickItHost` / 浏览器 fallback |
+| 前端 bridge 入口 | `apps/frontend/src/lib/nativeBridge.ts` | `window.floatemHost` / 浏览器 fallback |
 | 品牌与元数据 | `packages/branding` | `branding.json`、图标路径引用 |
 
 ## 仓库根目录结构（速查）
@@ -17,7 +19,7 @@
 在仓库根目录应能看到下列主要目录（与 [architecture.md](./architecture.md) 一致）：
 
 ```text
-stickit/
+floatem/
 ├── apps/
 │   ├── frontend/          # 共享 React + Vite 前端（UI、设置、笔记、测试）
 │   ├── mac-host/         # macOS 宿主（Xcode / AppKit / WKWebView），Windows 上无需构建
@@ -38,7 +40,7 @@ stickit/
 
 | 依赖 | 用途 | 推荐版本 |
 |------|------|----------|
-| Windows | 宿主目标 SDK | **Windows 10 19041+** 或 Windows 11（与 `StickIt.Windows.csproj` 中 `net8.0-windows10.0.19041.0` 一致） |
+| Windows | 宿主目标 SDK | **Windows 10 19041+** 或 Windows 11（与 `Floatem.Windows.csproj` 中 `net8.0-windows10.0.19041.0` 一致） |
 | Node.js | 前端构建、Vitest、Playwright | **20 LTS 或 22 LTS**（团队曾用 v24 验证，建议优先 LTS） |
 | pnpm | 与仓库 lockfile 一致的包管理 | **9.x / 10.x**（参见根目录 `pnpm-lock.yaml`） |
 | Git | 克隆与提交 | 任意近期版本 |
@@ -60,8 +62,8 @@ stickit/
 在仓库根目录（路径中尽量避免多余空格，见下文「路径空格」）：
 
 ```powershell
-git clone <你的远程地址> stickit
-cd stickit
+git clone <你的远程地址> floatem
+cd floatem
 ```
 
 安装 Node 依赖（任选其一）：
@@ -120,7 +122,7 @@ pnpm install
 pnpm windows:run
 ```
 
-等价于：先 `pnpm build`（产出 `apps/frontend/dist`），再 `dotnet run --project apps/windows-host/StickIt.Windows.csproj`。宿主将 dist 映射为 `https://stickit.local/index.html`（避免 `file://` 下模块脚本限制）。
+等价于：先 `pnpm build`（产出 `apps/frontend/dist`），再 `dotnet run --project apps/windows-host/Floatem.Windows.csproj`。宿主将 dist 映射为 `https://floatem.local/index.html`（避免 `file://` 下模块脚本限制）。
 
 ## 开发调试（Vite 热更新 + 宿主）
 
@@ -135,11 +137,11 @@ pnpm frontend:dev
 **终端 B：**
 
 ```powershell
-$env:STICKIT_FRONTEND_URL = "http://127.0.0.1:1420"
-dotnet run --project apps/windows-host/StickIt.Windows.csproj
+$env:FLOATEM_FRONTEND_URL = "http://127.0.0.1:1420"
+dotnet run --project apps/windows-host/Floatem.Windows.csproj
 ```
 
-宿主在 `MainWindow.xaml.cs` 中读取 `STICKIT_FRONTEND_URL`；未设置时回退到已构建的 `web/` 或向上查找 `apps/frontend/dist`。
+宿主在 `MainWindow.xaml.cs` 中读取 `FLOATEM_FRONTEND_URL`；未设置时回退到已构建的 `web/` 或向上查找 `apps/frontend/dist`。
 
 在设置或宿主中调用 `openDevTools` 可打开 WebView2 开发者工具。
 
@@ -160,7 +162,7 @@ powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\windows\setup-dev.
 ```powershell
 pnpm exec vitest --config apps/frontend/vite.config.ts --run
 pnpm build
-dotnet build apps/windows-host/StickIt.Windows.csproj
+dotnet build apps/windows-host/Floatem.Windows.csproj
 ```
 
 布局 E2E（需 Playwright 浏览器）：
@@ -195,7 +197,7 @@ Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
 
 ### 端口 1420 被占用
 
-改 Vite 端口需同时改 `apps/frontend/vite.config.ts` 的 `server.port` **和** `STICKIT_FRONTEND_URL`，二者保持一致。
+改 Vite 端口需同时改 `apps/frontend/vite.config.ts` 的 `server.port` **和** `FLOATEM_FRONTEND_URL`，二者保持一致。
 
 ### 路径中的空格
 

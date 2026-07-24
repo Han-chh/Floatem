@@ -2,7 +2,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import { useEffect, useMemo, useState } from "react";
 import { buildHelpDialogContent, type HelpSection } from "../../content/helpContent";
 import { useI18n } from "../../lib/i18n";
-import { getStickItBridge, isNativeStickItHost } from "../../lib/nativeBridge";
+import { getFloatemBridge, isNativeFloatemHost } from "../../lib/nativeBridge";
 import { useSettingsStore } from "../../store/settingsStore";
 import {
   ChevronRightIcon,
@@ -39,7 +39,7 @@ export function HelpDialog({ isOpen, onClose, onStartInteractiveGuide }: HelpDia
   const transitionStyle = useSettingsStore((state) => state.transitionStyle);
   const animationSpeed = useSettingsStore((state) => state.animationSpeed);
   const enableReminderSound = useSettingsStore((state) => state.enableReminderSound);
-  const platform = getStickItBridge().platform;
+  const platform = getFloatemBridge().platform;
   const content = useMemo(
     () =>
       buildHelpDialogContent({
@@ -51,7 +51,7 @@ export function HelpDialog({ isOpen, onClose, onStartInteractiveGuide }: HelpDia
               ? t.settings.openTodosOnHotkey
               : t.settings.openLastStoredSection,
         hotkey,
-        isNativeHost: isNativeStickItHost(),
+        isNativeHost: isNativeFloatemHost(),
         language,
         motionLabel: `${t.settings.tabTransitionStyle}: ${
           transitionStyle === "lift"
@@ -121,7 +121,7 @@ export function HelpDialog({ isOpen, onClose, onStartInteractiveGuide }: HelpDia
       {isOpen ? (
         <motion.div
           data-no-window-drag="true"
-          className="stickit-modal-backdrop fixed inset-0 z-[95] flex items-center justify-center bg-[rgba(30,25,21,0.24)] px-4 py-5"
+          className="floatem-modal-backdrop fixed inset-0 z-[95] flex items-center justify-center bg-[rgba(30,25,21,0.24)] px-4 py-5"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}

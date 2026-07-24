@@ -5,7 +5,7 @@ enum SharedDataStoreError: LocalizedError {
     case invalidJSON
 
     var errorDescription: String? {
-        "StickIt shared data is not valid JSON."
+        "Floatem shared data is not valid JSON."
     }
 }
 
@@ -19,7 +19,7 @@ final class SharedDataStore: @unchecked Sendable {
 
     let directoryURL: URL
     private let fileManager: FileManager
-    private let logger = Logger(subsystem: "com.stickit.app", category: "SharedData")
+    private let logger = Logger(subsystem: "com.floatem.app", category: "SharedData")
 
     init(directoryURL: URL, fileManager: FileManager = .default) {
         self.directoryURL = directoryURL
@@ -27,7 +27,7 @@ final class SharedDataStore: @unchecked Sendable {
     }
 
     convenience init?() {
-        guard let directoryURL = StickItSharedContainer.sharedDataURL() else {
+        guard let directoryURL = FloatemSharedContainer.sharedDataURL() else {
             return nil
         }
         self.init(directoryURL: directoryURL)
@@ -113,7 +113,7 @@ final class SharedDataStore: @unchecked Sendable {
         try writeCodable(preferences, filename: Self.widgetPreferencesFilename)
     }
 
-    func latestRequestedEntity(kind: StickItEntityKind) throws -> WidgetEntityReference? {
+    func latestRequestedEntity(kind: FloatemEntityKind) throws -> WidgetEntityReference? {
         try widgetPreferences()
             .filter { $0.entityKind == kind }
             .max(by: { $0.requestedAt < $1.requestedAt })
@@ -237,7 +237,7 @@ struct LegacyDataMigrator {
     let legacyDirectoryURL: URL
     let sharedStore: SharedDataStore
     var fileManager: FileManager = .default
-    private let logger = Logger(subsystem: "com.stickit.app", category: "Migration")
+    private let logger = Logger(subsystem: "com.floatem.app", category: "Migration")
 
     func migrateIfNeeded() throws {
         try fileManager.createDirectory(at: sharedStore.directoryURL, withIntermediateDirectories: true)
@@ -246,7 +246,7 @@ struct LegacyDataMigrator {
         }
         try migrateDesktopCardsIfNeeded()
         let record = [
-            "schemaVersion": StickItSharedContainer.currentSchemaVersion,
+            "schemaVersion": FloatemSharedContainer.currentSchemaVersion,
             "migratedAt": ISO8601DateFormatter().string(from: Date()),
         ] as [String: Any]
         try sharedStore.writeJSONObject(record, filename: Self.migrationRecordFilename)
@@ -277,7 +277,7 @@ struct LegacyDataMigrator {
             for record in object as? [[String: Any]] ?? [] {
                 guard
                     let kindValue = record["kind"] as? String,
-                    let kind = StickItEntityKind(rawValue: kindValue),
+                    let kind = FloatemEntityKind(rawValue: kindValue),
                     let id = record["id"] as? String,
                     !id.isEmpty
                 else { continue }

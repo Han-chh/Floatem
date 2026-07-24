@@ -1,7 +1,9 @@
 import { AnimatePresence, motion } from "framer-motion";
+import { floatemBranding } from "@floatem/branding";
 import type { ReactNode } from "react";
 import { useState } from "react";
 import { useI18n } from "../../lib/i18n";
+import { useSettingsStore } from "../../store/settingsStore";
 import {
   ChevronUpIcon,
   CircleHelpIcon,
@@ -10,6 +12,7 @@ import {
 import type { AnimationSpeed, TabId, TransitionStyle } from "../../lib/models";
 import { getSurfaceMotionConfig } from "../../lib/transitionMotion";
 import { HelpDialog } from "./HelpDialog";
+import { FirstLaunchHelpHint } from "./FirstLaunchHelpHint";
 import { InteractiveGuide } from "./InteractiveGuide";
 import { TabBar } from "./TabBar";
 
@@ -40,6 +43,9 @@ export function PanelShell({
   const [isHeaderCollapsed, setIsHeaderCollapsed] = useState(false);
   const [isHelpOpen, setIsHelpOpen] = useState(false);
   const [isInteractiveGuideOpen, setIsInteractiveGuideOpen] = useState(false);
+  const isSettingsLoaded = useSettingsStore((state) => state.isLoaded);
+  const hasSeenHelpEntryHint = useSettingsStore((state) => state.hasSeenHelpEntryHint);
+  const setHasSeenHelpEntryHint = useSettingsStore((state) => state.setHasSeenHelpEntryHint);
   const pageDirection = showSettings ? 1 : -1;
   const surfaceMotion = getSurfaceMotionConfig(transitionStyle, animationSpeed);
   const panelChromeDuration =
@@ -48,17 +54,29 @@ export function PanelShell({
       : 0.22;
   const getPanelChromeDelay = (delay: number) => (transitionStyle === "slide" ? 0 : delay);
   const headerToggleLabel = isHeaderCollapsed ? t.app.expandNavigation : t.app.collapseNavigation;
+  const isFirstLaunchHelpHintOpen =
+    isSettingsLoaded &&
+    !hasSeenHelpEntryHint &&
+    !showSettings &&
+    !isHeaderCollapsed;
+  const dismissFirstLaunchHelpHint = () => {
+    setHasSeenHelpEntryHint(true);
+  };
+  const openHelp = () => {
+    setHasSeenHelpEntryHint(true);
+    setIsHelpOpen(true);
+  };
 
   return (
-    <main className="stickit-content-surface h-screen overflow-hidden text-[13.5px] text-[var(--dark-text)]">
+    <main className="floatem-content-surface h-screen overflow-hidden text-[13.5px] text-[var(--dark-text)]">
       <motion.div
         initial={{ opacity: 0, y: 16, scale: 0.98 }}
         animate={{ opacity: 1, y: 0, scale: 1 }}
         transition={{ duration: 0.32, ease: [0.22, 1, 0.36, 1] }}
         className="h-full"
       >
-        <div className="stickit-content cq-panel">
-          <div className="stickit-page-viewport relative h-full min-h-0 overflow-hidden" style={surfaceMotion.sceneStyle}>
+        <div className="floatem-content cq-panel">
+          <div className="floatem-page-viewport relative h-full min-h-0 overflow-hidden" style={surfaceMotion.sceneStyle}>
             <AnimatePresence initial={false} mode={surfaceMotion.presenceMode} custom={pageDirection}>
               {showSettings ? (
                 <motion.div
@@ -80,7 +98,7 @@ export function PanelShell({
                       delay: getPanelChromeDelay(0.04),
                       ease: [0.22, 1, 0.36, 1],
                     }}
-                    className="paper-panel stickit-fill-panel relative h-full min-h-0 flex-1 overflow-hidden rounded-[32px] p-3"
+                    className="paper-panel floatem-fill-panel relative h-full min-h-0 flex-1 overflow-hidden rounded-[32px] p-3"
                   >
                     <div className="theme-inset-surface relative h-full overflow-visible rounded-[26px]">
                       {settingsPanel}
@@ -132,35 +150,78 @@ export function PanelShell({
                           >
                             <div className="space-y-1.5">
                               <div className="flex min-w-0 items-center justify-between gap-2.5">
-                                <p className="font-display text-[clamp(16px,4.5vw,19px)] font-semibold tracking-normal text-[var(--brown-strong)]">
-                                  StickIt
-                                </p>
-                                <div className="flex shrink-0 items-center gap-1.5">
-                                  <motion.button
-                                    type="button"
-                                    aria-label={t.app.help}
-                                    data-tooltip={t.app.help}
-                                    data-tooltip-placement="bottom"
-                                    className="paper-icon-button mt-1.5 h-[30px] w-[30px] min-h-0 min-w-0 shrink-0 rounded-[11px] text-[#7A5E39] outline-none focus-visible:outline-none focus-visible:border-[rgba(122,94,57,0.48)]"
-                                    whileHover={{ y: -1.5, scale: 1.02 }}
-                                    whileTap={{ scale: 0.985 }}
-                                    onClick={() => setIsHelpOpen(true)}
+                                <div className="flex min-w-0 items-baseline gap-2.5">
+                                  <p className="shrink-0 font-display text-[clamp(16px,4.5vw,19px)] font-semibold tracking-normal text-[var(--brown-strong)]">
+                                    {floatemBranding.displayName}
+                                  </p>
+                                  <p className="floatem-slogan min-w-0 truncate text-[clamp(9px,2.5vw,11px)] font-medium tracking-[0.015em] text-[#744a38] opacity-80">
+                                    {floatemBranding.slogan}
+                                  </p>
+                                </div>
+                                <div
+                                  data-testid="header-actions"
+                                  className="flex h-[30px] shrink-0 items-center gap-1.5 self-center"
+                                >
+                                  <span
+                                    data-testid="help-action-slot"
+                                    className="relative inline-flex h-[30px] w-[30px] shrink-0 items-center justify-center"
                                   >
-                                    <CircleHelpIcon size={15} />
-                                  </motion.button>
-                                  <motion.button
-                                    type="button"
-                                    aria-label={t.app.settings}
-                                    data-guide="settings-open"
-                                    data-tooltip={t.app.settings}
-                                    data-tooltip-placement="bottom"
-                                    className="paper-icon-button mt-1.5 h-[30px] w-[30px] min-h-0 min-w-0 shrink-0 rounded-[11px]"
-                                    whileHover={{ y: -1.5, scale: 1.02 }}
-                                    whileTap={{ scale: 0.985 }}
-                                    onClick={onToggleSettings}
+                                    <AnimatePresence>
+                                      {isFirstLaunchHelpHintOpen ? (
+                                        <>
+                                          <motion.span
+                                            data-testid="first-launch-help-highlight"
+                                            aria-hidden="true"
+                                            className="pointer-events-none absolute -inset-2 rounded-[16px] border border-[rgba(244,185,66,0.74)]"
+                                            initial={{ opacity: 0, scale: 0.72 }}
+                                            animate={{
+                                              opacity: [0.35, 0.9, 0.35],
+                                              scale: [0.82, 1.12, 0.82],
+                                            }}
+                                            exit={{ opacity: 0, scale: 0.85 }}
+                                            transition={{ duration: 1.8, ease: "easeInOut", repeat: Infinity }}
+                                          />
+                                          <motion.span
+                                            aria-hidden="true"
+                                            className="pointer-events-none absolute -inset-1 rounded-[14px] bg-[rgba(244,185,66,0.18)] shadow-[0_0_22px_rgba(244,185,66,0.46)]"
+                                            animate={{ opacity: [0.5, 1, 0.5] }}
+                                            transition={{ duration: 1.8, ease: "easeInOut", repeat: Infinity }}
+                                          />
+                                        </>
+                                      ) : null}
+                                    </AnimatePresence>
+                                    <motion.button
+                                      type="button"
+                                      aria-label={t.app.help}
+                                      data-guide="help-open"
+                                      data-tooltip={t.app.help}
+                                      data-tooltip-placement="bottom"
+                                      className="paper-icon-button relative z-[1] h-[30px] w-[30px] min-h-0 min-w-0 shrink-0 rounded-[11px] text-[#7A5E39] outline-none focus-visible:outline-none focus-visible:border-[rgba(122,94,57,0.48)]"
+                                      whileHover={{ y: -1.5, scale: 1.02 }}
+                                      whileTap={{ scale: 0.985 }}
+                                      onClick={openHelp}
+                                    >
+                                      <CircleHelpIcon size={15} />
+                                    </motion.button>
+                                  </span>
+                                  <span
+                                    data-testid="settings-action-slot"
+                                    className="inline-flex h-[30px] w-[30px] shrink-0 items-center justify-center"
                                   >
-                                    <SlidersHorizontalIcon size={14} />
-                                  </motion.button>
+                                    <motion.button
+                                      type="button"
+                                      aria-label={t.app.settings}
+                                      data-guide="settings-open"
+                                      data-tooltip={t.app.settings}
+                                      data-tooltip-placement="bottom"
+                                      className="paper-icon-button h-[30px] w-[30px] min-h-0 min-w-0 shrink-0 rounded-[11px]"
+                                      whileHover={{ y: -1.5, scale: 1.02 }}
+                                      whileTap={{ scale: 0.985 }}
+                                      onClick={onToggleSettings}
+                                    >
+                                      <SlidersHorizontalIcon size={14} />
+                                    </motion.button>
+                                  </span>
                                 </div>
                               </div>
 
@@ -217,7 +278,7 @@ export function PanelShell({
                       delay: getPanelChromeDelay(0.06),
                       ease: [0.22, 1, 0.36, 1],
                     }}
-                    className="paper-panel stickit-fill-panel relative min-h-0 flex-1 overflow-hidden rounded-[32px] p-3"
+                    className="paper-panel floatem-fill-panel relative min-h-0 flex-1 overflow-hidden rounded-[32px] p-3"
                   >
                     <div
                       data-testid="panel-scroll-region"
@@ -240,6 +301,11 @@ export function PanelShell({
           setIsHelpOpen(false);
           setIsInteractiveGuideOpen(true);
         }}
+      />
+      <FirstLaunchHelpHint
+        isOpen={isFirstLaunchHelpHintOpen}
+        onDismiss={dismissFirstLaunchHelpHint}
+        onOpenHelp={openHelp}
       />
       <InteractiveGuide
         activeTab={activeTab}

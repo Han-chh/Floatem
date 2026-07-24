@@ -8,8 +8,8 @@ import type {
   NotificationPermissionResult,
   NotificationRequest,
   ShortcutConfig,
-} from "@stickit/native-bridge";
-import { hostEventNames } from "@stickit/native-bridge";
+} from "@floatem/native-bridge";
+import { hostEventNames } from "@floatem/native-bridge";
 import type {
   AppLanguage,
   AppSettings,
@@ -22,9 +22,9 @@ import type {
 } from "./models";
 import { DEFAULT_SETTINGS, normalizeAppSettings, normalizeNotesDocument, normalizeTodosDocument } from "./models";
 
-const NOTES_STORAGE_KEY = "stickit.notes";
-const TODOS_STORAGE_KEY = "stickit.todos";
-const SETTINGS_STORAGE_KEY = "stickit.settings";
+const NOTES_STORAGE_KEY = "floatem.notes";
+const TODOS_STORAGE_KEY = "floatem.todos";
+const SETTINGS_STORAGE_KEY = "floatem.settings";
 const LEGACY_STORAGE_PREFIX = "quicknote.";
 
 export const PANEL_POSITION_EVENT = hostEventNames.panelPosition;
@@ -48,7 +48,7 @@ export type TextColorPanelCloseDetail = {
   requestId: string;
 };
 
-export type StickItNativeBridge = HostBridge<RawLoadAllResult, NotesDocument, TodosDocument, Partial<AppSettings>> & {
+export type FloatemNativeBridge = HostBridge<RawLoadAllResult, NotesDocument, TodosDocument, Partial<AppSettings>> & {
   clearFloatingCardGuides?: () => Promise<void>;
   setFloatingCardGuide?: (card: FloatingCardReference, guide: FloatingCardGuideState | null) => Promise<void>;
   testReminderNotification: (options?: {
@@ -68,8 +68,8 @@ export type FloatingCardGuideState = {
 
 declare global {
   interface Window {
-    stickItHost?: StickItNativeBridge;
-    stickItNative?: StickItNativeBridge;
+    floatemHost?: FloatemNativeBridge;
+    floatemNative?: FloatemNativeBridge;
   }
 }
 
@@ -103,7 +103,7 @@ function writeStoredValue(key: string, value: unknown) {
   }
 }
 
-const browserBridge: StickItNativeBridge = {
+const browserBridge: FloatemNativeBridge = {
   platform: "web",
   async getCapabilities(): Promise<HostCapabilities> {
     return {
@@ -299,17 +299,17 @@ const browserBridge: StickItNativeBridge = {
   },
 };
 
-export function isNativeStickItHost() {
+export function isNativeFloatemHost() {
   return (
     typeof window !== "undefined" &&
-    (typeof window.stickItHost?.loadAllData === "function" ||
-      typeof window.stickItNative?.loadAllData === "function")
+    (typeof window.floatemHost?.loadAllData === "function" ||
+      typeof window.floatemNative?.loadAllData === "function")
   );
 }
 
-export function getStickItBridge() {
+export function getFloatemBridge() {
   if (typeof window !== "undefined") {
-    return window.stickItHost ?? window.stickItNative ?? browserBridge;
+    return window.floatemHost ?? window.floatemNative ?? browserBridge;
   }
 
   return browserBridge;

@@ -1,12 +1,25 @@
 # Changelog
 
+All notable repository changes are recorded here. Historical entries describe the behavior of their named release and are not statements of current platform support.
+
+## Unreleased
+
+- No changes after the v1.0.8 release snapshot.
+
+## 1.0.8
+
+- Highlight the upper-right help button on a fresh installation and present a focused, bilingual dialog that introduces Floatem's feature help and interactive guide.
+- Persist the first-install hint state locally, keep it from competing with the launch-at-login prompt, and avoid showing it unexpectedly to existing users after upgrade.
+- Declare that Floatem does not use non-exempt encryption so future App Store Connect uploads can skip the repeated export-compliance questionnaire.
+- Bump Floatem to version 1.0.8 (build 46).
+
 ## 1.0.7
 
-- Move the fixed English copyright statement to the bottom of About StickIt as an unboxed footer.
+- Move the fixed English copyright statement to the bottom of About Floatem as an unboxed footer.
 - Explain the difference between ordinary floating notes and desktop-pinned notes directly inside the floating-card guide animation.
 - Keep guide scrolling inside the content panel, restore the original interface state, and reset document offset after the guide ends.
 - Show a bilingual congratulations dialog after all seven interactive-guide features are complete.
-- Bump StickIt to version 1.0.7 (build 45).
+- Bump Floatem to version 1.0.7 (build 45).
 
 ## 1.0.6
 
@@ -19,13 +32,13 @@
 - Demonstrate resizing both note and todo floating cards through an invisible bottom-right interaction area, adding todos to another date, and returning floating cards through either Close or drag-back.
 - Let guided todos be submitted with either Enter or the visible submit key, advance completion and restoration in exactly two clicks, and clearly ring the delete control.
 - Finish with a large text-only overview of every Settings submenu and adjustable option, followed by one Finish guide action.
-- Expand About StickIt with feature and privacy details, a contact email, an English copyright statement, and the macOS system copyright field.
-- Bump StickIt to version 1.0.6 (build 44).
+- Expand About Floatem with feature and privacy details, a contact email, an English copyright statement, and the macOS system copyright field.
+- Bump Floatem to version 1.0.6 (build 44).
 
 ## 1.0.5
 
 - Expand the seven-part interactive guide with real note and todo reordering, group filtering, note rich-text editing, formatting-toolbar folding, Enter-to-focus todo capture, and floating todo practice.
-- Demonstrate both ways to return a floating note to StickIt: click × or drag the card back into the main list with an insertion preview.
+- Demonstrate both ways to return a floating note to Floatem: click × or drag the card back into the main list with an insertion preview.
 - Replace the final settings tour with one focused Settings entry step and a concise bilingual overview of every configurable area.
 - Show both feature-level and within-feature progress, keep Previous/Next navigation scoped to whole features, and present the rich-text toolbar as an automatic explanation before reliably demonstrating its collapse and expand controls.
 - Keep practice cards and groups isolated, clear floating guidance reliably, and add regression coverage for the new rich-text walkthrough.
@@ -41,7 +54,7 @@
 
 ## 1.0.3
 
-- Distinguish Finder and Spotlight opens from macOS Login Item launches so the first direct open presents StickIt immediately while login startup remains silent.
+- Distinguish Finder and Spotlight opens from macOS Login Item launches so the first direct open presents Floatem immediately while login startup remains silent.
 - Consolidate the interactive guide into 7 complete feature workflows while preserving focused, in-place instructions and automatic practice-data cleanup.
 - Bump the macOS app to build 34.
 
@@ -52,23 +65,15 @@
 - Clarify the navigation-folding help copy and remove duplicate punctuation from the English time-format status.
 - Keep direct launches from Finder, Spotlight, or a double-click visible while login-item launches remain in the background.
 
-All notable repository changes are recorded here.
+## 1.0.1
 
-## v0.6.1 - 2026-07-18
-
-- Replace the macOS application icon with the new glass-reflection StickIt artwork.
-- Keep both reflection and non-reflection source designs for future branding work.
-- Bump the application version to `0.6.1` and macOS build number to `29`.
-
-## Unreleased
-
-- Bump StickIt to v1.0.1 (build 32), add a bilingual launch-at-login explanation prompt, and let users dismiss it once or suppress future prompts.
+- Bump Floatem to v1.0.1 (build 32), add a bilingual launch-at-login explanation prompt, and let users dismiss it once or suppress future prompts.
 - Always show the Main Window for first installs and user-initiated launches; keep only an actually enabled Login Item launch silent.
 - Prepare v1.0.0 for App Store distribution with an Apple Distribution Release configuration, App Sandbox, and the existing App Group.
 - Remove the WidgetKit extension from the product; desktop-pinned Note and Todo cards are provided exclusively by app-owned NSPanel windows.
 - Default new installations to launch-at-login off, keep login launches silent, and show the Main Window only for user-initiated launches.
 - Restore desktop pinning to app-owned `DesktopCardPanel` windows, persist entity-only typed placement state, recreate panels during silent Login Item startup, and warn when login launch is unavailable.
-- Move macOS authoritative data into App Group `group.com.hankch.stickit`, add atomic/idempotent legacy migration, and reduce old `desktop-cards.json` entries to schema-v1 entity-only Widget preferences.
+- Move macOS authoritative data into App Group `group.com.hankch.floatem`, add atomic/idempotent legacy migration, and reduce old `desktop-cards.json` entries to schema-v1 entity-only Widget preferences.
 - Keep full editing in floating AppKit/Web cards while sharing their WebKit process pool/data store/bootstrap, loading a dedicated floating Vite entry, and logging active lifecycle counts.
 - Restore floating frames with display UUIDs, normalized positions, and shared visible-frame clamping; keep login-item launches silent while preserving user launch, reopen, shortcut, and deep-link behavior.
 - Add native XCTest coverage and a macOS desktop-card/manual regression guide.
@@ -78,6 +83,12 @@ All notable repository changes are recorded here.
 - Keep the original desktop-pin entry point and map it to `DesktopCardPanel`.
 - Preserve rounded note and todo silhouettes in drag previews and detached floating windows by making their dedicated WebView root surfaces fully transparent.
 - Add a user-controlled launch-at-login preference to General Settings, backed by `SMAppService.mainApp` on macOS and the current-user Run key on Windows.
+
+## v0.6.1 - 2026-07-18
+
+- Replace the macOS application icon with the new glass-reflection Floatem artwork.
+- Keep both reflection and non-reflection source designs for future branding work.
+- Bump the application version to `0.6.1` and macOS build number to `29`.
 
 ## v0.5.0 - 2026-05-25
 
@@ -111,7 +122,7 @@ Contents:
 - Expand section-opening controls with `Open last stored section by default`, update hotkey summon behavior so Notes or Todos can be forced on each summon, and add a one-click `Restore defaults` action for the full Settings state.
 - Extend page-turn and slide animations to main-surface and Settings transitions, add the new `Lift` transition, retune switch-speed tiers with dedicated icons, and keep particle feedback toggle rendering stable without clipping.
 - Replace manual shortcut text editing with a record-in-dialog flow that captures key combos directly, validates modifier requirements, reports success or failure, and preserves the previous shortcut if native registration fails.
-- Add complete English and Simplified Chinese localization across the React UI and native macOS shell, including a language switcher with dedicated language icons while keeping the app name `StickIt` unchanged in both languages.
+- Add complete English and Simplified Chinese localization across the React UI and native macOS shell, including a language switcher with dedicated language icons while keeping the app name `Floatem` unchanged in both languages.
 - Bump the repository version to `0.2.4`.
 
 ## v0.2.3 - 2026-04-02
@@ -151,7 +162,7 @@ Contents:
 ## v0.2.0 - 2026-03-31
 
 Purpose:
-- Replace the unstable Tauri + Rust desktop shell with a pure macOS native AppKit + WKWebView host while preserving the existing StickIt frontend UI and interactions.
+- Replace the unstable Tauri + Rust desktop shell with a pure macOS native AppKit + WKWebView host while preserving the existing Floatem frontend UI and interactions.
 
 Contents:
 - Remove the Tauri/Rust host layer and rebuild the desktop runtime around a native AppKit application, a single owned floating panel, and a thin `WKWebView` JavaScript bridge.
@@ -489,7 +500,7 @@ Contents:
 ## v0.1.0 - 2026-03-28
 
 Purpose:
-- Establish the initial StickIt desktop scaffold and baseline version tag.
+- Establish the initial Floatem desktop scaffold and baseline version tag.
 
 Contents:
 - Initialize the Tauri 2 + React 18 + TypeScript project structure.
@@ -537,7 +548,7 @@ Purpose:
 - Add a reviewable, Figma-style Notes home preview so the next visual direction can be inspected before applying it to the main app shell.
 
 Contents:
-- Add a standalone design-preview route at `?preview=figma-notes-home` without changing the production StickIt flow.
+- Add a standalone design-preview route at `?preview=figma-notes-home` without changing the production Floatem flow.
 - Build an icon-rich Notes home board with tokens, components, responsive frames, textures, and a clickable prototype section.
 - Add local SVG icon components to model the intended Lucide-style action language across tabs, hero actions, note cards, and settings.
 - Export review screenshots locally because a real Figma MCP workspace is still unavailable in this environment.
@@ -545,7 +556,7 @@ Contents:
 ## v0.1.5 - 2026-03-28
 
 Purpose:
-- Apply the approved icon-rich Notes Home design language to the production StickIt interface.
+- Apply the approved icon-rich Notes Home design language to the production Floatem interface.
 
 Contents:
 - Migrate the main panel shell and segmented tabs to the higher-contrast, texture-light, icon-first visual system.
@@ -559,7 +570,7 @@ Purpose:
 - Expand the working space of the main panel and turn settings into a full-page destination with real motion and behavior controls.
 
 Contents:
-- Remove the StickIt intro copy from the main shell so Notes and Todos get more vertical space.
+- Remove the Floatem intro copy from the main shell so Notes and Todos get more vertical space.
 - Replace the old settings overlay with a full-window settings view that includes product introduction and broader option controls.
 - Add persisted settings for transition style, transition speed, and particle effects, and wire them into the live app.
 - Speed up Notes/Todos switching and add an optional page-turn transition style as the default behavior.

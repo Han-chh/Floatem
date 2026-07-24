@@ -2,9 +2,9 @@ import AppKit
 import OSLog
 import UserNotifications
 
-private let stickItReminderNotificationPrefix = "stickit.todo.reminder."
-private let stickItTestNotificationPrefix = "stickit.test.notification."
-private let stickItBridgeNotificationPrefix = "stickit.bridge.notification."
+private let floatemReminderNotificationPrefix = "floatem.todo.reminder."
+private let floatemTestNotificationPrefix = "floatem.test.notification."
+private let floatemBridgeNotificationPrefix = "floatem.bridge.notification."
 
 struct TodoReminderDescriptor: Hashable {
     let todoID: String
@@ -13,7 +13,7 @@ struct TodoReminderDescriptor: Hashable {
     let reminderDate: Date
 
     var notificationIdentifier: String {
-        "\(stickItReminderNotificationPrefix)\(todoID)"
+        "\(floatemReminderNotificationPrefix)\(todoID)"
     }
 }
 
@@ -52,13 +52,13 @@ enum NotificationManagerError: LocalizedError {
     var errorDescription: String? {
         switch self {
         case let .reminderDateMissing(todoID):
-            return "StickIt could not schedule reminder \(todoID) because reminderDate is missing."
+            return "Floatem could not schedule reminder \(todoID) because reminderDate is missing."
         case let .reminderDateInPast(todoID, reminderDate):
-            return "StickIt could not schedule reminder \(todoID) because the reminder date \(reminderDate) is not in the future."
+            return "Floatem could not schedule reminder \(todoID) because the reminder date \(reminderDate) is not in the future."
         case let .notificationsNotAllowed(message, _):
             return message
         case let .schedulingFailed(identifier, underlying):
-            return "StickIt failed to schedule notification \(identifier): \(underlying.localizedDescription)"
+            return "Floatem failed to schedule notification \(identifier): \(underlying.localizedDescription)"
         }
     }
 
@@ -75,7 +75,7 @@ enum NotificationManagerError: LocalizedError {
 @MainActor
 final class NotificationManager: NSObject, @preconcurrency UNUserNotificationCenterDelegate {
     private let center: UNUserNotificationCenter
-    private let logger = Logger(subsystem: "com.stickit.app", category: "Notifications")
+    private let logger = Logger(subsystem: "com.floatem.app", category: "Notifications")
 
     var onReminderResponse: ((String) -> Void)?
 
@@ -85,7 +85,7 @@ final class NotificationManager: NSObject, @preconcurrency UNUserNotificationCen
     }
 
     static func reminderIdentifier(for todoID: String) -> String {
-        "\(stickItReminderNotificationPrefix)\(todoID)"
+        "\(floatemReminderNotificationPrefix)\(todoID)"
     }
 
     func configure() {
@@ -114,7 +114,7 @@ final class NotificationManager: NSObject, @preconcurrency UNUserNotificationCen
         )
     }
 
-    func requestAuthorizationOnLaunchIfNeeded(language: StickItLanguage) async {
+    func requestAuthorizationOnLaunchIfNeeded(language: FloatemLanguage) async {
         do {
             let snapshot = try await requestAuthorizationIfNeeded(
                 language: language,
@@ -130,7 +130,7 @@ final class NotificationManager: NSObject, @preconcurrency UNUserNotificationCen
         }
     }
 
-    func checkAuthorization(language: StickItLanguage) async throws -> Bool {
+    func checkAuthorization(language: FloatemLanguage) async throws -> Bool {
         let snapshot = try await requestAuthorizationIfNeeded(
             language: language,
             activateAppIfNeeded: true
@@ -139,7 +139,7 @@ final class NotificationManager: NSObject, @preconcurrency UNUserNotificationCen
         return snapshot.allowsUserVisibleNotifications
     }
 
-    func scheduleTestNotification(soundEnabled: Bool, language: StickItLanguage) async throws {
+    func scheduleTestNotification(soundEnabled: Bool, language: FloatemLanguage) async throws {
         let snapshot = try await ensureSchedulingAuthorization(
             language: language,
             activateAppIfNeeded: true
@@ -151,7 +151,7 @@ final class NotificationManager: NSObject, @preconcurrency UNUserNotificationCen
         content.sound = soundEnabled ? .default : nil
 
         let request = UNNotificationRequest(
-            identifier: "\(stickItTestNotificationPrefix)\(UUID().uuidString)",
+            identifier: "\(floatemTestNotificationPrefix)\(UUID().uuidString)",
             content: content,
             trigger: UNTimeIntervalNotificationTrigger(timeInterval: 2, repeats: false)
         )
@@ -181,7 +181,7 @@ final class NotificationManager: NSObject, @preconcurrency UNUserNotificationCen
         body: String,
         scheduledAt: Date?,
         soundEnabled: Bool,
-        language: StickItLanguage
+        language: FloatemLanguage
     ) async throws {
         let snapshot = try await ensureSchedulingAuthorization(
             language: language,
@@ -204,7 +204,7 @@ final class NotificationManager: NSObject, @preconcurrency UNUserNotificationCen
         }
 
         let request = UNNotificationRequest(
-            identifier: identifier ?? "\(stickItBridgeNotificationPrefix)\(UUID().uuidString)",
+            identifier: identifier ?? "\(floatemBridgeNotificationPrefix)\(UUID().uuidString)",
             content: content,
             trigger: trigger
         )
@@ -227,7 +227,7 @@ final class NotificationManager: NSObject, @preconcurrency UNUserNotificationCen
     func replaceScheduledTodoReminders(
         with reminders: [TodoReminderDescriptor],
         soundEnabled: Bool,
-        language: StickItLanguage,
+        language: FloatemLanguage,
         requestAuthorizationIfNeeded: Bool
     ) async throws -> [TodoReminderDescriptor] {
         let validReminders = reminders.filter { $0.reminderDate > Date() }
@@ -300,7 +300,7 @@ final class NotificationManager: NSObject, @preconcurrency UNUserNotificationCen
         let notifications = await deliveredNotifications()
         let identifiers = notifications
             .map(\.request.identifier)
-            .filter { $0.hasPrefix(stickItReminderNotificationPrefix) }
+            .filter { $0.hasPrefix(floatemReminderNotificationPrefix) }
 
         guard !identifiers.isEmpty else {
             return []
@@ -319,9 +319,9 @@ final class NotificationManager: NSObject, @preconcurrency UNUserNotificationCen
     ) {
         let identifier = notification.request.identifier
         guard
-            identifier.hasPrefix(stickItReminderNotificationPrefix) ||
-            identifier.hasPrefix(stickItTestNotificationPrefix) ||
-            identifier.hasPrefix(stickItBridgeNotificationPrefix)
+            identifier.hasPrefix(floatemReminderNotificationPrefix) ||
+            identifier.hasPrefix(floatemTestNotificationPrefix) ||
+            identifier.hasPrefix(floatemBridgeNotificationPrefix)
         else {
             completionHandler([])
             return
@@ -369,7 +369,7 @@ final class NotificationManager: NSObject, @preconcurrency UNUserNotificationCen
                 let identifiers = Set(
                     requests
                         .map(\.identifier)
-                        .filter { $0.hasPrefix(stickItReminderNotificationPrefix) }
+                        .filter { $0.hasPrefix(floatemReminderNotificationPrefix) }
                 )
                 continuation.resume(returning: identifiers)
             }
@@ -377,7 +377,7 @@ final class NotificationManager: NSObject, @preconcurrency UNUserNotificationCen
     }
 
     private func requestAuthorizationIfNeeded(
-        language: StickItLanguage,
+        language: FloatemLanguage,
         activateAppIfNeeded: Bool
     ) async throws -> NotificationAuthorizationSnapshot {
         var snapshot = await currentAuthorizationSnapshot()
@@ -410,7 +410,7 @@ final class NotificationManager: NSObject, @preconcurrency UNUserNotificationCen
     }
 
     private func ensureSchedulingAuthorization(
-        language: StickItLanguage,
+        language: FloatemLanguage,
         activateAppIfNeeded: Bool
     ) async throws -> NotificationAuthorizationSnapshot {
         let snapshot = try await requestAuthorizationIfNeeded(
@@ -419,7 +419,7 @@ final class NotificationManager: NSObject, @preconcurrency UNUserNotificationCen
         )
 
         guard snapshot.allowsUserVisibleNotifications else {
-            logger.error("Notifications are not allowed for StickIt. \(snapshot.logDescription, privacy: .public)")
+            logger.error("Notifications are not allowed for Floatem. \(snapshot.logDescription, privacy: .public)")
             throw NotificationManagerError.notificationsNotAllowed(
                 message: language.localization.notificationPermissionDeniedMessage,
                 snapshot: snapshot
@@ -474,7 +474,7 @@ final class NotificationManager: NSObject, @preconcurrency UNUserNotificationCen
 
     private func mapSchedulingError(
         _ error: Error,
-        language: StickItLanguage,
+        language: FloatemLanguage,
         snapshot: NotificationAuthorizationSnapshot,
         identifier: String
     ) -> Error {
@@ -491,11 +491,11 @@ final class NotificationManager: NSObject, @preconcurrency UNUserNotificationCen
     }
 
     private static func todoID(fromReminderIdentifier identifier: String) -> String? {
-        guard identifier.hasPrefix(stickItReminderNotificationPrefix) else {
+        guard identifier.hasPrefix(floatemReminderNotificationPrefix) else {
             return nil
         }
 
-        return String(identifier.dropFirst(stickItReminderNotificationPrefix.count))
+        return String(identifier.dropFirst(floatemReminderNotificationPrefix.count))
     }
 }
 

@@ -2,13 +2,13 @@ using System.IO;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 
-namespace StickIt.Windows;
+namespace Floatem.Windows;
 
 internal sealed class AppStorage
 {
     private readonly string dataDirectory = Path.Combine(
         Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
-        "StickIt");
+        "Floatem");
     private readonly string legacyDataDirectory = Path.Combine(
         Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
         "QuickNote");

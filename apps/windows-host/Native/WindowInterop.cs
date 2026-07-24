@@ -3,7 +3,7 @@ using System.Text;
 using System.Windows;
 using System.Windows.Interop;
 
-namespace StickIt.Windows.Native;
+namespace Floatem.Windows.Native;
 
 internal static partial class WindowInterop
 {

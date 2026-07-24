@@ -141,14 +141,14 @@ for (const filename of htmlFilenames) {
   const styleTags = inlineStyles
   .map(
     ({ href, content }) =>
-      `    <style data-stickit-inline="${href}">\n${sanitizeInlineStyle(content)}\n    </style>`,
+      `    <style data-floatem-inline="${href}">\n${sanitizeInlineStyle(content)}\n    </style>`,
   )
   .join("\n");
 
   const scriptTags = inlineScripts
   .map(
     ({ src, content }) =>
-      `    <script type="module" data-stickit-inline="${src}">\n${sanitizeInlineScript(content)}\n    </script>`,
+      `    <script type="module" data-floatem-inline="${src}">\n${sanitizeInlineScript(content)}\n    </script>`,
   )
   .join("\n");
 

@@ -1,7 +1,7 @@
 {
-  "name": "@stickit/native-bridge",
+  "name": "@floatem/native-bridge",
   "private": true,
-  "version": "1.0.7",
+  "version": "1.0.8",
   "type": "module",
   "exports": {
     ".": "./src/index.ts"

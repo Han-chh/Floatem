@@ -6,7 +6,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private let hotKeyManager = GlobalHotKeyManager()
     private let notificationManager = NotificationManager()
     private let launchAtLoginManager = LaunchAtLoginManager()
-    private var currentLanguage: StickItLanguage = .simplifiedChinese
+    private var currentLanguage: FloatemLanguage = .simplifiedChinese
 
     private lazy var mainWindowController = MainWindowController(
         storage: storage,
@@ -29,7 +29,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private var languageObserver: NSObjectProtocol?
     private var launchContextResolver = LaunchContextResolver()
 
-    private var localization: StickItLocalization {
+    private var localization: FloatemLocalization {
         currentLanguage.localization
     }
 
@@ -119,7 +119,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         launchContextResolver.markDeepLinkReceived()
         showMainWindowForUserAction()
         for url in urls {
-            guard let deepLink = StickItDeepLink(url: url) else { continue }
+            guard let deepLink = FloatemDeepLink(url: url) else { continue }
             switch deepLink.destination {
             case .mainWindow:
                 break
@@ -233,7 +233,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         }
 
         image.isTemplate = true
-        image.accessibilityDescription = "StickIt"
+        image.accessibilityDescription = "Floatem"
         return image
     }
 
@@ -310,7 +310,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     private func installLanguageObserver() {
         languageObserver = NotificationCenter.default.addObserver(
-            forName: .stickItLanguageDidChange,
+            forName: .floatemLanguageDidChange,
             object: nil,
             queue: .main
         ) { [weak self] notification in
@@ -319,7 +319,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
                     return
                 }
 
-                self.currentLanguage = StickItLanguage(storedValue: notification.userInfo?["language"])
+                self.currentLanguage = FloatemLanguage(storedValue: notification.userInfo?["language"])
                 self.updateLocalizedMenuTitles()
             }
         }

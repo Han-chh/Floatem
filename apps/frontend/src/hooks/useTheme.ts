@@ -1,6 +1,6 @@
 import { useEffect } from "react";
 import { useSettingsStore } from "../store/settingsStore";
-import { getStickItBridge } from "../lib/nativeBridge";
+import { getFloatemBridge } from "../lib/nativeBridge";
 
 export function useTheme() {
   const theme = useSettingsStore((state) => state.theme);
@@ -12,15 +12,15 @@ export function useTheme() {
 
     const root = document.documentElement;
     const syncVisibility = () => {
-      root.dataset.stickitWindowVisible = String(document.visibilityState !== "hidden");
+      root.dataset.floatemWindowVisible = String(document.visibilityState !== "hidden");
     };
 
-    root.dataset.stickitTheme = theme;
-    delete root.dataset.stickitAfterglowAppearance;
+    root.dataset.floatemTheme = theme;
+    delete root.dataset.floatemAfterglowAppearance;
     root.style.colorScheme = "light";
     syncVisibility();
     document.addEventListener("visibilitychange", syncVisibility);
-    void getStickItBridge().setWindowTheme?.(theme);
+    void getFloatemBridge().setWindowTheme?.(theme);
 
     return () => document.removeEventListener("visibilitychange", syncVisibility);
   }, [theme]);

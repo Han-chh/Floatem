@@ -24,7 +24,7 @@ final class GlobalHotKeyManager {
 
     private var eventHandlerRef: EventHandlerRef?
     private var hotKeyRef: EventHotKeyRef?
-    private let logger = Logger(subsystem: "com.stickit.app", category: "HotKey")
+    private let logger = Logger(subsystem: "com.floatem.app", category: "HotKey")
 
     init() {}
 
@@ -126,7 +126,7 @@ final class GlobalHotKeyManager {
 
         let status = InstallEventHandler(
             GetEventDispatcherTarget(),
-            stickItHotKeyHandler,
+            floatemHotKeyHandler,
             1,
             &eventType,
             UnsafeMutableRawPointer(Unmanaged.passUnretained(self).toOpaque()),
@@ -143,9 +143,9 @@ final class GlobalHotKeyManager {
     fileprivate static let hotKeySignature: OSType = 0x514E4F54
 }
 
-private let hotKeyLogger = Logger(subsystem: "com.stickit.app", category: "HotKey")
+private let hotKeyLogger = Logger(subsystem: "com.floatem.app", category: "HotKey")
 
-private func stickItHotKeyHandler(
+private func floatemHotKeyHandler(
     _ nextHandler: EventHandlerCallRef?,
     _ event: EventRef?,
     _ userData: UnsafeMutableRawPointer?

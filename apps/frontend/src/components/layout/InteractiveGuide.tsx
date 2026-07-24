@@ -267,7 +267,7 @@ export function InteractiveGuide({
       stepItem("note-delete", 2, "删除练习便签", "Delete the practice note", "点击便签删除按钮", "Click the note delete button", () => noteId ? queryTarget(`[data-note-card-id="${cssValue(noteId)}"] [data-action="delete"]`) : null),
 
       stepItem("todo-tab", 3, "切换到 Todos", "Switch to Todos", "点击 Todos 标签", "Click the Todos tab", () => queryTarget('[data-guide="tab-todos"]')),
-      stepItem("todo-focus", 3, "用Enter快速定位", "Focus quickly with Enter", "应用唤起后按Enter键或点击输入框获取焦点，按Enter键获取焦点无需鼠标", "After StickIt appears, press Enter or click the input field to focus it. Pressing Enter lets you focus without a mouse.", () => queryTarget('[data-guide="todo-quick-input"]'), { advanceOn: "focus" }),
+      stepItem("todo-focus", 3, "用Enter快速定位", "Focus quickly with Enter", "应用唤起后按Enter键或点击输入框获取焦点，按Enter键获取焦点无需鼠标", "After Floatem appears, press Enter or click the input field to focus it. Pressing Enter lets you focus without a mouse.", () => queryTarget('[data-guide="todo-quick-input"]'), { advanceOn: "focus" }),
       stepItem("todo-draft", 3, "输入待办", "Type a todo", "输入第一条待办内容", "Type the first todo", () => queryTarget('[data-guide="todo-quick-input"]'), { advanceOn: "input" }),
       stepItem("todo-submit", 3, "快速创建", "Create it quickly", "按 Enter 或点击右侧的可视化提交按键均可创建；Shift + Enter 可换行", "Press Enter or click the visible submit key on the right; Shift + Enter inserts a new line", () => queryTarget('[data-guide="todo-quick-add"]')),
       stepItem("todo-second-draft", 3, "再输入一条待办", "Type another todo", "输入第二条待办", "Type a second todo", () => queryTarget('[data-guide="todo-quick-input"]'), { advanceOn: "input" }),
@@ -285,7 +285,7 @@ export function InteractiveGuide({
 
       stepItem("todo-reminder-open", 4, "打开待办提醒", "Open the reminder", "点击第一条待办的提醒按钮", "Click the reminder control on the first todo", () => todoId ? queryTarget(`[data-todo-item-id="${cssValue(todoId)}"] [data-action="todo-reminder"]`) : null),
       stepItem("todo-reminder-time", 4, "选择提醒时间", "Choose a reminder time", "选择“上午”", "Choose Morning", () => queryTarget('[data-guide-reminder="morning"]')),
-      stepItem("todo-reminder-save", 4, "保存提醒", "Save the reminder", "点击保存；到时 StickIt 会发送系统通知", "Click Save; StickIt will send a system notification at that time", () => queryTarget('[data-guide="reminder-save"]')),
+      stepItem("todo-reminder-save", 4, "保存提醒", "Save the reminder", "点击保存；到时 Floatem 会发送系统通知", "Click Save; Floatem will send a system notification at that time", () => queryTarget('[data-guide="reminder-save"]')),
 
       stepItem("todo-group-open", 5, "打开 Todo 分组", "Open todo groups", "点击第一条待办的分组按钮", "Click the group control on the first todo", () => todoId ? queryTarget(`[data-todo-item-id="${cssValue(todoId)}"] [data-action="todo-group"]`) : null),
       stepItem("todo-group-add", 5, "新增 Todo 分组", "Add a todo group", "点击新增分组", "Click Add group", () => queryTarget('[data-guide="todo-group-add"]')),
@@ -378,8 +378,8 @@ export function InteractiveGuide({
       {
         title: copy("快捷键", "Shortcuts"),
         body: copy(
-          "设置在任何应用中唤起 StickIt 的全局快捷键组合。",
-          "Set the global key combination that summons StickIt from any app.",
+          "设置在任何应用中唤起 Floatem 的全局快捷键组合。",
+          "Set the global key combination that summons Floatem from any app.",
         ),
       },
       {
@@ -397,7 +397,7 @@ export function InteractiveGuide({
         ),
       },
       {
-        title: copy("关于 StickIt", "About StickIt"),
+        title: copy("关于 Floatem", "About Floatem"),
         body: copy(
           "查看版本与构建号、功能概览、数据隐私范围、版权声明和联系邮箱。",
           "Review the version and build, feature summary, data privacy scope, copyright, and contact email.",
@@ -995,7 +995,7 @@ export function InteractiveGuide({
     if (!runtime) return;
     if (!runtime.todoId || !useTodosStore.getState().todos.some((todo) => todo.id === runtime.todoId)) {
       runtime.todoId =
-        useTodosStore.getState().addTodo(copy("体验 StickIt Todo", "Try a StickIt todo"))?.id ?? null;
+        useTodosStore.getState().addTodo(copy("体验 Floatem Todo", "Try a Floatem todo"))?.id ?? null;
     }
     if (
       !runtime.secondaryTodoId ||
@@ -1099,7 +1099,7 @@ export function InteractiveGuide({
           <motion.aside
             data-guide-dialog
             role="dialog"
-            aria-label={copy("StickIt 交互式指引", "StickIt interactive guide")}
+            aria-label={copy("Floatem 交互式指引", "Floatem interactive guide")}
             className={`paper-scroll fixed z-[200] max-h-[calc(100vh-28px)] w-[min(268px,calc(100vw-28px))] overflow-y-auto rounded-[20px] border border-[rgba(213,198,180,0.88)] bg-[rgba(255,252,248,0.97)] p-3.5 shadow-[0_22px_46px_rgba(61,49,34,0.22)] backdrop-blur-xl ${
               isFloatingCardWindowStep || currentStep.id === "settings-overview" ? "hidden" : ""
             }`}
@@ -1301,8 +1301,8 @@ export function InteractiveGuide({
             </div>
             <p className="mt-4 rounded-[14px] bg-[rgba(47,107,255,0.06)] px-3 py-2.5 text-[10.5px] font-semibold leading-5 text-[#2853C7]">
               {copy(
-                "设置首页还提供“恢复默认设置”和“退出 StickIt”操作。",
-                "The Settings home also provides Restore defaults and Quit StickIt actions.",
+                "设置首页还提供“恢复默认设置”和“退出 Floatem”操作。",
+                "The Settings home also provides Restore defaults and Quit Floatem actions.",
               )}
             </p>
             <motion.button
@@ -1346,8 +1346,8 @@ export function InteractiveGuide({
             </h2>
             <p className="mx-auto mt-3 max-w-[330px] text-[12px] leading-6 text-[var(--muted)]">
               {copy(
-                "你已经体验了 StickIt 的便签、待办、分组、悬浮卡片与设置。练习内容已清理，主界面也已恢复。",
-                "You explored StickIt notes, todos, groups, floating cards, and settings. Practice content has been cleared and your workspace restored.",
+                "你已经体验了 Floatem 的便签、待办、分组、悬浮卡片与设置。练习内容已清理，主界面也已恢复。",
+                "You explored Floatem notes, todos, groups, floating cards, and settings. Practice content has been cleared and your workspace restored.",
               )}
             </p>
             <motion.button
@@ -1357,7 +1357,7 @@ export function InteractiveGuide({
               onClick={handleCompletionClose}
             >
               <CircleCheckBigIcon size={15} />
-              {copy("返回 StickIt", "Return to StickIt")}
+              {copy("返回 Floatem", "Return to Floatem")}
             </motion.button>
           </motion.div>
         </motion.div>

@@ -38,7 +38,7 @@ import {
   parseLocalDateKey,
   type TodoItem as TodoItemModel,
 } from "../../lib/models";
-import { isNativeStickItHost } from "../../lib/nativeBridge";
+import { isNativeFloatemHost } from "../../lib/nativeBridge";
 import { readPlainTextFromClipboard, writePlainTextToClipboard } from "../../lib/plainTextClipboard";
 import {
   addDaysToDateKey,
@@ -1526,7 +1526,7 @@ export function TodoList({ dockZoneTarget = null }: { dockZoneTarget?: DockZoneE
                 }
 
                 event.preventDefault();
-                if (isNativeStickItHost()) {
+                if (isNativeFloatemHost()) {
                   void writePlainTextToClipboard(text);
                   return;
                 }
@@ -1543,7 +1543,7 @@ export function TodoList({ dockZoneTarget = null }: { dockZoneTarget?: DockZoneE
                   return;
                 }
 
-                if (isNativeStickItHost()) {
+                if (isNativeFloatemHost()) {
                   void handleDraftPaste(event.currentTarget);
                 }
               }}
@@ -1588,7 +1588,7 @@ export function TodoList({ dockZoneTarget = null }: { dockZoneTarget?: DockZoneE
               {isCalendarOpen ? (
                 <motion.div
                   data-no-window-drag="true"
-                  className="stickit-modal-backdrop fixed inset-0 z-[88] flex items-center justify-center bg-[rgba(30,25,21,0.24)] px-5 py-6"
+                  className="floatem-modal-backdrop fixed inset-0 z-[88] flex items-center justify-center bg-[rgba(30,25,21,0.24)] px-5 py-6"
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   exit={{ opacity: 0 }}
@@ -1643,7 +1643,7 @@ export function TodoList({ dockZoneTarget = null }: { dockZoneTarget?: DockZoneE
               {editingTodo ? (
                 <motion.div
                   data-no-window-drag="true"
-                  className="stickit-modal-backdrop fixed inset-0 z-[90] flex items-center justify-center bg-[rgba(30,25,21,0.24)] px-5 py-6"
+                  className="floatem-modal-backdrop fixed inset-0 z-[90] flex items-center justify-center bg-[rgba(30,25,21,0.24)] px-5 py-6"
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   exit={{ opacity: 0 }}
@@ -1763,7 +1763,7 @@ export function TodoList({ dockZoneTarget = null }: { dockZoneTarget?: DockZoneE
               {dateChangeDialog ? (
                 <motion.div
                   data-no-window-drag="true"
-                  className="stickit-modal-backdrop fixed inset-0 z-[91] flex items-center justify-center bg-[rgba(30,25,21,0.24)] px-5 py-6"
+                  className="floatem-modal-backdrop fixed inset-0 z-[91] flex items-center justify-center bg-[rgba(30,25,21,0.24)] px-5 py-6"
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   exit={{ opacity: 0 }}
@@ -1839,7 +1839,7 @@ export function TodoList({ dockZoneTarget = null }: { dockZoneTarget?: DockZoneE
               {pendingBulkConfirmation ? (
                 <motion.div
                   data-no-window-drag="true"
-                  className="stickit-modal-backdrop fixed inset-0 z-[92] flex items-center justify-center bg-[rgba(30,25,21,0.24)] px-5 py-6"
+                  className="floatem-modal-backdrop fixed inset-0 z-[92] flex items-center justify-center bg-[rgba(30,25,21,0.24)] px-5 py-6"
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   exit={{ opacity: 0 }}

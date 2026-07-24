@@ -7,7 +7,7 @@ const root = document.getElementById("root") as HTMLElement;
 const windowMode = new URLSearchParams(window.location.search).get("mode");
 
 if (windowMode === "drag-preview" || windowMode === "floating-note") {
-  document.documentElement.dataset.stickitCardWindow = windowMode;
+  document.documentElement.dataset.floatemCardWindow = windowMode;
 }
 
 ReactDOM.createRoot(root).render(

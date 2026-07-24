@@ -3,7 +3,7 @@ import OSLog
 
 @MainActor
 class FloatingPanel: NSPanel {
-    private nonisolated static let lifecycle = Logger(subsystem: "com.stickit.floating", category: "Lifecycle")
+    private nonisolated static let lifecycle = Logger(subsystem: "com.floatem.floating", category: "Lifecycle")
     private nonisolated static let debugLifecycle: Bool = {
         DebugFlags.isEnabled("DEBUG_FLOATING_LIFECYCLE")
     }()

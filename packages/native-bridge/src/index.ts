@@ -236,16 +236,16 @@ export type HostBridge<TLoadAllResult, TNotes, TTodos, TSettings> = {
 };
 
 export const hostEventNames = {
-  panelPosition: "stickit:panel-position",
-  panelWillOpen: "stickit:panel-will-open",
-  hotkeyRegistrationState: "stickit:hotkey-registration-state",
-  textColorPanelOpen: "stickit:text-color-panel-open",
-  textColorPanelChange: "stickit:text-color-panel-change",
-  textColorPanelClose: "stickit:text-color-panel-close",
-  notesUpdated: "stickit:notes-updated",
-  todosUpdated: "stickit:todos-updated",
-  floatingCardsState: "stickit:floating-cards-state",
-  shortcutInvoked: "stickit:shortcut-invoked",
-  floatingDockZoneEnter: "stickit:floating-dock-zone-enter",
-  floatingDockZoneLeave: "stickit:floating-dock-zone-leave",
+  panelPosition: "floatem:panel-position",
+  panelWillOpen: "floatem:panel-will-open",
+  hotkeyRegistrationState: "floatem:hotkey-registration-state",
+  textColorPanelOpen: "floatem:text-color-panel-open",
+  textColorPanelChange: "floatem:text-color-panel-change",
+  textColorPanelClose: "floatem:text-color-panel-close",
+  notesUpdated: "floatem:notes-updated",
+  todosUpdated: "floatem:todos-updated",
+  floatingCardsState: "floatem:floating-cards-state",
+  shortcutInvoked: "floatem:shortcut-invoked",
+  floatingDockZoneEnter: "floatem:floating-dock-zone-enter",
+  floatingDockZoneLeave: "floatem:floating-dock-zone-leave",
 } as const;

@@ -1,11 +1,12 @@
 {
-  "displayName": "StickIt",
-  "productName": "StickIt",
-  "bundleIdentifier": "com.hankch.stickit",
-  "windowsAppUserModelId": "com.stickit.app",
+  "displayName": "Floatem",
+  "productName": "Floatem",
+  "slogan": "Don't lose thoughts. Float'em.",
+  "bundleIdentifier": "com.hankch.floatem",
+  "windowsAppUserModelId": "com.floatem.app",
   "icons": {
-    "sourceSvg": "packages/branding/assets/stickit-icon.svg",
-    "macIcns": "apps/mac-host/StickItMacOS/Resources/AppIcon.icns",
+    "sourceSvg": "packages/branding/assets/floatem-icon.svg",
+    "macIcns": "apps/mac-host/FloatemMacOS/Resources/AppIcon.icns",
     "windowsIco": "apps/windows-host/Assets/AppIcon.ico"
   }
 }

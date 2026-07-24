@@ -25,8 +25,8 @@ function selectMinute(label: string) {
 
 describe("ReminderPicker", () => {
   afterEach(() => {
-    delete window.stickItHost;
-    delete window.stickItNative;
+    delete window.floatemHost;
+    delete window.floatemNative;
     vi.useRealTimers();
     vi.restoreAllMocks();
   });
@@ -221,10 +221,10 @@ describe("ReminderPicker", () => {
     vi.useFakeTimers();
     vi.setSystemTime(new Date("2026-04-05T12:00:00"));
     const checkNotificationPermission = vi.fn(async () => ({ allowed: false }));
-    window.stickItHost = {
+    window.floatemHost = {
       platform: "macos",
       checkNotificationPermission,
-    } as unknown as NonNullable<typeof window.stickItHost>;
+    } as unknown as NonNullable<typeof window.floatemHost>;
 
     render(<ReminderPicker todoTitle="Permission check" reminderAt={null} onChange={vi.fn()} />);
     openDialog();

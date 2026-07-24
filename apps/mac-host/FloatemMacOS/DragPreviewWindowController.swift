@@ -3,7 +3,7 @@ import WebKit
 
 @MainActor
 final class DragPreviewWindowController: NSObject, WKNavigationDelegate {
-    private static let dragPreviewEventName = "stickit:drag-preview-state"
+    private static let dragPreviewEventName = "floatem:drag-preview-state"
 
     private let panel: NSPanel
     private let webView: WKWebView
@@ -110,7 +110,7 @@ final class DragPreviewWindowController: NSObject, WKNavigationDelegate {
         let revision = payloadRevision
         webView.callAsyncJavaScript(
             """
-            window.__STICKIT_DRAG_PREVIEW_STATE__ = \(json);
+            window.__FLOATEM_DRAG_PREVIEW_STATE__ = \(json);
             window.dispatchEvent(new CustomEvent('\(Self.dragPreviewEventName)', { detail: \(json) }));
             await new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)));
             return true;

@@ -5,8 +5,8 @@ import ServiceManagement
 @MainActor
 final class LaunchAtLoginManager {
     private let service = SMAppService.mainApp
-    private let logger = Logger(subsystem: "com.stickit.app", category: "LaunchAtLogin")
-    private let approvalPromptedKey = "stickit.launchAtLoginApprovalPrompted"
+    private let logger = Logger(subsystem: "com.floatem.app", category: "LaunchAtLogin")
+    private let approvalPromptedKey = "floatem.launchAtLoginApprovalPrompted"
 
     var isEnabled: Bool {
         service.status == .enabled

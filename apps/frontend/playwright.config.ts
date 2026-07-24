@@ -14,7 +14,7 @@ export default defineConfig({
       origins: [
         {
           origin: "http://127.0.0.1:4173",
-          localStorage: [{ name: "stickit.settings", value: JSON.stringify({ language: "en" }) }],
+          localStorage: [{ name: "floatem.settings", value: JSON.stringify({ language: "en" }) }],
         },
       ],
     },

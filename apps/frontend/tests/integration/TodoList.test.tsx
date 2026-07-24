@@ -228,14 +228,14 @@ describe("TodoList", () => {
 
   it("uses the native clipboard bridge for Cmd+C and Cmd+V in the macOS host", async () => {
     const user = userEvent.setup();
-    const originalBridge = window.stickItHost;
+    const originalBridge = window.floatemHost;
     const clipboard = { value: "" };
     const writeClipboardText = vi.fn(async (text: string) => {
       clipboard.value = text;
     });
     const readClipboardText = vi.fn(async () => clipboard.value);
 
-    window.stickItHost = {
+    window.floatemHost = {
       platform: "macos",
       getCapabilities: vi.fn(async () => ({
         platform: "macos" as const,
@@ -319,7 +319,7 @@ describe("TodoList", () => {
         expect(input).toHaveValue("Native paste");
       });
     } finally {
-      window.stickItHost = originalBridge;
+      window.floatemHost = originalBridge;
     }
   });
 
