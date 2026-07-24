@@ -375,19 +375,12 @@ describe("FloatingNoteApp", () => {
 
       await user.click(screen.getByRole("button", { name: "Keep on desktop" }));
       expect(await screen.findByRole("dialog", { name: "Keep StickIt running" })).toBeInTheDocument();
-      expect(
-        screen.getByRole("dialog", { name: "Guide: Handle the startup dialog first" }),
-      ).toHaveTextContent("Choose an option in the startup dialog before continuing with the pin guide.");
-      expect(document.querySelector("[data-floating-guide-pin-ring]")).not.toBeInTheDocument();
-      expect(document.querySelector("[data-floating-guide-dialog-ring]")).toHaveClass("rounded-[30px]");
+      expect(document.querySelector("[data-floating-guide-overlay]")).not.toBeInTheDocument();
 
       act(() => {
         window.dispatchEvent(new CustomEvent("stickit:floating-card-guide", { detail: null }));
       });
-      expect(
-        screen.getByRole("dialog", { name: "Guide: Handle the startup dialog first" }),
-      ).toBeInTheDocument();
-      expect(document.querySelector("[data-floating-guide-dialog-ring]")).toBeInTheDocument();
+      expect(document.querySelector("[data-floating-guide-overlay]")).not.toBeInTheDocument();
 
       act(() => {
         window.dispatchEvent(new CustomEvent("stickit:floating-card-guide", {
@@ -410,6 +403,22 @@ describe("FloatingNoteApp", () => {
       await waitFor(() => {
         expect(document.querySelector("[data-floating-guide-pin-ring]")).toHaveClass("rounded-full");
       });
+
+      act(() => {
+        window.dispatchEvent(new CustomEvent("stickit:floating-card-guide", {
+          detail: {
+            phase: "unpin",
+            title: "Floating vs. desktop-pinned",
+            instruction:
+              "A floating note stays above windows in the current workspace. A desktop-pinned note stays with the desktop.",
+          },
+        }));
+      });
+      const comparisonGuide = await screen.findByRole("dialog", {
+        name: "Floating vs. desktop-pinned",
+      });
+      expect(comparisonGuide).toHaveTextContent("A desktop-pinned note stays with the desktop.");
+      expect(comparisonGuide.querySelector("p:last-child")).toHaveClass("whitespace-normal");
 
       act(() => {
         window.dispatchEvent(new CustomEvent("stickit:floating-card-guide", {

@@ -87,7 +87,6 @@ type GuideStepId =
   | "note-collapse"
   | "note-float"
   | "note-pin"
-  | "note-pin-explained"
   | "note-unpin"
   | "note-resize"
   | "note-close-return"
@@ -260,8 +259,7 @@ export function InteractiveGuide({
 
       stepItem("note-float", 2, "创建便签悬浮卡片", "Create a floating note", "把高亮便签拖出主窗口后松开", "Drag the highlighted note outside the main window", () => noteId ? queryTarget(`[data-note-card-id="${cssValue(noteId)}"]`) : null),
       stepItem("note-pin", 2, "固定到桌面", "Pin it to the desktop", "点击悬浮卡片上的图钉，将它放到桌面", "Click the pin on the floating card to place it on your desktop", () => null),
-      stepItem("note-pin-explained", 2, "桌面置顶与普通悬浮", "Desktop-pinned vs. floating", "普通悬浮便签会随当前工作空间显示在窗口上方；桌面置顶便签会像桌面上的固定卡片一样停留，不会覆盖其他全屏空间，并可在重新登录后自动恢复。", "A floating note stays above windows in your current work area. A desktop-pinned note stays with the desktop, does not cover other full-screen spaces, and can return automatically after you sign in again.", () => null, { autoAdvanceMs: 6_000 }),
-      stepItem("note-unpin", 2, "取消桌面固定", "Remove the desktop pin", "再次点击图钉，恢复普通悬浮", "Click the pin again to return to normal floating mode", () => null),
+      stepItem("note-unpin", 2, "普通悬浮与桌面置顶", "Floating vs. desktop-pinned", "普通悬浮便签显示在当前工作空间的窗口上方；桌面置顶便签像固定在桌面的卡片，不会覆盖其他全屏空间，重新登录后还可自动恢复。阅读后再次点击图钉，恢复普通悬浮。", "A floating note stays above windows in the current workspace. A desktop-pinned note stays with the desktop, does not cover other full-screen spaces, and can return after sign-in. When you are ready, click the pin again to return to normal floating mode.", () => null),
       stepItem("note-resize", 2, "调整便签悬浮大小", "Resize the floating note", "拖动悬浮卡片右下角即可放大或缩小；请实际试一试", "Drag the floating card's bottom-right corner to make it larger or smaller", () => null, { autoAdvanceMs: 5_000 }),
       stepItem("note-close-return", 2, "用关闭键收回", "Return it with Close", "点击悬浮卡片上的 ×，卡片会回到应用内部", "Click × on the floating card to return it to the app", () => null),
       stepItem("note-float-again", 2, "再次创建悬浮卡片", "Float it again", "再次把便签拖出主窗口", "Drag the note outside the main window again", () => noteId ? queryTarget(`[data-note-card-id="${cssValue(noteId)}"]`) : null),
@@ -417,7 +415,6 @@ export function InteractiveGuide({
     currentChapterSteps.findIndex((item) => item.id === currentStep?.id) + 1;
   const isFloatingCardWindowStep = [
     "note-pin",
-    "note-pin-explained",
     "note-unpin",
     "note-resize",
     "note-close-return",
@@ -645,25 +642,16 @@ export function InteractiveGuide({
               ),
             } satisfies FloatingCardGuideState,
           }
-          : currentStep?.id === "note-pin-explained" && noteId
-            ? {
-                card: { kind: "note" as const, id: noteId },
-                guide: {
-                  phase: "desktop",
-                  title: copy("普通悬浮与桌面置顶", "Floating vs. desktop-pinned"),
-                  instruction: copy(
-                    "普通悬浮便签显示在当前工作窗口上方；桌面置顶便签像桌面卡片一样停留，不覆盖其他全屏空间，重新登录后还可自动恢复。",
-                    "A floating note stays above windows in your current workspace. A desktop-pinned note stays with the desktop, does not cover other full-screen spaces, and can return after sign-in.",
-                  ),
-                } satisfies FloatingCardGuideState,
-              }
           : currentStep?.id === "note-unpin" && noteId
             ? {
               card: { kind: "note" as const, id: noteId },
               guide: {
                 phase: "unpin",
-                title: copy("取消桌面固定", "Remove desktop pin"),
-                instruction: copy("再次点击高亮图钉", "Click the highlighted pin again"),
+                title: copy("普通悬浮与桌面置顶", "Floating vs. desktop-pinned"),
+                instruction: copy(
+                  "普通悬浮便签显示在当前工作空间的窗口上方；桌面置顶便签像固定在桌面的卡片，不会覆盖其他全屏空间，重新登录后还可自动恢复。阅读后再次点击高亮图钉。",
+                  "A floating note stays above windows in the current workspace. A desktop-pinned note stays with the desktop, does not cover other full-screen spaces, and can return after sign-in. When ready, click the highlighted pin again.",
+                ),
                 } satisfies FloatingCardGuideState,
               }
           : currentStep?.id === "note-resize" && noteId
