@@ -36,7 +36,6 @@ import { canUseFloatingTodos } from "../../lib/platformFeatures";
 import {
   formatLocalDateKey,
   parseLocalDateKey,
-  resolveTodoAccentColor,
   type TodoItem as TodoItemModel,
 } from "../../lib/models";
 import { isNativeStickItHost } from "../../lib/nativeBridge";
@@ -716,11 +715,11 @@ export function TodoList({ dockZoneTarget = null }: { dockZoneTarget?: DockZoneE
       return;
     }
 
-    const deletedTodo = todos.find((todo) => todo.id === id) ?? null;
-    const particleColor = deletedTodo ? resolveTodoAccentColor(deletedTodo, groups) : undefined;
-
     if (enableParticles) {
-      spawnBurst(target, "rose", { color: particleColor });
+      spawnBurst(target, "rose", {
+        color: "#ef334f",
+        distribution: "single",
+      });
     }
     setRemovingIds((current) => [...current, id]);
     window.setTimeout(() => {
@@ -858,11 +857,13 @@ export function TodoList({ dockZoneTarget = null }: { dockZoneTarget?: DockZoneE
     if (pendingBulkConfirmation.action === "delete") {
       if (enableParticles) {
         ids.forEach((id) => {
-          const deletedTodo = todos.find((todo) => todo.id === id) ?? null;
           const target = document.querySelector<HTMLElement>(`[data-todo-item-id="${id}"]`)?.getBoundingClientRect();
 
-          if (deletedTodo && target) {
-            spawnBurst(target, "rose", { color: resolveTodoAccentColor(deletedTodo, groups) });
+          if (target) {
+            spawnBurst(target, "rose", {
+              color: "#ef334f",
+              distribution: "single",
+            });
           }
         });
       }

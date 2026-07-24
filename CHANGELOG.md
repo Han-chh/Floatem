@@ -2,6 +2,10 @@
 
 ## 1.0.6
 
+- Match todo deletion to the note deletion effect with the same focused red particle burst.
+- Rebuild desktop-pinned cards as stationary desktop NSPanel components that stay with the desktop, remain out of unrelated full-screen spaces, and restore after login.
+- Explain the user-facing difference between regular floating cards and desktop-pinned cards without exposing implementation details.
+- Prevent the final Settings guide action from advancing twice and crashing after the settings overview opens.
 - Complete the bilingual interactive guide with detailed note-group filtering, expanded color choices, group editing and deletion, and concise todo filtering.
 - Hold the rich-text toolbar explanation for five seconds, then continue through reliable toolbar collapse and expansion controls.
 - Demonstrate resizing both note and todo floating cards through an invisible bottom-right interaction area, adding todos to another date, and returning floating cards through either Close or drag-back.

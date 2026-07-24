@@ -304,6 +304,11 @@ describe("PanelShell", () => {
     expect(within(overview).getByText(/Restore defaults and Quit StickIt/)).toBeInTheDocument();
     expect(within(overview).queryByRole("button", { name: "Previous feature" })).not.toBeInTheDocument();
 
+    await act(async () => {
+      await new Promise((resolve) => window.setTimeout(resolve, 180));
+    });
+    expect(screen.getByRole("dialog", { name: "Settings menus and options" })).toBeInTheDocument();
+
     await user.click(within(overview).getByRole("button", { name: "Finish guide" }));
     await waitFor(() => {
       expect(screen.queryByRole("dialog", { name: "Settings menus and options" })).not.toBeInTheDocument();

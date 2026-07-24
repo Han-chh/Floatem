@@ -440,6 +440,19 @@ describe("FloatingNoteApp", () => {
       act(() => {
         window.dispatchEvent(new CustomEvent("stickit:floating-card-guide", {
           detail: {
+            phase: "desktop",
+            title: "Desktop-pinned vs. floating",
+            instruction: "A desktop-pinned note stays with the desktop and returns after sign-in.",
+          },
+        }));
+      });
+
+      expect(await screen.findByRole("dialog", { name: "Desktop-pinned vs. floating" })).toBeInTheDocument();
+      expect(document.querySelector("[data-floating-guide-desktop-ring]")).toHaveClass("rounded-[26px]");
+
+      act(() => {
+        window.dispatchEvent(new CustomEvent("stickit:floating-card-guide", {
+          detail: {
             phase: "resize",
             title: "Resize from the bottom-right",
             instruction: "Drag the highlighted corner",

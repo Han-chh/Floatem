@@ -66,6 +66,7 @@ function FloatingCardGuideOverlay({
   );
   const isDragTarget = guide?.phase === "drag" && !showLaunchAtLoginDialog;
   const isResizeTarget = guide?.phase === "resize" && !showLaunchAtLoginDialog;
+  const isDesktopTarget = guide?.phase === "desktop" && !showLaunchAtLoginDialog;
   const displayTitle = showLaunchAtLoginDialog ? t.common.guideLaunchAtLoginTitle : guide?.title;
   const displayInstruction = showLaunchAtLoginDialog
     ? t.common.guideLaunchAtLoginInstruction
@@ -82,6 +83,8 @@ function FloatingCardGuideOverlay({
       ? "[data-floating-launch-at-login-dialog]"
       : guide?.phase === "drag"
         ? '[data-testid="floating-card-shell"]'
+        : guide?.phase === "desktop"
+          ? '[data-testid="floating-card-shell"]'
         : guide?.phase === "resize"
           ? '[data-action="floating-card-resize"]'
         : guide?.phase === "close"
@@ -124,11 +127,12 @@ function FloatingCardGuideOverlay({
               data-floating-guide-pin-ring={isPinTarget ? "true" : undefined}
               data-floating-guide-drag-ring={isDragTarget ? "true" : undefined}
               data-floating-guide-resize-ring={isResizeTarget ? "true" : undefined}
+              data-floating-guide-desktop-ring={isDesktopTarget ? "true" : undefined}
               data-floating-guide-dialog-ring={showLaunchAtLoginDialog ? "true" : undefined}
               className={`fixed border-2 border-[#ff4f3d] shadow-[0_0_0_5px_rgba(255,79,61,0.22),0_8px_24px_rgba(61,49,34,0.2)] ${
                 isPinTarget
                   ? "rounded-full"
-                  : isDragTarget
+                  : isDragTarget || isDesktopTarget
                     ? "rounded-[26px]"
                     : isResizeTarget
                       ? "rounded-[10px]"

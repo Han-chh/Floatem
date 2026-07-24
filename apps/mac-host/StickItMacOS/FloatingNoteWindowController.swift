@@ -317,9 +317,25 @@ final class FloatingNoteWindowController: NSObject, WKNavigationDelegate, WKScri
         panel?.frame ?? .zero
     }
 
+    var usesDesktopCardPanel: Bool {
+        panel is DesktopCardPanel
+    }
+
+    var currentPanelCollectionBehavior: NSWindow.CollectionBehavior {
+        panel?.collectionBehavior ?? []
+    }
+
+    var currentPanelLevel: NSWindow.Level? {
+        panel?.level
+    }
+
     func focusWindow() {
         guard !isDestroyed, let panel else { return }
         panel.orderFrontRegardless()
+        if isDesktopPinned {
+            panel.makeFirstResponder(webView)
+            return
+        }
         panel.makeKey()
         focusWebView()
     }
@@ -339,7 +355,9 @@ final class FloatingNoteWindowController: NSObject, WKNavigationDelegate, WKScri
         }
         panel.alphaValue = 1
         panel.orderFrontRegardless()
-        focusWebView()
+        if !isDesktopPinned {
+            focusWebView()
+        }
     }
 
     func closeWindow() {
@@ -617,6 +635,11 @@ final class FloatingNoteWindowController: NSObject, WKNavigationDelegate, WKScri
             return
         }
 
+        if isDesktopPinned {
+            panel.makeFirstResponder(webView)
+            return
+        }
+
         NSApp.activate(ignoringOtherApps: true)
         panel.orderFrontRegardless()
         panel.makeKey()
@@ -624,27 +647,95 @@ final class FloatingNoteWindowController: NSObject, WKNavigationDelegate, WKScri
     }
 
     private func configurePanelForGlobalOverlay() {
-        panel?.level = NSWindow.Level(
+        guard let panel else { return }
+        panel.isFloatingPanel = true
+        panel.collectionBehavior = MainWindowController.overlayCollectionBehavior
+        panel.level = NSWindow.Level(
             rawValue: MainWindowController.overlayPanelLevel.rawValue + 1
         )
     }
 
-    func setDesktopPinned(_ pinned: Bool) {
-        guard !isDestroyed, isDesktopPinned != pinned else { return }
+    private func configurePanelForDesktop() {
         guard let panel else { return }
-        isDesktopPinned = pinned
+        panel.isFloatingPanel = false
+        panel.collectionBehavior = MainWindowController.desktopCardCollectionBehavior
+        panel.level = MainWindowController.desktopCardPanelLevel
+        panel.hidesOnDeactivate = false
+    }
 
-        // Keep collection behavior invariant for the lifetime of the panel.
-        // Mutating Space membership while a borderless panel is visible can
-        // detach it from the active Space, which made the card appear deleted
-        // after unpinning even though its controller was still alive.
-        panel.collectionBehavior = MainWindowController.overlayCollectionBehavior
-        if pinned {
-            let desktopIconLevel = Int(CGWindowLevelForKey(.desktopIconWindow)) + 1
-            panel.level = NSWindow.Level(rawValue: desktopIconLevel)
+    private func replacePanel(forDesktop desktopPinned: Bool) {
+        guard let oldPanel = panel else { return }
+        let alreadyUsesRequestedPanel =
+            desktopPinned ? oldPanel is DesktopCardPanel : !(oldPanel is DesktopCardPanel)
+
+        if alreadyUsesRequestedPanel {
+            if desktopPinned {
+                configurePanelForDesktop()
+            } else {
+                configurePanelForGlobalOverlay()
+            }
+            return
+        }
+
+        let frame = oldPanel.frame
+        let wasVisible = oldPanel.isVisible
+        let alphaValue = oldPanel.alphaValue
+        let contentView = oldPanel.contentView
+        oldPanel.contentView = nil
+
+        let replacement: FloatingPanel
+        if desktopPinned {
+            replacement = DesktopCardPanel(
+                contentRect: frame,
+                styleMask: [.borderless, .nonactivatingPanel],
+                backing: .buffered,
+                defer: false
+            )
+        } else {
+            replacement = FloatingPanel(
+                contentRect: frame,
+                styleMask: [.borderless, .nonactivatingPanel],
+                backing: .buffered,
+                defer: false
+            )
+        }
+
+        replacement.isReleasedWhenClosed = false
+        replacement.backgroundColor = .clear
+        replacement.isOpaque = false
+        replacement.alphaValue = alphaValue
+        replacement.hasShadow = false
+        replacement.hidesOnDeactivate = false
+        replacement.becomesKeyOnlyIfNeeded = desktopPinned
+        replacement.lifecycleCardID = cardID
+        replacement.delegate = self
+        replacement.contentView = contentView
+        replacement.setFrame(frame, display: true)
+        if let contentView {
+            applyCornerMask(to: contentView)
+        }
+
+        panel = replacement
+        if desktopPinned {
+            configurePanelForDesktop()
         } else {
             configurePanelForGlobalOverlay()
         }
+
+        oldPanel.delegate = nil
+        oldPanel.orderOut(nil)
+        oldPanel.close()
+
+        if wasVisible {
+            replacement.orderFrontRegardless()
+        }
+    }
+
+    func setDesktopPinned(_ pinned: Bool) {
+        guard !isDestroyed, isDesktopPinned != pinned else { return }
+        isDesktopPinned = pinned
+        replacePanel(forDesktop: pinned)
+        guard let panel else { return }
 
         if isContentReady {
             panel.alphaValue = 1
@@ -691,7 +782,8 @@ final class FloatingNoteWindowController: NSObject, WKNavigationDelegate, WKScri
         }
 
         if isDesktopPinned {
-            setDesktopPinned(true)
+            configurePanelForDesktop()
+            panel.orderFrontRegardless()
             return
         }
 

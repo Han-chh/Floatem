@@ -7,6 +7,16 @@ final class MainWindowController: NSObject, NSWindowDelegate, StickItNativeBridg
     private static let minimumPanelSize = NSSize(width: 320, height: 480)
     static let overlayPanelLevel = NSWindow.Level.statusBar
     private static let interactivePanelLevel = NSWindow.Level.floating
+    static var desktopCardCollectionBehavior: NSWindow.CollectionBehavior {
+        [
+            .stationary,
+            .ignoresCycle,
+            .fullScreenNone,
+        ]
+    }
+    static var desktopCardPanelLevel: NSWindow.Level {
+        NSWindow.Level(rawValue: Int(CGWindowLevelForKey(.desktopIconWindow)) + 1)
+    }
     static var overlayCollectionBehavior: NSWindow.CollectionBehavior {
         var behavior: NSWindow.CollectionBehavior = [
             .canJoinAllSpaces,
@@ -559,7 +569,7 @@ final class MainWindowController: NSObject, NSWindowDelegate, StickItNativeBridg
             let state = ScreenPlacementResolver.state(
                 for: WidgetEntityReference(entityKind: entityKind, entityID: cardID),
                 frame: frame,
-                isAlwaysOnTop: true
+                isAlwaysOnTop: controller?.isDesktopPinned != true
             )
             try? self.storage.saveFloatingWindowState(state)
             if controller?.isDesktopPinned == true {
@@ -641,6 +651,9 @@ final class MainWindowController: NSObject, NSWindowDelegate, StickItNativeBridg
             screens: ScreenPlacementResolver.currentScreens()
         )
         controller.updatePayload(payloadDictionary)
+        if payloadDictionary["desktopPinned"] as? Bool == true {
+            controller.setDesktopPinned(true)
+        }
         controller.showWindow(frame: cardFrame)
         emitFloatingCardsState()
     }

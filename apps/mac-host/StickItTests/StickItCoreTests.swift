@@ -2,6 +2,26 @@ import XCTest
 @testable import StickIt
 
 final class StickItCoreTests: XCTestCase {
+    @MainActor
+    func testDesktopPinTransitionsToStationaryDesktopNSPanelAndBackToOverlay() {
+        let controller = FloatingNoteWindowController(cardKind: "note", cardID: "desktop-test")
+
+        controller.setDesktopPinned(true)
+        XCTAssertTrue(controller.usesDesktopCardPanel)
+        XCTAssertEqual(controller.currentPanelLevel, MainWindowController.desktopCardPanelLevel)
+        XCTAssertTrue(controller.currentPanelCollectionBehavior.contains(.stationary))
+        XCTAssertTrue(controller.currentPanelCollectionBehavior.contains(.ignoresCycle))
+        XCTAssertTrue(controller.currentPanelCollectionBehavior.contains(.fullScreenNone))
+        XCTAssertFalse(controller.currentPanelCollectionBehavior.contains(.canJoinAllSpaces))
+        XCTAssertFalse(controller.currentPanelCollectionBehavior.contains(.fullScreenAuxiliary))
+
+        controller.setDesktopPinned(false)
+        XCTAssertFalse(controller.usesDesktopCardPanel)
+        XCTAssertTrue(controller.currentPanelCollectionBehavior.contains(.canJoinAllSpaces))
+        XCTAssertTrue(controller.currentPanelCollectionBehavior.contains(.fullScreenAuxiliary))
+        controller.closeWindow()
+    }
+
     func testFloatingGuideDeliveryWaitsForNavigationAndFrontendReadiness() {
         var gate = FloatingGuideDeliveryGate()
 

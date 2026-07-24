@@ -62,7 +62,7 @@ export type StickItNativeBridge = HostBridge<RawLoadAllResult, NotesDocument, To
 
 export type FloatingCardGuideState = {
   instruction: string;
-  phase: "pin" | "unpin" | "close" | "drag" | "resize";
+  phase: "pin" | "unpin" | "close" | "drag" | "resize" | "desktop";
   title: string;
 };
 
