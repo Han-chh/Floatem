@@ -1,8 +1,8 @@
 {
   "name": "stickit",
   "private": true,
-  "version": "1.0.5",
-  "buildNumber": 43,
+  "version": "1.0.6",
+  "buildNumber": 44,
   "type": "module",
   "scripts": {
     "dev": "pnpm frontend:dev",

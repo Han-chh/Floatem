@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.0.6
+
+- Complete the bilingual interactive guide with detailed note-group filtering, expanded color choices, group editing and deletion, and concise todo filtering.
+- Hold the rich-text toolbar explanation for four seconds, then continue through reliable toolbar collapse and expansion controls.
+- Demonstrate resizing both note and todo floating cards, adding todos to another date, and returning floating cards through either Close or drag-back.
+- Keep the todo delete control clear of the guide panel, summarize every Settings submenu at the final step, and show a separate congratulations dialog after confirmation.
+- Expand About StickIt with feature and privacy details, a contact email, an English copyright statement, and the macOS system copyright field.
+- Bump StickIt to version 1.0.6 (build 44).
+
 ## 1.0.5
 
 - Expand the seven-part interactive guide with real note and todo reordering, group filtering, note rich-text editing, formatting-toolbar folding, Enter-to-focus todo capture, and floating todo practice.
