@@ -80,6 +80,19 @@ describe("TodoList", () => {
     expect(screen.queryByText("Ship docs")).not.toBeInTheDocument();
   });
 
+  it("creates a todo through the visible submit key used by the guide", async () => {
+    const user = userEvent.setup();
+    render(<TodoList />);
+
+    await user.type(screen.getByLabelText("Quick add"), "Click to create");
+    const submit = screen.getByRole("button", { name: "Add task" });
+    expect(submit).toHaveAttribute("data-guide", "todo-quick-submit");
+    expect(submit.closest('[data-guide="todo-quick-add"]')).not.toBeNull();
+
+    await user.click(submit);
+    expect(screen.getByText("Click to create")).toBeInTheDocument();
+  });
+
   it("supports selecting todos for bulk complete, date change, and delete", async () => {
     const user = userEvent.setup();
     const today = new Date();

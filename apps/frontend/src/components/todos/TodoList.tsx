@@ -1554,6 +1554,7 @@ export function TodoList({ dockZoneTarget = null }: { dockZoneTarget?: DockZoneE
               <motion.button
                 type="submit"
                 aria-label={t.todos.add}
+                data-guide="todo-quick-submit"
                 data-tooltip={t.todos.quickAddSubmitTooltip}
                 data-tooltip-align="left"
                 disabled={!draft.trim()}

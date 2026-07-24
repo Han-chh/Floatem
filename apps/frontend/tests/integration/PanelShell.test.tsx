@@ -1,6 +1,8 @@
 import { act, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+import { useState } from "react";
 import { describe, expect, it, vi } from "vitest";
+import { InteractiveGuide } from "../../src/components/layout/InteractiveGuide";
 import { PanelShell } from "../../src/components/layout/PanelShell";
 import { NotesList } from "../../src/components/notes/NotesList";
 import { SETTINGS_LANGUAGE_ORDER, SettingsPanel } from "../../src/components/settings/SettingsPanel";
@@ -245,6 +247,69 @@ describe("PanelShell", () => {
     expect(useTodosStore.getState().groups).toHaveLength(0);
   });
 
+  it("finishes with a large text-only overview of every settings submenu", async () => {
+    function GuideHarness() {
+      const [isOpen, setIsOpen] = useState(true);
+      const [showSettings, setShowSettings] = useState(false);
+      const [isHeaderCollapsed, setIsHeaderCollapsed] = useState(false);
+
+      return (
+        <>
+          <button
+            type="button"
+            data-guide="settings-open"
+            onClick={() => setShowSettings(true)}
+          >
+            Open Settings
+          </button>
+          {showSettings ? <div data-guide="settings-overview">Settings content</div> : null}
+          <InteractiveGuide
+            isHeaderCollapsed={isHeaderCollapsed}
+            isOpen={isOpen}
+            onClose={() => setIsOpen(false)}
+            onHeaderCollapsedChange={setIsHeaderCollapsed}
+            onSettingsChange={setShowSettings}
+            onTabChange={vi.fn()}
+            showSettings={showSettings}
+          />
+        </>
+      );
+    }
+
+    const user = userEvent.setup();
+    useSettingsStore.setState({ language: "en" });
+    render(<GuideHarness />);
+
+    for (let feature = 2; feature <= 7; feature += 1) {
+      await user.click(screen.getByRole("button", { name: "Next feature" }));
+      await waitFor(() => {
+        expect(screen.getByText(new RegExp(`Feature ${feature} of 7 · Step 1 of \\d+`))).toBeInTheDocument();
+      });
+    }
+
+    await user.click(screen.getByRole("button", { name: "Open Settings" }));
+    const overview = await screen.findByRole("dialog", { name: "Settings menus and options" });
+
+    expect(overview).toHaveClass("max-w-[680px]");
+    for (const title of [
+      "General",
+      "Theme",
+      "Shortcuts",
+      "Motion and feedback",
+      "Notifications",
+      "About StickIt",
+    ]) {
+      expect(within(overview).getByRole("heading", { name: title })).toBeInTheDocument();
+    }
+    expect(within(overview).getByText(/Restore defaults and Quit StickIt/)).toBeInTheDocument();
+    expect(within(overview).queryByRole("button", { name: "Previous feature" })).not.toBeInTheDocument();
+
+    await user.click(within(overview).getByRole("button", { name: "Finish guide" }));
+    await waitFor(() => {
+      expect(screen.queryByRole("dialog", { name: "Settings menus and options" })).not.toBeInTheDocument();
+    });
+  });
+
   it("guides rich-text editing and toolbar folding on the real note card", async () => {
     const user = userEvent.setup();
     useSettingsStore.setState({ language: "en" });
@@ -285,11 +350,11 @@ describe("PanelShell", () => {
     expect(document.querySelector("[data-guide-highlight]")).toBeInTheDocument();
     await waitFor(
       () => expect(screen.getByText("Collapse the editor toolbar")).toBeInTheDocument(),
-      { timeout: 4_800 },
+      { timeout: 5_800 },
     );
     await user.click(within(guideNote as HTMLElement).getByRole("button", { name: "Collapse formatting toolbar" }));
     await waitFor(() => expect(screen.getByText("Expand the editor toolbar")).toBeInTheDocument());
     await user.click(within(guideNote as HTMLElement).getByRole("button", { name: "Expand formatting toolbar" }));
     await waitFor(() => expect(screen.getByText("Create another note")).toBeInTheDocument());
-  }, 8_000);
+  }, 10_000);
 });

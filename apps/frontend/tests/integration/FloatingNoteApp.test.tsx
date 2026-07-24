@@ -744,7 +744,7 @@ describe("FloatingNoteApp", () => {
     }
   });
 
-  it("resizes a floating note with a visible corner affordance without allowing it below its initial size", async () => {
+  it("resizes a floating note from a large invisible corner region without allowing it below its initial size", async () => {
     const note = createNoteCard({ id: "floating-note-resize", title: "Resizable note" });
     const bridge = installFloatingBridge(note);
 
@@ -755,7 +755,7 @@ describe("FloatingNoteApp", () => {
       const shell = screen.getByTestId("floating-card-shell");
       const scaledContent = screen.getByTestId("floating-card-scaled-content");
       const handle = screen.getByRole("separator", { name: "Resize floating card" });
-      expect(handle.querySelector('[aria-hidden="true"]')).toBeInTheDocument();
+      expect(handle).toBeEmptyDOMElement();
       expect(handle).not.toHaveAttribute("data-tooltip");
       expect(handle).toHaveClass("h-8", "w-8");
       bridge.resizeFloatingCard.mockClear();

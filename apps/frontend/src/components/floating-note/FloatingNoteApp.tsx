@@ -974,12 +974,7 @@ export function FloatingNoteApp() {
               resizeSessionRef.current = null;
               event.currentTarget.releasePointerCapture?.(event.pointerId);
             }}
-          >
-            <span
-              aria-hidden="true"
-              className="pointer-events-none absolute bottom-1.5 right-1.5 h-3 w-3 rounded-br-[3px] border-b-2 border-r-2 border-[rgba(91,72,54,0.42)]"
-            />
-          </div>
+          />
         ) : null}
         {showDesktopBackgroundGuide && typeof document !== "undefined"
           ? createPortal(
