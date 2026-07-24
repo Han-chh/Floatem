@@ -65,6 +65,7 @@ function FloatingCardGuideOverlay({
     guide && (guide.phase === "pin" || guide.phase === "unpin") && !showLaunchAtLoginDialog,
   );
   const isDragTarget = guide?.phase === "drag" && !showLaunchAtLoginDialog;
+  const isResizeTarget = guide?.phase === "resize" && !showLaunchAtLoginDialog;
   const displayTitle = showLaunchAtLoginDialog ? t.common.guideLaunchAtLoginTitle : guide?.title;
   const displayInstruction = showLaunchAtLoginDialog
     ? t.common.guideLaunchAtLoginInstruction
@@ -81,6 +82,8 @@ function FloatingCardGuideOverlay({
       ? "[data-floating-launch-at-login-dialog]"
       : guide?.phase === "drag"
         ? '[data-testid="floating-card-shell"]'
+        : guide?.phase === "resize"
+          ? '[data-action="floating-card-resize"]'
         : guide?.phase === "close"
         ? '[data-action="dock"]'
         : '[data-action="desktop-pin"] [data-desktop-pin-indicator]';
@@ -120,9 +123,16 @@ function FloatingCardGuideOverlay({
               data-floating-guide-highlight
               data-floating-guide-pin-ring={isPinTarget ? "true" : undefined}
               data-floating-guide-drag-ring={isDragTarget ? "true" : undefined}
+              data-floating-guide-resize-ring={isResizeTarget ? "true" : undefined}
               data-floating-guide-dialog-ring={showLaunchAtLoginDialog ? "true" : undefined}
               className={`fixed border-2 border-[#ff4f3d] shadow-[0_0_0_5px_rgba(255,79,61,0.22),0_8px_24px_rgba(61,49,34,0.2)] ${
-                isPinTarget ? "rounded-full" : isDragTarget ? "rounded-[26px]" : "rounded-[30px]"
+                isPinTarget
+                  ? "rounded-full"
+                  : isDragTarget
+                    ? "rounded-[26px]"
+                    : isResizeTarget
+                      ? "rounded-[10px]"
+                      : "rounded-[30px]"
               }`}
               style={{
                 height: targetRect.height + (isPinTarget ? 14 : 10),
@@ -935,6 +945,7 @@ export function FloatingNoteApp() {
           <div
             role="separator"
             aria-label={t.common.resizeFloatingCard}
+            data-action="floating-card-resize"
             className="absolute bottom-0 right-0 z-40 h-8 w-8 cursor-nwse-resize"
             style={{
               scale: Math.min(contentScale, 1.35),
@@ -963,7 +974,12 @@ export function FloatingNoteApp() {
               resizeSessionRef.current = null;
               event.currentTarget.releasePointerCapture?.(event.pointerId);
             }}
-          />
+          >
+            <span
+              aria-hidden="true"
+              className="pointer-events-none absolute bottom-1.5 right-1.5 h-3 w-3 rounded-br-[3px] border-b-2 border-r-2 border-[rgba(91,72,54,0.42)]"
+            />
+          </div>
         ) : null}
         {showDesktopBackgroundGuide && typeof document !== "undefined"
           ? createPortal(

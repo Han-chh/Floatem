@@ -63,6 +63,26 @@ describe("PanelShell", () => {
     }
   });
 
+  it("shows localized privacy details with the fixed English copyright block and contact email", async () => {
+    const user = userEvent.setup();
+    HTMLElement.prototype.scrollTo = vi.fn();
+    useSettingsStore.setState({ language: "zh-CN" });
+    render(<SettingsPanel onClose={vi.fn()} />);
+
+    await user.click(screen.getByRole("button", { name: /关于 StickIt/ }));
+
+    expect(screen.getByText("Capture first. Organize later.")).toBeInTheDocument();
+    expect(screen.getByText(/Version 1\.0\.\d+ \(Build \d+\)/)).toBeInTheDocument();
+    expect(screen.getByText("Designed and developed by Hank Chen")).toBeInTheDocument();
+    expect(screen.getByText("© 2026 Hank Chen. All rights reserved.")).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: /hankchenchh@gmail\.com/ })).toHaveAttribute(
+      "href",
+      "mailto:hankchenchh@gmail.com",
+    );
+    expect(screen.getByText("不会收集或上传")).toBeInTheDocument();
+    expect(screen.queryByText(/package\.json/)).not.toBeInTheDocument();
+  });
+
   it("opens global StickIt help from the header", async () => {
     const user = userEvent.setup();
     useSettingsStore.setState({ language: "en", theme: "afterglow" });
@@ -265,11 +285,11 @@ describe("PanelShell", () => {
     expect(document.querySelector("[data-guide-highlight]")).toBeInTheDocument();
     await waitFor(
       () => expect(screen.getByText("Collapse the editor toolbar")).toBeInTheDocument(),
-      { timeout: 2_500 },
+      { timeout: 4_800 },
     );
     await user.click(within(guideNote as HTMLElement).getByRole("button", { name: "Collapse formatting toolbar" }));
     await waitFor(() => expect(screen.getByText("Expand the editor toolbar")).toBeInTheDocument());
     await user.click(within(guideNote as HTMLElement).getByRole("button", { name: "Expand formatting toolbar" }));
     await waitFor(() => expect(screen.getByText("Create another note")).toBeInTheDocument());
-  });
+  }, 8_000);
 });

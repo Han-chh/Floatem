@@ -391,6 +391,7 @@
 				ENABLE_TESTABILITY = YES;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = StickItMacOS/Info.plist;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "© 2026 Hank Chen. All rights reserved.";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/../Frameworks",
@@ -420,6 +421,7 @@
 				ENABLE_HARDENED_RUNTIME = YES;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = StickItMacOS/Info.plist;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "© 2026 Hank Chen. All rights reserved.";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/../Frameworks",

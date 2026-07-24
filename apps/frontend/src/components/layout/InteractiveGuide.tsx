@@ -33,6 +33,7 @@ type InteractiveGuideProps = {
 };
 
 type GuideRuntime = {
+  dateTodoId: string | null;
   noteGroupId: string | null;
   noteGroupIds: string[];
   noteId: string | null;
@@ -61,6 +62,10 @@ type GuideStepId =
   | "note-group-add"
   | "note-group-name"
   | "note-group-color"
+  | "note-group-more-colors"
+  | "note-group-advanced-open"
+  | "note-group-advanced-surface"
+  | "note-group-advanced-save"
   | "note-group-create"
   | "note-group-apply"
   | "note-filter-open"
@@ -69,10 +74,17 @@ type GuideStepId =
   | "note-filter-reopen"
   | "note-filter-all"
   | "note-filter-clear"
+  | "note-group-reopen"
+  | "note-group-edit"
+  | "note-group-save"
+  | "note-group-delete-mode"
+  | "note-group-delete"
+  | "note-group-close"
   | "note-collapse"
   | "note-float"
   | "note-pin"
   | "note-unpin"
+  | "note-resize"
   | "note-close-return"
   | "note-float-again"
   | "note-drag-return"
@@ -87,6 +99,12 @@ type GuideStepId =
   | "todo-edit-open"
   | "todo-edit-text"
   | "todo-edit-save"
+  | "todo-calendar-open"
+  | "todo-date-tomorrow"
+  | "todo-date-draft"
+  | "todo-date-submit"
+  | "todo-calendar-return-open"
+  | "todo-date-today"
   | "todo-reminder-open"
   | "todo-reminder-time"
   | "todo-reminder-save"
@@ -96,13 +114,10 @@ type GuideStepId =
   | "todo-group-color"
   | "todo-group-create"
   | "todo-group-apply"
-  | "todo-filter-open"
-  | "todo-filter-pick"
-  | "todo-filter-apply"
-  | "todo-filter-reopen"
-  | "todo-filter-all"
-  | "todo-filter-clear"
+  | "todo-filter-brief"
+  | "todo-filter-close"
   | "todo-float"
+  | "todo-resize"
   | "todo-drag-return"
   | "todo-complete"
   | "todo-restore"
@@ -115,10 +130,12 @@ type GuideStep = {
   allowOutsideTarget?: boolean;
   autoAdvanceMs?: number;
   chapter: number;
+  details?: string[];
   id: GuideStepId;
   instruction: string;
   target: () => HTMLElement | null;
   title: string;
+  panelPlacement?: "top-left" | "top-right" | "bottom-left" | "bottom-right";
 };
 
 const GUIDE_CHAPTER_COUNT = 7;
@@ -160,6 +177,7 @@ export function InteractiveGuide({
   const { language } = useI18n();
   const isZh = language === "zh-CN";
   const [step, setStep] = useState(0);
+  const [showCompletionDialog, setShowCompletionDialog] = useState(false);
   const [targetRect, setTargetRect] = useState<DOMRect | null>(null);
   const [pinnedNoteIds, setPinnedNoteIds] = useState<string[]>([]);
   const runtimeRef = useRef<GuideRuntime | null>(null);
@@ -184,7 +202,10 @@ export function InteractiveGuide({
     instructionZh: string,
     instructionEn: string,
     target: () => HTMLElement | null,
-    options: Pick<GuideStep, "advanceOn" | "allowOutsideTarget" | "autoAdvanceMs"> = {},
+    options: Pick<
+      GuideStep,
+      "advanceOn" | "allowOutsideTarget" | "autoAdvanceMs" | "details" | "panelPlacement"
+    > = {},
   ): GuideStep => ({
     chapter,
     id,
@@ -201,7 +222,7 @@ export function InteractiveGuide({
       stepItem("note-add", 1, "新建第一张便签", "Create the first note", "点击新增便签", "Click Add note", () => queryTarget('[data-guide="note-add"]')),
       stepItem("note-title", 1, "填写标题", "Add a title", "直接输入便签标题", "Type a note title", () => noteId ? queryTarget(`[data-note-card-id="${cssValue(noteId)}"] [data-action="note-title"]`) : null, { advanceOn: "input" }),
       stepItem("note-body", 1, "输入富文本内容", "Write rich text", "在正文输入一行内容；这里支持富文本格式", "Type a line in the body; this editor supports rich text", () => noteId ? queryTarget(`[data-note-card-id="${cssValue(noteId)}"] [data-action="note-rich-editor"]`) : null, { advanceOn: "input" }),
-      stepItem("note-toolbar-overview", 1, "这是富文本工具栏", "This is the rich-text toolbar", "高亮区域包含粗体、斜体、下划线、文字颜色、复制粘贴和撤销重做；此步只需查看，无需点击", "The highlighted toolbar contains bold, italic, underline, text color, clipboard, undo, and redo; just review it—no click needed", () => noteId ? queryTarget(`[data-note-card-id="${cssValue(noteId)}"] [data-action="note-rich-toolbar"]`) : null, { autoAdvanceMs: 1_800 }),
+      stepItem("note-toolbar-overview", 1, "这是富文本工具栏", "This is the rich-text toolbar", "高亮区域包含粗体、斜体、下划线、文字颜色、复制粘贴和撤销重做；请查看 4 秒，无需点击", "The highlighted toolbar contains bold, italic, underline, text color, clipboard, undo, and redo; review it for four seconds—no click needed", () => noteId ? queryTarget(`[data-note-card-id="${cssValue(noteId)}"] [data-action="note-rich-toolbar"]`) : null, { autoAdvanceMs: 4_000 }),
       stepItem("note-toolbar-collapse", 1, "折叠编辑工具栏", "Collapse the editor toolbar", "点击工具栏末端箭头，把编辑区收成紧凑模式", "Click the arrow at the end of the toolbar for a compact editor", () => noteId ? queryTarget(`[data-note-card-id="${cssValue(noteId)}"] [data-action="note-toolbar-toggle"]`) : null, { advanceOn: "pointerdown" }),
       stepItem("note-toolbar-expand", 1, "展开编辑工具栏", "Expand the editor toolbar", "再次点击箭头即可恢复全部工具", "Click the arrow again to restore every tool", () => noteId ? queryTarget(`[data-note-card-id="${cssValue(noteId)}"] [data-action="note-toolbar-toggle"]`) : null, { advanceOn: "pointerdown" }),
       stepItem("note-add-second", 1, "再建一张便签", "Create another note", "点击新增便签，为换序准备第二张卡片", "Click Add note to prepare a second card for reordering", () => queryTarget('[data-guide="note-add"]')),
@@ -209,8 +230,12 @@ export function InteractiveGuide({
       stepItem("note-group-open", 1, "打开便签分组", "Open note groups", "点击第一张便签的分组标签", "Click the group label on the first note", () => noteId ? queryTarget(`[data-note-card-id="${cssValue(noteId)}"] [data-action="note-group"]`) : null),
       stepItem("note-group-add", 1, "新增分组", "Add a group", "点击新增分组", "Click Add group", () => queryTarget('[data-guide="note-group-add"]')),
       stepItem("note-group-name", 1, "命名分组", "Name the group", "输入一个分组名称", "Enter a group name", () => queryTarget('[data-guide="note-group-name"]'), { advanceOn: "input" }),
-      stepItem("note-group-color", 1, "选择分组颜色", "Choose a group color", "点击调色板并选择任一颜色", "Open the palette and choose any color", () => queryTarget('[data-guide="note-group-color"]'), { allowOutsideTarget: true }),
-      stepItem("note-group-create", 1, "创建分组", "Create the group", "选择颜色后点击创建分组", "Choose a color, then click Create group", () => queryTarget('[data-guide="note-group-create"]'), { allowOutsideTarget: true }),
+      stepItem("note-group-color", 1, "打开分组调色板", "Open the group palette", "点击调色板，查看便签分组的颜色选项", "Open the palette to explore note-group colors", () => queryTarget('[data-guide="note-group-color"]')),
+      stepItem("note-group-more-colors", 1, "丰富的分组颜色", "A rich group palette", "预设色可快速区分不同分组；点击彩色按钮展开更多颜色", "Preset colors make groups easy to distinguish; click the multicolor button for more", () => queryTarget('[data-guide="note-group-more-colors"]'), { advanceOn: "pointerdown" }),
+      stepItem("note-group-advanced-open", 1, "打开系统调色板", "Open the full color picker", "点击“显示颜色”，进入完整颜色编辑", "Click Show Colors for full color editing", () => queryTarget('[data-guide="note-group-advanced-open"]'), { advanceOn: "pointerdown" }),
+      stepItem("note-group-advanced-surface", 1, "自定义任意颜色", "Customize any color", "在色彩区域点选一个颜色", "Pick any color from the color surface", () => queryTarget('[data-guide="note-group-advanced-surface"]'), { advanceOn: "pointerdown" }),
+      stepItem("note-group-advanced-save", 1, "保存自定义颜色", "Save the custom color", "点击保存颜色", "Click Save color", () => queryTarget('[data-guide="note-group-advanced-save"]'), { advanceOn: "pointerdown" }),
+      stepItem("note-group-create", 1, "创建分组", "Create the group", "点击创建分组", "Click Create group", () => queryTarget('[data-guide="note-group-create"]')),
       stepItem("note-group-apply", 1, "应用分组", "Apply the group", "选择刚创建的分组", "Choose the group you just created", () => runtimeRef.current?.noteGroupId ? queryGroupTarget(runtimeRef.current.noteGroupId) : null),
       stepItem("note-filter-open", 1, "打开分组筛选", "Open group filters", "点击底部的分组筛选按钮", "Click the group-filter button at the bottom", () => queryTarget('[data-guide="note-filter-open"]')),
       stepItem("note-filter-pick", 1, "筛选便签", "Filter notes", "取消一个分组的勾选，观察列表如何按分组收窄", "Uncheck one group and watch the list narrow by group", () => queryTarget('[data-testid="note-group-filter-scroll-region"]')),
@@ -218,11 +243,18 @@ export function InteractiveGuide({
       stepItem("note-filter-reopen", 1, "恢复全部便签", "Restore all notes", "再次打开筛选", "Open the filters again", () => queryTarget('[data-guide="note-filter-open"]')),
       stepItem("note-filter-all", 1, "选择全部分组", "Select every group", "勾选“全部分组”", "Select All groups", () => queryTarget('[data-testid="note-group-filter-scroll-region"]')),
       stepItem("note-filter-clear", 1, "保存完整列表", "Save the full list", "点击保存，恢复显示所有便签", "Click Save to show every note again", () => queryTarget('[data-guide="note-filter-apply"]')),
+      stepItem("note-group-reopen", 1, "再次打开分组", "Open groups again", "重新打开便签分组，继续了解编辑和删除", "Open note groups again to review editing and deletion", () => noteId ? queryTarget(`[data-note-card-id="${cssValue(noteId)}"] [data-action="note-group"]`) : null),
+      stepItem("note-group-edit", 1, "编辑已有分组", "Edit an existing group", "点击分组右侧的编辑按钮", "Click the edit button beside the group", () => runtimeRef.current?.noteGroupId ? queryTarget(`[data-guide-group-edit-id="${cssValue(runtimeRef.current.noteGroupId)}"]`) : null),
+      stepItem("note-group-save", 1, "保存分组修改", "Save group changes", "这里可以修改名称和颜色；本次直接保存即可", "You can change the name and color here; save it as-is for this tour", () => queryTarget('[data-guide="note-group-save"]')),
+      stepItem("note-group-delete-mode", 1, "进入分组删除模式", "Enter group deletion mode", "点击垃圾桶按钮；列表会显示每个分组的删除入口", "Click the trash button to reveal a delete control for each group", () => queryTarget('[data-guide="note-group-delete-mode"]')),
+      stepItem("note-group-delete", 1, "删除练习分组", "Delete the practice group", "点击刚创建分组右侧的删除按钮", "Click Delete beside the group you just created", () => runtimeRef.current?.noteGroupId ? queryTarget(`[data-guide-group-delete-id="${cssValue(runtimeRef.current.noteGroupId)}"]`) : null),
+      stepItem("note-group-close", 1, "关闭分组面板", "Close the group panel", "点击关闭，返回便签列表", "Click Close to return to notes", () => queryTarget('[data-guide="note-group-close"]')),
       stepItem("note-collapse", 1, "折叠便签", "Fold the note", "点击第一张便签的折叠按钮", "Click the fold control on the first note", () => noteId ? queryTarget(`[data-note-card-id="${cssValue(noteId)}"] [data-action="note-collapse"]`) : null),
 
       stepItem("note-float", 2, "创建便签悬浮卡片", "Create a floating note", "把高亮便签拖出主窗口后松开", "Drag the highlighted note outside the main window", () => noteId ? queryTarget(`[data-note-card-id="${cssValue(noteId)}"]`) : null),
       stepItem("note-pin", 2, "固定到桌面", "Pin it to the desktop", "在悬浮卡片上点击图钉", "Click the pin on the floating card", () => null),
       stepItem("note-unpin", 2, "取消桌面固定", "Remove the desktop pin", "再次点击图钉，恢复普通悬浮", "Click the pin again to return to normal floating mode", () => null),
+      stepItem("note-resize", 2, "调整便签悬浮大小", "Resize the floating note", "拖动悬浮卡片右下角即可放大或缩小；请实际试一试", "Drag the floating card's bottom-right corner to make it larger or smaller", () => null, { autoAdvanceMs: 5_000 }),
       stepItem("note-close-return", 2, "用关闭键收回", "Return it with Close", "点击悬浮卡片上的 ×，卡片会回到应用内部", "Click × on the floating card to return it to the app", () => null),
       stepItem("note-float-again", 2, "再次创建悬浮卡片", "Float it again", "再次把便签拖出主窗口", "Drag the note outside the main window again", () => noteId ? queryTarget(`[data-note-card-id="${cssValue(noteId)}"]`) : null),
       stepItem("note-drag-return", 2, "拖回应用内部", "Drag it back into the app", "按住悬浮卡片，将它拖入主窗口的便签列表；绿色插入线会显示落点", "Drag the floating card into the main note list; the green insertion line shows its destination", () => null),
@@ -238,6 +270,12 @@ export function InteractiveGuide({
       stepItem("todo-edit-open", 3, "打开待办编辑", "Open todo editing", "点击第一条待办的文字区域", "Click the text area of the first todo", () => todoId ? queryTarget(`[data-todo-item-id="${cssValue(todoId)}"]`) : null),
       stepItem("todo-edit-text", 3, "修改待办内容", "Edit the todo", "修改待办文字", "Change the todo text", () => queryTarget('[data-guide="todo-edit-title"]'), { advanceOn: "input" }),
       stepItem("todo-edit-save", 3, "保存修改", "Save the edit", "点击保存", "Click Save", () => queryTarget('[data-guide="todo-edit-save"]')),
+      stepItem("todo-calendar-open", 3, "选择其他日期", "Choose another date", "打开日期面板，为不同日期添加待办", "Open the date panel to add a todo on another day", () => queryTarget('[data-guide="todo-calendar"]')),
+      stepItem("todo-date-tomorrow", 3, "切换到明天", "Switch to tomorrow", "点击“明天”", "Click Tomorrow", () => queryTarget('[data-guide-date="tomorrow"]')),
+      stepItem("todo-date-draft", 3, "输入明天的待办", "Type tomorrow's todo", "在输入框填写一条明日待办", "Type a todo for tomorrow", () => queryTarget('[data-guide="todo-quick-input"]'), { advanceOn: "input" }),
+      stepItem("todo-date-submit", 3, "添加到指定日期", "Add it to that date", "按 Enter，待办会保存到当前选择的明天", "Press Enter to save the todo under tomorrow", () => queryTarget('[data-guide="todo-quick-input"]')),
+      stepItem("todo-calendar-return-open", 3, "返回今天", "Return to today", "再次打开日期面板", "Open the date panel again", () => queryTarget('[data-guide="todo-calendar"]')),
+      stepItem("todo-date-today", 3, "恢复今天列表", "Restore today's list", "点击“今天”，继续后续功能", "Click Today to continue with the remaining features", () => queryTarget('[data-guide-date="today"]')),
 
       stepItem("todo-reminder-open", 4, "打开待办提醒", "Open the reminder", "点击第一条待办的提醒按钮", "Click the reminder control on the first todo", () => todoId ? queryTarget(`[data-todo-item-id="${cssValue(todoId)}"] [data-action="todo-reminder"]`) : null),
       stepItem("todo-reminder-time", 4, "选择提醒时间", "Choose a reminder time", "选择“上午”", "Choose Morning", () => queryTarget('[data-guide-reminder="morning"]')),
@@ -249,20 +287,35 @@ export function InteractiveGuide({
       stepItem("todo-group-color", 5, "选择分组颜色", "Choose a group color", "点击调色板并选择任一颜色", "Open the palette and choose any color", () => queryTarget('[data-guide="todo-group-color"]'), { allowOutsideTarget: true }),
       stepItem("todo-group-create", 5, "创建 Todo 分组", "Create the todo group", "选择颜色后点击创建分组", "Choose a color, then click Create group", () => queryTarget('[data-guide="todo-group-create"]'), { allowOutsideTarget: true }),
       stepItem("todo-group-apply", 5, "应用 Todo 分组", "Apply the todo group", "选择刚创建的分组", "Choose the group you just created", () => runtimeRef.current?.todoGroupId ? queryGroupTarget(runtimeRef.current.todoGroupId) : null),
-      stepItem("todo-filter-open", 5, "打开 Todo 分组筛选", "Open todo filters", "点击顶部工具栏的分组筛选按钮", "Click the group-filter control in the top toolbar", () => queryTarget('[data-guide="todo-filter-open"]')),
-      stepItem("todo-filter-pick", 5, "筛选待办", "Filter todos", "取消一个分组的勾选", "Uncheck one group", () => queryTarget('[data-testid="todo-group-filter-scroll-region"]')),
-      stepItem("todo-filter-apply", 5, "应用筛选", "Apply the filter", "点击保存", "Click Save", () => queryTarget('[data-guide="todo-filter-apply"]')),
-      stepItem("todo-filter-reopen", 5, "恢复全部待办", "Restore all todos", "再次打开筛选", "Open the filters again", () => queryTarget('[data-guide="todo-filter-open"]')),
-      stepItem("todo-filter-all", 5, "选择全部分组", "Select every group", "勾选“全部分组”", "Select All groups", () => queryTarget('[data-testid="todo-group-filter-scroll-region"]')),
-      stepItem("todo-filter-clear", 5, "保存完整列表", "Save the full list", "点击保存，恢复全部待办", "Click Save to restore every todo", () => queryTarget('[data-guide="todo-filter-apply"]')),
+      stepItem("todo-filter-brief", 5, "Todo 同样支持分组筛选", "Todos support group filters too", "点击筛选按钮。这里与便签一致：选择需要显示的分组并保存即可", "Open filters. This works like notes: choose which groups to show, then save", () => queryTarget('[data-guide="todo-filter-open"]')),
+      stepItem("todo-filter-close", 5, "返回 Todo 列表", "Return to Todos", "Todo 筛选功能在此简要带过，点击关闭继续", "That is the todo filter flow in brief; click Close to continue", () => queryTarget('[data-guide="todo-filter-close"]')),
       stepItem("todo-float", 5, "创建待办悬浮卡片", "Create a floating todo", "把高亮待办拖出主窗口；Todo 也支持悬浮和桌面固定", "Drag the highlighted todo outside the window; todos also support floating and desktop pinning", () => todoId ? queryTarget(`[data-todo-item-id="${cssValue(todoId)}"]`) : null),
+      stepItem("todo-resize", 5, "调整待办悬浮大小", "Resize the floating todo", "拖动悬浮待办右下角，体验放大和缩小", "Drag the floating todo's bottom-right corner to resize it", () => null, { autoAdvanceMs: 5_000 }),
       stepItem("todo-drag-return", 5, "拖回 Todo 列表", "Drag it back to Todos", "把悬浮待办拖回主窗口，插入线会帮助你选择排列位置", "Drag the floating todo back; the insertion line helps choose its position", () => null),
       stepItem("todo-complete", 5, "完成待办", "Complete the todo", "点击待办完成圆圈", "Click the completion circle", () => todoId ? queryTarget(`[data-todo-item-id="${cssValue(todoId)}"] [data-action="todo-completion"]`) : null),
       stepItem("todo-restore", 5, "恢复待办", "Restore the todo", "再次点击完成圆圈", "Click the completion circle again", () => todoId ? queryTarget(`[data-todo-item-id="${cssValue(todoId)}"] [data-action="todo-completion"]`) : null),
-      stepItem("todo-delete", 5, "删除练习待办", "Delete the practice todo", "点击待办删除按钮", "Click the todo delete button", () => todoId ? queryTarget(`[data-todo-item-id="${cssValue(todoId)}"] [data-action="todo-delete"]`) : null),
+      stepItem("todo-delete", 5, "删除练习待办", "Delete the practice todo", "点击待办删除按钮", "Click the todo delete button", () => todoId ? queryTarget(`[data-todo-item-id="${cssValue(todoId)}"] [data-action="todo-delete"]`) : null, { panelPlacement: "top-left" }),
 
       stepItem("settings-open", 6, "进入设置", "Open Settings", "点击顶部设置按钮", "Click the Settings button in the header", () => queryTarget('[data-guide="settings-open"]')),
-      stepItem("settings-overview", 6, "设置一览", "Settings at a glance", "通用：语言、时区、时间格式、默认页面与开机启动；主题：固定外观；快捷键：全局唤出；动效：切换方式、速度与粒子；通知：声音与测试；关于：版本、重置与退出。按需修改即可。", "General covers language, time zone, time format, default page, and launch at login; Theme sets appearance; Shortcuts controls global summon; Motion covers transitions, speed, and particles; Notifications covers sound and testing; About shows version, reset, and quit. Change only what you need.", () => queryTarget('[data-guide="settings-overview"]')),
+      stepItem("settings-overview", 6, "设置一览", "Settings at a glance", "以下是各子菜单支持的修改项。确认后将结束指引。", "Here is what each submenu lets you change. Confirm to finish the guide.", () => queryTarget('[data-guide="settings-overview"]'), {
+        details: isZh
+          ? [
+              "通用：语言、时区、时间格式、默认页面、开机启动",
+              "主题：经典、余晖等固定浅色主题风格",
+              "快捷键：全局唤起组合键",
+              "动效：切换方式、速度与粒子效果",
+              "通知：提醒声音与测试通知",
+              "关于：版本、功能与隐私说明；设置首页还可重置和退出",
+            ]
+          : [
+              "General: language, time zone, time format, default page, launch at login",
+              "Theme: a fixed light visual style such as Classic or Afterglow",
+              "Shortcuts: global summon key combination",
+              "Motion: transition style, speed, and particles",
+              "Notifications: reminder sound and test notification",
+              "About: version, features, and privacy; the Settings index also offers reset and quit",
+            ],
+      }),
     ],
     [isZh, noteId, secondaryNoteId, secondaryTodoId, todoId],
   );
@@ -310,8 +363,10 @@ export function InteractiveGuide({
   const isFloatingCardWindowStep = [
     "note-pin",
     "note-unpin",
+    "note-resize",
     "note-close-return",
     "note-drag-return",
+    "todo-resize",
     "todo-drag-return",
   ].includes(currentStep?.id);
 
@@ -322,6 +377,7 @@ export function InteractiveGuide({
     const notesState = useNotesStore.getState();
     const todosState = useTodosStore.getState();
     runtimeRef.current = {
+      dateTodoId: null,
       noteGroupId: null,
       noteGroupIds: notesState.groups.map((group) => group.id),
       noteId: null,
@@ -401,6 +457,13 @@ export function InteractiveGuide({
     ) {
       setStep((value) => value + 1);
     }
+    if (
+      currentStep.id === "note-group-delete" &&
+      runtime.noteGroupId &&
+      !noteGroups.some((group) => group.id === runtime.noteGroupId)
+    ) {
+      setStep((value) => value + 1);
+    }
     if (currentStep.id === "todo-submit" && !runtime.todoId) {
       const created = todos.find((todo) => !runtime.todoIds.includes(todo.id));
       if (created) {
@@ -419,6 +482,18 @@ export function InteractiveGuide({
           runtime.todoId,
           runtime.secondaryTodoId,
         );
+        setStep((value) => value + 1);
+      }
+    }
+    if (currentStep.id === "todo-date-submit" && !runtime.dateTodoId) {
+      const created = todos.find(
+        (todo) =>
+          todo.id !== runtime.todoId &&
+          todo.id !== runtime.secondaryTodoId &&
+          !runtime.todoIds.includes(todo.id),
+      );
+      if (created) {
+        runtime.dateTodoId = created.id;
         setStep((value) => value + 1);
       }
     }
@@ -493,15 +568,24 @@ export function InteractiveGuide({
               ),
             } satisfies FloatingCardGuideState,
           }
-        : currentStep?.id === "note-unpin" && noteId
-          ? {
+          : currentStep?.id === "note-unpin" && noteId
+            ? {
               card: { kind: "note" as const, id: noteId },
               guide: {
                 phase: "unpin",
                 title: copy("取消桌面固定", "Remove desktop pin"),
                 instruction: copy("再次点击高亮图钉", "Click the highlighted pin again"),
-              } satisfies FloatingCardGuideState,
-            }
+                } satisfies FloatingCardGuideState,
+              }
+          : currentStep?.id === "note-resize" && noteId
+            ? {
+                card: { kind: "note" as const, id: noteId },
+                guide: {
+                  phase: "resize",
+                  title: copy("拖动右下角缩放", "Resize from the bottom-right"),
+                  instruction: copy("拖动高亮的右下角，放大或缩小便签", "Drag the highlighted corner to resize the note"),
+                } satisfies FloatingCardGuideState,
+              }
           : currentStep?.id === "note-close-return" && noteId
             ? {
                 card: { kind: "note" as const, id: noteId },
@@ -523,14 +607,21 @@ export function InteractiveGuide({
                   } satisfies FloatingCardGuideState,
                 }
               : (currentStep?.id === "todo-float" ||
+                    currentStep?.id === "todo-resize" ||
                     currentStep?.id === "todo-drag-return") &&
                   todoId
                 ? {
                     card: { kind: "todo" as const, id: todoId },
                     guide: {
-                      phase: "drag",
-                      title: copy("拖回 Todo 列表", "Drag back to Todos"),
-                      instruction: copy("按住卡片空白处，拖入主窗口", "Drag a blank area of the card into the main window"),
+                      phase: currentStep.id === "todo-resize" ? "resize" : "drag",
+                      title:
+                        currentStep.id === "todo-resize"
+                          ? copy("拖动右下角缩放", "Resize from the bottom-right")
+                          : copy("拖回 Todo 列表", "Drag back to Todos"),
+                      instruction:
+                        currentStep.id === "todo-resize"
+                          ? copy("拖动高亮的右下角，放大或缩小待办", "Drag the highlighted corner to resize the todo")
+                          : copy("按住卡片空白处，拖入主窗口", "Drag a blank area of the card into the main window"),
                     } satisfies FloatingCardGuideState,
                   }
                 : null;
@@ -666,6 +757,7 @@ export function InteractiveGuide({
       "note-reorder",
       "note-group-create",
       "note-group-apply",
+      "note-group-delete",
       "note-float",
       "note-pin",
       "note-unpin",
@@ -674,6 +766,7 @@ export function InteractiveGuide({
       "note-drag-return",
       "todo-submit",
       "todo-second-submit",
+      "todo-date-submit",
       "todo-reorder",
       "todo-group-create",
       "todo-group-apply",
@@ -722,7 +815,7 @@ export function InteractiveGuide({
       }
       useNotesStore.getState().removeCard(id);
     }
-    for (const id of [runtime.todoId, runtime.secondaryTodoId]) {
+    for (const id of [runtime.todoId, runtime.secondaryTodoId, runtime.dateTodoId]) {
       if (!id) continue;
       if (useTodosStore.getState().floatingTodoIds.includes(id)) {
         void closeFloatingCard({ kind: "todo", id });
@@ -738,11 +831,20 @@ export function InteractiveGuide({
   };
 
   const handleClose = () => {
+    setShowCompletionDialog(false);
     setTargetRect(null);
     void clearFloatingCardGuides().catch(() => {});
     cleanupPracticeData();
     runtimeRef.current = null;
     onClose();
+  };
+
+  const handleGuideConfirmed = () => {
+    setTargetRect(null);
+    void clearFloatingCardGuides().catch(() => {});
+    cleanupPracticeData();
+    runtimeRef.current = null;
+    setShowCompletionDialog(true);
   };
 
   const ensureGuideNotePair = () => {
@@ -807,18 +909,32 @@ export function InteractiveGuide({
   };
 
   const viewportHeight = typeof window === "undefined" ? 800 : window.innerHeight;
-  const panelStyle =
+  const viewportWidth = typeof window === "undefined" ? 1000 : window.innerWidth;
+  const automaticPanelPlacement =
     targetRect && targetRect.top > viewportHeight * 0.52
+      ? targetRect.left > viewportWidth * 0.5
+        ? "top-left"
+        : "top-right"
+      : targetRect && targetRect.left > viewportWidth * 0.5
+        ? "bottom-left"
+        : "bottom-right";
+  const panelPlacement = currentStep.panelPlacement ?? automaticPanelPlacement;
+  const panelStyle =
+    panelPlacement === "top-left"
       ? { left: 14, top: 14 }
-      : { bottom: 14, right: 14 };
+      : panelPlacement === "top-right"
+        ? { right: 14, top: 14 }
+        : panelPlacement === "bottom-left"
+          ? { bottom: 14, left: 14 }
+          : { bottom: 14, right: 14 };
 
-  if (!isOpen || !currentStep || typeof document === "undefined") {
+  if ((!isOpen && !showCompletionDialog) || !currentStep || typeof document === "undefined") {
     return null;
   }
 
   return createPortal(
     <AnimatePresence>
-      {isOpen ? (
+      {isOpen && !showCompletionDialog ? (
         <>
           <motion.div
             className={`pointer-events-none fixed inset-0 z-[195] bg-[rgba(30,25,21,0.08)] ${
@@ -861,7 +977,7 @@ export function InteractiveGuide({
             data-guide-dialog
             role="dialog"
             aria-label={copy("StickIt 交互式指引", "StickIt interactive guide")}
-            className={`fixed z-[200] w-[min(268px,calc(100vw-28px))] rounded-[20px] border border-[rgba(213,198,180,0.88)] bg-[rgba(255,252,248,0.97)] p-3.5 shadow-[0_22px_46px_rgba(61,49,34,0.22)] backdrop-blur-xl ${
+            className={`paper-scroll fixed z-[200] max-h-[calc(100vh-28px)] w-[min(268px,calc(100vw-28px))] overflow-y-auto rounded-[20px] border border-[rgba(213,198,180,0.88)] bg-[rgba(255,252,248,0.97)] p-3.5 shadow-[0_22px_46px_rgba(61,49,34,0.22)] backdrop-blur-xl ${
               isFloatingCardWindowStep ? "hidden" : ""
             }`}
             style={panelStyle}
@@ -935,6 +1051,16 @@ export function InteractiveGuide({
                 <p className="mt-0.5 text-[10.5px] font-semibold leading-5">
                   {currentStep.instruction}
                 </p>
+                {currentStep.details?.length ? (
+                  <ul className="mt-1.5 space-y-1 border-t border-[rgba(143,85,61,0.14)] pt-1.5 text-[9.5px] font-semibold leading-4">
+                    {currentStep.details.map((detail) => (
+                      <li key={detail} className="flex gap-1.5">
+                        <span aria-hidden="true" className="mt-[6px] h-1 w-1 shrink-0 rounded-full bg-[#ff7a59]" />
+                        <span>{detail}</span>
+                      </li>
+                    ))}
+                  </ul>
+                ) : null}
               </motion.div>
             </AnimatePresence>
             {!targetRect && currentStep.id !== "settings-overview" ? (
@@ -980,14 +1106,58 @@ export function InteractiveGuide({
                 type="button"
                 className="mt-3 flex w-full items-center justify-center gap-2 rounded-[12px] bg-[linear-gradient(145deg,#ff7a59,#f4b942)] px-3 py-2.5 text-[11px] font-bold text-white"
                 whileTap={{ scale: 0.98 }}
-                onClick={handleClose}
+                onClick={handleGuideConfirmed}
               >
                 <CircleCheckBigIcon size={14} />
-                {copy("完成指引", "Finish guide")}
+                {copy("确认并完成", "Confirm and finish")}
               </motion.button>
             ) : null}
           </motion.aside>
         </>
+      ) : null}
+      {showCompletionDialog ? (
+        <motion.div
+          className="fixed inset-0 z-[220] flex items-center justify-center bg-[rgba(30,25,21,0.22)] px-5 backdrop-blur-[3px]"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+        >
+          <motion.div
+            role="dialog"
+            aria-modal="true"
+            data-guide-dialog
+            aria-label={copy("恭喜完成交互指引", "Interactive guide complete")}
+            className="paper-panel w-full max-w-[360px] rounded-[26px] border border-[rgba(213,198,180,0.9)] p-6 text-center shadow-[0_28px_64px_rgba(61,49,34,0.26)]"
+            initial={{ opacity: 0, y: 16, scale: 0.94 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            transition={{ type: "spring", stiffness: 320, damping: 24 }}
+          >
+            <motion.span
+              className="mx-auto inline-flex h-14 w-14 items-center justify-center rounded-[20px] bg-[linear-gradient(145deg,#ff7a59,#f4b942)] text-white shadow-[0_12px_24px_rgba(255,122,89,0.25)]"
+              animate={{ rotate: [0, -7, 7, 0], scale: [1, 1.08, 1] }}
+              transition={{ duration: 1.3 }}
+            >
+              <CircleCheckBigIcon size={26} />
+            </motion.span>
+            <h2 className="mt-4 font-display text-[24px] font-semibold tracking-[-0.04em] text-[var(--brown-strong)]">
+              {copy("恭喜完成交互指引", "You completed the interactive guide")}
+            </h2>
+            <p className="mt-2 text-[12px] leading-6 text-[var(--muted)]">
+              {copy(
+                "现在你已经掌握便签、Todo、悬浮卡片、分组筛选和个性化设置，可以开始使用 StickIt 了。",
+                "You now know notes, todos, floating cards, group filters, and personalization. You're ready to use StickIt.",
+              )}
+            </p>
+            <motion.button
+              type="button"
+              className="mt-5 flex w-full items-center justify-center rounded-[14px] bg-[linear-gradient(145deg,#ff7a59,#f4b942)] px-4 py-3 text-[12px] font-bold text-white"
+              whileTap={{ scale: 0.98 }}
+              onClick={handleClose}
+            >
+              {copy("开始使用 StickIt", "Start using StickIt")}
+            </motion.button>
+          </motion.div>
+        </motion.div>
       ) : null}
     </AnimatePresence>,
     document.body,

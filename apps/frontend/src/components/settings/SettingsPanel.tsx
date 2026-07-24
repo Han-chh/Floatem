@@ -1611,11 +1611,19 @@ function AboutStickItSettings() {
     <>
       <SettingSection title={t.settings.aboutOverviewTitle} description={t.settings.aboutSubtitle}>
         <div className="grid gap-3">
-          <SettingRow
-            icon={<NotebookPenIcon size={15} />}
-            title={t.settings.appVersionTitle}
-            description={t.settings.appVersionBody(__STICKIT_VERSION__)}
-          />
+          <div className="overflow-hidden rounded-[24px] border border-[rgba(213,198,180,0.9)] bg-[linear-gradient(145deg,rgba(255,255,255,0.92),rgba(255,246,236,0.84))] px-5 py-5 shadow-[0_14px_28px_rgba(61,49,34,0.08)]">
+            <p className="font-display text-[25px] font-semibold tracking-[-0.045em] text-[var(--brown-strong)]">
+              StickIt
+            </p>
+            <p className="mt-1 text-[12px] font-semibold text-[#8f553d]">
+              Capture first. Organize later.
+            </p>
+            <div className="mt-4 space-y-1 text-[11.5px] leading-5 text-[var(--muted)]">
+              <p>Version {__STICKIT_VERSION__} (Build {__STICKIT_BUILD__})</p>
+              <p>Designed and developed by Hank Chen</p>
+              <p>© 2026 Hank Chen. All rights reserved.</p>
+            </div>
+          </div>
           <SettingRow icon={<NotebookPenIcon size={15} />} title={t.settings.aboutNotesTitle} description={t.settings.aboutNotesBody} />
           <SettingRow icon={<CircleCheckBigIcon size={15} />} title={t.settings.aboutTodosTitle} description={t.settings.aboutTodosBody} />
           <SettingRow icon={<SlidersHorizontalIcon size={15} />} title={t.settings.aboutTrayFlowTitle} description={t.settings.aboutTrayFlowBody} />
@@ -1623,11 +1631,35 @@ function AboutStickItSettings() {
       </SettingSection>
 
       <SettingSection title={t.settings.dataScopeTitle} description={t.settings.dataScopeSubtitle}>
-        <SettingRow
-          icon={<NotebookPenIcon size={15} />}
-          title={t.settings.dataScopeTitle}
-          description={t.settings.dataScopeBody}
-        />
+        <div className="grid gap-3">
+          <SettingRow
+            icon={<NotebookPenIcon size={15} />}
+            title={t.settings.dataLocalTitle}
+            description={t.settings.dataScopeBody}
+          />
+          <SettingRow
+            icon={<SlidersHorizontalIcon size={15} />}
+            title={t.settings.dataSystemTitle}
+            description={t.settings.dataSystemBody}
+          />
+          <SettingRow
+            icon={<CircleCheckBigIcon size={15} />}
+            title={t.settings.dataPrivacyTitle}
+            description={t.settings.dataPrivacyBody}
+          />
+        </div>
+      </SettingSection>
+
+      <SettingSection title={t.settings.contactTitle} description={t.settings.contactBody}>
+        <a
+          href="mailto:hankchenchh@gmail.com"
+          className="surface-field flex w-full items-center gap-3 rounded-[20px] px-4 py-3 text-[13px] font-semibold text-[#2853C7] transition-transform hover:-translate-y-0.5"
+        >
+          <span className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-[14px] bg-[rgba(47,107,255,0.08)]">
+            @
+          </span>
+          hankchenchh@gmail.com
+        </a>
       </SettingSection>
     </>
   );

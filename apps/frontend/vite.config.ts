@@ -23,6 +23,7 @@ export default defineConfig(({ mode }) => {
     clearScreen: false,
     define: {
       __STICKIT_VERSION__: JSON.stringify(rootPackage.version),
+      __STICKIT_BUILD__: JSON.stringify(String(rootPackage.buildNumber)),
     },
     resolve: {
       alias: {

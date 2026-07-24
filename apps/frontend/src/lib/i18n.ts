@@ -137,6 +137,13 @@ type MessageCatalog = {
     dataScopeBody: string;
     dataScopeSubtitle: string;
     dataScopeTitle: string;
+    dataLocalTitle: string;
+    dataSystemBody: string;
+    dataSystemTitle: string;
+    dataPrivacyBody: string;
+    dataPrivacyTitle: string;
+    contactBody: string;
+    contactTitle: string;
     defaultLaunchShortcut: (shortcut: string) => string;
     defaultSection: string;
     dialogRecorded: string;
@@ -458,16 +465,16 @@ const messages: Record<AppLanguage, MessageCatalog> = {
       useColor: (color) => `Use ${color} for note`,
     },
     settings: {
-      aboutNotesBody: "Card-based notes with drag sorting, color tags, and a compact editor surface.",
+      aboutNotesBody: "Capture rich-text notes, fold the editor toolbar, reorder cards, organize them with colored groups and filters, then float, pin, or resize a card on the desktop.",
       aboutNotesTitle: "Notes",
       aboutOverviewTitle: "Overview",
-      aboutSubtitle: "A tray-first capture surface for fast notes and timed todos on macOS.",
+      aboutSubtitle: "StickIt is a tray-first workspace for capturing ideas immediately and organizing them when you are ready.",
       aboutTitle: "About StickIt",
-      aboutTodosBody: "Status-colored tasks with reminders, fast entry, and quicker scanning in narrow windows.",
+      aboutTodosBody: "Press Enter to focus and capture quickly, assign todos to different dates, reorder and group them, schedule local reminders, or keep a resizable todo floating nearby.",
       aboutTodosTitle: "Todos",
-      aboutTrayFlowBody: "Open from the global shortcut, keep the panel floating, and tune motion to match your pace.",
-      aboutTrayFlowTitle: "Tray flow",
-      appVersionBody: (version) => `Current app version: ${version}. This value is read from package.json at build time.`,
+      aboutTrayFlowBody: "Summon the panel with a global shortcut, switch between Notes and Todos, and tune language, time, appearance, motion, notifications, and startup behavior.",
+      aboutTrayFlowTitle: "Everyday workflow",
+      appVersionBody: (version) => `Current app version: ${version}.`,
       appVersionTitle: "Version",
       appIntro: "Configure how the tray panel opens, switches between Notes and Todos, and how much motion feedback you want while working.",
       backToSettings: "All settings",
@@ -485,9 +492,16 @@ const messages: Record<AppLanguage, MessageCatalog> = {
       categoryThemeTitle: "Theme",
       changeShortcut: "Change",
       currentShortcut: "Current shortcut",
-      dataScopeBody: "Notes, todos, and settings are stored locally in the app data directory and auto-saved after edits.",
-      dataScopeSubtitle: "StickIt keeps your working data on this device.",
-      dataScopeTitle: "Data scope",
+      dataScopeBody: "Notes, todos, groups, reminders, preferences, and floating-card positions are stored in StickIt’s local app data directory and auto-saved after edits.",
+      dataScopeSubtitle: "A clear summary of what stays on this Mac and which system services StickIt uses.",
+      dataScopeTitle: "Data and privacy",
+      dataLocalTitle: "Stored on this device",
+      dataSystemBody: "Reminder delivery uses macOS notifications, and optional launch at login uses the system startup service. These integrations process only the information needed for the requested feature.",
+      dataSystemTitle: "System integrations",
+      dataPrivacyBody: "StickIt has no account, cloud sync, advertising, or analytics upload. Your note and todo content is not sent to the developer. Your own backups may include StickIt’s local data.",
+      dataPrivacyTitle: "Not collected or uploaded",
+      contactBody: "Questions, feedback, or support:",
+      contactTitle: "Contact",
       defaultLaunchShortcut: (shortcut) => `Default launch shortcut: ${shortcut}`,
       defaultSection: "Default section",
       dialogRecorded: "Recorded shortcut",
@@ -809,16 +823,16 @@ const messages: Record<AppLanguage, MessageCatalog> = {
       useColor: (color) => `使用 ${color} 作为笔记颜色`,
     },
     settings: {
-      aboutNotesBody: "卡片式笔记支持拖拽排序、颜色标记和紧凑编辑区域。",
+      aboutNotesBody: "使用富文本快速记录，折叠编辑工具栏、拖动卡片换序，再用彩色分组和筛选整理内容；也可以把便签悬浮、固定在桌面并自由缩放。",
       aboutNotesTitle: "笔记",
       aboutOverviewTitle: "概览",
-      aboutSubtitle: "一个面向托盘的快速记录界面，适合在 macOS 上迅速记下笔记和定时待办。",
+      aboutSubtitle: "StickIt 是一个从托盘快速唤起的工作区，帮助你先捕捉想法，再在合适的时候整理。",
       aboutTitle: "关于 StickIt",
-      aboutTodosBody: "待办事项带有状态颜色和提醒，输入更快，在窄窗口里也更好浏览。",
+      aboutTodosBody: "按 Enter 快速聚焦并录入，将待办添加到不同日期、拖动换序和分组，设置本地提醒，或让可缩放的待办悬浮在手边。",
       aboutTodosTitle: "待办",
-      aboutTrayFlowBody: "通过全局快捷键呼出面板，让窗口保持悬浮，并按你的节奏调整动画。",
-      aboutTrayFlowTitle: "托盘流程",
-      appVersionBody: (version) => `当前应用版本：${version}。该值会在构建时从 package.json 读取。`,
+      aboutTrayFlowBody: "通过全局快捷键唤起面板，在便签与待办之间切换，并按需调整语言、时间、外观、动效、通知和启动行为。",
+      aboutTrayFlowTitle: "日常工作流",
+      appVersionBody: (version) => `当前应用版本：${version}。`,
       appVersionTitle: "版本号",
       appIntro: "配置托盘面板的打开方式、Notes 与 Todos 的切换方式，以及你希望保留多少动效反馈。",
       backToSettings: "全部设置",
@@ -836,9 +850,16 @@ const messages: Record<AppLanguage, MessageCatalog> = {
       categoryThemeTitle: "主题",
       changeShortcut: "更改",
       currentShortcut: "当前快捷键",
-      dataScopeBody: "笔记、待办和设置都会保存在本地应用数据目录中，并在编辑后自动保存。",
-      dataScopeSubtitle: "StickIt 会将你的工作数据保存在这台设备上。",
-      dataScopeTitle: "数据范围",
+      dataScopeBody: "便签、待办、分组、提醒、偏好设置和悬浮卡片位置均保存在 StickIt 的本地应用数据目录中，并在修改后自动保存。",
+      dataScopeSubtitle: "清楚说明哪些数据保留在这台 Mac，以及 StickIt 使用了哪些系统服务。",
+      dataScopeTitle: "数据与隐私",
+      dataLocalTitle: "保存在本机",
+      dataSystemBody: "提醒通过 macOS 系统通知发送；可选的开机启动使用系统启动服务。这些集成只处理实现对应功能所需的信息。",
+      dataSystemTitle: "系统集成",
+      dataPrivacyBody: "StickIt 不提供账号、云同步、广告或分析数据上传，也不会把便签和待办内容发送给开发者。你自行创建的系统备份可能包含 StickIt 本地数据。",
+      dataPrivacyTitle: "不会收集或上传",
+      contactBody: "如需咨询、反馈或支持：",
+      contactTitle: "联系方式",
       defaultLaunchShortcut: (shortcut) => `默认启动快捷键：${shortcut}`,
       defaultSection: "默认分区",
       dialogRecorded: "已录入快捷键",
