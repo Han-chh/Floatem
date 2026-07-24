@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.0.7
+
+- Move the fixed English copyright statement to the bottom of About StickIt as an unboxed footer.
+- Explain the difference between ordinary floating notes and desktop-pinned notes directly inside the floating-card guide animation.
+- Keep guide scrolling inside the content panel, restore the original interface state, and reset document offset after the guide ends.
+- Show a bilingual congratulations dialog after all seven interactive-guide features are complete.
+- Bump StickIt to version 1.0.7 (build 45).
+
 ## 1.0.6
 
 - Match todo deletion to the note deletion effect with the same focused red particle burst.

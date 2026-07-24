@@ -23,6 +23,7 @@ import {
 } from "../icons/AppIcons";
 
 type InteractiveGuideProps = {
+  activeTab: TabId;
   isHeaderCollapsed: boolean;
   isOpen: boolean;
   onClose: () => void;
@@ -34,6 +35,9 @@ type InteractiveGuideProps = {
 
 type GuideRuntime = {
   dateTodoId: string | null;
+  initialHeaderCollapsed: boolean;
+  initialShowSettings: boolean;
+  initialTab: TabId;
   noteGroupId: string | null;
   noteGroupIds: string[];
   noteId: string | null;
@@ -168,6 +172,7 @@ function orderSignature(ids: string[], firstId: string | null, secondId: string 
 }
 
 export function InteractiveGuide({
+  activeTab,
   isHeaderCollapsed,
   isOpen,
   onClose,
@@ -181,6 +186,7 @@ export function InteractiveGuide({
   const [step, setStep] = useState(0);
   const [targetRect, setTargetRect] = useState<DOMRect | null>(null);
   const [pinnedNoteIds, setPinnedNoteIds] = useState<string[]>([]);
+  const [isCompletionVisible, setIsCompletionVisible] = useState(false);
   const runtimeRef = useRef<GuideRuntime | null>(null);
   const guidedFloatingRef = useRef<{ id: string; kind: "note" | "todo" } | null>(null);
   const cards = useNotesStore((state) => state.cards);
@@ -428,6 +434,9 @@ export function InteractiveGuide({
     const todosState = useTodosStore.getState();
     runtimeRef.current = {
       dateTodoId: null,
+      initialHeaderCollapsed: isHeaderCollapsed,
+      initialShowSettings: showSettings,
+      initialTab: activeTab,
       noteGroupId: null,
       noteGroupIds: notesState.groups.map((group) => group.id),
       noteId: null,
@@ -442,11 +451,20 @@ export function InteractiveGuide({
       secondaryTodoId: null,
     };
     setStep(0);
+    setIsCompletionVisible(false);
     setPinnedNoteIds([]);
     onSettingsChange(false);
     onTabChange("notes");
     onHeaderCollapsedChange(false);
-  }, [isOpen, onHeaderCollapsedChange, onSettingsChange, onTabChange]);
+  }, [
+    activeTab,
+    isHeaderCollapsed,
+    isOpen,
+    onHeaderCollapsedChange,
+    onSettingsChange,
+    onTabChange,
+    showSettings,
+  ]);
 
   useEffect(() => {
     if (!isOpen) {
@@ -632,10 +650,10 @@ export function InteractiveGuide({
                 card: { kind: "note" as const, id: noteId },
                 guide: {
                   phase: "desktop",
-                  title: copy("像桌面卡片一样停留", "Stays with your desktop"),
+                  title: copy("普通悬浮与桌面置顶", "Floating vs. desktop-pinned"),
                   instruction: copy(
-                    "不会覆盖其他全屏空间；重新登录后可自动恢复",
-                    "It will not cover other full-screen spaces and can return after sign-in",
+                    "普通悬浮便签显示在当前工作窗口上方；桌面置顶便签像桌面卡片一样停留，不覆盖其他全屏空间，重新登录后还可自动恢复。",
+                    "A floating note stays above windows in your current workspace. A desktop-pinned note stays with the desktop, does not cover other full-screen spaces, and can return after sign-in.",
                   ),
                 } satisfies FloatingCardGuideState,
               }
@@ -761,7 +779,21 @@ export function InteractiveGuide({
       }
       if (target && !didScrollTarget) {
         didScrollTarget = true;
-        target.scrollIntoView?.({ block: "nearest", behavior: "smooth" });
+        const scrollRegion = target.closest<HTMLElement>(".paper-scroll");
+        if (scrollRegion) {
+          const targetBounds = target.getBoundingClientRect();
+          const scrollBounds = scrollRegion.getBoundingClientRect();
+          const isOutsideVisibleRegion =
+            targetBounds.top < scrollBounds.top || targetBounds.bottom > scrollBounds.bottom;
+          if (isOutsideVisibleRegion) {
+            const centeredTop =
+              scrollRegion.scrollTop +
+              targetBounds.top -
+              scrollBounds.top -
+              Math.max(0, (scrollBounds.height - targetBounds.height) / 2);
+            scrollRegion.scrollTop = Math.max(0, centeredTop);
+          }
+        }
       }
       animationFrame = window.requestAnimationFrame(update);
     };
@@ -904,11 +936,46 @@ export function InteractiveGuide({
     }
   };
 
+  const resetGuideViewport = () => {
+    document.documentElement.scrollTop = 0;
+    document.body.scrollTop = 0;
+    document.querySelectorAll<HTMLElement>('[data-testid="panel-scroll-region"]').forEach((region) => {
+      region.scrollTop = 0;
+    });
+  };
+
+  const restoreInterfaceState = () => {
+    const runtime = runtimeRef.current;
+    if (!runtime) {
+      return;
+    }
+    onSettingsChange(runtime.initialShowSettings);
+    onTabChange(runtime.initialTab);
+    onHeaderCollapsedChange(runtime.initialHeaderCollapsed);
+    resetGuideViewport();
+  };
+
   const handleClose = () => {
     setTargetRect(null);
     void clearFloatingCardGuides().catch(() => {});
     cleanupPracticeData();
+    restoreInterfaceState();
     runtimeRef.current = null;
+    onClose();
+  };
+
+  const handleFinish = () => {
+    setTargetRect(null);
+    void clearFloatingCardGuides().catch(() => {});
+    cleanupPracticeData();
+    restoreInterfaceState();
+    setIsCompletionVisible(true);
+  };
+
+  const handleCompletionClose = () => {
+    setIsCompletionVisible(false);
+    runtimeRef.current = null;
+    resetGuideViewport();
     onClose();
   };
 
@@ -998,8 +1065,8 @@ export function InteractiveGuide({
   }
 
   return createPortal(
-    <AnimatePresence>
-      {isOpen ? (
+    <>
+      {isOpen && !isCompletionVisible ? (
         <>
           <motion.div
             className={`pointer-events-none fixed inset-0 z-[195] bg-[rgba(30,25,21,0.08)] ${
@@ -1174,7 +1241,7 @@ export function InteractiveGuide({
                 type="button"
                 className="mt-3 flex w-full items-center justify-center gap-2 rounded-[12px] bg-[linear-gradient(145deg,#ff7a59,#f4b942)] px-3 py-2.5 text-[11px] font-bold text-white"
                 whileTap={{ scale: 0.98 }}
-                onClick={handleClose}
+                onClick={handleFinish}
               >
                 <CircleCheckBigIcon size={14} />
                 {copy("确认并完成", "Confirm and finish")}
@@ -1183,7 +1250,7 @@ export function InteractiveGuide({
           </motion.aside>
         </>
       ) : null}
-      {currentStep.id === "settings-overview" ? (
+      {!isCompletionVisible && currentStep.id === "settings-overview" ? (
         <motion.div
           key="settings-overview-dialog"
           className="fixed inset-0 z-[220] flex items-center justify-center bg-[rgba(30,25,21,0.22)] px-5 backdrop-blur-[3px]"
@@ -1254,7 +1321,7 @@ export function InteractiveGuide({
               type="button"
               className="mt-5 flex w-full items-center justify-center gap-2 rounded-[14px] bg-[linear-gradient(145deg,#ff7a59,#f4b942)] px-4 py-3 text-[12px] font-bold text-white"
               whileTap={{ scale: 0.98 }}
-              onClick={handleClose}
+              onClick={handleFinish}
             >
               <CircleCheckBigIcon size={15} />
               {copy("完成指引", "Finish guide")}
@@ -1262,7 +1329,52 @@ export function InteractiveGuide({
           </motion.div>
         </motion.div>
       ) : null}
-    </AnimatePresence>,
+      {isCompletionVisible ? (
+        <motion.div
+          key="guide-complete-dialog"
+          className="fixed inset-0 z-[230] flex items-center justify-center bg-[rgba(30,25,21,0.2)] px-5 backdrop-blur-[4px]"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+        >
+          <motion.div
+            role="dialog"
+            aria-modal="true"
+            aria-label={copy("恭喜完成所有交互指引", "Congratulations on completing the interactive guide")}
+            className="paper-panel w-full max-w-[420px] rounded-[26px] border border-[rgba(213,198,180,0.9)] px-7 py-8 text-center shadow-[0_28px_64px_rgba(61,49,34,0.24)]"
+            initial={{ opacity: 0, y: 18, scale: 0.92 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            transition={{ type: "spring", stiffness: 320, damping: 24 }}
+          >
+            <motion.span
+              className="mx-auto inline-flex h-16 w-16 items-center justify-center rounded-full bg-[linear-gradient(145deg,#ff7a59,#f4b942)] text-white shadow-[0_14px_30px_rgba(255,122,89,0.28)]"
+              animate={{ rotate: [0, -6, 6, 0], scale: [1, 1.08, 1] }}
+              transition={{ duration: 1.4 }}
+            >
+              <SparklesIcon size={28} />
+            </motion.span>
+            <h2 className="mt-5 font-display text-[25px] font-semibold tracking-[-0.04em] text-[var(--brown-strong)]">
+              {copy("恭喜完成所有交互指引", "You completed the interactive guide")}
+            </h2>
+            <p className="mx-auto mt-3 max-w-[330px] text-[12px] leading-6 text-[var(--muted)]">
+              {copy(
+                "你已经体验了 StickIt 的便签、待办、分组、悬浮卡片与设置。练习内容已清理，主界面也已恢复。",
+                "You explored StickIt notes, todos, groups, floating cards, and settings. Practice content has been cleared and your workspace restored.",
+              )}
+            </p>
+            <motion.button
+              type="button"
+              className="mt-6 inline-flex min-w-[150px] items-center justify-center gap-2 rounded-[14px] bg-[linear-gradient(145deg,#ff7a59,#f4b942)] px-5 py-3 text-[12px] font-bold text-white"
+              whileTap={{ scale: 0.98 }}
+              onClick={handleCompletionClose}
+            >
+              <CircleCheckBigIcon size={15} />
+              {copy("返回 StickIt", "Return to StickIt")}
+            </motion.button>
+          </motion.div>
+        </motion.div>
+      ) : null}
+    </>,
     document.body,
   );
 }

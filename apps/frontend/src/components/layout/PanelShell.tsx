@@ -242,6 +242,7 @@ export function PanelShell({
         }}
       />
       <InteractiveGuide
+        activeTab={activeTab}
         isHeaderCollapsed={isHeaderCollapsed}
         isOpen={isInteractiveGuideOpen}
         onClose={() => setIsInteractiveGuideOpen(false)}

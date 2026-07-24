@@ -75,8 +75,10 @@ describe("PanelShell", () => {
 
     expect(screen.getByText("Capture first. Organize later.")).toBeInTheDocument();
     expect(screen.getByText(/Version 1\.0\.\d+ \(Build \d+\)/)).toBeInTheDocument();
-    expect(screen.getByText("Designed and developed by Hank Chen")).toBeInTheDocument();
-    expect(screen.getByText("© 2026 Hank Chen. All rights reserved.")).toBeInTheDocument();
+    const copyrightFooter = screen.getByTestId("about-copyright-footer");
+    expect(within(copyrightFooter).getByText("Designed and developed by Hank Chen")).toBeInTheDocument();
+    expect(within(copyrightFooter).getByText("© 2026 Hank Chen. All rights reserved.")).toBeInTheDocument();
+    expect(screen.getByTestId("about-brand-block")).not.toContainElement(copyrightFooter);
     expect(screen.getByRole("link", { name: /hankchenchh@gmail\.com/ })).toHaveAttribute(
       "href",
       "mailto:hankchenchh@gmail.com",
@@ -242,6 +244,11 @@ describe("PanelShell", () => {
       expect(screen.queryByRole("dialog", { name: "StickIt interactive guide" })).not.toBeInTheDocument();
       expect(document.querySelector("[data-guide-highlight]")).not.toBeInTheDocument();
     });
+    expect(
+      screen.queryByRole("dialog", {
+        name: "Congratulations on completing the interactive guide",
+      }),
+    ).not.toBeInTheDocument();
     expect(screen.getByText("Original panel body")).toBeInTheDocument();
     expect(useNotesStore.getState().groups).toHaveLength(0);
     expect(useTodosStore.getState().groups).toHaveLength(0);
@@ -249,12 +256,16 @@ describe("PanelShell", () => {
 
   it("finishes with a large text-only overview of every settings submenu", async () => {
     function GuideHarness() {
+      const [activeTab, setActiveTab] = useState<"notes" | "todos">("todos");
       const [isOpen, setIsOpen] = useState(true);
       const [showSettings, setShowSettings] = useState(false);
-      const [isHeaderCollapsed, setIsHeaderCollapsed] = useState(false);
+      const [isHeaderCollapsed, setIsHeaderCollapsed] = useState(true);
 
       return (
         <>
+          <output data-testid="guide-restored-state">
+            {activeTab}:{isHeaderCollapsed ? "collapsed" : "expanded"}
+          </output>
           <button
             type="button"
             data-guide="settings-open"
@@ -264,12 +275,13 @@ describe("PanelShell", () => {
           </button>
           {showSettings ? <div data-guide="settings-overview">Settings content</div> : null}
           <InteractiveGuide
+            activeTab={activeTab}
             isHeaderCollapsed={isHeaderCollapsed}
             isOpen={isOpen}
             onClose={() => setIsOpen(false)}
             onHeaderCollapsedChange={setIsHeaderCollapsed}
             onSettingsChange={setShowSettings}
-            onTabChange={vi.fn()}
+            onTabChange={setActiveTab}
             showSettings={showSettings}
           />
         </>
@@ -310,7 +322,22 @@ describe("PanelShell", () => {
     expect(screen.getByRole("dialog", { name: "Settings menus and options" })).toBeInTheDocument();
 
     await user.click(within(overview).getByRole("button", { name: "Finish guide" }));
+    const completion = await screen.findByRole("dialog", {
+      name: "Congratulations on completing the interactive guide",
+    });
+    expect(screen.queryByRole("dialog", { name: "Settings menus and options" })).not.toBeInTheDocument();
+    expect(screen.queryByText("Settings content")).not.toBeInTheDocument();
+    expect(screen.getByTestId("guide-restored-state")).toHaveTextContent("todos:collapsed");
+    expect(document.documentElement.scrollTop).toBe(0);
+    expect(document.body.scrollTop).toBe(0);
+
+    await user.click(within(completion).getByRole("button", { name: "Return to StickIt" }));
     await waitFor(() => {
+      expect(
+        screen.queryByRole("dialog", {
+          name: "Congratulations on completing the interactive guide",
+        }),
+      ).not.toBeInTheDocument();
       expect(screen.queryByRole("dialog", { name: "Settings menus and options" })).not.toBeInTheDocument();
     });
   });

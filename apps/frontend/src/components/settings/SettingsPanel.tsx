@@ -1611,7 +1611,10 @@ function AboutStickItSettings() {
     <>
       <SettingSection title={t.settings.aboutOverviewTitle} description={t.settings.aboutSubtitle}>
         <div className="grid gap-3">
-          <div className="overflow-hidden rounded-[24px] border border-[rgba(213,198,180,0.9)] bg-[linear-gradient(145deg,rgba(255,255,255,0.92),rgba(255,246,236,0.84))] px-5 py-5 shadow-[0_14px_28px_rgba(61,49,34,0.08)]">
+          <div
+            data-testid="about-brand-block"
+            className="overflow-hidden rounded-[24px] border border-[rgba(213,198,180,0.9)] bg-[linear-gradient(145deg,rgba(255,255,255,0.92),rgba(255,246,236,0.84))] px-5 py-5 shadow-[0_14px_28px_rgba(61,49,34,0.08)]"
+          >
             <p className="font-display text-[25px] font-semibold tracking-[-0.045em] text-[var(--brown-strong)]">
               StickIt
             </p>
@@ -1620,8 +1623,6 @@ function AboutStickItSettings() {
             </p>
             <div className="mt-4 space-y-1 text-[11.5px] leading-5 text-[var(--muted)]">
               <p>Version {__STICKIT_VERSION__} (Build {__STICKIT_BUILD__})</p>
-              <p>Designed and developed by Hank Chen</p>
-              <p>© 2026 Hank Chen. All rights reserved.</p>
             </div>
           </div>
           <SettingRow icon={<NotebookPenIcon size={15} />} title={t.settings.aboutNotesTitle} description={t.settings.aboutNotesBody} />
@@ -1661,6 +1662,14 @@ function AboutStickItSettings() {
           hankchenchh@gmail.com
         </a>
       </SettingSection>
+
+      <footer
+        data-testid="about-copyright-footer"
+        className="mt-8 border-t border-[rgba(213,198,180,0.72)] px-2 pb-2 pt-6 text-center text-[11px] leading-5 text-[var(--muted)]"
+      >
+        <p>Designed and developed by Hank Chen</p>
+        <p>© 2026 Hank Chen. All rights reserved.</p>
+      </footer>
     </>
   );
 }
