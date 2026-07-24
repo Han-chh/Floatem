@@ -229,7 +229,7 @@ export function InteractiveGuide({
       stepItem("note-delete", 2, "删除练习便签", "Delete the practice note", "点击便签删除按钮", "Click the note delete button", () => noteId ? queryTarget(`[data-note-card-id="${cssValue(noteId)}"] [data-action="delete"]`) : null),
 
       stepItem("todo-tab", 3, "切换到 Todos", "Switch to Todos", "点击 Todos 标签", "Click the Todos tab", () => queryTarget('[data-guide="tab-todos"]')),
-      stepItem("todo-focus", 3, "用 Enter 快速定位", "Focus quick entry with Enter", "先点击界面空白处，再直接按 Enter；无需鼠标即可聚焦输入框", "Click a blank area, then press Enter to focus quick entry without the mouse", () => queryTarget('[data-guide="todo-quick-input"]'), { advanceOn: "focus" }),
+      stepItem("todo-focus", 3, "用Enter快速定位", "Focus quickly with Enter", "应用唤起后按Enter键或点击输入框获取焦点，按Enter键获取焦点无需鼠标", "After StickIt appears, press Enter or click the input field to focus it. Pressing Enter lets you focus without a mouse.", () => queryTarget('[data-guide="todo-quick-input"]'), { advanceOn: "focus" }),
       stepItem("todo-draft", 3, "输入待办", "Type a todo", "输入第一条待办内容", "Type the first todo", () => queryTarget('[data-guide="todo-quick-input"]'), { advanceOn: "input" }),
       stepItem("todo-submit", 3, "快速创建", "Create it quickly", "按 Enter 立即创建待办；Shift + Enter 可换行", "Press Enter to create it; Shift + Enter inserts a new line", () => queryTarget('[data-guide="todo-quick-input"]')),
       stepItem("todo-second-draft", 3, "再输入一条待办", "Type another todo", "输入第二条待办", "Type a second todo", () => queryTarget('[data-guide="todo-quick-input"]'), { advanceOn: "input" }),
