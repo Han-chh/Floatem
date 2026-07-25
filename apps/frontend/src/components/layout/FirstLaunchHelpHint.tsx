@@ -51,7 +51,7 @@ export function FirstLaunchHelpHint({
             role="dialog"
             aria-labelledby="first-launch-help-hint-title"
             aria-describedby="first-launch-help-hint-body"
-            className="paper-panel pointer-events-auto absolute right-3 top-[58px] w-[min(264px,calc(100vw-24px))] rounded-[22px] border border-[rgba(156,126,94,0.24)] p-3.5 shadow-[0_22px_44px_rgba(30,25,21,0.18)]"
+            className="paper-panel pointer-events-auto absolute right-3 top-[94px] w-[min(264px,calc(100vw-24px))] rounded-[22px] border border-[rgba(156,126,94,0.24)] p-3.5 shadow-[0_22px_44px_rgba(30,25,21,0.18)]"
             initial={{ opacity: 0, scale: 0.94, x: 8, y: -8 }}
             animate={{ opacity: 1, scale: 1, x: 0, y: 0 }}
             exit={{ opacity: 0, scale: 0.98, x: 4, y: -4 }}
@@ -59,7 +59,7 @@ export function FirstLaunchHelpHint({
           >
             <span
               aria-hidden="true"
-              className="absolute -top-1.5 right-[54px] h-3 w-3 rotate-45 border-l border-t border-[rgba(156,126,94,0.24)] bg-[var(--cream-strong)]"
+              className="absolute -top-1.5 right-[70px] h-3 w-3 rotate-45 border-l border-t border-[rgba(156,126,94,0.24)] bg-[var(--cream-strong)]"
             />
             <div className="flex items-start gap-2.5">
               <span className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-[13px] bg-[rgba(244,185,66,0.16)] text-[#7A5E39]">

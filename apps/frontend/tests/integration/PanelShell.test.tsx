@@ -116,20 +116,31 @@ describe("PanelShell", () => {
       "opacity-80",
     );
     const helpButton = screen.getByRole("button", { name: "Floatem help" });
-    expect(screen.getByTestId("header-actions")).toHaveClass("h-[30px]", "items-center");
+    expect(screen.getByTestId("header-actions")).toHaveClass("gap-1.5", "items-center");
     expect(screen.getByTestId("help-action-slot")).toHaveClass(
-      "h-[30px]",
-      "w-[30px]",
+      "h-11",
+      "w-11",
+      "mt-1.5",
       "items-center",
       "justify-center",
     );
-    expect(screen.getByTestId("settings-action-slot")).toHaveClass(
+    expect(helpButton).toHaveClass(
+      "paper-icon-button",
       "h-[30px]",
       "w-[30px]",
-      "items-center",
-      "justify-center",
+      "min-h-0",
+      "min-w-0",
+      "rounded-[11px]",
     );
-    expect(screen.getByRole("button", { name: "Settings" })).not.toHaveClass("mt-1.5");
+    expect(screen.getByRole("button", { name: "Settings" })).toHaveClass(
+      "paper-icon-button",
+      "mt-1.5",
+      "h-[30px]",
+      "w-[30px]",
+      "min-h-0",
+      "min-w-0",
+      "rounded-[11px]",
+    );
     expect(helpButton).toHaveClass("outline-none", "focus-visible:outline-none");
     await user.click(helpButton);
 
@@ -163,6 +174,7 @@ describe("PanelShell", () => {
 
   it("highlights the help entry once on a fresh installation", async () => {
     const user = userEvent.setup();
+    window.localStorage.removeItem("floatem.settings");
     useSettingsStore.getState().reset();
     useSettingsStore.getState().hydrateSettings({
       language: "en",
@@ -186,12 +198,20 @@ describe("PanelShell", () => {
     expect(screen.getByTestId("first-launch-help-highlight")).toBeInTheDocument();
     expect(
       screen.getByRole("dialog", { name: "Your guide is right here" }),
-    ).toBeInTheDocument();
+    ).toHaveClass("top-[94px]");
 
     await user.click(screen.getByRole("button", { name: "Open guide" }));
 
     expect(useSettingsStore.getState().hasSeenHelpEntryHint).toBe(true);
+    expect(JSON.parse(window.localStorage.getItem("floatem.settings") ?? "{}")).toEqual(
+      expect.objectContaining({
+        hasSeenHelpEntryHint: true,
+        hotkey: "Shift+Space",
+        theme: "classic",
+      }),
+    );
     await waitFor(() => {
+      expect(screen.queryByTestId("first-launch-help-highlight")).not.toBeInTheDocument();
       expect(
         screen.queryByRole("dialog", { name: "Your guide is right here" }),
       ).not.toBeInTheDocument();
@@ -217,6 +237,7 @@ describe("PanelShell", () => {
     expect(
       screen.queryByRole("dialog", { name: "Your guide is right here" }),
     ).not.toBeInTheDocument();
+    window.localStorage.removeItem("floatem.settings");
   });
 
   it("dismisses the first-install help hint without opening help", async () => {

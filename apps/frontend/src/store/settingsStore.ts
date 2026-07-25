@@ -142,3 +142,26 @@ export const useSettingsStore = create<SettingsState>()(
     },
   })),
 );
+
+export function getPersistedSettingsSnapshot(): AppSettings {
+  const state = useSettingsStore.getState();
+
+  return {
+    hotkey: state.hotkey,
+    language: state.language,
+    timeZone: state.timeZone,
+    timeFormat: state.timeFormat,
+    theme: state.theme,
+    panelPosition: state.panelPosition,
+    activeTab: state.activeTab,
+    lastActiveTab: state.lastActiveTab,
+    defaultOpenSection: state.defaultOpenSection,
+    transitionStyle: state.transitionStyle,
+    animationSpeed: state.animationSpeed,
+    launchAtLogin: state.launchAtLogin,
+    suppressLaunchAtLoginPrompt: state.suppressLaunchAtLoginPrompt,
+    hasSeenHelpEntryHint: state.hasSeenHelpEntryHint,
+    enableParticles: state.enableParticles,
+    enableReminderSound: state.enableReminderSound,
+  };
+}

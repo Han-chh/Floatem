@@ -2,8 +2,12 @@ import { AnimatePresence, motion } from "framer-motion";
 import { floatemBranding } from "@floatem/branding";
 import type { ReactNode } from "react";
 import { useState } from "react";
+import { saveSettings } from "../../hooks/usePlatform";
 import { useI18n } from "../../lib/i18n";
-import { useSettingsStore } from "../../store/settingsStore";
+import {
+  getPersistedSettingsSnapshot,
+  useSettingsStore,
+} from "../../store/settingsStore";
 import {
   ChevronUpIcon,
   CircleHelpIcon,
@@ -43,6 +47,7 @@ export function PanelShell({
   const [isHeaderCollapsed, setIsHeaderCollapsed] = useState(false);
   const [isHelpOpen, setIsHelpOpen] = useState(false);
   const [isInteractiveGuideOpen, setIsInteractiveGuideOpen] = useState(false);
+  const [hasAcknowledgedHelpEntry, setHasAcknowledgedHelpEntry] = useState(false);
   const isSettingsLoaded = useSettingsStore((state) => state.isLoaded);
   const hasSeenHelpEntryHint = useSettingsStore((state) => state.hasSeenHelpEntryHint);
   const setHasSeenHelpEntryHint = useSettingsStore((state) => state.setHasSeenHelpEntryHint);
@@ -57,13 +62,26 @@ export function PanelShell({
   const isFirstLaunchHelpHintOpen =
     isSettingsLoaded &&
     !hasSeenHelpEntryHint &&
+    !hasAcknowledgedHelpEntry &&
     !showSettings &&
     !isHeaderCollapsed;
-  const dismissFirstLaunchHelpHint = () => {
+  const acknowledgeFirstLaunchHelpHint = () => {
+    setHasAcknowledgedHelpEntry(true);
+
+    if (!isSettingsLoaded || hasSeenHelpEntryHint) {
+      return;
+    }
+
     setHasSeenHelpEntryHint(true);
+    void saveSettings(getPersistedSettingsSnapshot()).catch((error) => {
+      console.error("Floatem failed to persist the first-launch help acknowledgement.", error);
+    });
+  };
+  const dismissFirstLaunchHelpHint = () => {
+    acknowledgeFirstLaunchHelpHint();
   };
   const openHelp = () => {
-    setHasSeenHelpEntryHint(true);
+    acknowledgeFirstLaunchHelpHint();
     setIsHelpOpen(true);
   };
 
@@ -160,11 +178,11 @@ export function PanelShell({
                                 </div>
                                 <div
                                   data-testid="header-actions"
-                                  className="flex h-[30px] shrink-0 items-center gap-1.5 self-center"
+                                  className="flex shrink-0 items-center gap-1.5"
                                 >
                                   <span
                                     data-testid="help-action-slot"
-                                    className="relative inline-flex h-[30px] w-[30px] shrink-0 items-center justify-center"
+                                    className="relative mt-1.5 inline-flex h-11 w-11 shrink-0 items-center justify-center"
                                   >
                                     <AnimatePresence>
                                       {isFirstLaunchHelpHintOpen ? (
@@ -178,7 +196,15 @@ export function PanelShell({
                                               opacity: [0.35, 0.9, 0.35],
                                               scale: [0.82, 1.12, 0.82],
                                             }}
-                                            exit={{ opacity: 0, scale: 0.85 }}
+                                            exit={{
+                                              opacity: 0,
+                                              scale: 0.92,
+                                              transition: {
+                                                duration: 0.12,
+                                                ease: "easeOut",
+                                                repeat: 0,
+                                              },
+                                            }}
                                             transition={{ duration: 1.8, ease: "easeInOut", repeat: Infinity }}
                                           />
                                           <motion.span
@@ -204,24 +230,20 @@ export function PanelShell({
                                       <CircleHelpIcon size={15} />
                                     </motion.button>
                                   </span>
-                                  <span
-                                    data-testid="settings-action-slot"
-                                    className="inline-flex h-[30px] w-[30px] shrink-0 items-center justify-center"
+                                  <motion.button
+                                    type="button"
+                                    aria-label={t.app.settings}
+                                    data-testid="settings-action"
+                                    data-guide="settings-open"
+                                    data-tooltip={t.app.settings}
+                                    data-tooltip-placement="bottom"
+                                    className="paper-icon-button mt-1.5 h-[30px] w-[30px] min-h-0 min-w-0 shrink-0 rounded-[11px]"
+                                    whileHover={{ y: -1.5, scale: 1.02 }}
+                                    whileTap={{ scale: 0.985 }}
+                                    onClick={onToggleSettings}
                                   >
-                                    <motion.button
-                                      type="button"
-                                      aria-label={t.app.settings}
-                                      data-guide="settings-open"
-                                      data-tooltip={t.app.settings}
-                                      data-tooltip-placement="bottom"
-                                      className="paper-icon-button h-[30px] w-[30px] min-h-0 min-w-0 shrink-0 rounded-[11px]"
-                                      whileHover={{ y: -1.5, scale: 1.02 }}
-                                      whileTap={{ scale: 0.985 }}
-                                      onClick={onToggleSettings}
-                                    >
-                                      <SlidersHorizontalIcon size={14} />
-                                    </motion.button>
-                                  </span>
+                                    <SlidersHorizontalIcon size={14} />
+                                  </motion.button>
                                 </div>
                               </div>
 
