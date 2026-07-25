@@ -11,7 +11,8 @@ All notable repository changes are recorded here. Historical entries describe th
 - Highlight the upper-right help button on a fresh installation and present a focused, bilingual dialog that introduces Floatem's feature help and interactive guide.
 - Persist the first-install hint state locally, keep it from competing with the launch-at-login prompt, and avoid showing it unexpectedly to existing users after upgrade.
 - Declare that Floatem does not use non-exempt encryption so future App Store Connect uploads can skip the repeated export-compliance questionnaire.
-- Bump Floatem to version 1.0.8 (build 47).
+- Replace the legacy opaque ICNS app icon with an Icon Composer source so macOS and TestFlight generate the final rounded contour without white corners.
+- Bump Floatem to version 1.0.8 (build 48).
 
 ## 1.0.7
 

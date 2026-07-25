@@ -1,6 +1,6 @@
 # Floatem
 
-> Current release: **Floatem 1.0.8 (macOS build 47)**. The signed macOS archive and App Store Connect package have been generated successfully; build 47 has not yet been uploaded to App Store Connect/TestFlight. The Windows host remains a developer-preview target rather than part of the current Mac App Store release.
+> Current release candidate: **Floatem 1.0.8 (macOS build 48)**. Build 47 is in external TestFlight testing; build 48 replaces the legacy opaque ICNS with an Icon Composer app icon and has not yet been uploaded to App Store Connect/TestFlight. The Windows host remains a developer-preview target rather than part of the current Mac App Store release.
 
 Floatem is a lightweight, local-first desktop notes and todos app designed to capture and organize thoughts without interrupting the current workflow. The macOS app can be summoned with a global shortcut, float editable cards above other work, and pin app-owned cards at the desktop level.
 
