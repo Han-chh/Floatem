@@ -1,0 +1,89 @@
+- generic [ref=e2]:
+  - banner [ref=e3]:
+    - button "Floatem home" [ref=e4] [cursor=pointer]:
+      - generic [ref=e5]: Floatem
+    - navigation "Main navigation" [ref=e6]:
+      - button "功能" [ref=e7] [cursor=pointer]
+      - button "下载" [ref=e8] [cursor=pointer]
+      - button "技术支持" [ref=e9] [cursor=pointer]
+      - button "隐私" [ref=e10] [cursor=pointer]
+    - button "EN" [ref=e11] [cursor=pointer]
+  - main [ref=e12]:
+    - generic [ref=e13]:
+      - generic [ref=e15]:
+        - paragraph [ref=e16]: 为散落的思绪，留一处可以停泊的地方
+        - heading "Floatem 思绪， 自由浮现。" [level=1] [ref=e17]:
+          - generic [ref=e18]: Floatem
+          - generic [ref=e19]: 思绪，
+          - generic [ref=e20]: 自由浮现。
+        - paragraph [ref=e21]: Floatem 是一款为桌面而生的悬浮笔记与待办工具。它轻轻留在你的视野里，却不会打断当下。
+        - generic [ref=e22]:
+          - button "获取 Floatem" [ref=e23] [cursor=pointer]
+          - button "探索功能" [ref=e26] [cursor=pointer]
+      - generic "Floatem 应用界面示意" [ref=e29]:
+        - generic [ref=e37]:
+          - generic [ref=e38]: Floatem
+          - paragraph [ref=e43]: 今天，想留住什么？
+          - generic [ref=e45]:
+            - generic [ref=e46]: 浮现于此
+            - generic [ref=e47]: ↗
+        - generic [ref=e48]: 在眼前，恰到好处。
+      - generic [ref=e49]:
+        - generic [ref=e50]: 最新版本
+        - generic [ref=e51]: v1.0.8
+        - generic [ref=e52]: ↓
+    - generic [ref=e53]:
+      - generic [ref=e54]:
+        - paragraph [ref=e55]: 六种主题
+        - heading "一日六景， 也有六种心境。" [level=2] [ref=e56]:
+          - generic [ref=e57]: 一日六景，
+          - generic [ref=e58]: 也有六种心境。
+        - paragraph [ref=e59]: 从梅的克制、兰的清醒，到竹的自在与菊的温润。让桌面随心情呼吸。
+      - generic [ref=e60]:
+        - img "经典色 theme" [ref=e62]
+        - generic [ref=e63]:
+          - generic [ref=e64]: "01"
+          - strong [ref=e65]: 经典色
+          - emphasis [ref=e66]: 此刻的桌面色彩。
+        - generic "六种主题" [ref=e67]:
+          - button "经典色" [ref=e68] [cursor=pointer]
+          - button "浮光" [ref=e70] [cursor=pointer]
+          - button "梅" [ref=e72] [cursor=pointer]
+          - button "兰" [ref=e74] [cursor=pointer]
+          - button "竹" [ref=e76] [cursor=pointer]
+          - button "菊" [ref=e78] [cursor=pointer]
+    - generic [ref=e80]:
+      - generic [ref=e81]:
+        - paragraph [ref=e82]: FLOAT WITH YOUR FLOW
+        - heading "让重要的事， 始终在恰当的位置。" [level=2] [ref=e83]:
+          - generic [ref=e84]: 让重要的事，
+          - generic [ref=e85]: 始终在恰当的位置。
+        - paragraph [ref=e86]: 写下、拖出、完成。Floatem 把笔记与待办从层层窗口中解放出来，成为工作流里自然的一笔。
+      - generic [ref=e87]:
+        - generic [ref=e90]:
+          - text: "01"
+          - heading "看视频时，留下灵光" [level=3] [ref=e91]
+        - generic [ref=e94]:
+          - text: "02"
+          - heading "编码时，悬浮在一侧" [level=3] [ref=e95]
+        - generic [ref=e98]:
+          - text: "03"
+          - heading "把便签，固定在桌面" [level=3] [ref=e99]
+        - generic [ref=e102]:
+          - text: "04"
+          - heading "待办与提醒，不再遗漏" [level=3] [ref=e103]
+    - generic [ref=e106]:
+      - paragraph [ref=e107]: Floatem
+      - heading "不必记住一切。 让 Floatem 留在眼前。" [level=2] [ref=e108]:
+        - generic [ref=e109]: 不必记住一切。
+        - generic [ref=e110]: 让 Floatem 留在眼前。
+      - button "获取 Floatem" [ref=e111] [cursor=pointer]
+  - contentinfo [ref=e114]:
+    - button "Floatem © 2026 Floatem" [ref=e115] [cursor=pointer]:
+      - strong [ref=e116]: Floatem
+      - generic [ref=e117]: © 2026 Floatem
+    - generic [ref=e118]:
+      - button "技术支持" [ref=e119] [cursor=pointer]
+      - button "隐私" [ref=e120] [cursor=pointer]
+      - link "support@floatem.app" [ref=e121] [cursor=pointer]:
+        - /url: mailto:support@floatem.app

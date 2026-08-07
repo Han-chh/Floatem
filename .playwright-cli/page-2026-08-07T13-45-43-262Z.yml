@@ -1,0 +1,89 @@
+- generic [ref=e2]:
+  - banner [ref=e3]:
+    - button "Floatem home" [ref=e4] [cursor=pointer]:
+      - generic [ref=e5]: Floatem
+    - navigation "Main navigation" [ref=e6]:
+      - button "Features" [ref=e123] [cursor=pointer]
+      - button "Download" [ref=e124] [cursor=pointer]
+      - button "Support" [ref=e125] [cursor=pointer]
+      - button "Privacy" [ref=e126] [cursor=pointer]
+    - button "中文" [active] [ref=e127] [cursor=pointer]
+  - main [ref=e12]:
+    - generic [ref=e13]:
+      - generic [ref=e15]:
+        - paragraph [ref=e16]: A quiet place for thoughts that arrive between moments
+        - heading "Floatem Thoughts, gently afloat." [level=1] [ref=e128]:
+          - generic [ref=e18]: Floatem
+          - generic [ref=e129]: Thoughts,
+          - generic [ref=e130]: gently afloat.
+        - paragraph [ref=e21]: Floatem is a floating notes and tasks companion for your desktop. It stays within sight, without getting in your way.
+        - generic [ref=e22]:
+          - button "Get Floatem" [ref=e131] [cursor=pointer]
+          - button "Explore features" [ref=e132] [cursor=pointer]
+      - generic "Floatem application interface" [ref=e133]:
+        - generic [ref=e37]:
+          - generic [ref=e38]: Floatem
+          - paragraph [ref=e43]: What would you keep today?
+          - generic [ref=e45]:
+            - generic [ref=e46]: Float here
+            - generic [ref=e47]: ↗
+        - generic [ref=e48]: In sight. Just right.
+      - generic [ref=e49]:
+        - generic [ref=e50]: Latest release
+        - generic [ref=e51]: v1.0.8
+        - generic [ref=e52]: ↓
+    - generic [ref=e53]:
+      - generic [ref=e54]:
+        - paragraph [ref=e55]: Six themes
+        - heading "Six scenes for six states of mind." [level=2] [ref=e134]:
+          - generic [ref=e135]: Six scenes for
+          - generic [ref=e136]: six states of mind.
+        - paragraph [ref=e59]: Plum’s restraint. Orchid’s clarity. Bamboo’s ease. Chrysanthemum’s warmth. Let your desktop breathe with you.
+      - generic [ref=e60]:
+        - img "Plum theme" [ref=e137]
+        - generic [ref=e63]:
+          - generic [ref=e64]: "03"
+          - strong [ref=e65]: Plum
+          - emphasis [ref=e66]: A color for this moment.
+        - generic "Six themes" [ref=e138]:
+          - button "Classic" [ref=e139] [cursor=pointer]
+          - button "Afterglow" [ref=e140] [cursor=pointer]
+          - button "Plum" [ref=e141] [cursor=pointer]
+          - button "Orchid" [ref=e142] [cursor=pointer]
+          - button "Bamboo" [ref=e143] [cursor=pointer]
+          - button "Chrysanthemum" [ref=e144] [cursor=pointer]
+    - generic [ref=e80]:
+      - generic [ref=e81]:
+        - paragraph [ref=e82]: FLOAT WITH YOUR FLOW
+        - heading "Keep what matters where it belongs." [level=2] [ref=e145]:
+          - generic [ref=e146]: Keep what matters
+          - generic [ref=e147]: where it belongs.
+        - paragraph [ref=e86]: Write it down. Pull it out. Mark it done. Floatem frees notes and tasks from layers of windows.
+      - generic [ref=e87]:
+        - generic [ref=e90]:
+          - text: "01"
+          - heading "Catch a thought while watching" [level=3] [ref=e148]
+        - generic [ref=e94]:
+          - text: "02"
+          - heading "Keep context beside your code" [level=3] [ref=e149]
+        - generic [ref=e98]:
+          - text: "03"
+          - heading "Pin a note on your desktop" [level=3] [ref=e150]
+        - generic [ref=e102]:
+          - text: "04"
+          - heading "Never lose a task or reminder" [level=3] [ref=e151]
+    - generic [ref=e106]:
+      - paragraph [ref=e107]: Floatem
+      - heading "You do not have to remember it all. Let Floatem keep it in sight." [level=2] [ref=e152]:
+        - generic [ref=e153]: You do not have to remember it all.
+        - generic [ref=e154]: Let Floatem keep it in sight.
+      - button "Get Floatem" [ref=e155] [cursor=pointer]
+  - contentinfo [ref=e114]:
+    - button "Floatem © 2026 Floatem" [ref=e115] [cursor=pointer]:
+      - strong [ref=e116]: Floatem
+      - generic [ref=e117]: © 2026 Floatem
+    - generic [ref=e118]:
+      - button "Support" [ref=e156] [cursor=pointer]
+      - button "Privacy" [ref=e157] [cursor=pointer]
+      - link "support@floatem.app" [ref=e121] [cursor=pointer]:
+        - /url: mailto:support@floatem.app

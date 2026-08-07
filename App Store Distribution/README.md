@@ -4,7 +4,7 @@
 
 ## Screenshots
 
-`screenshots/` 中恰好包含 10 张最终 PNG：2880 × 1800、16:10、sRGB、无 alpha 通道。
+`screenshots/` 根目录保留 10 张语义化命名的原始截图，不直接上传 App Store：
 
 1. `01-经典色.png`
 2. `02-浮光.png`
@@ -12,12 +12,22 @@
 4. `04-兰.png`
 5. `05-竹.png`
 6. `06-菊.png`
-7. `07-悬浮主窗口-视频工作.png`
-8. `08-多卡片悬浮-代码工作.png`
-9. `09-桌面固定-彩色便签.png`
-10. `10-待办与提醒.png`
+7. `07-视频工作-悬浮记录.png`
+8. `08-代码工作-多卡片悬浮.png`
+9. `09-桌面固定-彩色卡片.png`
+10. `10-交互式引导.png`
 
-第 1–6 张用于展示六种主题；第 7–10 张依次展示视频工作时的悬浮主窗口、代码工作时的多卡片悬浮、桌面固定的彩色卡片，以及待办与提醒。
+`screenshots/Edited/` 包含 7 张可上传的最终 PNG：2880 × 1800、16:10、RGB、无 alpha 通道。
+
+1. `01-让灵感始终在眼前.png`
+2. `02-六种主题随心切换.png`
+3. `03-富文本记录随手整理.png`
+4. `04-看视频也不错过灵光.png`
+5. `05-编码时保留上下文.png`
+6. `06-固定到桌面一眼看到重点.png`
+7. `07-跟着引导快速上手.png`
+
+`screenshots/Edited/WindowCrops/` 保存 7 张 800 × 1424 的透明圆角窗口中间素材；`Branding/` 保存组合图使用的无文字背景。这两个子目录都不用于上传。
 
 ## App Preview drafts
 
@@ -33,4 +43,10 @@
 
 ## Source and regeneration
 
-`source/` 保存原始窗口捕捉和不直接上传的背景素材。`render_assets.swift` 可重新生成 PNG 分镜和截图；运行后，对 `screenshots/` 下最终 PNG 执行无 alpha 的导出处理。
+`source/` 保存旧版原始窗口捕捉和不直接上传的背景素材。`render_assets.swift` 是旧版生成脚本，会写入 `screenshots/` 根目录，不用于当前这批原始截图。
+
+当前 App Store 成品由 `render_edited_screenshots.swift` 生成。它会读取 10 张原始截图，重建统一圆角窗口素材，并输出 7 张无 alpha 的 2880 × 1800 成品：
+
+```bash
+swift "App Store Distribution/render_edited_screenshots.swift"
+```
