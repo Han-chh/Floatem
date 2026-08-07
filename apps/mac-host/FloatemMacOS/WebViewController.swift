@@ -3,7 +3,7 @@ import OSLog
 import WebKit
 
 @MainActor
-final class WebViewController: NSViewController, WKNavigationDelegate {
+final class WebViewController: NSViewController, WKNavigationDelegate, WKUIDelegate {
     private static let bridgeName = "floatemHost"
     private static let panelWillOpenEventName = "floatem:panel-will-open"
     private static let shortcutInvokedEventName = "floatem:shortcut-invoked"
@@ -82,6 +82,7 @@ final class WebViewController: NSViewController, WKNavigationDelegate {
         )
 
         webView.navigationDelegate = self
+        webView.uiDelegate = self
         webView.translatesAutoresizingMaskIntoConstraints = false
         webView.underPageBackgroundColor = .clear
         webView.setValue(false, forKey: "drawsBackground")
@@ -330,10 +331,56 @@ final class WebViewController: NSViewController, WKNavigationDelegate {
         logger.info("Started provisional WebView navigation. url=\(webView.url?.absoluteString ?? "nil", privacy: .public)")
     }
 
+    func webView(
+        _ webView: WKWebView,
+        decidePolicyFor navigationAction: WKNavigationAction,
+        decisionHandler: @escaping @MainActor (WKNavigationActionPolicy) -> Void
+    ) {
+        guard let url = navigationAction.request.url, shouldOpenExternally(url) else {
+            decisionHandler(.allow)
+            return
+        }
+
+        openExternally(url)
+        decisionHandler(.cancel)
+    }
+
+    func webView(
+        _ webView: WKWebView,
+        createWebViewWith configuration: WKWebViewConfiguration,
+        for navigationAction: WKNavigationAction,
+        windowFeatures: WKWindowFeatures
+    ) -> WKWebView? {
+        guard let url = navigationAction.request.url, shouldOpenExternally(url) else {
+            return nil
+        }
+
+        openExternally(url)
+        return nil
+    }
+
     func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
         hasRetriedAfterTermination = false
         logger.info("Finished WebView navigation. url=\(webView.url?.absoluteString ?? "nil", privacy: .public)")
         beginFrontendProbe()
+    }
+
+    private func shouldOpenExternally(_ url: URL) -> Bool {
+        switch url.scheme?.lowercased() {
+        case "http", "https":
+            true
+        default:
+            false
+        }
+    }
+
+    private func openExternally(_ url: URL) {
+        guard NSWorkspace.shared.open(url) else {
+            logger.error("Unable to open external URL in the default browser. url=\(url.absoluteString, privacy: .public)")
+            return
+        }
+
+        logger.info("Opened external URL in the default browser. url=\(url.absoluteString, privacy: .public)")
     }
 
     func webView(_ webView: WKWebView, didFail navigation: WKNavigation!, withError error: Error) {
