@@ -50,6 +50,7 @@ type HotkeyFeedback = {
 type SettingsCategoryId = "general" | "theme" | "shortcuts" | "motion" | "notifications" | "about";
 
 const FEEDBACK_AUTO_DISMISS_MS = 4_000;
+const FLOATEM_WEBSITE_URL = "https://han-chh.github.io/Floatem-App/";
 export const SETTINGS_LANGUAGE_ORDER: readonly AppLanguage[] = ["zh-CN", "en"];
 
 function OptionButton({
@@ -1657,13 +1658,27 @@ function AboutFloatemSettings() {
 
       <SettingSection title={t.settings.contactTitle} description={t.settings.contactBody}>
         <a
-          href="mailto:hankchenchh@gmail.com"
+          href="mailto:floatemapp@outlook.com"
           className="surface-field flex w-full items-center gap-3 rounded-[20px] px-4 py-3 text-[13px] font-semibold text-[#2853C7] transition-transform hover:-translate-y-0.5"
         >
           <span className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-[14px] bg-[rgba(47,107,255,0.08)]">
             @
           </span>
-          hankchenchh@gmail.com
+          floatemapp@outlook.com
+        </a>
+      </SettingSection>
+
+      <SettingSection title={t.settings.websiteTitle} description={t.settings.websiteBody}>
+        <a
+          href={FLOATEM_WEBSITE_URL}
+          target="_blank"
+          rel="noreferrer"
+          className="surface-field flex w-full items-center gap-3 rounded-[20px] px-4 py-3 text-[13px] font-semibold text-[#2853C7] transition-transform hover:-translate-y-0.5"
+        >
+          <span className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-[14px] bg-[rgba(47,107,255,0.08)]">
+            ↗
+          </span>
+          <span className="break-all">{FLOATEM_WEBSITE_URL}</span>
         </a>
       </SettingSection>
 

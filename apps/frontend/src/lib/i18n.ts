@@ -150,6 +150,8 @@ type MessageCatalog = {
     dataPrivacyTitle: string;
     contactBody: string;
     contactTitle: string;
+    websiteBody: string;
+    websiteTitle: string;
     defaultLaunchShortcut: (shortcut: string) => string;
     defaultSection: string;
     dialogRecorded: string;
@@ -514,6 +516,8 @@ const messages: Record<AppLanguage, MessageCatalog> = {
       dataPrivacyTitle: "Not collected or uploaded",
       contactBody: "Questions, feedback, or support:",
       contactTitle: "Contact",
+      websiteBody: "News, downloads, support, and privacy information:",
+      websiteTitle: "Official website",
       defaultLaunchShortcut: (shortcut) => `Default launch shortcut: ${shortcut}`,
       defaultSection: "Default section",
       dialogRecorded: "Recorded shortcut",
@@ -878,6 +882,8 @@ const messages: Record<AppLanguage, MessageCatalog> = {
       dataPrivacyTitle: "不会收集或上传",
       contactBody: "如需咨询、反馈或支持：",
       contactTitle: "联系方式",
+      websiteBody: "了解产品、下载、技术支持与隐私信息：",
+      websiteTitle: "官方网站",
       defaultLaunchShortcut: (shortcut) => `默认启动快捷键：${shortcut}`,
       defaultSection: "默认分区",
       dialogRecorded: "已录入快捷键",

@@ -83,9 +83,13 @@ describe("PanelShell", () => {
     expect(within(copyrightFooter).getByText("Designed and developed by Hank Chen")).toBeInTheDocument();
     expect(within(copyrightFooter).getByText("© 2026 Hank Chen. All rights reserved.")).toBeInTheDocument();
     expect(screen.getByTestId("about-brand-block")).not.toContainElement(copyrightFooter);
-    expect(screen.getByRole("link", { name: /hankchenchh@gmail\.com/ })).toHaveAttribute(
+    expect(screen.getByRole("link", { name: /floatemapp@outlook\.com/ })).toHaveAttribute(
       "href",
-      "mailto:hankchenchh@gmail.com",
+      "mailto:floatemapp@outlook.com",
+    );
+    expect(screen.getByRole("link", { name: /han-chh\.github\.io\/Floatem-App/ })).toHaveAttribute(
+      "href",
+      "https://han-chh.github.io/Floatem-App/",
     );
     expect(screen.getByText("不会收集或上传")).toBeInTheDocument();
     expect(screen.queryByText(/package\.json/)).not.toBeInTheDocument();
