@@ -238,7 +238,12 @@ final class MainWindowController: NSObject, NSWindowDelegate, FloatemNativeBridg
 
         lastHotKeyPressTimestamp = now
         logToggleState(context: "Global hotkey received")
+        let isOpeningPanel = !isPanelPresented
         togglePanel(reason: "global-hotkey")
+
+        if isOpeningPanel {
+            webViewController.emitShortcutInvoked(hotKeyManager.registeredShortcut ?? GlobalHotKeyManager.defaultShortcut)
+        }
     }
 
     func loadAllData() throws -> [String: Any] {

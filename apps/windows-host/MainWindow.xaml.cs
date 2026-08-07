@@ -42,8 +42,12 @@ public partial class MainWindow : Window
         hotKeys = new Win32HotKeyManager(this);
         hotKeys.HotKeyPressed += (_, shortcut) =>
         {
+            var isOpeningWindow = !IsVisible || WindowState == WindowState.Minimized;
             ToggleWindow();
-            _ = bridge?.EmitShortcutInvokedAsync(shortcut);
+            if (isOpeningWindow)
+            {
+                _ = bridge?.EmitShortcutInvokedAsync(shortcut);
+            }
         };
         topmostReinforcementTimer = new DispatcherTimer(DispatcherPriority.Background)
         {

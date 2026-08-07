@@ -29,6 +29,7 @@ const LEGACY_STORAGE_PREFIX = "quicknote.";
 
 export const PANEL_POSITION_EVENT = hostEventNames.panelPosition;
 export const PANEL_WILL_OPEN_EVENT = hostEventNames.panelWillOpen;
+export const SHORTCUT_INVOKED_EVENT = hostEventNames.shortcutInvoked;
 export const HOTKEY_REGISTRATION_STATE_EVENT = hostEventNames.hotkeyRegistrationState;
 export const TEXT_COLOR_PANEL_OPEN_EVENT = hostEventNames.textColorPanelOpen;
 export const TEXT_COLOR_PANEL_CHANGE_EVENT = hostEventNames.textColorPanelChange;
@@ -349,6 +350,27 @@ export function subscribeToPanelWillOpen(listener: () => void) {
 
   return () => {
     window.removeEventListener(PANEL_WILL_OPEN_EVENT, handler);
+  };
+}
+
+export function subscribeToShortcutInvoked(listener: (shortcut: string) => void) {
+  if (typeof window === "undefined") {
+    return () => {};
+  }
+
+  const handler = (event: Event) => {
+    const detail = (event as CustomEvent<{ shortcut?: unknown }>).detail;
+    if (!detail || typeof detail.shortcut !== "string") {
+      return;
+    }
+
+    listener(detail.shortcut);
+  };
+
+  window.addEventListener(SHORTCUT_INVOKED_EVENT, handler as EventListener);
+
+  return () => {
+    window.removeEventListener(SHORTCUT_INVOKED_EVENT, handler as EventListener);
   };
 }
 

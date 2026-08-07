@@ -25,6 +25,7 @@ import { useI18n } from "./lib/i18n";
 import {
   subscribeToPanelPosition,
   subscribeToPanelWillOpen,
+  subscribeToShortcutInvoked,
   subscribeToFloatingCardsState,
   subscribeToFloatingDockZoneEnter,
   subscribeToFloatingDockZoneLeave,
@@ -36,7 +37,7 @@ import {
 } from "./lib/nativeBridge";
 import { isFloatingDockZoneTarget, isSameDockZoneTarget } from "./lib/dnd/floatingDockZone";
 import type { DockZoneEventDetail } from "./lib/nativeBridge";
-import type { TabId } from "./lib/models";
+import { formatLocalDateKey, type TabId } from "./lib/models";
 import { getPlatformFeatures } from "./lib/platformFeatures";
 import { getTabMotionConfig } from "./lib/transitionMotion";
 import { useNotesStore } from "./store/notesStore";
@@ -176,6 +177,15 @@ function FloatemApp() {
         setShowSettings(false);
         useSettingsStore.getState().applyPreferredOpenSection();
       });
+    });
+  }, []);
+
+  useEffect(() => {
+    return subscribeToShortcutInvoked(() => {
+      // A global shortcut can reopen the panel after the user last viewed another
+      // day. Keep date navigation stable while the panel is open; only a shortcut
+      // summon returns the Todo view to today.
+      useTodosStore.getState().selectDate(formatLocalDateKey(new Date()));
     });
   }, []);
 

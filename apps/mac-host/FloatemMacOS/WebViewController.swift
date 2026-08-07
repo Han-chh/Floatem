@@ -6,6 +6,7 @@ import WebKit
 final class WebViewController: NSViewController, WKNavigationDelegate {
     private static let bridgeName = "floatemHost"
     private static let panelWillOpenEventName = "floatem:panel-will-open"
+    private static let shortcutInvokedEventName = "floatem:shortcut-invoked"
     private static let hotkeyRegistrationStateEventName = "floatem:hotkey-registration-state"
     private static let textColorPanelChangeEventName = "floatem:text-color-panel-change"
     private static let textColorPanelCloseEventName = "floatem:text-color-panel-close"
@@ -145,6 +146,16 @@ final class WebViewController: NSViewController, WKNavigationDelegate {
     func emitPanelWillOpen() {
         webView.evaluateJavaScript(
             "window.dispatchEvent(new Event('\(Self.panelWillOpenEventName)'));"
+        )
+    }
+
+    func emitShortcutInvoked(_ shortcut: String) {
+        guard let json = jsonString(for: ["shortcut": shortcut]) else {
+            return
+        }
+
+        webView.evaluateJavaScript(
+            "window.dispatchEvent(new CustomEvent('\(Self.shortcutInvokedEventName)', { detail: \(json) }));"
         )
     }
 
