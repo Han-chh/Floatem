@@ -1,8 +1,8 @@
 import { expect, test, type Page } from "@playwright/test";
 
-async function boot(page: Page) {
+async function boot(page: Page, viewport = { width: 420, height: 430 }) {
   await page.emulateMedia({ reducedMotion: "reduce" });
-  await page.setViewportSize({ width: 420, height: 430 });
+  await page.setViewportSize(viewport);
   await page.goto("/");
   await page.addStyleTag({
     content: `
@@ -19,6 +19,54 @@ async function settlePopoverLayout(page: Page) {
     requestAnimationFrame(() => requestAnimationFrame(() => resolve()));
   }));
 }
+
+test("group color picker keeps Save visible without an internal scroll at the smallest supported window", async ({ page }) => {
+  await boot(page, { width: 352, height: 340 });
+
+  await page.getByRole("button", { name: "Add note" }).click();
+  const note = page.getByTestId("note-card").first();
+  await note.getByRole("button", { name: "Change note group" }).click();
+
+  const manageDialog = page.getByRole("dialog", { name: "Manage groups" });
+  await manageDialog.getByRole("button", { name: "Add group" }).click();
+
+  const createDialog = page.getByRole("dialog", { name: "Create group" });
+  await createDialog.getByRole("button", { name: "Change group color" }).click();
+
+  const palette = page.getByTestId("note-group-dialog-color-palette");
+  await palette.getByRole("button", { name: "More Colors" }).click();
+  await palette.getByRole("button", { name: "Show Colors" }).click();
+
+  const saveButton = palette.getByRole("button", { name: "Save" });
+  await expect(saveButton).toBeVisible();
+
+  const viewport = page.viewportSize();
+  const layout = await palette.evaluate((element) => {
+    const save = Array.from(element.querySelectorAll<HTMLButtonElement>("button")).find(
+      (button) => button.textContent?.trim() === "Save",
+    );
+    const paletteBox = element.getBoundingClientRect();
+    const saveBox = save?.getBoundingClientRect();
+
+    return {
+      clientHeight: element.clientHeight,
+      paletteBottom: paletteBox.bottom,
+      paletteTop: paletteBox.top,
+      saveBottom: saveBox?.bottom ?? null,
+      saveTop: saveBox?.top ?? null,
+      scrollHeight: element.scrollHeight,
+    };
+  });
+
+  expect(viewport).not.toBeNull();
+  expect(layout.paletteTop).toBeGreaterThanOrEqual(0);
+  expect(layout.paletteBottom).toBeLessThanOrEqual(viewport!.height);
+  expect(layout.saveTop).not.toBeNull();
+  expect(layout.saveBottom).not.toBeNull();
+  expect(layout.saveTop!).toBeGreaterThanOrEqual(0);
+  expect(layout.saveBottom!).toBeLessThanOrEqual(viewport!.height);
+  expect(layout.scrollHeight).toBeLessThanOrEqual(layout.clientHeight + 1);
+});
 
 test("note text color palette stays fully visible in a compact window", async ({ page }) => {
   await boot(page);
