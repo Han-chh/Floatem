@@ -1,5 +1,5 @@
 import { AnimatePresence, motion } from "framer-motion";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useMemo, useRef, useState, type CSSProperties } from "react";
 import { createPortal } from "react-dom";
 import {
   clearFloatingCardGuides,
@@ -144,6 +144,51 @@ type GuideStep = {
 };
 
 const GUIDE_CHAPTER_COUNT = 7;
+const GUIDE_PANEL_MARGIN = 14;
+
+type GuidePanelPlacement = "top-left" | "top-right" | "bottom-left" | "bottom-right";
+
+type GuideRect = Pick<DOMRect, "bottom" | "height" | "left" | "right" | "top" | "width">;
+
+export function getGuidePanelPosition(
+  target: GuideRect,
+  panel: Pick<DOMRect, "height" | "width">,
+  viewport: { height: number; width: number },
+  preferredPlacement: GuidePanelPlacement,
+) {
+  const right = Math.max(GUIDE_PANEL_MARGIN, viewport.width - panel.width - GUIDE_PANEL_MARGIN);
+  const bottom = Math.max(GUIDE_PANEL_MARGIN, viewport.height - panel.height - GUIDE_PANEL_MARGIN);
+  const candidates: Record<GuidePanelPlacement, { left: number; top: number }> = {
+    "top-left": { left: GUIDE_PANEL_MARGIN, top: GUIDE_PANEL_MARGIN },
+    "top-right": { left: right, top: GUIDE_PANEL_MARGIN },
+    "bottom-left": { left: GUIDE_PANEL_MARGIN, top: bottom },
+    "bottom-right": { left: right, top: bottom },
+  };
+  const paddedTarget = {
+    bottom: target.bottom + 12,
+    left: target.left - 12,
+    right: target.right + 12,
+    top: target.top - 12,
+  };
+  const placementOrder = [
+    preferredPlacement,
+    ...(["top-left", "top-right", "bottom-left", "bottom-right"] as const).filter(
+      (placement) => placement !== preferredPlacement,
+    ),
+  ];
+
+  const overlapArea = ({ left, top }: { left: number; top: number }) => {
+    const overlapWidth = Math.max(0, Math.min(left + panel.width, paddedTarget.right) - Math.max(left, paddedTarget.left));
+    const overlapHeight = Math.max(0, Math.min(top + panel.height, paddedTarget.bottom) - Math.max(top, paddedTarget.top));
+    return overlapWidth * overlapHeight;
+  };
+  const nonOverlappingPlacement = placementOrder.find((placement) => overlapArea(candidates[placement]) === 0);
+  const placement = nonOverlappingPlacement ?? placementOrder.reduce((best, candidate) =>
+    overlapArea(candidates[candidate]) < overlapArea(candidates[best]) ? candidate : best,
+  );
+
+  return candidates[placement];
+}
 
 function queryTarget(selector: string) {
   return document.querySelector<HTMLElement>(selector);
@@ -184,10 +229,12 @@ export function InteractiveGuide({
   const isZh = language === "zh-CN";
   const [step, setStep] = useState(0);
   const [targetRect, setTargetRect] = useState<DOMRect | null>(null);
+  const [guidePanelPosition, setGuidePanelPosition] = useState<CSSProperties | null>(null);
   const [pinnedNoteIds, setPinnedNoteIds] = useState<string[]>([]);
   const [isCompletionVisible, setIsCompletionVisible] = useState(false);
   const runtimeRef = useRef<GuideRuntime | null>(null);
   const guidedFloatingRef = useRef<{ id: string; kind: "note" | "todo" } | null>(null);
+  const guidePanelRef = useRef<HTMLElement>(null);
   const cards = useNotesStore((state) => state.cards);
   const floatingCardIds = useNotesStore((state) => state.floatingCardIds);
   const noteGroups = useNotesStore((state) => state.groups);
@@ -413,15 +460,13 @@ export function InteractiveGuide({
   const currentChapterSteps = steps.filter((item) => item.chapter === currentChapter);
   const currentStepInChapter =
     currentChapterSteps.findIndex((item) => item.id === currentStep?.id) + 1;
-  const isFloatingCardWindowStep = [
-    "note-pin",
-    "note-unpin",
-    "note-resize",
-    "note-close-return",
-    "note-drag-return",
-    "todo-resize",
-    "todo-drag-return",
-  ].includes(currentStep?.id);
+  const isFloatingCardWindowStep =
+    ((noteId !== null && floatingCardIds.includes(noteId)) &&
+      ["note-pin", "note-unpin", "note-resize", "note-close-return", "note-drag-return"].includes(
+        currentStep?.id,
+      )) ||
+    ((todoId !== null && floatingTodoIds.includes(todoId)) &&
+      ["todo-resize", "todo-drag-return"].includes(currentStep?.id));
 
   useEffect(() => {
     if (!isOpen || runtimeRef.current) {
@@ -967,63 +1012,12 @@ export function InteractiveGuide({
     onClose();
   };
 
-  const ensureGuideNotePair = () => {
-    const runtime = runtimeRef.current;
-    if (!runtime) return;
-    if (!runtime.noteId || !useNotesStore.getState().cards.some((card) => card.id === runtime.noteId)) {
-      const created = useNotesStore.getState().addCard();
-      useNotesStore.getState().updateCardTitle(created.id, copy("交互指引便签", "Interactive guide note"));
-      runtime.noteId = created.id;
-    }
-    if (
-      !runtime.secondaryNoteId ||
-      !useNotesStore.getState().cards.some((card) => card.id === runtime.secondaryNoteId)
-    ) {
-      const created = useNotesStore.getState().addCard();
-      useNotesStore.getState().updateCardTitle(created.id, copy("拖动我来换序", "Drag me to reorder"));
-      runtime.secondaryNoteId = created.id;
-    }
-    runtime.noteOrderBefore = orderSignature(
-      useNotesStore.getState().cards.map((card) => card.id),
-      runtime.noteId,
-      runtime.secondaryNoteId,
-    );
-  };
-
-  const ensureGuideTodoPair = () => {
-    const runtime = runtimeRef.current;
-    if (!runtime) return;
-    if (!runtime.todoId || !useTodosStore.getState().todos.some((todo) => todo.id === runtime.todoId)) {
-      runtime.todoId =
-        useTodosStore.getState().addTodo(copy("体验 Floatem Todo", "Try a Floatem todo"))?.id ?? null;
-    }
-    if (
-      !runtime.secondaryTodoId ||
-      !useTodosStore.getState().todos.some((todo) => todo.id === runtime.secondaryTodoId)
-    ) {
-      runtime.secondaryTodoId =
-        useTodosStore.getState().addTodo(copy("拖动我来换序", "Drag me to reorder"))?.id ?? null;
-    }
-    runtime.todoOrderBefore = orderSignature(
-      useTodosStore.getState().todos.map((todo) => todo.id),
-      runtime.todoId,
-      runtime.secondaryTodoId,
-    );
-  };
-
-  const moveToChapter = (nextChapter: number) => {
-    const targetChapter = Math.max(0, Math.min(GUIDE_CHAPTER_COUNT - 1, nextChapter));
-    const targetStep = steps.findIndex((item) => item.chapter === targetChapter);
-    if (targetStep < 0) return;
-
-    document.dispatchEvent(new KeyboardEvent("keydown", { bubbles: true, key: "Escape" }));
-    if (targetChapter >= 2) ensureGuideNotePair();
-    if (targetChapter >= 4) ensureGuideTodoPair();
+  const moveToStep = (nextStep: number) => {
+    const targetStep = Math.max(0, Math.min(steps.length - 1, nextStep));
     setTargetRect(null);
-    onSettingsChange(false);
-    onTabChange(targetChapter <= 2 ? "notes" : "todos");
-    if (targetChapter === 0 || targetChapter === 3 || targetChapter === 6) {
-      onHeaderCollapsedChange(false);
+    setGuidePanelPosition(null);
+    if (steps[targetStep]?.id === "settings-open") {
+      onSettingsChange(false);
     }
     setStep(targetStep);
   };
@@ -1047,6 +1041,23 @@ export function InteractiveGuide({
         : panelPlacement === "bottom-left"
           ? { bottom: 14, left: 14 }
           : { bottom: 14, right: 14 };
+
+  useLayoutEffect(() => {
+    if (!targetRect || isFloatingCardWindowStep || currentStep.id === "settings-overview") {
+      setGuidePanelPosition(null);
+      return;
+    }
+
+    const panel = guidePanelRef.current;
+    if (!panel) {
+      return;
+    }
+
+    const panelRect = panel.getBoundingClientRect();
+    setGuidePanelPosition(
+      getGuidePanelPosition(targetRect, panelRect, { height: window.innerHeight, width: window.innerWidth }, panelPlacement),
+    );
+  }, [currentStep.id, isFloatingCardWindowStep, panelPlacement, targetRect]);
 
   if (!isOpen || !currentStep || typeof document === "undefined") {
     return null;
@@ -1097,13 +1108,15 @@ export function InteractiveGuide({
             />
           ) : null}
           <motion.aside
+            ref={guidePanelRef}
             data-guide-dialog
+            data-guide-step={currentStep.id}
             role="dialog"
             aria-label={copy("Floatem 交互式指引", "Floatem interactive guide")}
             className={`paper-scroll fixed z-[200] max-h-[calc(100vh-28px)] w-[min(268px,calc(100vw-28px))] overflow-y-auto rounded-[20px] border border-[rgba(213,198,180,0.88)] bg-[rgba(255,252,248,0.97)] p-3.5 shadow-[0_22px_46px_rgba(61,49,34,0.22)] backdrop-blur-xl ${
               isFloatingCardWindowStep || currentStep.id === "settings-overview" ? "hidden" : ""
             }`}
-            style={panelStyle}
+            style={guidePanelPosition ?? panelStyle}
             initial={{ opacity: 0, y: 8, scale: 0.97 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 6, scale: 0.98 }}
@@ -1203,24 +1216,24 @@ export function InteractiveGuide({
             <div className="mt-3 grid grid-cols-2 gap-2">
               <motion.button
                 type="button"
-                aria-label={copy("上一功能", "Previous feature")}
-                disabled={currentChapter === 0}
+                aria-label={copy("上一步", "Previous step")}
+                disabled={step === 0}
                 className="paper-button inline-flex items-center justify-center gap-1 rounded-[11px] px-2.5 py-2 text-[10.5px] font-bold disabled:cursor-not-allowed disabled:opacity-40"
-                whileTap={currentChapter === 0 ? undefined : { scale: 0.97 }}
-                onClick={() => moveToChapter(currentChapter - 1)}
+                whileTap={step === 0 ? undefined : { scale: 0.97 }}
+                onClick={() => moveToStep(step - 1)}
               >
                 <ChevronLeftIcon size={12} />
-                {copy("上一功能", "Previous feature")}
+                {copy("上一步", "Previous step")}
               </motion.button>
               <motion.button
                 type="button"
-                aria-label={copy("下一功能", "Next feature")}
-                disabled={currentChapter === GUIDE_CHAPTER_COUNT - 1}
+                aria-label={copy("下一步", "Next step")}
+                disabled={step === steps.length - 1}
                 className="paper-button paper-button-primary inline-flex items-center justify-center gap-1 rounded-[11px] px-2.5 py-2 text-[10.5px] font-bold disabled:cursor-not-allowed disabled:opacity-40"
-                whileTap={currentChapter === GUIDE_CHAPTER_COUNT - 1 ? undefined : { scale: 0.97 }}
-                onClick={() => moveToChapter(currentChapter + 1)}
+                whileTap={step === steps.length - 1 ? undefined : { scale: 0.97 }}
+                onClick={() => moveToStep(step + 1)}
               >
-                {copy("下一功能", "Next feature")}
+                {copy("下一步", "Next step")}
                 <ChevronRightIcon size={12} />
               </motion.button>
             </div>
@@ -1305,15 +1318,26 @@ export function InteractiveGuide({
                 "The Settings home also provides Restore defaults and Quit Floatem actions.",
               )}
             </p>
-            <motion.button
-              type="button"
-              className="mt-5 flex w-full items-center justify-center gap-2 rounded-[14px] bg-[linear-gradient(145deg,#ff7a59,#f4b942)] px-4 py-3 text-[12px] font-bold text-white"
-              whileTap={{ scale: 0.98 }}
-              onClick={handleFinish}
-            >
-              <CircleCheckBigIcon size={15} />
-              {copy("完成指引", "Finish guide")}
-            </motion.button>
+            <div className="mt-5 grid grid-cols-2 gap-2">
+              <motion.button
+                type="button"
+                className="paper-button inline-flex items-center justify-center gap-1 rounded-[14px] px-4 py-3 text-[12px] font-bold"
+                whileTap={{ scale: 0.98 }}
+                onClick={() => moveToStep(step - 1)}
+              >
+                <ChevronLeftIcon size={14} />
+                {copy("上一步", "Previous step")}
+              </motion.button>
+              <motion.button
+                type="button"
+                className="inline-flex items-center justify-center gap-2 rounded-[14px] bg-[linear-gradient(145deg,#ff7a59,#f4b942)] px-4 py-3 text-[12px] font-bold text-white"
+                whileTap={{ scale: 0.98 }}
+                onClick={handleFinish}
+              >
+                <CircleCheckBigIcon size={15} />
+                {copy("完成指引", "Finish guide")}
+              </motion.button>
+            </div>
           </motion.div>
         </motion.div>
       ) : null}

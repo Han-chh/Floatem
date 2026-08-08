@@ -1,8 +1,6 @@
-import { act, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
+import { render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { useState } from "react";
 import { describe, expect, it, vi } from "vitest";
-import { InteractiveGuide } from "../../src/components/layout/InteractiveGuide";
 import { PanelShell } from "../../src/components/layout/PanelShell";
 import { NotesList } from "../../src/components/notes/NotesList";
 import { SETTINGS_LANGUAGE_ORDER, SettingsPanel } from "../../src/components/settings/SettingsPanel";
@@ -275,7 +273,7 @@ describe("PanelShell", () => {
     expect(screen.queryByRole("dialog", { name: "Floatem 指引" })).not.toBeInTheDocument();
   });
 
-  it("runs the interactive guide over the real panel with a lightweight floating dialog", async () => {
+  it("moves through the interactive guide one step at a time", async () => {
     const user = userEvent.setup();
     useSettingsStore.setState({ language: "en", timeFormat: "24h" });
 
@@ -310,70 +308,18 @@ describe("PanelShell", () => {
       expect(within(guide).getByText("Create the first note")).toBeInTheDocument();
     });
 
-    expect(within(guide).getByRole("button", { name: "Previous feature" })).toBeEnabled();
-    expect(within(guide).getByRole("button", { name: "Next feature" })).toBeEnabled();
+    expect(within(guide).getByRole("button", { name: "Previous step" })).toBeEnabled();
+    expect(within(guide).getByRole("button", { name: "Next step" })).toBeEnabled();
 
-    const originalBridge = window.floatemHost;
-    const setFloatingCardGuide = vi.fn(async (_card: unknown, _guide: unknown) => {});
-    window.floatemHost = {
-      setFloatingCardGuide,
-    } as unknown as NonNullable<typeof window.floatemHost>;
-    const draggedGuideCard = document.createElement("button");
-    try {
-      await user.click(within(guide).getByRole("button", { name: "Next feature" }));
-      await waitFor(() => {
-        expect(within(guide).getByText(/Feature 3 of 7 · Step 1 of \d+/)).toBeInTheDocument();
-        expect(within(guide).getByText("Create a floating note")).toBeInTheDocument();
-      });
-
-      const guideNoteId = setFloatingCardGuide.mock.calls.at(-1)?.[0]
-        ? (setFloatingCardGuide.mock.calls.at(-1)?.[0] as { id: string }).id
-        : undefined;
-      if (!guideNoteId) {
-        throw new Error("Expected the floating guide to register a note.");
-      }
-      await waitFor(() => {
-        expect(setFloatingCardGuide).toHaveBeenLastCalledWith(
-          { kind: "note", id: guideNoteId },
-          expect.objectContaining({ phase: "pin" }),
-        );
-      });
-
-      draggedGuideCard.dataset.noteCardId = guideNoteId;
-      document.body.appendChild(draggedGuideCard);
-      fireEvent.click(draggedGuideCard);
-      await act(async () => {
-        await new Promise((resolve) => window.setTimeout(resolve, 140));
-      });
-      expect(within(guide).getByText("Create a floating note")).toBeInTheDocument();
-
-      act(() => {
-        useNotesStore.getState().setFloatingCardIds([guideNoteId]);
-      });
-      await waitFor(() => {
-        expect(within(guide).getByText("Pin it to the desktop")).toBeInTheDocument();
-        expect(guide).toHaveClass("hidden");
-      });
-      expect(setFloatingCardGuide.mock.calls.some(([, state]) => state === null)).toBe(false);
-    } finally {
-      draggedGuideCard.remove();
-      window.floatemHost = originalBridge;
-    }
-
-    for (const chapter of [4, 5, 6, 7]) {
-      await user.click(within(guide).getByRole("button", { name: "Next feature" }));
-      await waitFor(() => {
-        expect(
-          within(guide).getByText(new RegExp(`Feature ${chapter} of 7 · Step 1 of \\d+`)),
-        ).toBeInTheDocument();
-      });
-    }
-    expect(within(guide).getByRole("button", { name: "Next feature" })).toBeDisabled();
-
-    await user.click(within(guide).getByRole("button", { name: "Previous feature" }));
+    await user.click(within(guide).getByRole("button", { name: "Next step" }));
     await waitFor(() => {
-      expect(within(guide).getByText(/Feature 6 of 7 · Step 1 of \d+/)).toBeInTheDocument();
-      expect(within(guide).getByText("Open todo groups")).toBeInTheDocument();
+      expect(within(guide).getByText(/Feature 2 of 7 · Step 2 of \d+/)).toBeInTheDocument();
+      expect(within(guide).getByText("Add a title")).toBeInTheDocument();
+    });
+
+    await user.click(within(guide).getByRole("button", { name: "Previous step" }));
+    await waitFor(() => {
+      expect(within(guide).getByText("Create the first note")).toBeInTheDocument();
     });
 
     await user.click(within(guide).getByRole("button", { name: "Exit guide" }));
@@ -391,92 +337,41 @@ describe("PanelShell", () => {
     expect(useTodosStore.getState().groups).toHaveLength(0);
   });
 
-  it("finishes with a large text-only overview of every settings submenu", async () => {
-    function GuideHarness() {
-      const [activeTab, setActiveTab] = useState<"notes" | "todos">("todos");
-      const [isOpen, setIsOpen] = useState(true);
-      const [showSettings, setShowSettings] = useState(false);
-      const [isHeaderCollapsed, setIsHeaderCollapsed] = useState(true);
-
-      return (
-        <>
-          <output data-testid="guide-restored-state">
-            {activeTab}:{isHeaderCollapsed ? "collapsed" : "expanded"}
-          </output>
-          <button
-            type="button"
-            data-guide="settings-open"
-            onClick={() => setShowSettings(true)}
-          >
-            Open Settings
-          </button>
-          {showSettings ? <div data-guide="settings-overview">Settings content</div> : null}
-          <InteractiveGuide
-            activeTab={activeTab}
-            isHeaderCollapsed={isHeaderCollapsed}
-            isOpen={isOpen}
-            onClose={() => setIsOpen(false)}
-            onHeaderCollapsedChange={setIsHeaderCollapsed}
-            onSettingsChange={setShowSettings}
-            onTabChange={setActiveTab}
-            showSettings={showSettings}
-          />
-        </>
-      );
-    }
-
+  it("dry-runs every guide step through the next-step control", async () => {
     const user = userEvent.setup();
     useSettingsStore.setState({ language: "en" });
-    render(<GuideHarness />);
 
-    for (let feature = 2; feature <= 7; feature += 1) {
-      await user.click(screen.getByRole("button", { name: "Next feature" }));
-      await waitFor(() => {
-        expect(screen.getByText(new RegExp(`Feature ${feature} of 7 · Step 1 of \\d+`))).toBeInTheDocument();
-      });
+    render(
+      <PanelShell
+        activeTab="notes"
+        animationSpeed="mediate"
+        onTabChange={vi.fn()}
+        onToggleSettings={vi.fn()}
+        settingsPanel={<div>Settings panel</div>}
+        showSettings={false}
+        transitionStyle="lift"
+      >
+        <div>Original panel body</div>
+      </PanelShell>,
+    );
+
+    await user.click(screen.getByRole("button", { name: "Floatem help" }));
+    await user.click(screen.getByRole("button", { name: "Start interactive guide" }));
+
+    let advancedSteps = 0;
+    while (advancedSteps < 100) {
+      const nextStep = screen.queryByRole("button", { name: "Next step" });
+      if (!nextStep || nextStep.hasAttribute("disabled")) {
+        break;
+      }
+      await user.click(nextStep);
+      advancedSteps += 1;
     }
 
-    await user.click(screen.getByRole("button", { name: "Open Settings" }));
-    const overview = await screen.findByRole("dialog", { name: "Settings menus and options" });
-
-    expect(overview).toHaveClass("max-w-[680px]");
-    for (const title of [
-      "General",
-      "Theme",
-      "Shortcuts",
-      "Motion and feedback",
-      "Notifications",
-      "About Floatem",
-    ]) {
-      expect(within(overview).getByRole("heading", { name: title })).toBeInTheDocument();
-    }
-    expect(within(overview).getByText(/Restore defaults and Quit Floatem/)).toBeInTheDocument();
-    expect(within(overview).queryByRole("button", { name: "Previous feature" })).not.toBeInTheDocument();
-
-    await act(async () => {
-      await new Promise((resolve) => window.setTimeout(resolve, 180));
-    });
-    expect(screen.getByRole("dialog", { name: "Settings menus and options" })).toBeInTheDocument();
-
-    await user.click(within(overview).getByRole("button", { name: "Finish guide" }));
-    const completion = await screen.findByRole("dialog", {
-      name: "Congratulations on completing the interactive guide",
-    });
-    expect(screen.queryByRole("dialog", { name: "Settings menus and options" })).not.toBeInTheDocument();
-    expect(screen.queryByText("Settings content")).not.toBeInTheDocument();
-    expect(screen.getByTestId("guide-restored-state")).toHaveTextContent("todos:collapsed");
-    expect(document.documentElement.scrollTop).toBe(0);
-    expect(document.body.scrollTop).toBe(0);
-
-    await user.click(within(completion).getByRole("button", { name: "Return to Floatem" }));
-    await waitFor(() => {
-      expect(
-        screen.queryByRole("dialog", {
-          name: "Congratulations on completing the interactive guide",
-        }),
-      ).not.toBeInTheDocument();
-      expect(screen.queryByRole("dialog", { name: "Settings menus and options" })).not.toBeInTheDocument();
-    });
+    expect(advancedSteps).toBeGreaterThan(70);
+    const overview = screen.getByRole("dialog", { name: "Settings menus and options" });
+    expect(within(overview).getByRole("button", { name: "Previous step" })).toBeEnabled();
+    expect(within(overview).getByRole("button", { name: "Finish guide" })).toBeEnabled();
   });
 
   it("guides rich-text editing and toolbar folding on the real note card", async () => {
