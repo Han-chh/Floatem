@@ -68,7 +68,7 @@ import {
   readEventCoordinates,
 } from "../../lib/dnd/centerOverlayToCursor";
 import { resolveDragReorderTarget } from "../../lib/dnd/resolveDragReorderTarget";
-import { readDockInsertionIndex } from "../../lib/dnd/dockInsertion";
+import { isCardFullyOutsideViewport, readDockInsertionIndex } from "../../lib/dnd/dockInsertion";
 import type { DockZoneEventDetail } from "../../lib/nativeBridge";
 import { syncTextareaHeight } from "../../lib/resizeTextarea";
 import { useSettingsStore } from "../../store/settingsStore";
@@ -944,6 +944,7 @@ export function TodoList({ dockZoneTarget = null }: { dockZoneTarget?: DockZoneE
   const handleDragEnd = (event: DragEndEvent) => {
     const activeId = String(event.active.id);
     const activeTodo = openTodos.find((todo) => todo.id === activeId) ?? null;
+    const isCardFullyOutsideWindow = isCardFullyOutsideViewport(event.active.rect.current.translated);
     const overId = resolveDragReorderTarget({
       activeId,
       eventOverId: event.over ? String(event.over.id) : null,
@@ -965,7 +966,7 @@ export function TodoList({ dockZoneTarget = null }: { dockZoneTarget?: DockZoneE
         })
       : null;
 
-    if (insertionIndex !== null) {
+    if (!isCardFullyOutsideWindow && insertionIndex !== null) {
       if (floatingTodosEnabled) {
         void hideDragPreview();
       }
@@ -977,7 +978,7 @@ export function TodoList({ dockZoneTarget = null }: { dockZoneTarget?: DockZoneE
       return;
     }
 
-    if (!overId) {
+    if (isCardFullyOutsideWindow || !overId) {
       if (!floatingTodosEnabled) {
         return;
       }

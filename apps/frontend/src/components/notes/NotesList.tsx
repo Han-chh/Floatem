@@ -22,7 +22,7 @@ import {
   readEventCoordinates,
 } from "../../lib/dnd/centerOverlayToCursor";
 import { resolveDragReorderTarget } from "../../lib/dnd/resolveDragReorderTarget";
-import { readDockInsertionIndex } from "../../lib/dnd/dockInsertion";
+import { isCardFullyOutsideViewport, readDockInsertionIndex } from "../../lib/dnd/dockInsertion";
 import type { DockZoneEventDetail } from "../../lib/nativeBridge";
 import { useParticleField } from "../../hooks/useParticleField";
 import { useNotesStore } from "../../store/notesStore";
@@ -251,6 +251,7 @@ export function NotesList({ dockZoneTarget = null }: { dockZoneTarget?: DockZone
   const handleDragEnd = (event: DragEndEvent) => {
     const activeId = String(event.active.id);
     const activeCard = cards.find((card) => card.id === activeId) ?? null;
+    const isCardFullyOutsideWindow = isCardFullyOutsideViewport(event.active.rect.current.translated);
     const overId = resolveDragReorderTarget({
       activeId,
       eventOverId: event.over ? String(event.over.id) : null,
@@ -272,7 +273,7 @@ export function NotesList({ dockZoneTarget = null }: { dockZoneTarget?: DockZone
         })
       : null;
 
-    if (insertionIndex !== null) {
+    if (!isCardFullyOutsideWindow && insertionIndex !== null) {
       if (floatingNotesEnabled) {
         void hideDragPreview();
       }
@@ -284,7 +285,7 @@ export function NotesList({ dockZoneTarget = null }: { dockZoneTarget?: DockZone
       return;
     }
 
-    if (!overId) {
+    if (isCardFullyOutsideWindow || !overId) {
       if (!floatingNotesEnabled) {
         return;
       }
