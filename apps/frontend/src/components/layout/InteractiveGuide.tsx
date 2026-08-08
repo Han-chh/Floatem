@@ -694,8 +694,8 @@ export function InteractiveGuide({
                 phase: "unpin",
                 title: copy("普通悬浮与桌面置顶", "Floating vs. desktop-pinned"),
                 instruction: copy(
-                  "普通悬浮便签显示在当前工作空间的窗口上方；桌面置顶便签像固定在桌面的卡片，不会覆盖其他全屏空间，重新登录后还可自动恢复。阅读后再次点击高亮图钉。",
-                  "A floating note stays above windows in the current workspace. A desktop-pinned note stays with the desktop, does not cover other full-screen spaces, and can return after sign-in. When ready, click the highlighted pin again.",
+                  "点击高亮图钉，恢复普通悬浮。详细说明见主窗口指引。",
+                  "Click the highlighted pin to return to normal floating. See the main guide for details.",
                 ),
                 } satisfies FloatingCardGuideState,
               }

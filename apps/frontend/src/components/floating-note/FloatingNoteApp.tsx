@@ -1,6 +1,6 @@
 import type { DragPreviewPayload, FloatingCardScreenPlacement } from "@floatem/native-bridge";
 import { motion } from "framer-motion";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties } from "react";
 import { createPortal } from "react-dom";
 import type { Descendant } from "slate";
 import {
@@ -50,7 +50,41 @@ const MAX_FLOATING_CARD_CONTENT_SCALE = 1.65;
 const FLOATING_DIALOG_BACKDROP_SELECTOR = ".floatem-modal-backdrop";
 const EDITABLE_TARGET_SELECTOR = 'input,textarea,select,[contenteditable="true"],[role="textbox"]';
 const FLOATING_CARD_GUIDE_EVENT = "floatem:floating-card-guide";
+const FLOATING_GUIDE_PROMPT_MARGIN = 10;
+const FLOATING_GUIDE_TARGET_CLEARANCE = 10;
 type FloatingDialogSide = "left" | "right";
+
+type FloatingGuideRect = Pick<DOMRect, "bottom" | "height" | "left" | "right" | "top" | "width">;
+
+export function getFloatingGuidePromptPosition(
+  target: FloatingGuideRect,
+  prompt: Pick<DOMRect, "height" | "width">,
+  viewport: { height: number; width: number },
+) {
+  const right = Math.max(FLOATING_GUIDE_PROMPT_MARGIN, viewport.width - prompt.width - FLOATING_GUIDE_PROMPT_MARGIN);
+  const bottom = Math.max(FLOATING_GUIDE_PROMPT_MARGIN, viewport.height - prompt.height - FLOATING_GUIDE_PROMPT_MARGIN);
+  const candidates = [
+    { left: FLOATING_GUIDE_PROMPT_MARGIN, top: bottom },
+    { left: FLOATING_GUIDE_PROMPT_MARGIN, top: FLOATING_GUIDE_PROMPT_MARGIN },
+    { left: right, top: bottom },
+    { left: right, top: FLOATING_GUIDE_PROMPT_MARGIN },
+  ];
+  const protectedTarget = {
+    bottom: target.bottom + FLOATING_GUIDE_TARGET_CLEARANCE,
+    left: target.left - FLOATING_GUIDE_TARGET_CLEARANCE,
+    right: target.right + FLOATING_GUIDE_TARGET_CLEARANCE,
+    top: target.top - FLOATING_GUIDE_TARGET_CLEARANCE,
+  };
+  const overlapArea = ({ left, top }: { left: number; top: number }) => {
+    const overlapWidth = Math.max(0, Math.min(left + prompt.width, protectedTarget.right) - Math.max(left, protectedTarget.left));
+    const overlapHeight = Math.max(0, Math.min(top + prompt.height, protectedTarget.bottom) - Math.max(top, protectedTarget.top));
+    return overlapWidth * overlapHeight;
+  };
+
+  return candidates.find((candidate) => overlapArea(candidate) === 0) ?? candidates.reduce((best, candidate) =>
+    overlapArea(candidate) < overlapArea(best) ? candidate : best,
+  );
+}
 
 function FloatingCardGuideOverlay({
   guide,
@@ -60,6 +94,8 @@ function FloatingCardGuideOverlay({
   showLaunchAtLoginDialog: boolean;
 }) {
   const [targetRect, setTargetRect] = useState<DOMRect | null>(null);
+  const [promptStyle, setPromptStyle] = useState<CSSProperties | null>(null);
+  const promptRef = useRef<HTMLElement | null>(null);
   const isPinTarget = Boolean(
     guide && (guide.phase === "pin" || guide.phase === "unpin") && !showLaunchAtLoginDialog,
   );
@@ -101,6 +137,30 @@ function FloatingCardGuideOverlay({
       window.removeEventListener("resize", update);
     };
   }, [guide, isVisible, showLaunchAtLoginDialog]);
+
+  useLayoutEffect(() => {
+    if (!isVisible || !targetRect || !promptRef.current) {
+      setPromptStyle(null);
+      return;
+    }
+
+    const update = () => {
+      const prompt = promptRef.current;
+      if (!prompt) {
+        return;
+      }
+      setPromptStyle(
+        getFloatingGuidePromptPosition(targetRect, prompt.getBoundingClientRect(), {
+          height: window.innerHeight,
+          width: window.innerWidth,
+        }),
+      );
+    };
+
+    update();
+    window.addEventListener("resize", update);
+    return () => window.removeEventListener("resize", update);
+  }, [isVisible, targetRect]);
 
   if (!isVisible || typeof document === "undefined") {
     return null;
@@ -148,9 +208,12 @@ function FloatingCardGuideOverlay({
             />
           ) : null}
           <motion.aside
+            ref={promptRef}
             role="dialog"
             aria-label={displayTitle ?? ""}
-            className="absolute bottom-2.5 left-2.5 max-w-[calc(100%-20px)] rounded-[13px] border border-[rgba(255,122,89,0.34)] bg-[rgba(255,252,248,0.96)] px-3 py-2 shadow-[0_12px_28px_rgba(61,49,34,0.2)] backdrop-blur-xl"
+            data-floating-guide-prompt
+            className="absolute w-[min(184px,calc(100%-20px))] rounded-[12px] border border-[rgba(255,122,89,0.34)] bg-[rgba(255,252,248,0.96)] px-2.5 py-1.5 shadow-[0_10px_22px_rgba(61,49,34,0.18)] backdrop-blur-xl"
+            style={promptStyle ?? { bottom: FLOATING_GUIDE_PROMPT_MARGIN, left: FLOATING_GUIDE_PROMPT_MARGIN }}
             initial={{ opacity: 0, x: -8, y: 5, scale: 0.96 }}
             animate={{ opacity: 1, x: 0, y: 0, scale: 1 }}
             exit={{ opacity: 0, x: 6, scale: 0.97 }}
@@ -164,8 +227,8 @@ function FloatingCardGuideOverlay({
                 transition={{ duration: 1.15, repeat: Infinity }}
               />
               <div className="min-w-0">
-                <p className="text-[10.5px] font-bold text-[#8f553d]">{displayTitle}</p>
-                <p className="whitespace-normal text-[9.5px] font-semibold leading-4 text-[var(--muted)]">
+                <p className="text-[10px] font-bold leading-4 text-[#8f553d]">{displayTitle}</p>
+                <p className="max-h-12 overflow-hidden whitespace-normal text-[9px] font-semibold leading-4 text-[var(--muted)]">
                   {displayInstruction}
                 </p>
               </div>
