@@ -15,8 +15,6 @@ import type { TabId } from "../../lib/models";
 import { useNotesStore } from "../../store/notesStore";
 import { useTodosStore } from "../../store/todosStore";
 import {
-  ChevronLeftIcon,
-  ChevronRightIcon,
   CircleCheckBigIcon,
   SparklesIcon,
   XIcon,
@@ -1012,16 +1010,6 @@ export function InteractiveGuide({
     onClose();
   };
 
-  const moveToStep = (nextStep: number) => {
-    const targetStep = Math.max(0, Math.min(steps.length - 1, nextStep));
-    setTargetRect(null);
-    setGuidePanelPosition(null);
-    if (steps[targetStep]?.id === "settings-open") {
-      onSettingsChange(false);
-    }
-    setStep(targetStep);
-  };
-
   const viewportHeight = typeof window === "undefined" ? 800 : window.innerHeight;
   const viewportWidth = typeof window === "undefined" ? 1000 : window.innerWidth;
   const automaticPanelPlacement =
@@ -1213,30 +1201,6 @@ export function InteractiveGuide({
                 transition={{ duration: 1.3, repeat: Infinity }}
               />
             ) : null}
-            <div className="mt-3 grid grid-cols-2 gap-2">
-              <motion.button
-                type="button"
-                aria-label={copy("上一步", "Previous step")}
-                disabled={step === 0}
-                className="paper-button inline-flex items-center justify-center gap-1 rounded-[11px] px-2.5 py-2 text-[10.5px] font-bold disabled:cursor-not-allowed disabled:opacity-40"
-                whileTap={step === 0 ? undefined : { scale: 0.97 }}
-                onClick={() => moveToStep(step - 1)}
-              >
-                <ChevronLeftIcon size={12} />
-                {copy("上一步", "Previous step")}
-              </motion.button>
-              <motion.button
-                type="button"
-                aria-label={copy("下一步", "Next step")}
-                disabled={step === steps.length - 1}
-                className="paper-button paper-button-primary inline-flex items-center justify-center gap-1 rounded-[11px] px-2.5 py-2 text-[10.5px] font-bold disabled:cursor-not-allowed disabled:opacity-40"
-                whileTap={step === steps.length - 1 ? undefined : { scale: 0.97 }}
-                onClick={() => moveToStep(step + 1)}
-              >
-                {copy("下一步", "Next step")}
-                <ChevronRightIcon size={12} />
-              </motion.button>
-            </div>
             {currentStep.id === "settings-overview" ? (
               <motion.button
                 type="button"
@@ -1318,19 +1282,10 @@ export function InteractiveGuide({
                 "The Settings home also provides Restore defaults and Quit Floatem actions.",
               )}
             </p>
-            <div className="mt-5 grid grid-cols-2 gap-2">
+            <div className="mt-5">
               <motion.button
                 type="button"
-                className="paper-button inline-flex items-center justify-center gap-1 rounded-[14px] px-4 py-3 text-[12px] font-bold"
-                whileTap={{ scale: 0.98 }}
-                onClick={() => moveToStep(step - 1)}
-              >
-                <ChevronLeftIcon size={14} />
-                {copy("上一步", "Previous step")}
-              </motion.button>
-              <motion.button
-                type="button"
-                className="inline-flex items-center justify-center gap-2 rounded-[14px] bg-[linear-gradient(145deg,#ff7a59,#f4b942)] px-4 py-3 text-[12px] font-bold text-white"
+                className="inline-flex w-full items-center justify-center gap-2 rounded-[14px] bg-[linear-gradient(145deg,#ff7a59,#f4b942)] px-4 py-3 text-[12px] font-bold text-white"
                 whileTap={{ scale: 0.98 }}
                 onClick={handleFinish}
               >

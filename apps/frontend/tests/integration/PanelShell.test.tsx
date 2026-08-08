@@ -273,7 +273,7 @@ describe("PanelShell", () => {
     expect(screen.queryByRole("dialog", { name: "Floatem 指引" })).not.toBeInTheDocument();
   });
 
-  it("moves through the interactive guide one step at a time", async () => {
+  it("moves through the interactive guide only through its guided actions", async () => {
     const user = userEvent.setup();
     useSettingsStore.setState({ language: "en", timeFormat: "24h" });
 
@@ -287,7 +287,7 @@ describe("PanelShell", () => {
         showSettings={false}
         transitionStyle="lift"
       >
-        <div>Original panel body</div>
+        <NotesList />
       </PanelShell>,
     );
 
@@ -298,7 +298,7 @@ describe("PanelShell", () => {
     const guide = screen.getByRole("dialog", { name: "Floatem interactive guide" });
     expect(within(guide).getByText("Feature 1 of 7 · Step 1 of 1")).toBeInTheDocument();
     expect(guide).toHaveClass("fixed", "w-[min(268px,calc(100vw-28px))]");
-    expect(screen.getByText("Original panel body")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Add note" })).toBeInTheDocument();
 
     await user.click(screen.getByRole("button", { name: "Collapse navigation" }));
     await waitFor(() => {
@@ -308,19 +308,11 @@ describe("PanelShell", () => {
       expect(within(guide).getByText("Create the first note")).toBeInTheDocument();
     });
 
-    expect(within(guide).getByRole("button", { name: "Previous step" })).toBeEnabled();
-    expect(within(guide).getByRole("button", { name: "Next step" })).toBeEnabled();
+    expect(within(guide).queryByRole("button", { name: "Previous step" })).not.toBeInTheDocument();
+    expect(within(guide).queryByRole("button", { name: "Next step" })).not.toBeInTheDocument();
 
-    await user.click(within(guide).getByRole("button", { name: "Next step" }));
-    await waitFor(() => {
-      expect(within(guide).getByText(/Feature 2 of 7 · Step 2 of \d+/)).toBeInTheDocument();
-      expect(within(guide).getByText("Add a title")).toBeInTheDocument();
-    });
-
-    await user.click(within(guide).getByRole("button", { name: "Previous step" }));
-    await waitFor(() => {
-      expect(within(guide).getByText("Create the first note")).toBeInTheDocument();
-    });
+    await user.click(screen.getByRole("button", { name: "Add note" }));
+    await waitFor(() => expect(within(guide).getByText("Add a title")).toBeInTheDocument());
 
     await user.click(within(guide).getByRole("button", { name: "Exit guide" }));
     await waitFor(() => {
@@ -332,46 +324,9 @@ describe("PanelShell", () => {
         name: "Congratulations on completing the interactive guide",
       }),
     ).not.toBeInTheDocument();
-    expect(screen.getByText("Original panel body")).toBeInTheDocument();
+    expect(screen.queryByTestId("note-card")).not.toBeInTheDocument();
     expect(useNotesStore.getState().groups).toHaveLength(0);
     expect(useTodosStore.getState().groups).toHaveLength(0);
-  });
-
-  it("dry-runs every guide step through the next-step control", async () => {
-    const user = userEvent.setup();
-    useSettingsStore.setState({ language: "en" });
-
-    render(
-      <PanelShell
-        activeTab="notes"
-        animationSpeed="mediate"
-        onTabChange={vi.fn()}
-        onToggleSettings={vi.fn()}
-        settingsPanel={<div>Settings panel</div>}
-        showSettings={false}
-        transitionStyle="lift"
-      >
-        <div>Original panel body</div>
-      </PanelShell>,
-    );
-
-    await user.click(screen.getByRole("button", { name: "Floatem help" }));
-    await user.click(screen.getByRole("button", { name: "Start interactive guide" }));
-
-    let advancedSteps = 0;
-    while (advancedSteps < 100) {
-      const nextStep = screen.queryByRole("button", { name: "Next step" });
-      if (!nextStep || nextStep.hasAttribute("disabled")) {
-        break;
-      }
-      await user.click(nextStep);
-      advancedSteps += 1;
-    }
-
-    expect(advancedSteps).toBeGreaterThan(70);
-    const overview = screen.getByRole("dialog", { name: "Settings menus and options" });
-    expect(within(overview).getByRole("button", { name: "Previous step" })).toBeEnabled();
-    expect(within(overview).getByRole("button", { name: "Finish guide" })).toBeEnabled();
   });
 
   it("guides rich-text editing and toolbar folding on the real note card", async () => {
