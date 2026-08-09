@@ -294,7 +294,7 @@ export function InteractiveGuide({
       stepItem("note-filter-pick", 1, "筛选便签", "Filter notes", "取消一个分组的勾选，观察列表如何按分组收窄", "Uncheck one group and watch the list narrow by group", () => queryTarget('[data-testid="note-group-filter-scroll-region"]')),
       stepItem("note-filter-apply", 1, "应用筛选", "Apply the filter", "点击保存应用筛选", "Click Save to apply the filter", () => queryTarget('[data-guide="note-filter-apply"]')),
       stepItem("note-filter-reopen", 1, "恢复全部便签", "Restore all notes", "再次打开筛选", "Open the filters again", () => queryTarget('[data-guide="note-filter-open"]')),
-      stepItem("note-filter-all", 1, "选择全部分组", "Select every group", "勾选“全部分组”", "Select All groups", () => queryTarget('[data-testid="note-group-filter-scroll-region"]')),
+      stepItem("note-filter-all", 1, "选择全部分组", "Select every group", "勾选高亮的“全部分组”", "Select the highlighted All groups option", () => queryTarget('[data-guide="note-filter-all"]')),
       stepItem("note-filter-clear", 1, "保存完整列表", "Save the full list", "点击保存，恢复显示所有便签", "Click Save to show every note again", () => queryTarget('[data-guide="note-filter-apply"]')),
       stepItem("note-group-reopen", 1, "再次打开分组", "Open groups again", "重新打开便签分组，继续了解编辑和删除", "Open note groups again to review editing and deletion", () => noteId ? queryTarget(`[data-note-card-id="${cssValue(noteId)}"] [data-action="note-group"]`) : null),
       stepItem("note-group-edit", 1, "编辑已有分组", "Edit an existing group", "点击分组右侧的编辑按钮", "Click the edit button beside the group", () => runtimeRef.current?.noteGroupId ? queryTarget(`[data-guide-group-edit-id="${cssValue(runtimeRef.current.noteGroupId)}"]`) : null),
@@ -1356,19 +1356,29 @@ export function InteractiveGuide({
             </p>
             <motion.p
               data-guide-settings-scroll-hint
-              className="mt-3 flex items-center gap-1.5 rounded-[12px] bg-[rgba(255,122,89,0.10)] px-3 py-2 text-[10.5px] font-bold text-[#a85b41]"
-              animate={{ opacity: [0.7, 1, 0.7] }}
-              transition={{ duration: 1.3, repeat: Infinity }}
+              className="sticky top-0 z-10 mt-4 flex items-center justify-between gap-3 rounded-[14px] border border-[#ffb49e] bg-[#fff0eb] px-3.5 py-2.5 text-[11px] font-bold text-[#9a4931] shadow-[0_8px_18px_rgba(255,122,89,0.18)]"
+              animate={{ boxShadow: ["0 8px 18px rgba(255,122,89,0.14)", "0 10px 24px rgba(255,122,89,0.32)", "0 8px 18px rgba(255,122,89,0.14)"] }}
+              transition={{ duration: 1.25, repeat: Infinity, ease: "easeInOut" }}
             >
+              <span className="flex min-w-0 items-center gap-2">
+                <motion.span
+                  aria-hidden="true"
+                  className="inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-[#ff7a59] text-white shadow-[0_4px_10px_rgba(255,122,89,0.32)]"
+                  animate={{ y: [0, 4, 0], scale: [0.92, 1.08, 0.92] }}
+                  transition={{ duration: 0.85, repeat: Infinity, ease: "easeInOut" }}
+                >
+                  <ChevronDownIcon size={15} />
+                </motion.span>
+                <span>{copy("继续向下滑动，查看完整设置与完成按键", "Keep scrolling to see all settings and the Finish button")}</span>
+              </span>
               <motion.span
                 aria-hidden="true"
-                className="inline-flex"
+                className="inline-flex shrink-0 text-[#ff7a59]"
                 animate={{ y: [0, 3, 0] }}
-                transition={{ duration: 0.9, repeat: Infinity, ease: "easeInOut" }}
+                transition={{ duration: 0.85, repeat: Infinity, ease: "easeInOut", delay: 0.14 }}
               >
                 <ChevronDownIcon size={13} />
               </motion.span>
-              {copy("向下滑动，查看全部设置说明与完成按键", "Scroll down to see every setting and the Finish button")}
             </motion.p>
             <div className="mt-4 grid gap-x-6 gap-y-0 sm:grid-cols-2">
               {settingsOverviewItems.map((item, index) => (
