@@ -1,6 +1,6 @@
 # Floatem 四天上架前冲刺计划
 
-> 历史计划与当前状态（更新于 v1.0.8 build 49）：代码身份、自动签名、App Group、完整前端/原生测试、Release Archive 和 App Store Connect `.pkg` 导出流程已经验证，build 47 已进入外部 TestFlight 测试。build 49 是当前候选版本，尚未上传 App Store Connect/TestFlight；其 Archive、Xcode Validate、上传后 TestFlight 安装验证、商店资料终审和正式提交仍属于待办。以下 Day 3–Day 6 内容保留为发布过程与人工验收依据，不表示所有条目均已完成。
+> 历史计划与当前状态（更新于 v1.0.8 build 49）：代码身份、自动签名、App Group、完整前端/原生测试、Release Archive、App Store Connect `.pkg` 导出和上传均已完成，build 47 已进入外部 TestFlight 测试。build 49 已于 2026-08-09 上传至 App Store Connect，正等待 Apple 处理；上传后 TestFlight 安装验证、商店资料终审和正式提交仍属于待办。以下 Day 3–Day 6 内容保留为发布过程与人工验收依据，不表示所有条目均已完成。
 
 ## 计划基线
 
