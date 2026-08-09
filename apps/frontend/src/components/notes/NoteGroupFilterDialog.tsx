@@ -17,17 +17,19 @@ type NoteGroupFilterDialogProps = {
 type FilterOptionRowProps = {
   checked: boolean;
   count: number;
+  guideId?: string;
   label: string;
   onChange: () => void;
   swatch?: ReactNode;
 };
 
-function FilterOptionRow({ checked, count, label, onChange, swatch }: FilterOptionRowProps) {
+function FilterOptionRow({ checked, count, guideId, label, onChange, swatch }: FilterOptionRowProps) {
   const { t } = useI18n();
 
   return (
     <label
       data-no-window-drag="true"
+      data-guide={guideId}
       className={`flex cursor-pointer items-center gap-3 rounded-[16px] border px-3 py-2.5 transition-colors ${
         checked
           ? "border-[rgba(156,126,94,0.38)] bg-[rgba(255,249,243,0.96)]"
@@ -188,6 +190,7 @@ export function NoteGroupFilterDialog({
               <FilterOptionRow
                 checked={draftAllSelected}
                 count={cards.length}
+                guideId="note-filter-all"
                 label={t.notes.allGroups}
                 onChange={toggleDraftSelectAll}
                 swatch={<GroupFilterIcon size={14} />}

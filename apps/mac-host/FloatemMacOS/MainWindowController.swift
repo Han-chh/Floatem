@@ -238,7 +238,12 @@ final class MainWindowController: NSObject, NSWindowDelegate, FloatemNativeBridg
 
         lastHotKeyPressTimestamp = now
         logToggleState(context: "Global hotkey received")
+        let isOpeningPanel = !isPanelPresented
         togglePanel(reason: "global-hotkey")
+
+        if isOpeningPanel {
+            webViewController.emitShortcutInvoked(hotKeyManager.registeredShortcut ?? GlobalHotKeyManager.defaultShortcut)
+        }
     }
 
     func loadAllData() throws -> [String: Any] {
@@ -529,7 +534,8 @@ final class MainWindowController: NSObject, NSWindowDelegate, FloatemNativeBridg
         }
 
         let mouseLocation = NSEvent.mouseLocation
-        if !ignoreMainPanelDropZone && panel.isVisible && panel.frame.contains(mouseLocation) {
+        let cardFrameAtDrop = floatingCardFrame(for: mouseLocation, session: session)
+        if !ignoreMainPanelDropZone && panel.isVisible && cardFrameAtDrop.intersects(panel.frame) {
             return
         }
 
@@ -638,7 +644,7 @@ final class MainWindowController: NSObject, NSWindowDelegate, FloatemNativeBridg
             Self.lifecycle.info("panelCreated(cardId=\(cardID, privacy: .public)) kind=\(kind, privacy: .public)")
             logRemainingFloatingPanelCount()
         }
-        let defaultCardFrame = floatingCardFrame(for: mouseLocation, session: session)
+        let defaultCardFrame = cardFrameAtDrop
         let savedState = ignoreMainPanelDropZone
             ? (try? storage.floatingWindowStates())?.first {
                 $0.entityKind.rawValue == kind && $0.entityID == cardID

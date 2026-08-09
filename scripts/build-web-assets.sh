@@ -65,3 +65,22 @@ WEB_OUTPUT_DIR="$TARGET_BUILD_DIR/$UNLOCALIZED_RESOURCES_FOLDER_PATH/web"
 rm -rf "$WEB_OUTPUT_DIR"
 mkdir -p "$WEB_OUTPUT_DIR"
 cp -R "$NATIVE_WEB_DIR/." "$WEB_OUTPUT_DIR/"
+
+# This build phase replaces the bundled web files after Xcode has prepared the
+# app bundle. Re-sign the final bundle so the resource seal includes the new
+# hashed asset names and macOS retains the app's sandbox/App Group identity.
+if [ "${CODE_SIGNING_ALLOWED:-NO}" = "YES" ] && [ -n "${EXPANDED_CODE_SIGN_IDENTITY:-}" ]; then
+  APP_BUNDLE="$TARGET_BUILD_DIR/$WRAPPER_NAME"
+  ENTITLEMENTS_PATH="$TARGET_TEMP_DIR/$WRAPPER_NAME.xcent"
+  if [ ! -f "$ENTITLEMENTS_PATH" ]; then
+    ENTITLEMENTS_PATH="$SRCROOT/$CODE_SIGN_ENTITLEMENTS"
+  fi
+  /usr/bin/codesign \
+    --force \
+    --sign "$EXPANDED_CODE_SIGN_IDENTITY" \
+    --entitlements "$ENTITLEMENTS_PATH" \
+    --options runtime \
+    --timestamp=none \
+    --generate-entitlement-der \
+    "$APP_BUNDLE"
+fi

@@ -50,7 +50,41 @@ const MAX_FLOATING_CARD_CONTENT_SCALE = 1.65;
 const FLOATING_DIALOG_BACKDROP_SELECTOR = ".floatem-modal-backdrop";
 const EDITABLE_TARGET_SELECTOR = 'input,textarea,select,[contenteditable="true"],[role="textbox"]';
 const FLOATING_CARD_GUIDE_EVENT = "floatem:floating-card-guide";
+const FLOATING_GUIDE_PROMPT_MARGIN = 10;
+const FLOATING_GUIDE_TARGET_CLEARANCE = 10;
 type FloatingDialogSide = "left" | "right";
+
+type FloatingGuideRect = Pick<DOMRect, "bottom" | "height" | "left" | "right" | "top" | "width">;
+
+export function getFloatingGuidePromptPosition(
+  target: FloatingGuideRect,
+  prompt: Pick<DOMRect, "height" | "width">,
+  viewport: { height: number; width: number },
+) {
+  const right = Math.max(FLOATING_GUIDE_PROMPT_MARGIN, viewport.width - prompt.width - FLOATING_GUIDE_PROMPT_MARGIN);
+  const bottom = Math.max(FLOATING_GUIDE_PROMPT_MARGIN, viewport.height - prompt.height - FLOATING_GUIDE_PROMPT_MARGIN);
+  const candidates = [
+    { left: FLOATING_GUIDE_PROMPT_MARGIN, top: bottom },
+    { left: FLOATING_GUIDE_PROMPT_MARGIN, top: FLOATING_GUIDE_PROMPT_MARGIN },
+    { left: right, top: bottom },
+    { left: right, top: FLOATING_GUIDE_PROMPT_MARGIN },
+  ];
+  const protectedTarget = {
+    bottom: target.bottom + FLOATING_GUIDE_TARGET_CLEARANCE,
+    left: target.left - FLOATING_GUIDE_TARGET_CLEARANCE,
+    right: target.right + FLOATING_GUIDE_TARGET_CLEARANCE,
+    top: target.top - FLOATING_GUIDE_TARGET_CLEARANCE,
+  };
+  const overlapArea = ({ left, top }: { left: number; top: number }) => {
+    const overlapWidth = Math.max(0, Math.min(left + prompt.width, protectedTarget.right) - Math.max(left, protectedTarget.left));
+    const overlapHeight = Math.max(0, Math.min(top + prompt.height, protectedTarget.bottom) - Math.max(top, protectedTarget.top));
+    return overlapWidth * overlapHeight;
+  };
+
+  return candidates.find((candidate) => overlapArea(candidate) === 0) ?? candidates.reduce((best, candidate) =>
+    overlapArea(candidate) < overlapArea(best) ? candidate : best,
+  );
+}
 
 function FloatingCardGuideOverlay({
   guide,
@@ -60,6 +94,7 @@ function FloatingCardGuideOverlay({
   showLaunchAtLoginDialog: boolean;
 }) {
   const [targetRect, setTargetRect] = useState<DOMRect | null>(null);
+  const [shellRect, setShellRect] = useState<DOMRect | null>(null);
   const isPinTarget = Boolean(
     guide && (guide.phase === "pin" || guide.phase === "unpin") && !showLaunchAtLoginDialog,
   );
@@ -76,6 +111,7 @@ function FloatingCardGuideOverlay({
   useEffect(() => {
     if (!isVisible) {
       setTargetRect(null);
+      setShellRect(null);
       return;
     }
 
@@ -90,7 +126,9 @@ function FloatingCardGuideOverlay({
         : '[data-action="desktop-pin"] [data-desktop-pin-indicator]';
     const update = () => {
       const target = document.querySelector<HTMLElement>(selector);
+      const shell = document.querySelector<HTMLElement>('[data-testid="floating-card-shell"]');
       setTargetRect(target?.getBoundingClientRect() ?? null);
+      setShellRect(shell?.getBoundingClientRect() ?? null);
     };
     update();
     const observer = new MutationObserver(update);
@@ -102,26 +140,35 @@ function FloatingCardGuideOverlay({
     };
   }, [guide, isVisible, showLaunchAtLoginDialog]);
 
-  if (!isVisible || typeof document === "undefined") {
+  if (!isVisible || !shellRect || typeof document === "undefined") {
     return null;
   }
 
-  return createPortal(
+  const targetOffset = targetRect
+    ? {
+        height: targetRect.height + (isPinTarget ? 14 : 10),
+        left: targetRect.left - shellRect.left - (isPinTarget ? 7 : 5),
+        top: targetRect.top - shellRect.top - (isPinTarget ? 7 : 5),
+        width: targetRect.width + (isPinTarget ? 14 : 10),
+      }
+    : null;
+
+  return (
     <motion.div
       key={guide?.phase}
       data-floating-guide-overlay
-      className="pointer-events-none fixed inset-0 z-[190]"
+      className="pointer-events-none absolute inset-0 z-[190] overflow-hidden"
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
     >
-          {targetRect ? (
+          {targetOffset ? (
             <motion.div
               data-floating-guide-highlight
               data-floating-guide-pin-ring={isPinTarget ? "true" : undefined}
               data-floating-guide-drag-ring={isDragTarget ? "true" : undefined}
               data-floating-guide-resize-ring={isResizeTarget ? "true" : undefined}
               data-floating-guide-desktop-ring={isDesktopTarget ? "true" : undefined}
-              className={`fixed border-2 border-[#ff4f3d] shadow-[0_0_0_5px_rgba(255,79,61,0.22),0_8px_24px_rgba(61,49,34,0.2)] ${
+              className={`absolute border-2 border-[#ff4f3d] shadow-[0_0_0_5px_rgba(255,79,61,0.22),0_8px_24px_rgba(61,49,34,0.2)] ${
                 isPinTarget
                   ? "rounded-full"
                   : isDragTarget || isDesktopTarget
@@ -130,12 +177,7 @@ function FloatingCardGuideOverlay({
                       ? "rounded-[10px]"
                       : "rounded-[30px]"
               }`}
-              style={{
-                height: targetRect.height + (isPinTarget ? 14 : 10),
-                left: targetRect.left - (isPinTarget ? 7 : 5),
-                top: targetRect.top - (isPinTarget ? 7 : 5),
-                width: targetRect.width + (isPinTarget ? 14 : 10),
-              }}
+              style={targetOffset}
               animate={{
                 opacity: [0.72, 1, 0.72],
                 boxShadow: [
@@ -150,7 +192,8 @@ function FloatingCardGuideOverlay({
           <motion.aside
             role="dialog"
             aria-label={displayTitle ?? ""}
-            className="absolute bottom-2.5 left-2.5 max-w-[calc(100%-20px)] rounded-[13px] border border-[rgba(255,122,89,0.34)] bg-[rgba(255,252,248,0.96)] px-3 py-2 shadow-[0_12px_28px_rgba(61,49,34,0.2)] backdrop-blur-xl"
+            data-floating-guide-prompt
+            className="absolute bottom-2.5 left-2.5 w-[min(184px,calc(100%-20px))] rounded-[12px] border border-[#ffb49e] bg-[#fffaf8] px-2.5 py-1.5 shadow-[0_10px_22px_rgba(61,49,34,0.18)]"
             initial={{ opacity: 0, x: -8, y: 5, scale: 0.96 }}
             animate={{ opacity: 1, x: 0, y: 0, scale: 1 }}
             exit={{ opacity: 0, x: 6, scale: 0.97 }}
@@ -164,15 +207,14 @@ function FloatingCardGuideOverlay({
                 transition={{ duration: 1.15, repeat: Infinity }}
               />
               <div className="min-w-0">
-                <p className="text-[10.5px] font-bold text-[#8f553d]">{displayTitle}</p>
-                <p className="whitespace-normal text-[9.5px] font-semibold leading-4 text-[var(--muted)]">
+                <p className="text-[10px] font-bold leading-4 text-[#8f553d]">{displayTitle}</p>
+                <p className="max-h-12 overflow-hidden whitespace-normal text-[9px] font-semibold leading-4 text-[var(--muted)]">
                   {displayInstruction}
                 </p>
               </div>
             </div>
           </motion.aside>
-    </motion.div>,
-    document.body,
+    </motion.div>
   );
 }
 
@@ -399,21 +441,33 @@ export function FloatingNoteApp() {
     const root = document.getElementById("root");
 
     html.dataset.floatemFloatingCardWindow = "true";
+    html.style.background = "transparent";
+    html.style.backgroundColor = "transparent";
     html.style.overflow = "hidden";
+    body.style.background = "transparent";
+    body.style.backgroundColor = "transparent";
     body.style.overflow = "hidden";
     body.style.margin = "0";
     body.style.padding = "0";
     if (root) {
+      root.style.background = "transparent";
+      root.style.backgroundColor = "transparent";
       root.style.overflow = "hidden";
     }
 
     return () => {
       delete html.dataset.floatemFloatingCardWindow;
+      html.style.background = "";
+      html.style.backgroundColor = "";
       html.style.overflow = "";
+      body.style.background = "";
+      body.style.backgroundColor = "";
       body.style.overflow = "";
       body.style.margin = "";
       body.style.padding = "";
       if (root) {
+        root.style.background = "";
+        root.style.backgroundColor = "";
         root.style.overflow = "";
       }
     };
@@ -464,19 +518,22 @@ export function FloatingNoteApp() {
     const syncMeasuredSize = () => {
       animationFrame = null;
       const rect = node.getBoundingClientRect();
-      const contentSize = {
+      const measuredContentSize = {
         width: Math.max(cardSize.width, Math.ceil(rect.width || cardSize.width)),
         height: Math.max(cardSize.height, Math.ceil(rect.height || cardSize.height)),
       };
       const nextSize = hasOpenDialog
         ? {
             width: Math.max(
-              contentSize.width,
+              measuredContentSize.width,
               cardSize.width + FLOATING_DIALOG_GAP_PX + FLOATING_DIALOG_VIEWPORT_SIZE.width,
             ),
-            height: Math.max(contentSize.height, FLOATING_DIALOG_VIEWPORT_SIZE.height),
+            height: Math.max(measuredContentSize.height, FLOATING_DIALOG_VIEWPORT_SIZE.height),
           }
-        : contentSize;
+        // While no dialog is visible the card size is authoritative. Keeping a
+        // stale, larger DOM measurement here leaves a translucent WebView area
+        // around a card after it is resized smaller.
+        : cardSize;
       const lastSize = syncedFrameSizeRef.current;
       const isUnchanged =
         Math.abs(nextSize.width - lastSize.width) < 1 && Math.abs(nextSize.height - lastSize.height) < 1;
@@ -718,29 +775,12 @@ export function FloatingNoteApp() {
       return;
     }
 
+    // Keep the floating panel's existing frame when the note is folded. The
+    // folded header is intentionally compact, but the card still owns the
+    // full frame and paints its surface beneath it. Resizing the transparent
+    // host down to header height caused the desktop to show through below the
+    // card and shifted the panel while the user was dragging it.
     expandedCardSizeRef.current = cardSize;
-    const animationFrame = window.requestAnimationFrame(() => {
-      const collapsedCard = contentRef.current?.querySelector<HTMLElement>('[data-testid="note-card"]');
-      if (!collapsedCard) {
-        return;
-      }
-
-      const collapsedSize = {
-        width: cardSize.width,
-        height: Math.max(1, Math.ceil(collapsedCard.getBoundingClientRect().height)),
-      };
-      syncedFrameSizeRef.current = collapsedSize;
-      setCardSize(collapsedSize);
-      setFrameSize(collapsedSize);
-      void resizeFloatingCard({
-        ...collapsedSize,
-        anchor: "top",
-        horizontalAnchor: "left",
-        allowBelowMinimum: true,
-      });
-    });
-
-    return () => window.cancelAnimationFrame(animationFrame);
   }, [currentNoteCollapsed, payload]);
 
   if (!payload) {
@@ -768,6 +808,8 @@ export function FloatingNoteApp() {
     hasOpenDialog && dialogSide === "left"
       ? FLOATING_DIALOG_VIEWPORT_SIZE.width + FLOATING_DIALOG_GAP_PX
       : 0;
+  const floatingCardCornerRadius = payload.kind === "todo" ? 18 : 28;
+  const visibleFrameSize = hasOpenDialog ? frameSize : cardSize;
 
   const handleDock = () => {
     if (completeDockTimerRef.current !== null) {
@@ -860,8 +902,12 @@ export function FloatingNoteApp() {
     <main
       className="bg-transparent overflow-hidden"
       style={{
-        width: frameSize.width,
-        height: frameSize.height,
+        // Keep the composited WebView surface clipped to the card while it is
+        // resized. The larger native frame is only needed for in-card dialogs.
+        // Otherwise it leaves a translucent rectangle after a card shrinks.
+        borderRadius: floatingCardCornerRadius,
+        height: visibleFrameSize.height,
+        width: visibleFrameSize.width,
       }}
     >
       <article
@@ -881,7 +927,7 @@ export function FloatingNoteApp() {
           className="floating-card-scaled-content"
           style={{
             width: contentSize.width,
-            minHeight: isCollapsedFloatingNote ? undefined : contentSize.height,
+            minHeight: contentSize.height,
             zoom: contentScale,
           }}
         >
@@ -889,7 +935,7 @@ export function FloatingNoteApp() {
             <FloatingNoteCard
               note={note}
               width={contentSize.width}
-              minHeight={isCollapsedFloatingNote ? undefined : contentSize.height}
+              minHeight={contentSize.height}
               onBeginDrag={() => void startFloatingCardDrag(cardReference)}
               onDock={handleDock}
               desktopPinned={isDesktopPinned}
@@ -918,7 +964,11 @@ export function FloatingNoteApp() {
                 void startFloatingCardDrag(cardReference);
               }}
             >
-              <NoteCardPreview note={createPreviewNoteCard(payload)} width={contentSize.width} />
+              <NoteCardPreview
+                note={createPreviewNoteCard(payload)}
+                width={contentSize.width}
+                minHeight={contentSize.height}
+              />
             </div>
           ) : (
             <div

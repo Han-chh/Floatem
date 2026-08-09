@@ -4,7 +4,7 @@ Current release identity:
 
 ```text
 Version: 1.0.8
-Build: 47
+Build: 49
 Bundle ID: com.hankch.floatem
 App Group: group.com.hankch.floatem
 Team: 85923Q9JUG
@@ -94,12 +94,12 @@ xcodebuild archive \
   -scheme Floatem \
   -configuration Release \
   -destination 'generic/platform=macOS' \
-  -archivePath "$HOME/Library/Developer/Xcode/Archives/<date>/Floatem 1.0.8 (47).xcarchive" \
+  -archivePath "$HOME/Library/Developer/Xcode/Archives/<date>/Floatem 1.0.8 (49).xcarchive" \
   -allowProvisioningUpdates
 
 xcodebuild -exportArchive \
-  -archivePath "$HOME/Library/Developer/Xcode/Archives/<date>/Floatem 1.0.8 (47).xcarchive" \
-  -exportPath build/AppStoreExport/Floatem-1.0.8-47 \
+  -archivePath "$HOME/Library/Developer/Xcode/Archives/<date>/Floatem 1.0.8 (49).xcarchive" \
+  -exportPath build/AppStoreExport/Floatem-1.0.8-49 \
   -exportOptionsPlist apps/mac-host/ExportOptions.plist \
   -allowProvisioningUpdates
 ```

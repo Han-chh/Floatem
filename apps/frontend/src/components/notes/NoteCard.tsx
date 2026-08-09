@@ -296,7 +296,15 @@ function NoteCardBody({
   );
 }
 
-export function NoteCardPreview({ note, width }: { note: NoteCardModel; width?: number }) {
+export function NoteCardPreview({
+  note,
+  width,
+  minHeight,
+}: {
+  note: NoteCardModel;
+  width?: number;
+  minHeight?: number;
+}) {
   const { language, t } = useI18n();
   const groups = useNotesStore((state) => state.groups);
   const editedLabel = formatCompactEditedLabel(note.updatedAt, language);
@@ -315,6 +323,7 @@ export function NoteCardPreview({ note, width }: { note: NoteCardModel; width?: 
         background: getNoteCardSurface(accentColor, hasAssignedGroup),
         borderColor: colorWithAlpha(accentColor, "48"),
         width: width ?? undefined,
+        minHeight,
       }}
     >
       <NoteCardBody

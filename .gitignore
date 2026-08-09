@@ -35,6 +35,9 @@ vite.config.d.ts
 !.vscode/extensions.json
 .idea
 .DS_Store
+
+# Website is maintained and committed as an independent repository.
+/Website/
 *.suo
 *.ntvs*
 *.njsproj

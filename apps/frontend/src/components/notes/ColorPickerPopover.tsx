@@ -1,5 +1,6 @@
 import {
   useEffect,
+  useLayoutEffect,
   useRef,
   useState,
   type CSSProperties,
@@ -17,7 +18,7 @@ const EXPANDED_COLOR_PALETTE_WIDTH = 216;
 const ADVANCED_COLOR_PALETTE_WIDTH = 288;
 const COMPACT_COLOR_PALETTE_FALLBACK_HEIGHT = 112;
 const EXPANDED_COLOR_PALETTE_FALLBACK_HEIGHT = 246;
-const ADVANCED_COLOR_PALETTE_FALLBACK_HEIGHT = 356;
+const ADVANCED_COLOR_PALETTE_FALLBACK_HEIGHT = 306;
 const COLOR_PALETTE_GAP = 10;
 const COLOR_PALETTE_MARGIN = 12;
 
@@ -240,7 +241,11 @@ export function ColorPickerPopover({
       return;
     }
 
-    const paletteHeight = paletteRef.current?.getBoundingClientRect().height ?? colorPaletteMetrics.fallbackHeight;
+    const measuredPaletteHeight = paletteRef.current?.getBoundingClientRect().height ?? 0;
+    // A mode change can inherit the previous mode's max-height for one render.
+    // Keep the full advanced palette's height in the placement calculation so its
+    // footer is never clipped while React updates the popover.
+    const paletteHeight = Math.max(measuredPaletteHeight, colorPaletteMetrics.fallbackHeight);
     setColorPaletteStyle(
       buildColorPaletteStyle(anchorRef.current.getBoundingClientRect(), colorPaletteMetrics.width, paletteHeight),
     );
@@ -313,7 +318,7 @@ export function ColorPickerPopover({
     setHexDraft(normalizedActiveColor);
   }, [activeColor, isOpen]);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (!isOpen || typeof window === "undefined") {
       setColorPaletteStyle(null);
       return;
@@ -322,13 +327,12 @@ export function ColorPickerPopover({
     const handleReposition = () => {
       syncColorPalettePosition();
     };
-    const animationFrame = window.requestAnimationFrame(handleReposition);
+    handleReposition();
 
     window.addEventListener("resize", handleReposition);
     window.addEventListener("scroll", handleReposition, true);
 
     return () => {
-      window.cancelAnimationFrame(animationFrame);
       window.removeEventListener("resize", handleReposition);
       window.removeEventListener("scroll", handleReposition, true);
     };

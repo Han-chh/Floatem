@@ -1,0 +1,56 @@
+- generic [ref=e2]:
+  - banner [ref=e3]:
+    - button "Floatem home" [ref=e4] [cursor=pointer]:
+      - generic [ref=e5]: Floatem
+    - navigation "Main navigation" [ref=e6]:
+      - button "Features" [ref=e123] [cursor=pointer]
+      - button "Download" [ref=e124] [cursor=pointer]
+      - button "Support" [active] [ref=e125] [cursor=pointer]
+      - button "Privacy" [ref=e126] [cursor=pointer]
+    - button "中文" [ref=e127] [cursor=pointer]
+  - main [ref=e158]:
+    - generic [ref=e160]:
+      - paragraph [ref=e161]: Technical support
+      - heading "Here to keep your thoughts moving." [level=1] [ref=e162]:
+        - generic [ref=e163]: Here to keep
+        - generic [ref=e164]: your thoughts moving.
+      - paragraph [ref=e165]: Questions, ideas, or a little friction? Write to us. Every message is read with care.
+    - link "Contact support support@floatem.app" [ref=e170] [cursor=pointer]:
+      - /url: mailto:support@floatem.app?subject=Floatem%20Support
+      - generic [ref=e171]: Contact support
+      - strong [ref=e172]: support@floatem.app
+    - generic [ref=e175]:
+      - paragraph [ref=e176]: Frequently asked questions
+      - button "01 How do I report a problem? + Please include your device, system and Floatem versions, plus short steps that reproduce the issue." [ref=e177] [cursor=pointer]:
+        - generic [ref=e178]:
+          - generic [ref=e179]: "01"
+          - heading "How do I report a problem?" [level=2] [ref=e180]
+          - generic [ref=e181]: +
+        - paragraph [ref=e182]: Please include your device, system and Floatem versions, plus short steps that reproduce the issue.
+      - button "02 Where can I find the app version? + Open the About page in Floatem to see its current version." [ref=e183] [cursor=pointer]:
+        - generic [ref=e184]:
+          - generic [ref=e185]: "02"
+          - heading "Where can I find the app version?" [level=2] [ref=e186]
+          - generic [ref=e187]: +
+        - paragraph [ref=e188]: Open the About page in Floatem to see its current version.
+      - button "03 Does Floatem sync my data to the cloud? + Floatem currently keeps your content on your device. It does not create an account or upload your notes." [ref=e189] [cursor=pointer]:
+        - generic [ref=e190]:
+          - generic [ref=e191]: "03"
+          - heading "Does Floatem sync my data to the cloud?" [level=2] [ref=e192]
+          - generic [ref=e193]: +
+        - paragraph [ref=e194]: Floatem currently keeps your content on your device. It does not create an account or upload your notes.
+      - button "04 When will Windows be available? + The Windows edition is in preparation. Email us to be notified when it arrives." [ref=e195] [cursor=pointer]:
+        - generic [ref=e196]:
+          - generic [ref=e197]: "04"
+          - heading "When will Windows be available?" [level=2] [ref=e198]
+          - generic [ref=e199]: +
+        - paragraph [ref=e200]: The Windows edition is in preparation. Email us to be notified when it arrives.
+  - contentinfo [ref=e114]:
+    - button "Floatem © 2026 Floatem" [ref=e115] [cursor=pointer]:
+      - strong [ref=e116]: Floatem
+      - generic [ref=e117]: © 2026 Floatem
+    - generic [ref=e118]:
+      - button "Support" [ref=e156] [cursor=pointer]
+      - button "Privacy" [ref=e157] [cursor=pointer]
+      - link "support@floatem.app" [ref=e121] [cursor=pointer]:
+        - /url: mailto:support@floatem.app

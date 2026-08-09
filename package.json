@@ -2,7 +2,7 @@
   "name": "floatem",
   "private": true,
   "version": "1.0.8",
-  "buildNumber": 47,
+  "buildNumber": 49,
   "type": "module",
   "scripts": {
     "dev": "pnpm frontend:dev",

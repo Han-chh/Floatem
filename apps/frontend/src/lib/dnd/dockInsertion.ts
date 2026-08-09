@@ -4,6 +4,32 @@ export type DockInsertionRect = {
   bottom: number;
 };
 
+type ViewportRect = Pick<ClientRect, "top" | "right" | "bottom" | "left">;
+
+/**
+ * Returns true only after the dragged card no longer overlaps the app viewport.
+ * A card that merely crosses an edge is still an in-panel drag, so it can keep
+ * participating in list reordering until its full body has left the window.
+ */
+export function isCardFullyOutsideViewport(
+  rect: ViewportRect | null,
+  viewport?: Pick<ClientRect, "width" | "height">,
+) {
+  const bounds = viewport ??
+    (typeof window === "undefined" ? null : { width: window.innerWidth, height: window.innerHeight });
+
+  if (!rect || !bounds) {
+    return false;
+  }
+
+  return (
+    rect.right <= 0 ||
+    rect.left >= bounds.width ||
+    rect.bottom <= 0 ||
+    rect.top >= bounds.height
+  );
+}
+
 export function resolveDockInsertionIndex(clientY: number, items: readonly DockInsertionRect[]) {
   const index = items.findIndex((item) => clientY < item.top + (item.bottom - item.top) / 2);
   return index < 0 ? items.length : index;

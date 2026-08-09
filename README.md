@@ -13,7 +13,7 @@ Floatem is a lightweight, local-first desktop notes and todos app designed to ca
 - Editable floating Note/Todo cards on macOS, including resize, always-on-top behavior, and drag-back.
 - Desktop-pinned macOS cards restored from local state when Floatem is running; enabling **Open Floatem at login** restores them after login without opening the Main Window.
 - English and Simplified Chinese UI, six themes, motion controls, time-zone/time-format controls, and reminder sound settings.
-- Bilingual help plus a seven-workflow interactive guide. On a fresh v1.0.8 installation, Floatem highlights the upper-right help entry once and asks the user to open the guide.
+- Bilingual help plus a seven-workflow action-driven interactive guide. Each step advances only after its instructed action; there are no manual previous/next controls. On a fresh v1.0.8 installation, Floatem highlights the upper-right help entry once and asks the user to open the guide.
 - Local persistence only. macOS data is stored in the Floatem App Group container; the app has no account or cloud-sync feature.
 
 ## Repository status
