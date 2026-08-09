@@ -1,6 +1,6 @@
 import type { DragPreviewPayload, FloatingCardScreenPlacement } from "@floatem/native-bridge";
 import { motion } from "framer-motion";
-import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties } from "react";
+import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import type { Descendant } from "slate";
 import {
@@ -94,8 +94,7 @@ function FloatingCardGuideOverlay({
   showLaunchAtLoginDialog: boolean;
 }) {
   const [targetRect, setTargetRect] = useState<DOMRect | null>(null);
-  const [promptStyle, setPromptStyle] = useState<CSSProperties | null>(null);
-  const promptRef = useRef<HTMLElement | null>(null);
+  const [shellRect, setShellRect] = useState<DOMRect | null>(null);
   const isPinTarget = Boolean(
     guide && (guide.phase === "pin" || guide.phase === "unpin") && !showLaunchAtLoginDialog,
   );
@@ -112,6 +111,7 @@ function FloatingCardGuideOverlay({
   useEffect(() => {
     if (!isVisible) {
       setTargetRect(null);
+      setShellRect(null);
       return;
     }
 
@@ -126,7 +126,9 @@ function FloatingCardGuideOverlay({
         : '[data-action="desktop-pin"] [data-desktop-pin-indicator]';
     const update = () => {
       const target = document.querySelector<HTMLElement>(selector);
+      const shell = document.querySelector<HTMLElement>('[data-testid="floating-card-shell"]');
       setTargetRect(target?.getBoundingClientRect() ?? null);
+      setShellRect(shell?.getBoundingClientRect() ?? null);
     };
     update();
     const observer = new MutationObserver(update);
@@ -138,50 +140,35 @@ function FloatingCardGuideOverlay({
     };
   }, [guide, isVisible, showLaunchAtLoginDialog]);
 
-  useLayoutEffect(() => {
-    if (!isVisible || !targetRect || !promptRef.current) {
-      setPromptStyle(null);
-      return;
-    }
-
-    const update = () => {
-      const prompt = promptRef.current;
-      if (!prompt) {
-        return;
-      }
-      setPromptStyle(
-        getFloatingGuidePromptPosition(targetRect, prompt.getBoundingClientRect(), {
-          height: window.innerHeight,
-          width: window.innerWidth,
-        }),
-      );
-    };
-
-    update();
-    window.addEventListener("resize", update);
-    return () => window.removeEventListener("resize", update);
-  }, [isVisible, targetRect]);
-
-  if (!isVisible || typeof document === "undefined") {
+  if (!isVisible || !shellRect || typeof document === "undefined") {
     return null;
   }
 
-  return createPortal(
+  const targetOffset = targetRect
+    ? {
+        height: targetRect.height + (isPinTarget ? 14 : 10),
+        left: targetRect.left - shellRect.left - (isPinTarget ? 7 : 5),
+        top: targetRect.top - shellRect.top - (isPinTarget ? 7 : 5),
+        width: targetRect.width + (isPinTarget ? 14 : 10),
+      }
+    : null;
+
+  return (
     <motion.div
       key={guide?.phase}
       data-floating-guide-overlay
-      className="pointer-events-none fixed inset-0 z-[190]"
+      className="pointer-events-none absolute inset-0 z-[190] overflow-hidden"
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
     >
-          {targetRect ? (
+          {targetOffset ? (
             <motion.div
               data-floating-guide-highlight
               data-floating-guide-pin-ring={isPinTarget ? "true" : undefined}
               data-floating-guide-drag-ring={isDragTarget ? "true" : undefined}
               data-floating-guide-resize-ring={isResizeTarget ? "true" : undefined}
               data-floating-guide-desktop-ring={isDesktopTarget ? "true" : undefined}
-              className={`fixed border-2 border-[#ff4f3d] shadow-[0_0_0_5px_rgba(255,79,61,0.22),0_8px_24px_rgba(61,49,34,0.2)] ${
+              className={`absolute border-2 border-[#ff4f3d] shadow-[0_0_0_5px_rgba(255,79,61,0.22),0_8px_24px_rgba(61,49,34,0.2)] ${
                 isPinTarget
                   ? "rounded-full"
                   : isDragTarget || isDesktopTarget
@@ -190,12 +177,7 @@ function FloatingCardGuideOverlay({
                       ? "rounded-[10px]"
                       : "rounded-[30px]"
               }`}
-              style={{
-                height: targetRect.height + (isPinTarget ? 14 : 10),
-                left: targetRect.left - (isPinTarget ? 7 : 5),
-                top: targetRect.top - (isPinTarget ? 7 : 5),
-                width: targetRect.width + (isPinTarget ? 14 : 10),
-              }}
+              style={targetOffset}
               animate={{
                 opacity: [0.72, 1, 0.72],
                 boxShadow: [
@@ -208,12 +190,10 @@ function FloatingCardGuideOverlay({
             />
           ) : null}
           <motion.aside
-            ref={promptRef}
             role="dialog"
             aria-label={displayTitle ?? ""}
             data-floating-guide-prompt
-            className="absolute w-[min(184px,calc(100%-20px))] rounded-[12px] border border-[rgba(255,122,89,0.34)] bg-[rgba(255,252,248,0.96)] px-2.5 py-1.5 shadow-[0_10px_22px_rgba(61,49,34,0.18)] backdrop-blur-xl"
-            style={promptStyle ?? { bottom: FLOATING_GUIDE_PROMPT_MARGIN, left: FLOATING_GUIDE_PROMPT_MARGIN }}
+            className="absolute bottom-2.5 left-2.5 w-[min(184px,calc(100%-20px))] rounded-[12px] border border-[#ffb49e] bg-[#fffaf8] px-2.5 py-1.5 shadow-[0_10px_22px_rgba(61,49,34,0.18)]"
             initial={{ opacity: 0, x: -8, y: 5, scale: 0.96 }}
             animate={{ opacity: 1, x: 0, y: 0, scale: 1 }}
             exit={{ opacity: 0, x: 6, scale: 0.97 }}
@@ -234,8 +214,7 @@ function FloatingCardGuideOverlay({
               </div>
             </div>
           </motion.aside>
-    </motion.div>,
-    document.body,
+    </motion.div>
   );
 }
 
