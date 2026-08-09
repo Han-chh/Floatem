@@ -462,21 +462,33 @@ export function FloatingNoteApp() {
     const root = document.getElementById("root");
 
     html.dataset.floatemFloatingCardWindow = "true";
+    html.style.background = "transparent";
+    html.style.backgroundColor = "transparent";
     html.style.overflow = "hidden";
+    body.style.background = "transparent";
+    body.style.backgroundColor = "transparent";
     body.style.overflow = "hidden";
     body.style.margin = "0";
     body.style.padding = "0";
     if (root) {
+      root.style.background = "transparent";
+      root.style.backgroundColor = "transparent";
       root.style.overflow = "hidden";
     }
 
     return () => {
       delete html.dataset.floatemFloatingCardWindow;
+      html.style.background = "";
+      html.style.backgroundColor = "";
       html.style.overflow = "";
+      body.style.background = "";
+      body.style.backgroundColor = "";
       body.style.overflow = "";
       body.style.margin = "";
       body.style.padding = "";
       if (root) {
+        root.style.background = "";
+        root.style.backgroundColor = "";
         root.style.overflow = "";
       }
     };
@@ -527,19 +539,22 @@ export function FloatingNoteApp() {
     const syncMeasuredSize = () => {
       animationFrame = null;
       const rect = node.getBoundingClientRect();
-      const contentSize = {
+      const measuredContentSize = {
         width: Math.max(cardSize.width, Math.ceil(rect.width || cardSize.width)),
         height: Math.max(cardSize.height, Math.ceil(rect.height || cardSize.height)),
       };
       const nextSize = hasOpenDialog
         ? {
             width: Math.max(
-              contentSize.width,
+              measuredContentSize.width,
               cardSize.width + FLOATING_DIALOG_GAP_PX + FLOATING_DIALOG_VIEWPORT_SIZE.width,
             ),
-            height: Math.max(contentSize.height, FLOATING_DIALOG_VIEWPORT_SIZE.height),
+            height: Math.max(measuredContentSize.height, FLOATING_DIALOG_VIEWPORT_SIZE.height),
           }
-        : contentSize;
+        // While no dialog is visible the card size is authoritative. Keeping a
+        // stale, larger DOM measurement here leaves a translucent WebView area
+        // around a card after it is resized smaller.
+        : cardSize;
       const lastSize = syncedFrameSizeRef.current;
       const isUnchanged =
         Math.abs(nextSize.width - lastSize.width) < 1 && Math.abs(nextSize.height - lastSize.height) < 1;

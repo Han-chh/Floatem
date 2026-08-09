@@ -875,6 +875,29 @@ export function InteractiveGuide({
   }, [currentStep, isOpen]);
 
   useEffect(() => {
+    if (!isOpen || typeof window === "undefined") {
+      return;
+    }
+
+    const handleAdvancedColorSaved = (event: Event) => {
+      const guideId = (event as CustomEvent<{ id?: string }>).detail?.id;
+      if (guideId !== "note-group") {
+        return;
+      }
+
+      // Saving directly from the advanced picker is itself a completed color
+      // selection. Skip the now-closed "Save color" step instead of requiring
+      // an unnecessary click in the saturation/brightness surface first.
+      setStep((value) =>
+        steps[value]?.id === "note-group-advanced-surface" ? value + 2 : value,
+      );
+    };
+
+    window.addEventListener("floatem:guide-color-selected", handleAdvancedColorSaved);
+    return () => window.removeEventListener("floatem:guide-color-selected", handleAdvancedColorSaved);
+  }, [isOpen, steps]);
+
+  useEffect(() => {
     if (
       !isOpen ||
       !currentStep ||
