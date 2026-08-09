@@ -663,21 +663,6 @@ export function InteractiveGuide({
   }, [currentStep, floatingCardIds, isOpen, noteId, pinnedNoteIds]);
 
   useEffect(() => {
-    // Folding is demonstrated in the main window, but a folded note leaves a
-    // transparent-looking remainder when it is promoted into a floating card.
-    // Restore the practice note before the floating chapter so the native
-    // window and its card keep the same fully filled surface as normal notes.
-    if (!isOpen || currentStep?.id !== "note-float" || !noteId) {
-      return;
-    }
-
-    const note = cards.find((card) => card.id === noteId);
-    if (note?.collapsed) {
-      useNotesStore.getState().toggleCollapsed(noteId);
-    }
-  }, [cards, currentStep?.id, isOpen, noteId]);
-
-  useEffect(() => {
     if (!isOpen || !currentStep || !todoId) {
       return;
     }

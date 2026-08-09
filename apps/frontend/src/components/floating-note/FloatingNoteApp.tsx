@@ -775,29 +775,12 @@ export function FloatingNoteApp() {
       return;
     }
 
+    // Keep the floating panel's existing frame when the note is folded. The
+    // folded header is intentionally compact, but the card still owns the
+    // full frame and paints its surface beneath it. Resizing the transparent
+    // host down to header height caused the desktop to show through below the
+    // card and shifted the panel while the user was dragging it.
     expandedCardSizeRef.current = cardSize;
-    const animationFrame = window.requestAnimationFrame(() => {
-      const collapsedCard = contentRef.current?.querySelector<HTMLElement>('[data-testid="note-card"]');
-      if (!collapsedCard) {
-        return;
-      }
-
-      const collapsedSize = {
-        width: cardSize.width,
-        height: Math.max(1, Math.ceil(collapsedCard.getBoundingClientRect().height)),
-      };
-      syncedFrameSizeRef.current = collapsedSize;
-      setCardSize(collapsedSize);
-      setFrameSize(collapsedSize);
-      void resizeFloatingCard({
-        ...collapsedSize,
-        anchor: "top",
-        horizontalAnchor: "left",
-        allowBelowMinimum: true,
-      });
-    });
-
-    return () => window.cancelAnimationFrame(animationFrame);
   }, [currentNoteCollapsed, payload]);
 
   if (!payload) {
@@ -944,7 +927,7 @@ export function FloatingNoteApp() {
           className="floating-card-scaled-content"
           style={{
             width: contentSize.width,
-            minHeight: isCollapsedFloatingNote ? undefined : contentSize.height,
+            minHeight: contentSize.height,
             zoom: contentScale,
           }}
         >
@@ -952,7 +935,7 @@ export function FloatingNoteApp() {
             <FloatingNoteCard
               note={note}
               width={contentSize.width}
-              minHeight={isCollapsedFloatingNote ? undefined : contentSize.height}
+              minHeight={contentSize.height}
               onBeginDrag={() => void startFloatingCardDrag(cardReference)}
               onDock={handleDock}
               desktopPinned={isDesktopPinned}
@@ -981,7 +964,11 @@ export function FloatingNoteApp() {
                 void startFloatingCardDrag(cardReference);
               }}
             >
-              <NoteCardPreview note={createPreviewNoteCard(payload)} width={contentSize.width} />
+              <NoteCardPreview
+                note={createPreviewNoteCard(payload)}
+                width={contentSize.width}
+                minHeight={contentSize.height}
+              />
             </div>
           ) : (
             <div
