@@ -822,7 +822,7 @@ describe("FloatingNoteApp", () => {
     }
   });
 
-  it("shrinks a collapsed floating note to its header and restores its expanded size", async () => {
+  it("keeps a collapsed floating note in its filled frame and restores its expanded size", async () => {
     const note = createNoteCard({ id: "floating-note-collapse-size", title: "Collapsible note" });
     const bridge = installFloatingBridge(note);
     const user = userEvent.setup();
@@ -831,30 +831,11 @@ describe("FloatingNoteApp", () => {
 
     try {
       const card = await screen.findByTestId("note-card");
-      vi.spyOn(card, "getBoundingClientRect").mockReturnValue({
-        bottom: 104,
-        height: 104,
-        left: 0,
-        right: 420,
-        top: 0,
-        width: 420,
-        x: 0,
-        y: 0,
-        toJSON: () => ({}),
-      });
       bridge.resizeFloatingCard.mockClear();
 
       await user.click(within(card).getByRole("button", { name: "Collapse note" }));
-      await waitFor(() => {
-        expect(bridge.resizeFloatingCard).toHaveBeenCalledWith({
-          width: 420,
-          height: 104,
-          anchor: "top",
-          horizontalAnchor: "left",
-          allowBelowMinimum: true,
-        });
-      });
-      expect(screen.getByTestId("floating-card-shell")).toHaveStyle({ width: "420px", minHeight: "104px" });
+      expect(bridge.resizeFloatingCard).not.toHaveBeenCalled();
+      expect(screen.getByTestId("floating-card-shell")).toHaveStyle({ width: "420px", minHeight: "300px" });
       expect(within(card).getByRole("textbox", { name: "Note title" })).toBeInTheDocument();
       expect(within(card).getAllByRole("textbox")).toHaveLength(1);
 
