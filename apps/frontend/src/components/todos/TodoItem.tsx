@@ -957,6 +957,7 @@ export function CompletedTodoItem({
         whileHover={{ y: -1.5, scale: 1.006 }}
         data-no-window-drag="true"
         data-testid="todo-item"
+        data-todo-item-id={todo.id}
         data-card-grouped={hasAssignedGroup}
         data-todo-status={todo.done ? "done" : "active"}
         style={{

@@ -15,6 +15,7 @@ import type { TabId } from "../../lib/models";
 import { useNotesStore } from "../../store/notesStore";
 import { useTodosStore } from "../../store/todosStore";
 import {
+  ChevronDownIcon,
   CircleCheckBigIcon,
   SparklesIcon,
   XIcon,
@@ -1361,6 +1362,22 @@ export function InteractiveGuide({
                 "You are now in Settings. The text below summarizes every submenu and its adjustable options, so you do not need to open them one by one.",
               )}
             </p>
+            <motion.p
+              data-guide-settings-scroll-hint
+              className="mt-3 flex items-center gap-1.5 rounded-[12px] bg-[rgba(255,122,89,0.10)] px-3 py-2 text-[10.5px] font-bold text-[#a85b41]"
+              animate={{ opacity: [0.7, 1, 0.7] }}
+              transition={{ duration: 1.3, repeat: Infinity }}
+            >
+              <motion.span
+                aria-hidden="true"
+                className="inline-flex"
+                animate={{ y: [0, 3, 0] }}
+                transition={{ duration: 0.9, repeat: Infinity, ease: "easeInOut" }}
+              >
+                <ChevronDownIcon size={13} />
+              </motion.span>
+              {copy("向下滑动，查看全部设置说明与完成按键", "Scroll down to see every setting and the Finish button")}
+            </motion.p>
             <div className="mt-4 grid gap-x-6 gap-y-0 sm:grid-cols-2">
               {settingsOverviewItems.map((item, index) => (
                 <section

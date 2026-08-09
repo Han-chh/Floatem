@@ -846,6 +846,8 @@ export function FloatingNoteApp() {
     hasOpenDialog && dialogSide === "left"
       ? FLOATING_DIALOG_VIEWPORT_SIZE.width + FLOATING_DIALOG_GAP_PX
       : 0;
+  const floatingCardCornerRadius = payload.kind === "todo" ? 18 : 28;
+  const visibleFrameSize = hasOpenDialog ? frameSize : cardSize;
 
   const handleDock = () => {
     if (completeDockTimerRef.current !== null) {
@@ -938,8 +940,12 @@ export function FloatingNoteApp() {
     <main
       className="bg-transparent overflow-hidden"
       style={{
-        width: frameSize.width,
-        height: frameSize.height,
+        // Keep the composited WebView surface clipped to the card while it is
+        // resized. The larger native frame is only needed for in-card dialogs.
+        // Otherwise it leaves a translucent rectangle after a card shrinks.
+        borderRadius: floatingCardCornerRadius,
+        height: visibleFrameSize.height,
+        width: visibleFrameSize.width,
       }}
     >
       <article
