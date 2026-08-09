@@ -1122,14 +1122,6 @@ export function InteractiveGuide({
     <>
       {isOpen && !isCompletionVisible ? (
         <>
-          <motion.div
-            className={`pointer-events-none fixed inset-0 z-[195] bg-[rgba(30,25,21,0.08)] ${
-              isFloatingCardWindowStep ? "hidden" : ""
-            }`}
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-          />
           {targetRect && !isFloatingCardWindowStep ? (
             <motion.div
               key={`highlight-${currentStep.id}`}
@@ -1207,7 +1199,7 @@ export function InteractiveGuide({
             data-guide-step={currentStep.id}
             role="dialog"
             aria-label={copy("Floatem 交互式指引", "Floatem interactive guide")}
-            className={`paper-scroll fixed z-[200] max-h-[calc(100vh-28px)] w-[min(268px,calc(100vw-28px))] overflow-y-auto rounded-[20px] border border-[rgba(213,198,180,0.88)] bg-[rgba(255,252,248,0.97)] p-3.5 shadow-[0_22px_46px_rgba(61,49,34,0.22)] backdrop-blur-xl ${
+            className={`paper-scroll fixed z-[200] max-h-[calc(100vh-28px)] w-[min(268px,calc(100vw-28px))] overflow-y-auto rounded-[20px] border border-[#d5c6b4] bg-[#fffaf8] p-3.5 shadow-[0_22px_46px_rgba(61,49,34,0.22)] ${
               isFloatingCardWindowStep || currentStep.id === "settings-overview" ? "hidden" : ""
             }`}
             style={guidePanelPosition ?? panelStyle}
@@ -1271,7 +1263,7 @@ export function InteractiveGuide({
             <AnimatePresence mode="wait">
               <motion.div
                 key={currentStep.id}
-                className="mt-3 rounded-[12px] bg-[rgba(255,122,89,0.09)] px-2.5 py-2 text-[#8f553d]"
+                className="mt-3 rounded-[12px] bg-[#fff0eb] px-2.5 py-2 text-[#8f553d]"
                 initial={{ opacity: 0, x: 10, scale: 0.97 }}
                 animate={{ opacity: 1, x: 0, scale: 1 }}
                 exit={{ opacity: 0, x: -8, scale: 0.98 }}
