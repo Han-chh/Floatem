@@ -119,6 +119,21 @@ describe("ReminderPicker", () => {
     expect(onChange).toHaveBeenCalledWith(new Date("2026-04-05T12:30:00").getTime());
   });
 
+  it("marks the first available quick shortcut as the guide recommendation", () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date("2026-04-05T14:00:00"));
+
+    render(<ReminderPicker todoTitle="Guide reminder" reminderAt={null} onChange={vi.fn()} />);
+
+    openDialog();
+
+    expect(screen.getByRole("button", { name: "Afternoon" })).toHaveAttribute(
+      "data-guide-reminder",
+      "recommended",
+    );
+    expect(screen.getByRole("button", { name: "Morning" })).not.toHaveAttribute("data-guide-reminder");
+  });
+
   it("highlights the quick shortcut that matches the custom time", () => {
     vi.useFakeTimers();
     vi.setSystemTime(new Date("2026-04-05T12:00:00"));

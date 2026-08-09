@@ -219,6 +219,7 @@ export function ReminderPicker({
         disabled: isPastDate || isDifferentDate || timestamp === null || !isFutureReminderTimestamp(timestamp, nowMs),
         displayLabel: label,
         hourValue,
+        kind: "relative" as const,
         label,
         minuteValue,
         tooltip: isPastDate ? pastTooltip : isDifferentDate ? t.todos.notSameDay : label,
@@ -231,6 +232,7 @@ export function ReminderPicker({
         disabled: timestamp === null || !isFutureReminderTimestamp(timestamp, nowMs),
         displayLabel: label,
         hourValue,
+        kind: "timeOfDay" as const,
         label,
         minuteValue,
         tooltip:
@@ -262,6 +264,12 @@ export function ReminderPicker({
     timeFormat,
     timeZone,
   ]);
+  const recommendedQuickOptionIndex = quickOptions.findIndex(
+    (option) => option.kind === "timeOfDay" && !option.disabled,
+  );
+  const fallbackRecommendedQuickOptionIndex = quickOptions.findIndex((option) => !option.disabled);
+  const guideRecommendedQuickOptionIndex =
+    recommendedQuickOptionIndex >= 0 ? recommendedQuickOptionIndex : fallbackRecommendedQuickOptionIndex;
 
   const getHourOptionState = useMemo(() => {
     return (hour: string): TimeOptionState => {
@@ -512,7 +520,7 @@ export function ReminderPicker({
                       </motion.div>
 
                       <motion.div className="grid grid-cols-2 gap-1.5" layout>
-                        {quickOptions.map((option) => {
+                        {quickOptions.map((option, index) => {
                           const isSelected =
                             !option.disabled && option.hourValue === draftHour && option.minuteValue === draftMinute;
 
@@ -522,7 +530,7 @@ export function ReminderPicker({
                               type="button"
                               aria-disabled={option.disabled}
                               aria-pressed={isSelected}
-                              data-guide-reminder={option.label === t.todos.morning ? "morning" : undefined}
+                              data-guide-reminder={index === guideRecommendedQuickOptionIndex ? "recommended" : undefined}
                               data-tooltip={option.tooltip}
                               data-no-window-drag="true"
                               className={`rounded-[11px] border px-2 py-1.75 text-[10.5px] font-semibold ${

@@ -227,6 +227,7 @@ export function InteractiveGuide({
   const isZh = language === "zh-CN";
   const [step, setStep] = useState(0);
   const [targetRect, setTargetRect] = useState<DOMRect | null>(null);
+  const [reorderDropRect, setReorderDropRect] = useState<GuideRect | null>(null);
   const [guidePanelPosition, setGuidePanelPosition] = useState<CSSProperties | null>(null);
   const [pinnedNoteIds, setPinnedNoteIds] = useState<string[]>([]);
   const [isCompletionVisible, setIsCompletionVisible] = useState(false);
@@ -277,7 +278,7 @@ export function InteractiveGuide({
       stepItem("note-toolbar-collapse", 1, "折叠编辑工具栏", "Collapse the editor toolbar", "点击工具栏末端箭头，把编辑区收成紧凑模式", "Click the arrow at the end of the toolbar for a compact editor", () => noteId ? queryTarget(`[data-note-card-id="${cssValue(noteId)}"] [data-action="note-toolbar-toggle"]`) : null, { advanceOn: "pointerdown" }),
       stepItem("note-toolbar-expand", 1, "展开编辑工具栏", "Expand the editor toolbar", "再次点击箭头即可恢复全部工具", "Click the arrow again to restore every tool", () => noteId ? queryTarget(`[data-note-card-id="${cssValue(noteId)}"] [data-action="note-toolbar-toggle"]`) : null, { advanceOn: "pointerdown" }),
       stepItem("note-add-second", 1, "再建一张便签", "Create another note", "点击新增便签，为换序准备第二张卡片", "Click Add note to prepare a second card for reordering", () => queryTarget('[data-guide="note-add"]')),
-      stepItem("note-reorder", 1, "交换便签位置", "Reorder note cards", "按住高亮便签的空白区域，把它拖到另一张便签的上方或下方", "Drag the highlighted card by a blank area above or below the other note", () => secondaryNoteId ? queryTarget(`[data-note-card-id="${cssValue(secondaryNoteId)}"]`) : null),
+      stepItem("note-reorder", 1, "交换便签位置", "Reorder note cards", "按住高亮便签的空白区域，沿着虚线卡片的轨迹拖到闪动插入线", "Drag the highlighted card by a blank area along the dashed-card path to the pulsing insertion line", () => secondaryNoteId ? queryTarget(`[data-note-card-id="${cssValue(secondaryNoteId)}"]`) : null),
       stepItem("note-group-open", 1, "打开便签分组", "Open note groups", "点击第一张便签的分组标签", "Click the group label on the first note", () => noteId ? queryTarget(`[data-note-card-id="${cssValue(noteId)}"] [data-action="note-group"]`) : null),
       stepItem("note-group-add", 1, "新增分组", "Add a group", "点击新增分组", "Click Add group", () => queryTarget('[data-guide="note-group-add"]')),
       stepItem("note-group-name", 1, "命名分组", "Name the group", "输入一个分组名称", "Enter a group name", () => queryTarget('[data-guide="note-group-name"]'), { advanceOn: "input" }),
@@ -317,7 +318,7 @@ export function InteractiveGuide({
       stepItem("todo-submit", 3, "快速创建", "Create it quickly", "按 Enter 或点击右侧的可视化提交按键均可创建；Shift + Enter 可换行", "Press Enter or click the visible submit key on the right; Shift + Enter inserts a new line", () => queryTarget('[data-guide="todo-quick-add"]')),
       stepItem("todo-second-draft", 3, "再输入一条待办", "Type another todo", "输入第二条待办", "Type a second todo", () => queryTarget('[data-guide="todo-quick-input"]'), { advanceOn: "input" }),
       stepItem("todo-second-submit", 3, "创建第二条待办", "Create the second todo", "按 Enter 或点击右侧提交按键创建", "Press Enter or click the submit key on the right", () => queryTarget('[data-guide="todo-quick-add"]')),
-      stepItem("todo-reorder", 3, "交换待办位置", "Reorder todos", "把高亮待办拖到另一条待办的上方或下方", "Drag the highlighted todo above or below the other todo", () => secondaryTodoId ? queryTarget(`[data-todo-item-id="${cssValue(secondaryTodoId)}"]`) : null),
+      stepItem("todo-reorder", 3, "交换待办位置", "Reorder todos", "按住高亮待办，沿着虚线卡片的轨迹拖到闪动插入线", "Drag the highlighted todo along the dashed-card path to the pulsing insertion line", () => secondaryTodoId ? queryTarget(`[data-todo-item-id="${cssValue(secondaryTodoId)}"]`) : null),
       stepItem("todo-edit-open", 3, "打开待办编辑", "Open todo editing", "点击第一条待办的文字区域", "Click the text area of the first todo", () => todoId ? queryTarget(`[data-todo-item-id="${cssValue(todoId)}"]`) : null),
       stepItem("todo-edit-text", 3, "修改待办内容", "Edit the todo", "修改待办文字", "Change the todo text", () => queryTarget('[data-guide="todo-edit-title"]'), { advanceOn: "input" }),
       stepItem("todo-edit-save", 3, "保存修改", "Save the edit", "点击保存", "Click Save", () => queryTarget('[data-guide="todo-edit-save"]')),
@@ -329,7 +330,7 @@ export function InteractiveGuide({
       stepItem("todo-date-today", 3, "恢复今天列表", "Restore today's list", "点击“今天”，继续后续功能", "Click Today to continue with the remaining features", () => queryTarget('[data-guide-date="today"]')),
 
       stepItem("todo-reminder-open", 4, "打开待办提醒", "Open the reminder", "点击第一条待办的提醒按钮", "Click the reminder control on the first todo", () => todoId ? queryTarget(`[data-todo-item-id="${cssValue(todoId)}"] [data-action="todo-reminder"]`) : null),
-      stepItem("todo-reminder-time", 4, "选择提醒时间", "Choose a reminder time", "选择“上午”", "Choose Morning", () => queryTarget('[data-guide-reminder="morning"]')),
+      stepItem("todo-reminder-time", 4, "选择提醒时间", "Choose a reminder time", "选择高亮的有效提醒时间", "Choose the highlighted available reminder time", () => queryTarget('[data-guide-reminder="recommended"]')),
       stepItem("todo-reminder-save", 4, "保存提醒", "Save the reminder", "点击保存；到时 Floatem 会发送系统通知", "Click Save; Floatem will send a system notification at that time", () => queryTarget('[data-guide="reminder-save"]')),
 
       stepItem("todo-group-open", 5, "打开 Todo 分组", "Open todo groups", "点击第一条待办的分组按钮", "Click the group control on the first todo", () => todoId ? queryTarget(`[data-todo-item-id="${cssValue(todoId)}"] [data-action="todo-group"]`) : null),
@@ -781,11 +782,13 @@ export function InteractiveGuide({
   useEffect(() => {
     if (!isOpen || !currentStep) {
       setTargetRect(null);
+      setReorderDropRect(null);
       return;
     }
     let animationFrame = 0;
     let didScrollTarget = false;
     let lastRect: { height: number; left: number; top: number; width: number } | null = null;
+    let lastDropRect: GuideRect | null = null;
     const update = () => {
       const target = currentStep.target();
       const nextRect = target?.getBoundingClientRect() ?? null;
@@ -807,6 +810,34 @@ export function InteractiveGuide({
             }
           : null;
         setTargetRect(nextRect);
+      }
+      const reorderDropTarget =
+        currentStep.id === "note-reorder" && noteId
+          ? queryTarget(`[data-note-card-id="${cssValue(noteId)}"]`)
+          : currentStep.id === "todo-reorder" && todoId
+            ? queryTarget(`[data-todo-item-id="${cssValue(todoId)}"]`)
+            : null;
+      const nextDropRect = reorderDropTarget?.getBoundingClientRect() ?? null;
+      const didDropRectChange =
+        nextDropRect === null
+          ? lastDropRect !== null
+          : lastDropRect === null ||
+            nextDropRect.height !== lastDropRect.height ||
+            nextDropRect.left !== lastDropRect.left ||
+            nextDropRect.top !== lastDropRect.top ||
+            nextDropRect.width !== lastDropRect.width;
+      if (didDropRectChange) {
+        lastDropRect = nextDropRect
+          ? {
+              bottom: nextDropRect.bottom,
+              height: nextDropRect.height,
+              left: nextDropRect.left,
+              right: nextDropRect.right,
+              top: nextDropRect.top,
+              width: nextDropRect.width,
+            }
+          : null;
+        setReorderDropRect(lastDropRect);
       }
       if (target && !didScrollTarget) {
         didScrollTarget = true;
@@ -830,7 +861,7 @@ export function InteractiveGuide({
     };
     update();
     return () => window.cancelAnimationFrame(animationFrame);
-  }, [currentStep, isOpen]);
+  }, [currentStep, isOpen, noteId, todoId]);
 
   useEffect(() => {
     if (!isOpen || !currentStep?.autoAdvanceMs) {
@@ -1029,6 +1060,18 @@ export function InteractiveGuide({
         : panelPlacement === "bottom-left"
           ? { bottom: 14, left: 14 }
           : { bottom: 14, right: 14 };
+  const isReorderGuideStep = currentStep.id === "note-reorder" || currentStep.id === "todo-reorder";
+  const reorderInsertionAboveTarget =
+    targetRect && reorderDropRect ? targetRect.top > reorderDropRect.top : false;
+  const reorderMotion =
+    targetRect && reorderDropRect
+      ? {
+          x: reorderDropRect.left - targetRect.left,
+          y: reorderInsertionAboveTarget
+            ? reorderDropRect.top - targetRect.top - 12
+            : reorderDropRect.bottom - targetRect.bottom + 12,
+        }
+      : null;
 
   useLayoutEffect(() => {
     if (!targetRect || isFloatingCardWindowStep || currentStep.id === "settings-overview") {
@@ -1094,6 +1137,45 @@ export function InteractiveGuide({
                 width: { duration: 0.2 },
               }}
             />
+          ) : null}
+          {isReorderGuideStep && targetRect && reorderDropRect && reorderMotion ? (
+            <>
+              <motion.div
+                data-guide-reorder-destination
+                className="pointer-events-none fixed z-[197] h-1 rounded-full bg-[#36b89b] shadow-[0_0_0_4px_rgba(54,184,155,0.18),0_4px_12px_rgba(54,184,155,0.36)]"
+                style={{
+                  left: reorderDropRect.left - 4,
+                  top: reorderInsertionAboveTarget ? reorderDropRect.top - 6 : reorderDropRect.bottom + 2,
+                  width: reorderDropRect.width + 8,
+                }}
+                animate={{ opacity: [0.5, 1, 0.5], scaleX: [0.7, 1, 0.7] }}
+                transition={{ duration: 1.15, ease: "easeInOut", repeat: Infinity }}
+              />
+              <motion.div
+                data-guide-reorder-animation
+                className="pointer-events-none fixed z-[198] rounded-[16px] border-2 border-dashed border-[#36b89b] bg-[rgba(232,255,248,0.18)] shadow-[0_10px_24px_rgba(54,184,155,0.22)]"
+                style={{
+                  height: targetRect.height + 10,
+                  left: targetRect.left - 5,
+                  top: targetRect.top - 5,
+                  width: targetRect.width + 10,
+                }}
+                animate={{
+                  opacity: [0, 0.96, 0.96, 0],
+                  x: [0, reorderMotion.x * 0.42, reorderMotion.x],
+                  y: [0, reorderMotion.y * 0.42, reorderMotion.y],
+                }}
+                transition={{ duration: 1.7, ease: [0.22, 1, 0.36, 1], repeat: Infinity, repeatDelay: 0.25 }}
+              >
+                <motion.span
+                  className="absolute -top-7 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-full bg-[#247d6a] px-2 py-1 text-[10px] font-bold text-white shadow-[0_5px_12px_rgba(36,125,106,0.28)]"
+                  animate={{ opacity: [0.55, 1, 0.55], y: [1, -1, 1] }}
+                  transition={{ duration: 1.1, ease: "easeInOut", repeat: Infinity }}
+                >
+                  {copy("拖到这里", "Drag here")}
+                </motion.span>
+              </motion.div>
+            </>
           ) : null}
           <motion.aside
             ref={guidePanelRef}
