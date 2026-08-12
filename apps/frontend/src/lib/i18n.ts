@@ -43,6 +43,16 @@ type MessageCatalog = {
     notNow: string;
     enable: string;
   };
+  languageMismatchPrompt: {
+    englishSystemBody: string;
+    englishSystemTitle: string;
+    keepCurrent: string;
+    suppress: string;
+    switchToChinese: string;
+    switchToEnglish: string;
+    chineseSystemBody: string;
+    chineseSystemTitle: string;
+  };
   firstLaunchHelpHint: {
     title: string;
     body: string;
@@ -409,6 +419,16 @@ const messages: Record<AppLanguage, MessageCatalog> = {
       notNow: "Not Now",
       enable: "Enable",
     },
+    languageMismatchPrompt: {
+      englishSystemBody: "Your Mac’s system language is not Chinese, while Floatem is using Chinese. Would you like to switch Floatem to English?",
+      englishSystemTitle: "Switch to English?",
+      keepCurrent: "Keep Current Language",
+      suppress: "Don't show this dialog again",
+      switchToChinese: "Switch to Chinese",
+      switchToEnglish: "Switch to English",
+      chineseSystemBody: "Your Mac’s system language is Chinese, while Floatem is using English. Would you like to switch Floatem to Simplified Chinese?",
+      chineseSystemTitle: "Switch to Chinese?",
+    },
     firstLaunchHelpHint: {
       title: "Your guide is right here",
       body: "Click the highlighted ? in the upper-right corner anytime to explore feature help and the interactive guide.",
@@ -774,6 +794,16 @@ const messages: Record<AppLanguage, MessageCatalog> = {
       suppress: "以后不再显示此对话框",
       notNow: "暂不开启",
       enable: "开启",
+    },
+    languageMismatchPrompt: {
+      englishSystemBody: "检测到 Mac 系统语言不是中文，而 Floatem 当前使用中文。是否将 Floatem 切换为英文界面？",
+      englishSystemTitle: "切换到英文界面？",
+      keepCurrent: "保持当前语言",
+      suppress: "以后不再显示此对话框",
+      switchToChinese: "切换到中文",
+      switchToEnglish: "切换到 English",
+      chineseSystemBody: "检测到 Mac 系统语言为中文，而 Floatem 当前使用英文。是否将 Floatem 切换为简体中文界面？",
+      chineseSystemTitle: "切换到中文界面？",
     },
     firstLaunchHelpHint: {
       title: "用户指引就在这里",

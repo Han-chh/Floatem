@@ -26,6 +26,7 @@ describe("settingsStore", () => {
       animationSpeed: "slow",
       launchAtLogin: false,
       suppressLaunchAtLoginPrompt: true,
+      suppressLanguageMismatchPrompt: true,
       hasSeenHelpEntryHint: true,
       enableParticles: false,
       enableReminderSound: false,
@@ -45,6 +46,7 @@ describe("settingsStore", () => {
     expect(state.animationSpeed).toBe("slow");
     expect(state.launchAtLogin).toBe(false);
     expect(state.suppressLaunchAtLoginPrompt).toBe(true);
+    expect(state.suppressLanguageMismatchPrompt).toBe(true);
     expect(state.hasSeenHelpEntryHint).toBe(true);
     expect(state.enableParticles).toBe(false);
     expect(state.enableReminderSound).toBe(false);
@@ -63,6 +65,7 @@ describe("settingsStore", () => {
     useSettingsStore.getState().setAnimationSpeed("rapid");
     useSettingsStore.getState().setLaunchAtLogin(false);
     useSettingsStore.getState().setSuppressLaunchAtLoginPrompt(true);
+    useSettingsStore.getState().setSuppressLanguageMismatchPrompt(true);
     useSettingsStore.getState().setHasSeenHelpEntryHint(true);
     useSettingsStore.getState().setEnableParticles(true);
     useSettingsStore.getState().setEnableReminderSound(false);
@@ -81,6 +84,7 @@ describe("settingsStore", () => {
     expect(state.animationSpeed).toBe("rapid");
     expect(state.launchAtLogin).toBe(false);
     expect(state.suppressLaunchAtLoginPrompt).toBe(true);
+    expect(state.suppressLanguageMismatchPrompt).toBe(true);
     expect(state.hasSeenHelpEntryHint).toBe(true);
     expect(state.enableParticles).toBe(true);
     expect(state.enableReminderSound).toBe(false);

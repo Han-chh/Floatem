@@ -51,6 +51,7 @@ export type TextColorPanelCloseDetail = {
 
 export type FloatemNativeBridge = HostBridge<RawLoadAllResult, NotesDocument, TodosDocument, Partial<AppSettings>> & {
   clearFloatingCardGuides?: () => Promise<void>;
+  getSystemLanguage?: () => Promise<AppLanguage>;
   setFloatingCardGuide?: (card: FloatingCardReference, guide: FloatingCardGuideState | null) => Promise<void>;
   testReminderNotification: (options?: {
     soundEnabled?: boolean;
@@ -141,6 +142,9 @@ const browserBridge: FloatemNativeBridge = {
         ...settings,
       }),
     };
+  },
+  async getSystemLanguage() {
+    return detectSystemLanguage();
   },
   async saveNotes(notes) {
     writeStoredValue(NOTES_STORAGE_KEY, notes);
@@ -299,6 +303,19 @@ const browserBridge: FloatemNativeBridge = {
     // Browser preview can rely on the regular browser console.
   },
 };
+
+export function detectSystemLanguage(languages?: readonly string[]): AppLanguage {
+  const candidates = languages ?? (typeof navigator === "undefined" ? [] : navigator.languages);
+  const primaryLanguage = candidates[0] ?? (typeof navigator === "undefined" ? "" : navigator.language);
+  const normalized = primaryLanguage.trim().toLowerCase().replace(/_/g, "-");
+
+  return normalized === "zh" || normalized.startsWith("zh-") ? "zh-CN" : "en";
+}
+
+export async function getSystemLanguage(): Promise<AppLanguage> {
+  const bridge = getFloatemBridge();
+  return (await bridge.getSystemLanguage?.()) ?? detectSystemLanguage();
+}
 
 export function isNativeFloatemHost() {
   return (

@@ -98,6 +98,23 @@ enum FloatemLanguage: String {
         }
     }
 
+    static var systemPreferred: FloatemLanguage {
+        systemPreferred(from: Locale.preferredLanguages)
+    }
+
+    static func systemPreferred(from preferredLanguages: [String]) -> FloatemLanguage {
+        guard let preferredLanguage = preferredLanguages.first else {
+            return .english
+        }
+
+        let normalized = preferredLanguage
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+            .lowercased()
+            .replacingOccurrences(of: "_", with: "-")
+
+        return normalized == "zh" || normalized.hasPrefix("zh-") ? .simplifiedChinese : .english
+    }
+
     var localization: FloatemLocalization {
         switch self {
         case .english:

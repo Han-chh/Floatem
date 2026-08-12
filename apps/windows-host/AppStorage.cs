@@ -130,6 +130,9 @@ internal sealed class AppStorage
             ["transitionStyle"] = "page",
             ["animationSpeed"] = "mediate",
             ["launchAtLogin"] = false,
+            ["suppressLaunchAtLoginPrompt"] = false,
+            ["suppressLanguageMismatchPrompt"] = false,
+            ["hasSeenHelpEntryHint"] = false,
             ["enableParticles"] = true,
             ["enableReminderSound"] = true,
         };

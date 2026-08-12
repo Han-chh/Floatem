@@ -2,6 +2,18 @@ import XCTest
 @testable import Floatem
 
 final class FloatemCoreTests: XCTestCase {
+    func testSystemLanguageDetectionTreatsEveryChineseLocaleAsChinese() {
+        XCTAssertEqual(FloatemLanguage.systemPreferred(from: ["zh"]), .simplifiedChinese)
+        XCTAssertEqual(FloatemLanguage.systemPreferred(from: ["zh-Hans-CN"]), .simplifiedChinese)
+        XCTAssertEqual(FloatemLanguage.systemPreferred(from: ["zh_Hant_TW"]), .simplifiedChinese)
+    }
+
+    func testSystemLanguageDetectionTreatsOtherAndMissingLocalesAsEnglish() {
+        XCTAssertEqual(FloatemLanguage.systemPreferred(from: ["en-US"]), .english)
+        XCTAssertEqual(FloatemLanguage.systemPreferred(from: ["fr-FR"]), .english)
+        XCTAssertEqual(FloatemLanguage.systemPreferred(from: []), .english)
+    }
+
     @MainActor
     func testDesktopPinTransitionsToStationaryDesktopNSPanelAndBackToOverlay() {
         let controller = FloatingNoteWindowController(cardKind: "note", cardID: "desktop-test")

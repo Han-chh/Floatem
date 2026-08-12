@@ -4,7 +4,9 @@ All notable repository changes are recorded here. Historical entries describe th
 
 ## Unreleased
 
-- No changes after the v1.0.8 release snapshot.
+- Detect the preferred macOS system language and offer to switch between the Chinese and English interfaces whenever the main panel is summoned with a mismatched language.
+- Add a persistent “Don't show this dialog again” choice for the language mismatch prompt.
+- Bump Floatem to version 1.0.9 (build 50).
 
 ## 1.0.8
 

@@ -288,6 +288,7 @@ final class AppStorage {
             "animationSpeed": "mediate",
             "launchAtLogin": false,
             "suppressLaunchAtLoginPrompt": false,
+            "suppressLanguageMismatchPrompt": false,
             "hasSeenHelpEntryHint": false,
             "enableParticles": true,
             "enableReminderSound": true,

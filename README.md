@@ -1,6 +1,6 @@
 # Floatem
 
-> Current release candidate: **Floatem 1.0.8 (macOS build 49)**. Build 47 is in external TestFlight testing; build 49 is the current App Store Connect submission candidate and uses an Icon Composer app icon. The Windows host remains a developer-preview target rather than part of the current Mac App Store release.
+> Current local release candidate: **Floatem 1.0.9 (macOS build 50)**. It adds system-language-aware interface switching prompts. Build 49 remains the latest App Store Connect submission until build 50 is uploaded. The Windows host remains a developer-preview target rather than part of the current Mac App Store release.
 
 Floatem is a lightweight, local-first desktop notes and todos app designed to capture and organize thoughts without interrupting the current workflow. The macOS app can be summoned with a global shortcut, float editable cards above other work, and pin app-owned cards at the desktop level.
 
@@ -13,7 +13,7 @@ Floatem is a lightweight, local-first desktop notes and todos app designed to ca
 - Editable floating Note/Todo cards on macOS, including resize, always-on-top behavior, and drag-back.
 - Desktop-pinned macOS cards restored from local state when Floatem is running; enabling **Open Floatem at login** restores them after login without opening the Main Window.
 - English and Simplified Chinese UI, six themes, motion controls, time-zone/time-format controls, and reminder sound settings.
-- Bilingual help plus a seven-workflow action-driven interactive guide. Each step advances only after its instructed action; there are no manual previous/next controls. On a fresh v1.0.8 installation, Floatem highlights the upper-right help entry once and asks the user to open the guide.
+- Bilingual help plus a seven-workflow action-driven interactive guide. Each step advances only after its instructed action; there are no manual previous/next controls. On a fresh installation, Floatem highlights the upper-right help entry once and asks the user to open the guide.
 - Local persistence only. macOS data is stored in the Floatem App Group container; the app has no account or cloud-sync feature.
 
 ## Repository status

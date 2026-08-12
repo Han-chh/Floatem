@@ -580,6 +580,8 @@ final class WebViewController: NSViewController, WKNavigationDelegate, WKUIDeleg
                 ]
             case "loadAllData":
                 result = try bridgeDelegate?.loadAllData() ?? [:]
+            case "getSystemLanguage":
+                result = FloatemLanguage.systemPreferred.rawValue
             case "getHotkeyRegistrationState":
                 result = bridgeDelegate?.currentHotKeyRegistrationState() ?? [:]
             case "getLaunchAtLoginStatus":
@@ -1029,6 +1031,9 @@ final class WebViewController: NSViewController, WKNavigationDelegate, WKUIDeleg
         },
         loadAllData() {
           return send("loadAllData");
+        },
+        getSystemLanguage() {
+          return send("getSystemLanguage");
         },
         getLaunchAtLoginStatus() {
           return send("getLaunchAtLoginStatus");

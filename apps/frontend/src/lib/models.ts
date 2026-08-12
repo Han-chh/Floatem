@@ -78,6 +78,7 @@ export type AppSettings = {
   animationSpeed: AnimationSpeed;
   launchAtLogin: boolean;
   suppressLaunchAtLoginPrompt: boolean;
+  suppressLanguageMismatchPrompt: boolean;
   hasSeenHelpEntryHint: boolean;
   enableParticles: boolean;
   enableReminderSound: boolean;
@@ -183,6 +184,7 @@ export function createDefaultSettings(): AppSettings {
     animationSpeed: "mediate",
     launchAtLogin: false,
     suppressLaunchAtLoginPrompt: false,
+    suppressLanguageMismatchPrompt: false,
     hasSeenHelpEntryHint: false,
     enableParticles: true,
     enableReminderSound: true,
@@ -299,6 +301,10 @@ export function normalizeAppSettings(settings: Partial<AppSettings> & LegacyThem
       typeof settings.suppressLaunchAtLoginPrompt === "boolean"
         ? settings.suppressLaunchAtLoginPrompt
         : defaultSettings.suppressLaunchAtLoginPrompt,
+    suppressLanguageMismatchPrompt:
+      typeof settings.suppressLanguageMismatchPrompt === "boolean"
+        ? settings.suppressLanguageMismatchPrompt
+        : defaultSettings.suppressLanguageMismatchPrompt,
     hasSeenHelpEntryHint:
       typeof settings.hasSeenHelpEntryHint === "boolean"
         ? settings.hasSeenHelpEntryHint

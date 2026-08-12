@@ -3,8 +3,8 @@
 Current release identity:
 
 ```text
-Version: 1.0.8
-Build: 49
+Version: 1.0.9
+Build: 50
 Bundle ID: com.hankch.floatem
 App Group: group.com.hankch.floatem
 Team: 85923Q9JUG

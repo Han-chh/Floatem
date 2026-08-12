@@ -5,6 +5,7 @@ import { TooltipLayer } from "./components/feedback/TooltipLayer";
 import { FloatingNoteApp } from "./components/floating-note/FloatingNoteApp";
 import { PanelShell } from "./components/layout/PanelShell";
 import { LaunchAtLoginDialog } from "./components/layout/LaunchAtLoginDialog";
+import { LanguageMismatchDialog } from "./components/layout/LanguageMismatchDialog";
 import { NotesList } from "./components/notes/NotesList";
 import { FigmaNotesHomePreview } from "./components/preview/FigmaNotesHomePreview";
 import { SettingsPanel } from "./components/settings/SettingsPanel";
@@ -136,6 +137,7 @@ function FloatemApp() {
   const [isBooting, setIsBooting] = useState(true);
   const [showSettings, setShowSettings] = useState(false);
   const [showLaunchAtLoginPromptThisSession, setShowLaunchAtLoginPromptThisSession] = useState(false);
+  const [isLanguageMismatchPromptOpen, setIsLanguageMismatchPromptOpen] = useState(false);
   const [activeDockZoneTarget, setActiveDockZoneTarget] = useState<DockZoneEventDetail | null>(null);
   const isNativeTextColorPanelOpenRef = useRef(false);
   const didResolveFirstRunPromptsRef = useRef(false);
@@ -532,7 +534,8 @@ function FloatemApp() {
         </div>
       )}
       </PanelShell>
-      {showLaunchAtLoginPromptThisSession ? <LaunchAtLoginDialog /> : null}
+      <LanguageMismatchDialog onOpenChange={setIsLanguageMismatchPromptOpen} />
+      {showLaunchAtLoginPromptThisSession && !isLanguageMismatchPromptOpen ? <LaunchAtLoginDialog /> : null}
       <TooltipLayer />
     </FrontendErrorBoundary>
   );

@@ -38,6 +38,7 @@ type SettingsState = AppSettings & {
   setAnimationSpeed: (animationSpeed: AnimationSpeed) => void;
   setLaunchAtLogin: (launchAtLogin: boolean) => void;
   setSuppressLaunchAtLoginPrompt: (suppress: boolean) => void;
+  setSuppressLanguageMismatchPrompt: (suppress: boolean) => void;
   setHasSeenHelpEntryHint: (hasSeen: boolean) => void;
   setEnableParticles: (enableParticles: boolean) => void;
   setEnableReminderSound: (enableReminderSound: boolean) => void;
@@ -128,6 +129,9 @@ export const useSettingsStore = create<SettingsState>()(
     setSuppressLaunchAtLoginPrompt: (suppressLaunchAtLoginPrompt) => {
       set({ suppressLaunchAtLoginPrompt });
     },
+    setSuppressLanguageMismatchPrompt: (suppressLanguageMismatchPrompt) => {
+      set({ suppressLanguageMismatchPrompt });
+    },
     setHasSeenHelpEntryHint: (hasSeenHelpEntryHint) => {
       set({ hasSeenHelpEntryHint });
     },
@@ -160,6 +164,7 @@ export function getPersistedSettingsSnapshot(): AppSettings {
     animationSpeed: state.animationSpeed,
     launchAtLogin: state.launchAtLogin,
     suppressLaunchAtLoginPrompt: state.suppressLaunchAtLoginPrompt,
+    suppressLanguageMismatchPrompt: state.suppressLanguageMismatchPrompt,
     hasSeenHelpEntryHint: state.hasSeenHelpEntryHint,
     enableParticles: state.enableParticles,
     enableReminderSound: state.enableReminderSound,
