@@ -190,6 +190,30 @@ final class FloatemCoreTests: XCTestCase {
         XCTAssertLessThanOrEqual(frame.height, 900 * 0.95)
     }
 
+    @MainActor
+    func testRestoredFloatingPayloadMatchesTheResolvedWindowFrame() throws {
+        let payload: [String: Any] = [
+            "kind": "todo",
+            "size": ["width": 360.0, "height": 72.0],
+            "minimumSize": ["width": 360.0, "height": 72.0],
+            "pointerOffset": ["x": 180.0, "y": 36.0],
+        ]
+        let restored = MainWindowController.floatingCardPayload(
+            payload,
+            matching: NSRect(x: 100, y: 200, width: 318, height: 42)
+        )
+        let size = try XCTUnwrap(restored["size"] as? [String: Double])
+        let pointerOffset = try XCTUnwrap(restored["pointerOffset"] as? [String: Double])
+        let minimumSize = try XCTUnwrap(restored["minimumSize"] as? [String: Double])
+
+        XCTAssertEqual(size["width"], 318)
+        XCTAssertEqual(size["height"], 42)
+        XCTAssertEqual(pointerOffset["x"], 159)
+        XCTAssertEqual(pointerOffset["y"], 21)
+        XCTAssertEqual(minimumSize["width"], 360)
+        XCTAssertEqual(minimumSize["height"], 72)
+    }
+
     func testRemovedScreenWithNoIntersectionUsesPrimaryScreen() throws {
         let state = FloatingCardWindowState(
             entityKind: .note,

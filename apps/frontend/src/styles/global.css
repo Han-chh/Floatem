@@ -750,12 +750,6 @@
     color: var(--afterglow-text-placeholder);
   }
 
-  html[data-floatem-theme="afterglow"] .content-card-classic [data-action="desktop-pin"][aria-pressed="true"] {
-    color: var(--afterglow-gold) !important;
-    border-color: color-mix(in srgb, var(--afterglow-gold) 34%, transparent) !important;
-    background: color-mix(in srgb, var(--afterglow-gold) 10%, var(--afterglow-card-background)) !important;
-  }
-
   html[data-floatem-theme="afterglow"] [data-testid="todo-item"] {
     box-shadow: 0 14px 34px rgba(91, 63, 50, 0.09) !important;
   }

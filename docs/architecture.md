@@ -55,7 +55,7 @@ The authoritative macOS data lives in App Group `group.com.hankch.floatem`, unde
 
 Floating WebViews use a single `WKProcessPool`, `WKWebsiteDataStore`, shared bootstrap `WKUserScript`, and a dedicated Vite entry. Closing removes delegates, scripts, message handlers, and view hierarchy before the panel/controller is released. Diagnostics log created, destroyed, and active WebView counts. WebView reuse is intentionally not implemented because editor selection, undo, IME, and entity isolation are safer with on-demand instances.
 
-Floating window state records display UUID, previous visible frame, normalized position, size, and schema version. The shared placement resolver prefers the original display, otherwise selects the largest frame intersection or primary display, then clamps and shrinks against the current `visibleFrame`. The same clamper is used for the main window.
+Floating window state records display UUID, previous visible frame, normalized position, size, and schema version. The shared placement resolver prefers the original display, otherwise selects the largest frame intersection or primary display, then clamps and shrinks against the current `visibleFrame`. Before a restored floating or desktop-pinned panel is shown, the host rewrites the Web payload size and pointer center to the resolved native frame so the React layout and `NSPanel` viewport cannot diverge. The same clamper is used for the main window.
 
 ### Launch behavior
 

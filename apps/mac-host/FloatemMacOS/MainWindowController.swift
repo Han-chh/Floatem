@@ -522,7 +522,11 @@ final class MainWindowController: NSObject, NSWindowDelegate, FloatemNativeBridg
         !existingKeys.contains(floatingCardKey(kind: reference.entityKind.rawValue, id: reference.entityID))
     }
 
-    private func presentFloatingCard(_ payload: Any, ignoreMainPanelDropZone: Bool) throws {
+    private func presentFloatingCard(
+        _ payload: Any,
+        ignoreMainPanelDropZone: Bool,
+        restoredFrame: NSRect? = nil
+    ) throws {
         guard
             let payloadDictionary = payload as? [String: Any],
             let kind = payloadDictionary["kind"] as? String,
@@ -636,7 +640,6 @@ final class MainWindowController: NSObject, NSWindowDelegate, FloatemNativeBridg
             return try await self.checkNotificationPermission(language: language)
         }
         floatingCardWindowControllers[key] = controller
-        floatingCardPayloads[key] = payloadDictionary
         if let guide = floatingCardGuideStates[key] {
             controller.updateGuideState(guide)
         }
@@ -650,14 +653,18 @@ final class MainWindowController: NSObject, NSWindowDelegate, FloatemNativeBridg
                 $0.entityKind.rawValue == kind && $0.entityID == cardID
             }
             : nil
-        let cardFrame = ScreenPlacementResolver.initialFloatingFrame(
+        let cardFrame = restoredFrame ?? ScreenPlacementResolver.initialFloatingFrame(
             dragFrame: defaultCardFrame,
             savedState: savedState,
             restoreSavedPlacement: ignoreMainPanelDropZone,
             screens: ScreenPlacementResolver.currentScreens()
         )
-        controller.updatePayload(payloadDictionary)
-        if payloadDictionary["desktopPinned"] as? Bool == true {
+        let resolvedPayload = ignoreMainPanelDropZone
+            ? Self.floatingCardPayload(payloadDictionary, matching: cardFrame)
+            : payloadDictionary
+        floatingCardPayloads[key] = resolvedPayload
+        controller.updatePayload(resolvedPayload)
+        if resolvedPayload["desktopPinned"] as? Bool == true {
             controller.setDesktopPinned(true)
         }
         controller.showWindow(frame: cardFrame)
@@ -752,15 +759,6 @@ final class MainWindowController: NSObject, NSWindowDelegate, FloatemNativeBridg
         for state in states {
             let reference = WidgetEntityReference(entityKind: state.entityKind, entityID: state.entityID)
             do {
-                guard var payload = try storage.floatingCardPayload(kind: state.entityKind, id: state.entityID) else {
-                    try storage.removeDesktopPanelState(kind: state.entityKind, id: state.entityID)
-                    continue
-                }
-                payload["desktopPinned"] = true
-                try presentFloatingCard(payload, ignoreMainPanelDropZone: true)
-                let key = Self.floatingCardKey(kind: state.entityKind.rawValue, id: state.entityID)
-                guard let controller = floatingCardWindowControllers[key] else { continue }
-                controller.setDesktopPinned(true)
                 let frame = ScreenPlacementResolver.resolve(
                     state.windowState,
                     screens: ScreenPlacementResolver.currentScreens()
@@ -770,7 +768,15 @@ final class MainWindowController: NSObject, NSWindowDelegate, FloatemNativeBridg
                     width: state.frame.width,
                     height: state.frame.height
                 )
-                controller.showWindow(frame: frame, updateMinimumSize: false)
+                guard var payload = try storage.floatingCardPayload(kind: state.entityKind, id: state.entityID) else {
+                    try storage.removeDesktopPanelState(kind: state.entityKind, id: state.entityID)
+                    continue
+                }
+                payload["desktopPinned"] = true
+                try presentFloatingCard(payload, ignoreMainPanelDropZone: true, restoredFrame: frame)
+                let key = Self.floatingCardKey(kind: state.entityKind.rawValue, id: state.entityID)
+                guard let controller = floatingCardWindowControllers[key] else { continue }
+                controller.setDesktopPinned(true)
                 persistDesktopCard(kind: reference.entityKind.rawValue, id: reference.entityID, frame: frame)
             } catch {
                 logger.error("Failed to restore desktop panel kind=\(state.entityKind.rawValue, privacy: .public) id=\(state.entityID, privacy: .public). error=\(error.localizedDescription, privacy: .public)")
@@ -1237,6 +1243,23 @@ final class MainWindowController: NSObject, NSWindowDelegate, FloatemNativeBridg
         default:
             return nil
         }
+    }
+
+    static func floatingCardPayload(_ payload: [String: Any], matching frame: NSRect) -> [String: Any] {
+        guard frame.width > 0, frame.height > 0 else {
+            return payload
+        }
+
+        var resolvedPayload = payload
+        resolvedPayload["size"] = [
+            "width": Double(frame.width),
+            "height": Double(frame.height),
+        ]
+        resolvedPayload["pointerOffset"] = [
+            "x": Double(frame.width / 2),
+            "y": Double(frame.height / 2),
+        ]
+        return resolvedPayload
     }
 
     private struct DragPreviewSession {

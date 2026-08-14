@@ -1,6 +1,6 @@
 # Floatem
 
-> Current local release candidate: **Floatem 1.0.9 (macOS build 50)**. It adds system-language-aware interface switching prompts. Build 49 remains the latest App Store Connect submission until build 50 is uploaded. The Windows host remains a developer-preview target rather than part of the current Mac App Store release.
+> Current local release candidate: **Floatem 1.0.10 (macOS build 51)**. It fixes desktop-pinned Todo selection styling and keeps restored card content aligned with its saved native window frame. Build 49 remains the latest App Store Connect submission until build 51 is uploaded. The Windows host remains a developer-preview target rather than part of the current Mac App Store release.
 
 Floatem is a lightweight, local-first desktop notes and todos app designed to capture and organize thoughts without interrupting the current workflow. The macOS app can be summoned with a global shortcut, float editable cards above other work, and pin app-owned cards at the desktop level.
 
@@ -28,8 +28,8 @@ Floatem uses a shared React frontend with isolated native host layers:
 
 ## Docs
 
-- [v1.0.8 release state and release notes](docs/releases/v1.0.8.md)
-- [v1.0.8 manual release checklist](docs/releases/v1.0.8-manual-test-checklist.md)
+- [v1.0.10 release state and release notes](docs/releases/v1.0.10.md)
+- [v1.0.10 manual release checklist](docs/releases/v1.0.10-manual-test-checklist.md)
 - [Architecture](docs/architecture.md)
 - [Historical macOS prelaunch plan and current completion status](docs/four-day-prelaunch-plan.md)
 - [macOS setup](docs/macos-setup.md)

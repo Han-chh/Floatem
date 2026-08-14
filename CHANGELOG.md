@@ -4,9 +4,11 @@ All notable repository changes are recorded here. Historical entries describe th
 
 ## Unreleased
 
+- Keep a selected desktop pin visually contained to the black circular pin indicator instead of darkening the Todo action button's outer border and background.
+- Restore desktop-pinned and reopened floating cards with frontend content dimensions that exactly match the resolved native window frame, preventing Todo pin, reminder, and close controls from being clipped after relaunch.
 - Detect the preferred macOS system language and offer to switch between the Chinese and English interfaces whenever the main panel is summoned with a mismatched language.
 - Add a persistent “Don't show this dialog again” choice for the language mismatch prompt.
-- Bump Floatem to version 1.0.9 (build 50).
+- Bump Floatem to version 1.0.10 (build 51).
 
 ## 1.0.8
 
