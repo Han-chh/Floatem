@@ -4,13 +4,11 @@
 <dict>
 	<key>com.apple.security.app-sandbox</key>
 	<true/>
-	<key>com.apple.security.network.client</key>
-	<true/>
 	<key>com.apple.security.application-groups</key>
 	<array>
 		<string>group.com.hankch.floatem</string>
 	</array>
-	<key>com.apple.security.temporary-exception.mach-lookup.global-name</key>
+	<key>com.apple.security.temporary-exception.mach-register.global-name</key>
 	<array>
 		<string>com.hankch.floatem.hotkey-agent</string>
 	</array>

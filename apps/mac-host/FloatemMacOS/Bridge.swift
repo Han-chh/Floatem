@@ -49,8 +49,10 @@ protocol FloatemNativeBridgeHandling: AnyObject {
     func saveTodos(_ todos: Any) throws
     func saveSettings(_ settings: Any) throws
     func currentLaunchAtLoginStatus() -> [String: Any]
+    func currentBackgroundActivityStatus() -> [String: Any]
     func showMainWindowFromBridge()
     func openNotificationSettings() throws
+    func openBackgroundActivitySettings() throws
     func checkNotificationPermission(language: FloatemLanguage) async throws -> Bool
     func sendNotification(id: String?, title: String, body: String, soundEnabled: Bool) async throws
     func scheduleNotification(id: String?, title: String, body: String, scheduledAt: Date?, soundEnabled: Bool) async throws

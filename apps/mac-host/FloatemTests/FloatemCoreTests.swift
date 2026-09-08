@@ -306,6 +306,10 @@ final class FloatemCoreTests: XCTestCase {
         var disabledLogin = LaunchContextResolver(arguments: ["Floatem", "--floatem-login-item"], environment: [:])
         XCTAssertTrue(disabledLogin.shouldShowAtDidFinish(isApplicationActive: false, launchAtLoginEnabled: false))
 
+        var agentHotKey = LaunchContextResolver(arguments: ["Floatem", FloatemAgentXPC.agentLaunchArgument], environment: [:])
+        XCTAssertTrue(agentHotKey.shouldShowAtDidFinish(isApplicationActive: true, launchAtLoginEnabled: false))
+        XCTAssertFalse(agentHotKey.shouldShowForActivation(launchAtLoginEnabled: false))
+
         var user = LaunchContextResolver(arguments: ["Floatem", "--floatem-user-launch"], environment: [:])
         XCTAssertTrue(user.shouldShowAtDidFinish(isApplicationActive: false, launchAtLoginEnabled: false))
 
@@ -344,6 +348,84 @@ final class FloatemCoreTests: XCTestCase {
         var deepLink = LaunchContextResolver(arguments: ["Floatem"], environment: [:])
         deepLink.markDeepLinkReceived()
         XCTAssertFalse(deepLink.shouldShowAtDidFinish(isApplicationActive: true, launchAtLoginEnabled: false))
+    }
+
+    func testAgentHostLocatorFindsContainingAppFromAbsoluteExecutablePath() {
+        let executableURL = URL(fileURLWithPath: "/Applications/Floatem.app/Contents/Resources/FloatemHotKeyAgent")
+
+        XCTAssertEqual(
+            FloatemAgentHostLocator.containingAppBundleURL(executableURL: executableURL)?.path,
+            "/Applications/Floatem.app"
+        )
+    }
+
+    @MainActor
+    func testLifecycleDiagnosticsPersistLifecycleEventsAndHeartbeats() throws {
+        let directory = try makeDirectory()
+        var currentDate = Date(timeIntervalSince1970: 1_700_000_000)
+        let diagnostics = LifecycleDiagnostics(
+            directoryURL: directory,
+            processID: 4_242,
+            now: { currentDate },
+            processIsRunning: { $0 == 4_242 },
+            appVersion: "1.0.11",
+            appBuild: "53",
+            executablePath: "/Applications/Floatem.app/Contents/MacOS/Floatem"
+        )
+
+        diagnostics.start()
+        currentDate.addTimeInterval(30)
+        diagnostics.recordWillSleep()
+        currentDate.addTimeInterval(10)
+        diagnostics.recordDidWake()
+        currentDate.addTimeInterval(5)
+        diagnostics.recordGracefulTermination(reason: "applicationWillTerminate")
+
+        let session = try XCTUnwrap(diagnostics.currentSession())
+        XCTAssertEqual(session.processID, 4_242)
+        XCTAssertEqual(session.appVersion, "1.0.11")
+        XCTAssertEqual(session.appBuild, "53")
+        XCTAssertEqual(session.lastHeartbeatAt, currentDate)
+        XCTAssertEqual(session.sleptAt, Date(timeIntervalSince1970: 1_700_000_030))
+        XCTAssertEqual(session.wokeAt, Date(timeIntervalSince1970: 1_700_000_040))
+        XCTAssertEqual(session.exitReason, "applicationWillTerminate")
+        XCTAssertTrue(session.hadGracefulTermination)
+        XCTAssertEqual(diagnostics.eventRecords().map(\.kind), [.launch, .willSleep, .didWake, .gracefulTermination])
+    }
+
+    @MainActor
+    func testLifecycleDiagnosticsInfersMissingGracefulExitOnlyAfterPIDIsGone() throws {
+        let directory = try makeDirectory()
+        let first = LifecycleDiagnostics(
+            directoryURL: directory,
+            processID: 101,
+            processIsRunning: { $0 == 101 },
+            appVersion: "1.0.11",
+            appBuild: "53",
+            executablePath: "/tmp/Floatem"
+        )
+        first.start()
+        let firstSessionID = try XCTUnwrap(first.currentSession()?.sessionID)
+
+        let second = LifecycleDiagnostics(
+            directoryURL: directory,
+            processID: 202,
+            processIsRunning: { $0 == 202 },
+            appVersion: "1.0.11",
+            appBuild: "53",
+            executablePath: "/tmp/Floatem"
+        )
+        second.start()
+
+        let priorSession = try XCTUnwrap(second.sessionRecords().first { $0.sessionID == firstSessionID })
+        XCTAssertNotNil(priorSession.unexpectedTerminationInferredAt)
+        XCTAssertEqual(
+            priorSession.inferredExitReason,
+            "No graceful termination record; the recorded PID was absent when a later Floatem session began."
+        )
+        XCTAssertTrue(second.eventRecords().contains {
+            $0.kind == .previousSessionEndedUnexpectedly && $0.relatedSessionID == firstSessionID
+        })
     }
 
     private func makeDirectory() throws -> URL {

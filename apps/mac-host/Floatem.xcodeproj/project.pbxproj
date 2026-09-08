@@ -29,6 +29,15 @@
 		A00000000000000000000228 /* FloatingWebViewFactory.swift in Sources */ = {isa = PBXBuildFile; fileRef = A00000000000000000000133 /* FloatingWebViewFactory.swift */; };
 		A00000000000000000000229 /* LaunchContextResolver.swift in Sources */ = {isa = PBXBuildFile; fileRef = A00000000000000000000134 /* LaunchContextResolver.swift */; };
 		A00000000000000000000230 /* ScreenPlacementResolver.swift in Sources */ = {isa = PBXBuildFile; fileRef = A00000000000000000000135 /* ScreenPlacementResolver.swift */; };
+		A00000000000000000000233 /* LifecycleDiagnostics.swift in Sources */ = {isa = PBXBuildFile; fileRef = A00000000000000000000139 /* LifecycleDiagnostics.swift */; };
+		A00000000000000000000234 /* FloatemAgentXPC.swift in Sources */ = {isa = PBXBuildFile; fileRef = A00000000000000000000140 /* FloatemAgentXPC.swift */; };
+		A00000000000000000000235 /* HotKeyAgentManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = A00000000000000000000141 /* HotKeyAgentManager.swift */; };
+		A00000000000000000000237 /* main.swift in Sources */ = {isa = PBXBuildFile; fileRef = A00000000000000000000143 /* main.swift */; };
+		A00000000000000000000238 /* GlobalHotKey.swift in Sources */ = {isa = PBXBuildFile; fileRef = A00000000000000000000105 /* GlobalHotKey.swift */; };
+		A00000000000000000000239 /* FloatemAgentXPC.swift in Sources */ = {isa = PBXBuildFile; fileRef = A00000000000000000000140 /* FloatemAgentXPC.swift */; };
+		A00000000000000000000240 /* FloatemHotKeyAgent in Resources */ = {isa = PBXBuildFile; fileRef = A00000000000000000000146 /* FloatemHotKeyAgent */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
+		A00000000000000000000241 /* com.hankch.floatem.hotkey-agent.plist in Copy LaunchAgent */ = {isa = PBXBuildFile; fileRef = A00000000000000000000145 /* com.hankch.floatem.hotkey-agent.plist */; };
+		A00000000000000000000242 /* AppKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A00000000000000000000112 /* AppKit.framework */; };
 		A00000000000000000000231 /* FloatemCoreTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A00000000000000000000136 /* FloatemCoreTests.swift */; };
 		A00000000000000000000232 /* XCTest.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A00000000000000000000138 /* XCTest.framework */; };
 /* End PBXBuildFile section */
@@ -40,6 +49,13 @@
 			proxyType = 1;
 			remoteGlobalIDString = A00000000000000000000010;
 			remoteInfo = Floatem;
+		};
+		A00000000000000000000041 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = A00000000000000000000001 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = A00000000000000000000039;
+			remoteInfo = FloatemHotKeyAgent;
 		};
 /* End PBXContainerItemProxy section */
 
@@ -74,6 +90,13 @@
 		A00000000000000000000136 /* FloatemCoreTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FloatemCoreTests.swift; sourceTree = "<group>"; };
 		A00000000000000000000137 /* FloatemTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = FloatemTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		A00000000000000000000138 /* XCTest.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = XCTest.framework; path = Developer/Library/Frameworks/XCTest.framework; sourceTree = DEVELOPER_DIR; };
+		A00000000000000000000139 /* LifecycleDiagnostics.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LifecycleDiagnostics.swift; sourceTree = "<group>"; };
+		A00000000000000000000140 /* FloatemAgentXPC.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FloatemAgentXPC.swift; sourceTree = "<group>"; };
+		A00000000000000000000141 /* HotKeyAgentManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HotKeyAgentManager.swift; sourceTree = "<group>"; };
+		A00000000000000000000143 /* main.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = main.swift; sourceTree = "<group>"; };
+		A00000000000000000000144 /* FloatemHotKeyAgent.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = FloatemHotKeyAgent.entitlements; sourceTree = "<group>"; };
+		A00000000000000000000145 /* com.hankch.floatem.hotkey-agent.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "com.hankch.floatem.hotkey-agent.plist"; sourceTree = "<group>"; };
+		A00000000000000000000146 /* FloatemHotKeyAgent */ = {isa = PBXFileReference; explicitFileType = compiled.mach-o.executable; includeInIndex = 0; path = FloatemHotKeyAgent; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -95,6 +118,14 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		A00000000000000000000036 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				A00000000000000000000242 /* AppKit.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
@@ -102,6 +133,7 @@
 			isa = PBXGroup;
 			children = (
 				A00000000000000000000005 /* FloatemMacOS */,
+				A00000000000000000000043 /* FloatemHotKeyAgent */,
 				A00000000000000000000009 /* FloatemTests */,
 				A00000000000000000000006 /* scripts */,
 				A00000000000000000000004 /* Frameworks */,
@@ -114,6 +146,7 @@
 			children = (
 				A00000000000000000000115 /* Floatem.app */,
 				A00000000000000000000137 /* FloatemTests.xctest */,
+				A00000000000000000000146 /* FloatemHotKeyAgent */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -148,6 +181,9 @@
 				A00000000000000000000133 /* FloatingWebViewFactory.swift */,
 				A00000000000000000000134 /* LaunchContextResolver.swift */,
 				A00000000000000000000135 /* ScreenPlacementResolver.swift */,
+				A00000000000000000000139 /* LifecycleDiagnostics.swift */,
+				A00000000000000000000140 /* FloatemAgentXPC.swift */,
+				A00000000000000000000141 /* HotKeyAgentManager.swift */,
 				A00000000000000000000107 /* WebViewController.swift */,
 				A00000000000000000000116 /* main.swift */,
 				A00000000000000000000108 /* Info.plist */,
@@ -155,6 +191,16 @@
 				A00000000000000000000007 /* Resources */,
 			);
 			path = FloatemMacOS;
+			sourceTree = "<group>";
+		};
+		A00000000000000000000043 /* FloatemHotKeyAgent */ = {
+			isa = PBXGroup;
+			children = (
+				A00000000000000000000143 /* main.swift */,
+				A00000000000000000000144 /* FloatemHotKeyAgent.entitlements */,
+				A00000000000000000000145 /* com.hankch.floatem.hotkey-agent.plist */,
+			);
+			path = FloatemHotKeyAgent;
 			sourceTree = "<group>";
 		};
 		A00000000000000000000006 /* scripts */ = {
@@ -192,16 +238,35 @@
 				A00000000000000000000013 /* Sources */,
 				A00000000000000000000014 /* Frameworks */,
 				A00000000000000000000015 /* Resources */,
+				A00000000000000000000037 /* Copy HotKey Agent */,
+				A00000000000000000000038 /* Copy LaunchAgent Property List */,
 				A00000000000000000000016 /* Build Frontend */,
 			);
 			buildRules = (
 			);
 			dependencies = (
+				A00000000000000000000042 /* PBXTargetDependency */,
 			);
 			name = Floatem;
 			productName = Floatem;
 			productReference = A00000000000000000000115 /* Floatem.app */;
 			productType = "com.apple.product-type.application";
+		};
+		A00000000000000000000039 /* FloatemHotKeyAgent */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = A00000000000000000000040 /* Build configuration list for PBXNativeTarget "FloatemHotKeyAgent" */;
+			buildPhases = (
+				A00000000000000000000035 /* Sources */,
+				A00000000000000000000036 /* Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = FloatemHotKeyAgent;
+			productName = FloatemHotKeyAgent;
+			productReference = A00000000000000000000146 /* FloatemHotKeyAgent */;
+			productType = "com.apple.product-type.tool";
 		};
 		A00000000000000000000025 /* FloatemTests */ = {
 			isa = PBXNativeTarget;
@@ -246,6 +311,9 @@
 						CreatedOnToolsVersion = 26.0.1;
 						TestTargetID = A00000000000000000000010;
 					};
+					A00000000000000000000039 = {
+						CreatedOnToolsVersion = 2600;
+					};
 				};
 			};
 			buildConfigurationList = A00000000000000000000011 /* Build configuration list for PBXProject "Floatem" */;
@@ -263,6 +331,7 @@
 			targets = (
 				A00000000000000000000010 /* Floatem */,
 				A00000000000000000000025 /* FloatemTests */,
+				A00000000000000000000039 /* FloatemHotKeyAgent */,
 			);
 		};
 /* End PBXProject section */
@@ -284,6 +353,31 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXResourcesBuildPhase section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		A00000000000000000000037 /* Copy HotKey Agent */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 7;
+			files = (
+				A00000000000000000000240 /* FloatemHotKeyAgent in Resources */,
+			);
+			name = "Copy HotKey Agent";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		A00000000000000000000038 /* Copy LaunchAgent Property List */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "Contents/Library/LaunchAgents";
+			dstSubfolderSpec = 1;
+			files = (
+				A00000000000000000000241 /* com.hankch.floatem.hotkey-agent.plist in Copy LaunchAgent */,
+			);
+			name = "Copy LaunchAgent Property List";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXShellScriptBuildPhase section */
 		A00000000000000000000016 /* Build Frontend */ = {
@@ -324,6 +418,9 @@
 				A00000000000000000000228 /* FloatingWebViewFactory.swift in Sources */,
 				A00000000000000000000229 /* LaunchContextResolver.swift in Sources */,
 				A00000000000000000000230 /* ScreenPlacementResolver.swift in Sources */,
+				A00000000000000000000233 /* LifecycleDiagnostics.swift in Sources */,
+				A00000000000000000000234 /* FloatemAgentXPC.swift in Sources */,
+				A00000000000000000000235 /* HotKeyAgentManager.swift in Sources */,
 				A00000000000000000000207 /* WebViewController.swift in Sources */,
 				A00000000000000000000212 /* main.swift in Sources */,
 			);
@@ -337,6 +434,16 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		A00000000000000000000035 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				A00000000000000000000237 /* main.swift in Sources */,
+				A00000000000000000000238 /* GlobalHotKey.swift in Sources */,
+				A00000000000000000000239 /* FloatemAgentXPC.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
@@ -344,6 +451,11 @@
 			isa = PBXTargetDependency;
 			target = A00000000000000000000010 /* Floatem */;
 			targetProxy = A00000000000000000000034 /* PBXContainerItemProxy */;
+		};
+		A00000000000000000000042 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = A00000000000000000000039 /* FloatemHotKeyAgent */;
+			targetProxy = A00000000000000000000041 /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
 
@@ -385,7 +497,7 @@
 				CODE_SIGN_IDENTITY = "Apple Development";
 				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 51;
+				CURRENT_PROJECT_VERSION = 62;
 				DEVELOPMENT_TEAM = 85923Q9JUG;
 				ENABLE_DEBUG_DYLIB = NO;
 				ENABLE_HARDENED_RUNTIME = YES;
@@ -398,7 +510,7 @@
 					"@executable_path/../Frameworks",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 14.0;
-				MARKETING_VERSION = 1.0.10;
+				MARKETING_VERSION = 1.0.11;
 				PRODUCT_BUNDLE_IDENTIFIER = com.hankch.floatem;
 				PRODUCT_NAME = Floatem;
 				PROVISIONING_PROFILE_SPECIFIER = "";
@@ -417,7 +529,7 @@
 				CODE_SIGN_ENTITLEMENTS = FloatemMacOS/Floatem.entitlements;
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 51;
+				CURRENT_PROJECT_VERSION = 62;
 				DEVELOPMENT_TEAM = 85923Q9JUG;
 				ENABLE_DEBUG_DYLIB = NO;
 				ENABLE_HARDENED_RUNTIME = YES;
@@ -429,7 +541,7 @@
 					"@executable_path/../Frameworks",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 14.0;
-				MARKETING_VERSION = 1.0.10;
+				MARKETING_VERSION = 1.0.11;
 				PRODUCT_BUNDLE_IDENTIFIER = com.hankch.floatem;
 				PRODUCT_NAME = Floatem;
 				PROVISIONING_PROFILE_SPECIFIER = "";
@@ -471,6 +583,44 @@
 			};
 			name = Release;
 		};
+		A00000000000000000000309 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CREATE_INFOPLIST_SECTION_IN_BINARY = YES;
+				CODE_SIGN_ENTITLEMENTS = FloatemHotKeyAgent/FloatemHotKeyAgent.entitlements;
+				CODE_SIGN_IDENTITY = "Apple Development";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 62;
+				DEVELOPMENT_TEAM = 85923Q9JUG;
+				ENABLE_HARDENED_RUNTIME = YES;
+				INFOPLIST_FILE = FloatemHotKeyAgent/Info.plist;
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.hankch.floatem.hotkey-agent;
+				PRODUCT_NAME = FloatemHotKeyAgent;
+				SKIP_INSTALL = YES;
+				SWIFT_VERSION = 5.0;
+			};
+			name = Debug;
+		};
+		A00000000000000000000310 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CREATE_INFOPLIST_SECTION_IN_BINARY = YES;
+				CODE_SIGN_ENTITLEMENTS = FloatemHotKeyAgent/FloatemHotKeyAgent.entitlements;
+				CODE_SIGN_IDENTITY = "Apple Development";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 62;
+				DEVELOPMENT_TEAM = 85923Q9JUG;
+				ENABLE_HARDENED_RUNTIME = YES;
+				INFOPLIST_FILE = FloatemHotKeyAgent/Info.plist;
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.hankch.floatem.hotkey-agent;
+				PRODUCT_NAME = FloatemHotKeyAgent;
+				SKIP_INSTALL = YES;
+				SWIFT_VERSION = 5.0;
+			};
+			name = Release;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -497,6 +647,15 @@
 			buildConfigurations = (
 				A00000000000000000000307 /* Debug */,
 				A00000000000000000000308 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		A00000000000000000000040 /* Build configuration list for PBXNativeTarget "FloatemHotKeyAgent" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				A00000000000000000000309 /* Debug */,
+				A00000000000000000000310 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Debug;

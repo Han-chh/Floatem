@@ -43,6 +43,14 @@ type MessageCatalog = {
     notNow: string;
     enable: string;
   };
+  backgroundActivityPrompt: {
+    title: string;
+    body: string;
+    detail: string;
+    notNow: string;
+    dontShowAgain: string;
+    openSettings: string;
+  };
   languageMismatchPrompt: {
     englishSystemBody: string;
     englishSystemTitle: string;
@@ -134,6 +142,14 @@ type MessageCatalog = {
     aboutTrayFlowTitle: string;
     appVersionBody: (version: string) => string;
     appVersionTitle: string;
+    backgroundActivityBody: string;
+    backgroundActivityDisabled: string;
+    backgroundActivityEnabled: string;
+    backgroundActivityOpenSettings: string;
+    backgroundActivityOpenSettingsFailed: string;
+    backgroundActivityOpenSettingsUnsupported: string;
+    backgroundActivityStatus: string;
+    backgroundActivityTitle: string;
     appIntro: string;
     backToSettings: string;
     categoryAboutDescription: string;
@@ -419,6 +435,14 @@ const messages: Record<AppLanguage, MessageCatalog> = {
       notNow: "Not Now",
       enable: "Enable",
     },
+    backgroundActivityPrompt: {
+      title: "Allow Floatem to run in the background",
+      body: "Floatem's background item is turned off, so the global shortcut cannot restore Floatem after the main app exits.",
+      detail: "Allow Floatem in System Settings to keep Shift + Space available after sleep. Floatem does not monitor or record your keyboard input.",
+      notNow: "Not now",
+      dontShowAgain: "Don't show again",
+      openSettings: "Open System Settings",
+    },
     languageMismatchPrompt: {
       englishSystemBody: "Your Mac’s system language is not Chinese, while Floatem is using Chinese. Would you like to switch Floatem to English?",
       englishSystemTitle: "Switch to English?",
@@ -510,6 +534,14 @@ const messages: Record<AppLanguage, MessageCatalog> = {
       aboutTrayFlowTitle: "Everyday workflow",
       appVersionBody: (version) => `Current app version: ${version}.`,
       appVersionTitle: "Version",
+      backgroundActivityBody: "A small macOS background item keeps your global shortcut available after sleep. It does not monitor or record keyboard input.",
+      backgroundActivityDisabled: "Background activity is off. Floatem cannot be restored with the global shortcut after the main app exits.",
+      backgroundActivityEnabled: "Background activity is active.",
+      backgroundActivityOpenSettings: "Open System Settings",
+      backgroundActivityOpenSettingsFailed: "Floatem couldn't open System Settings.",
+      backgroundActivityOpenSettingsUnsupported: "This preview cannot open macOS System Settings.",
+      backgroundActivityStatus: "Background activity",
+      backgroundActivityTitle: "Keep the global shortcut available",
       appIntro: "Configure how the tray panel opens, switches between Notes and Todos, and how much motion feedback you want while working.",
       backToSettings: "All settings",
       categoryAboutDescription: "App overview and local-only data details.",
@@ -795,6 +827,14 @@ const messages: Record<AppLanguage, MessageCatalog> = {
       notNow: "暂不开启",
       enable: "开启",
     },
+    backgroundActivityPrompt: {
+      title: "允许 Floatem 在后台运行",
+      body: "Floatem 的后台项目当前已关闭，因此主应用退出后，全局快捷键无法恢复 Floatem。",
+      detail: "请在系统设置中允许 Floatem 在后台运行，以便系统睡眠后仍可使用 Shift + Space。Floatem 不会监听或记录你的键盘输入。",
+      notNow: "暂不",
+      dontShowAgain: "不再显示",
+      openSettings: "打开系统设置",
+    },
     languageMismatchPrompt: {
       englishSystemBody: "检测到 Mac 系统语言不是中文，而 Floatem 当前使用中文。是否将 Floatem 切换为英文界面？",
       englishSystemTitle: "切换到英文界面？",
@@ -886,6 +926,14 @@ const messages: Record<AppLanguage, MessageCatalog> = {
       aboutTrayFlowTitle: "日常工作流",
       appVersionBody: (version) => `当前应用版本：${version}。`,
       appVersionTitle: "版本号",
+      backgroundActivityBody: "一个轻量的 macOS 后台项目会让全局快捷键在系统睡眠后继续可用；它不会监听或记录键盘输入。",
+      backgroundActivityDisabled: "后台活动已关闭。主应用退出后，无法通过全局快捷键恢复 Floatem。",
+      backgroundActivityEnabled: "后台活动已开启。",
+      backgroundActivityOpenSettings: "打开系统设置",
+      backgroundActivityOpenSettingsFailed: "Floatem 无法打开系统设置。",
+      backgroundActivityOpenSettingsUnsupported: "当前预览环境无法打开 macOS 系统设置。",
+      backgroundActivityStatus: "后台活动",
+      backgroundActivityTitle: "保持全局快捷键可用",
       appIntro: "配置托盘面板的打开方式、Notes 与 Todos 的切换方式，以及你希望保留多少动效反馈。",
       backToSettings: "全部设置",
       categoryAboutDescription: "应用概览和仅本地存储的数据说明。",

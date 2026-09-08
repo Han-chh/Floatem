@@ -49,7 +49,9 @@ final class WebViewController: NSViewController, WKNavigationDelegate, WKUIDeleg
     private let scriptMessageProxy = ScriptMessageProxy()
     private let logger = Logger(subsystem: "com.floatem.app", category: "WebView")
     private let pipelineLogger = Logger(subsystem: "com.floatem.app", category: "Pipeline")
-    private var hasRetriedAfterTermination = false
+    private static let maximumRecoveryDelay: TimeInterval = 5
+    private var consecutiveWebContentTerminations = 0
+    private var recoveryWorkItem: DispatchWorkItem?
     private var frontendProbeAttemptsRemaining = 0
     private var languageObserver: NSObjectProtocol?
 
@@ -97,6 +99,7 @@ final class WebViewController: NSViewController, WKNavigationDelegate, WKUIDeleg
     }
 
     deinit {
+        recoveryWorkItem?.cancel()
         if let languageObserver {
             NotificationCenter.default.removeObserver(languageObserver)
         }
@@ -360,7 +363,6 @@ final class WebViewController: NSViewController, WKNavigationDelegate, WKUIDeleg
     }
 
     func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
-        hasRetriedAfterTermination = false
         logger.info("Finished WebView navigation. url=\(webView.url?.absoluteString ?? "nil", privacy: .public)")
         beginFrontendProbe()
     }
@@ -392,22 +394,30 @@ final class WebViewController: NSViewController, WKNavigationDelegate, WKUIDeleg
     }
 
     func webViewWebContentProcessDidTerminate(_ webView: WKWebView) {
-        logger.error("WebView content process terminated.")
+        consecutiveWebContentTerminations += 1
+        logger.error("WebView content process terminated. consecutiveTerminations=\(self.consecutiveWebContentTerminations)")
+        scheduleWebContentRecovery(reason: "content process termination")
+    }
 
-        guard !hasRetriedAfterTermination else {
-            showLoadingOverlay(
-                title: localization.recoverWindowTitle,
-                detail: localization.recoverWindowDetail
-            )
-            return
+    /// A Mac can discard the WebContent process while sleeping without
+    /// terminating this AppKit host. Verify that the page is still reachable
+    /// after wake; the normal delegate callback remains the primary signal.
+    func recoverAfterSystemWake() {
+        logger.notice("Checking WebView health after system wake.")
+        webView.evaluateJavaScript("document.readyState") { [weak self] result, error in
+            guard let self else {
+                return
+            }
+
+            let readyState = result as? String
+            guard error != nil || readyState != "complete" else {
+                self.logger.info("WebView health check passed after system wake.")
+                return
+            }
+
+            self.logger.error("WebView health check failed after system wake. error=\(error?.localizedDescription ?? "unexpected ready state", privacy: .public)")
+            self.scheduleWebContentRecovery(reason: "wake health check")
         }
-
-        hasRetriedAfterTermination = true
-        showLoadingOverlay(
-            title: localization.reconnectingTitle,
-            detail: localization.reconnectingDetail
-        )
-        webView.reload()
     }
 
     func handle(message: WKScriptMessage) {
@@ -424,6 +434,10 @@ final class WebViewController: NSViewController, WKNavigationDelegate, WKUIDeleg
         switch method {
         case "frontendReady":
             logger.info("Frontend reported that the initial UI is ready.")
+            if consecutiveWebContentTerminations > 0 {
+                logger.notice("WebView recovered after \(self.consecutiveWebContentTerminations) consecutive terminations.")
+                consecutiveWebContentTerminations = 0
+            }
             if let state = bridgeDelegate?.currentHotKeyRegistrationState() {
                 emitHotkeyRegistrationState(state)
             }
@@ -586,6 +600,8 @@ final class WebViewController: NSViewController, WKNavigationDelegate, WKUIDeleg
                 result = bridgeDelegate?.currentHotKeyRegistrationState() ?? [:]
             case "getLaunchAtLoginStatus":
                 result = bridgeDelegate?.currentLaunchAtLoginStatus() ?? ["enabled": false]
+            case "getBackgroundActivityStatus":
+                result = bridgeDelegate?.currentBackgroundActivityStatus() ?? ["status": "unknown", "enabled": false, "activationEpoch": 0]
             case "saveNotes":
                 guard let cards = params["cards"] else {
                     throw FloatemBridgeError.invalidParameters("Floatem expected notes data from JavaScript.")
@@ -606,6 +622,9 @@ final class WebViewController: NSViewController, WKNavigationDelegate, WKUIDeleg
                 result = NSNull()
             case "openNotificationSettings":
                 try bridgeDelegate?.openNotificationSettings()
+                result = NSNull()
+            case "openBackgroundActivitySettings":
+                try bridgeDelegate?.openBackgroundActivitySettings()
                 result = NSNull()
             case "openTextColorPanel":
                 guard let requestID = params["requestId"] as? String, !requestID.isEmpty else {
@@ -908,6 +927,29 @@ final class WebViewController: NSViewController, WKNavigationDelegate, WKUIDeleg
         )
     }
 
+    private func scheduleWebContentRecovery(reason: String) {
+        recoveryWorkItem?.cancel()
+
+        let attempt = max(consecutiveWebContentTerminations, 1)
+        let delay = min(0.5 * pow(2, Double(attempt - 1)), Self.maximumRecoveryDelay)
+        showLoadingOverlay(
+            title: localization.reconnectingTitle,
+            detail: localization.reconnectingDetail
+        )
+        logger.notice("Scheduling WebView recovery. attempt=\(attempt) delay=\(delay, format: .fixed(precision: 1))s reason=\(reason, privacy: .public)")
+
+        let workItem = DispatchWorkItem { [weak self] in
+            guard let self else {
+                return
+            }
+
+            self.logger.notice("Reloading WebView for recovery. attempt=\(attempt)")
+            self.webView.reload()
+        }
+        recoveryWorkItem = workItem
+        DispatchQueue.main.asyncAfter(deadline: .now() + delay, execute: workItem)
+    }
+
     private func beginFrontendProbe() {
         frontendProbeAttemptsRemaining = 20
         probeFrontendReadiness()
@@ -1038,6 +1080,9 @@ final class WebViewController: NSViewController, WKNavigationDelegate, WKUIDeleg
         getLaunchAtLoginStatus() {
           return send("getLaunchAtLoginStatus");
         },
+        getBackgroundActivityStatus() {
+          return send("getBackgroundActivityStatus");
+        },
         saveNotes(cards) {
           return send("saveNotes", { cards });
         },
@@ -1049,6 +1094,9 @@ final class WebViewController: NSViewController, WKNavigationDelegate, WKUIDeleg
         },
         openNotificationSettings() {
           return send("openNotificationSettings");
+        },
+        openBackgroundActivitySettings() {
+          return send("openBackgroundActivitySettings");
         },
         checkNotificationPermission(options = {}) {
           return send("checkNotificationPermission", options);

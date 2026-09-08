@@ -213,6 +213,8 @@ final class FloatingNoteWindowController: NSObject, WKNavigationDelegate, WKScri
     private var isReady = false
     private var isContentReady = false
     private var isDestroyed = false
+    private var consecutiveWebContentTerminations = 0
+    private var recoveryWorkItem: DispatchWorkItem?
     private var didRecordWebViewDestruction = false
     private var isEditableInputActive = false
     private var isTextCompositionActive = false
@@ -290,6 +292,7 @@ final class FloatingNoteWindowController: NSObject, WKNavigationDelegate, WKScri
     }
 
     deinit {
+        recoveryWorkItem?.cancel()
         if !didRecordWebViewDestruction {
             FloatingWebViewResourcePool.shared.recordDestruction()
         }
@@ -363,6 +366,7 @@ final class FloatingNoteWindowController: NSObject, WKNavigationDelegate, WKScri
     func closeWindow() {
         guard !isDestroyed else { return }
         isDestroyed = true
+        recoveryWorkItem?.cancel()
 
         if Self.debugLifecycle {
             Self.lifecycle.info("destroyPanelStart(cardId=\(self.cardID, privacy: .public))")
@@ -630,6 +634,36 @@ final class FloatingNoteWindowController: NSObject, WKNavigationDelegate, WKScri
         focusWebView()
     }
 
+    func webViewWebContentProcessDidTerminate(_ webView: WKWebView) {
+        guard !isDestroyed else { return }
+
+        consecutiveWebContentTerminations += 1
+        isReady = false
+        isContentReady = false
+        guideDeliveryGate.navigationDidStart()
+        panel?.alphaValue = 0.001
+        Self.lifecycle.error("Floating WebView content process terminated. cardId=\(self.cardID, privacy: .public) consecutiveTerminations=\(self.consecutiveWebContentTerminations)")
+        scheduleWebContentRecovery(reason: "content process termination")
+    }
+
+    func recoverAfterSystemWake() {
+        guard !isDestroyed else { return }
+
+        webView.evaluateJavaScript("document.readyState") { [weak self] result, error in
+            guard let self, !self.isDestroyed else {
+                return
+            }
+
+            let readyState = result as? String
+            guard error != nil || readyState != "complete" else {
+                return
+            }
+
+            Self.lifecycle.error("Floating WebView health check failed after system wake. cardId=\(self.cardID, privacy: .public) error=\(error?.localizedDescription ?? "unexpected ready state", privacy: .public)")
+            self.scheduleWebContentRecovery(reason: "wake health check")
+        }
+    }
+
     private func focusWebView() {
         guard !isDestroyed, let panel, panel.isVisible else {
             return
@@ -818,6 +852,10 @@ final class FloatingNoteWindowController: NSObject, WKNavigationDelegate, WKScri
 
         switch method {
         case "reportFrontendReady":
+            if consecutiveWebContentTerminations > 0 {
+                Self.lifecycle.notice("Floating WebView recovered. cardId=\(self.cardID, privacy: .public) consecutiveTerminations=\(self.consecutiveWebContentTerminations)")
+                consecutiveWebContentTerminations = 0
+            }
             guideDeliveryGate.frontendDidBecomeReady()
             // React reports readiness only after both floating-card listeners
             // are installed. Replaying here makes initial window creation,
@@ -981,6 +1019,24 @@ final class FloatingNoteWindowController: NSObject, WKNavigationDelegate, WKScri
         }
 
         webView.loadFileURL(indexURL, allowingReadAccessTo: indexURL.deletingLastPathComponent())
+    }
+
+    private func scheduleWebContentRecovery(reason: String) {
+        recoveryWorkItem?.cancel()
+
+        let attempt = max(consecutiveWebContentTerminations, 1)
+        let delay = min(0.5 * pow(2, Double(attempt - 1)), 5)
+        Self.lifecycle.notice("Scheduling floating WebView recovery. cardId=\(self.cardID, privacy: .public) attempt=\(attempt) delay=\(delay, format: .fixed(precision: 1))s reason=\(reason, privacy: .public)")
+
+        let workItem = DispatchWorkItem { [weak self] in
+            guard let self, !self.isDestroyed else {
+                return
+            }
+
+            self.webView.reload()
+        }
+        recoveryWorkItem = workItem
+        DispatchQueue.main.asyncAfter(deadline: .now() + delay, execute: workItem)
     }
 
     private func applyPendingPayloadIfPossible() {

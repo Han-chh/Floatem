@@ -1,6 +1,7 @@
 import { create } from "zustand";
 import { subscribeWithSelector } from "zustand/middleware";
 import type { HotkeyRegistrationState } from "@floatem/native-bridge";
+import type { BackgroundActivityStatus } from "../lib/nativeBridge";
 import {
   DEFAULT_SETTINGS,
   type AnimationSpeed,
@@ -20,11 +21,13 @@ import {
 } from "../lib/models";
 
 type SettingsState = AppSettings & {
+  backgroundActivityStatus: BackgroundActivityStatus | null;
   hotkeyRegistrationState: HotkeyRegistrationState | null;
   isLoaded: boolean;
   applyPreferredOpenSection: () => void;
   hydrateSettings: (settings: Partial<AppSettings>) => void;
   restoreDefaults: () => void;
+  setBackgroundActivityStatus: (state: BackgroundActivityStatus | null) => void;
   setHotkeyRegistrationState: (state: HotkeyRegistrationState | null) => void;
   setActiveTab: (tab: TabId) => void;
   setDefaultOpenSection: (defaultOpenSection: DefaultOpenSection) => void;
@@ -38,6 +41,8 @@ type SettingsState = AppSettings & {
   setAnimationSpeed: (animationSpeed: AnimationSpeed) => void;
   setLaunchAtLogin: (launchAtLogin: boolean) => void;
   setSuppressLaunchAtLoginPrompt: (suppress: boolean) => void;
+  setSuppressBackgroundActivityPrompt: (suppress: boolean) => void;
+  setBackgroundActivityActivationEpoch: (epoch: number) => void;
   setSuppressLanguageMismatchPrompt: (suppress: boolean) => void;
   setHasSeenHelpEntryHint: (hasSeen: boolean) => void;
   setEnableParticles: (enableParticles: boolean) => void;
@@ -47,6 +52,7 @@ type SettingsState = AppSettings & {
 
 const initialState = () => ({
   ...createDefaultSettings(),
+  backgroundActivityStatus: null,
   hotkeyRegistrationState: null,
   isLoaded: false,
 });
@@ -71,12 +77,16 @@ export const useSettingsStore = create<SettingsState>()(
       set((state) => ({
         ...createDefaultSettings(),
         hasSeenHelpEntryHint: state.hasSeenHelpEntryHint,
+        backgroundActivityStatus: null,
         hotkeyRegistrationState: null,
         isLoaded: true,
       }));
     },
     setHotkeyRegistrationState: (hotkeyRegistrationState) => {
       set({ hotkeyRegistrationState });
+    },
+    setBackgroundActivityStatus: (backgroundActivityStatus) => {
+      set({ backgroundActivityStatus });
     },
     setActiveTab: (activeTab) => {
       set({
@@ -129,6 +139,12 @@ export const useSettingsStore = create<SettingsState>()(
     setSuppressLaunchAtLoginPrompt: (suppressLaunchAtLoginPrompt) => {
       set({ suppressLaunchAtLoginPrompt });
     },
+    setSuppressBackgroundActivityPrompt: (suppressBackgroundActivityPrompt) => {
+      set({ suppressBackgroundActivityPrompt });
+    },
+    setBackgroundActivityActivationEpoch: (backgroundActivityActivationEpoch) => {
+      set({ backgroundActivityActivationEpoch: Math.max(0, Math.floor(backgroundActivityActivationEpoch)) });
+    },
     setSuppressLanguageMismatchPrompt: (suppressLanguageMismatchPrompt) => {
       set({ suppressLanguageMismatchPrompt });
     },
@@ -164,6 +180,8 @@ export function getPersistedSettingsSnapshot(): AppSettings {
     animationSpeed: state.animationSpeed,
     launchAtLogin: state.launchAtLogin,
     suppressLaunchAtLoginPrompt: state.suppressLaunchAtLoginPrompt,
+    suppressBackgroundActivityPrompt: state.suppressBackgroundActivityPrompt,
+    backgroundActivityActivationEpoch: state.backgroundActivityActivationEpoch,
     suppressLanguageMismatchPrompt: state.suppressLanguageMismatchPrompt,
     hasSeenHelpEntryHint: state.hasSeenHelpEntryHint,
     enableParticles: state.enableParticles,

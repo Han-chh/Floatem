@@ -3,6 +3,7 @@ import { Component, startTransition, useEffect, useRef, useState, type ErrorInfo
 import { DragPreviewApp } from "./components/drag-preview/DragPreviewApp";
 import { TooltipLayer } from "./components/feedback/TooltipLayer";
 import { FloatingNoteApp } from "./components/floating-note/FloatingNoteApp";
+import { BackgroundActivityDialog } from "./components/layout/BackgroundActivityDialog";
 import { PanelShell } from "./components/layout/PanelShell";
 import { LaunchAtLoginDialog } from "./components/layout/LaunchAtLoginDialog";
 import { LanguageMismatchDialog } from "./components/layout/LanguageMismatchDialog";
@@ -137,6 +138,7 @@ function FloatemApp() {
   const [isBooting, setIsBooting] = useState(true);
   const [showSettings, setShowSettings] = useState(false);
   const [showLaunchAtLoginPromptThisSession, setShowLaunchAtLoginPromptThisSession] = useState(false);
+  const [isBackgroundActivityPromptOpen, setIsBackgroundActivityPromptOpen] = useState(false);
   const [isLanguageMismatchPromptOpen, setIsLanguageMismatchPromptOpen] = useState(false);
   const [activeDockZoneTarget, setActiveDockZoneTarget] = useState<DockZoneEventDetail | null>(null);
   const isNativeTextColorPanelOpenRef = useRef(false);
@@ -535,7 +537,8 @@ function FloatemApp() {
       )}
       </PanelShell>
       <LanguageMismatchDialog onOpenChange={setIsLanguageMismatchPromptOpen} />
-      {showLaunchAtLoginPromptThisSession && !isLanguageMismatchPromptOpen ? <LaunchAtLoginDialog /> : null}
+      <BackgroundActivityDialog onOpenChange={setIsBackgroundActivityPromptOpen} />
+      {showLaunchAtLoginPromptThisSession && !isLanguageMismatchPromptOpen && !isBackgroundActivityPromptOpen ? <LaunchAtLoginDialog /> : null}
       <TooltipLayer />
     </FrontendErrorBoundary>
   );

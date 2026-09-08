@@ -310,6 +310,7 @@ function FirstLevelAction({
 
 export function SettingsPanel({ onClose }: SettingsPanelProps) {
   const { t } = useI18n();
+  const backgroundActivityStatus = useSettingsStore((state) => state.backgroundActivityStatus);
   const hotkey = useSettingsStore((state) => state.hotkey);
   const hotkeyRegistrationState = useSettingsStore((state) => state.hotkeyRegistrationState);
   const language = useSettingsStore((state) => state.language);
@@ -348,6 +349,7 @@ export function SettingsPanel({ onClose }: SettingsPanelProps) {
   const [isApplyingHotkey, setIsApplyingHotkey] = useState(false);
   const [isRestoringDefaults, setIsRestoringDefaults] = useState(false);
   const [isOpeningNotificationSettings, setIsOpeningNotificationSettings] = useState(false);
+  const [isOpeningBackgroundActivitySettings, setIsOpeningBackgroundActivitySettings] = useState(false);
   const [isQuittingApplication, setIsQuittingApplication] = useState(false);
   const [isTestingNotification, setIsTestingNotification] = useState(false);
 
@@ -650,6 +652,31 @@ export function SettingsPanel({ onClose }: SettingsPanelProps) {
     }
   };
 
+  const handleOpenBackgroundActivitySettings = async () => {
+    if (isOpeningBackgroundActivitySettings) {
+      return;
+    }
+
+    if (!isNativeFloatemHost()) {
+      setSystemFeedback({
+        text: t.settings.backgroundActivityOpenSettingsUnsupported,
+        tone: "info",
+      });
+      return;
+    }
+
+    setIsOpeningBackgroundActivitySettings(true);
+
+    try {
+      await getFloatemBridge().openBackgroundActivitySettings?.();
+    } catch (error) {
+      const message = error instanceof Error ? error.message : t.settings.backgroundActivityOpenSettingsFailed;
+      setSystemFeedback({ text: message, tone: "error" });
+    } finally {
+      setIsOpeningBackgroundActivitySettings(false);
+    }
+  };
+
   const handleQuitApplication = async () => {
     if (isQuittingApplication) {
       return;
@@ -764,12 +791,15 @@ export function SettingsPanel({ onClose }: SettingsPanelProps) {
 
                 {activeCategory === "shortcuts" ? (
                   <ShortcutSettings
+                    backgroundActivityStatus={backgroundActivityStatus}
                     hotkey={hotkey}
                     defaultOpenSection={defaultOpenSection}
                     lastActiveTab={lastActiveTab}
                     hotkeyRegistrationState={hotkeyRegistrationState}
                     hotkeyFeedback={hotkeyFeedback}
                     openHotkeyDialog={openHotkeyDialog}
+                    openBackgroundActivitySettings={handleOpenBackgroundActivitySettings}
+                    isOpeningBackgroundActivitySettings={isOpeningBackgroundActivitySettings}
                     setDefaultOpenSection={setDefaultOpenSection}
                   />
                 ) : null}
@@ -1363,20 +1393,26 @@ function TimeZoneSettings({
 }
 
 function ShortcutSettings({
+  backgroundActivityStatus,
   hotkey,
   defaultOpenSection,
   lastActiveTab,
   hotkeyRegistrationState,
   hotkeyFeedback,
+  isOpeningBackgroundActivitySettings,
   openHotkeyDialog,
+  openBackgroundActivitySettings,
   setDefaultOpenSection,
 }: {
+  backgroundActivityStatus: import("../../lib/nativeBridge").BackgroundActivityStatus | null;
   hotkey: string;
   defaultOpenSection: "last" | "notes" | "todos";
   lastActiveTab: "notes" | "todos";
   hotkeyRegistrationState: import("@floatem/native-bridge").HotkeyRegistrationState | null;
   hotkeyFeedback: HotkeyFeedback | null;
+  isOpeningBackgroundActivitySettings: boolean;
   openHotkeyDialog: () => void;
+  openBackgroundActivitySettings: () => void;
   setDefaultOpenSection: (section: "last" | "notes" | "todos") => void;
 }) {
   const { t } = useI18n();
@@ -1415,6 +1451,46 @@ function ShortcutSettings({
             <p className={`text-[11px] font-medium leading-5 ${feedbackClassName(hotkeyFeedback.tone)}`}>{hotkeyFeedback.text}</p>
           ) : null}
         </SettingRow>
+      </SettingSection>
+
+      <SettingSection title={t.settings.backgroundActivityTitle} description={t.settings.backgroundActivityBody}>
+        <div className="surface-field w-full rounded-[20px] px-4 py-3">
+          <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3">
+            <div className="flex min-w-0 items-center gap-3">
+              <span
+                aria-hidden="true"
+                className={`inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full ${
+                  backgroundActivityStatus?.enabled === false
+                    ? "bg-[rgba(201,93,68,0.14)] text-[rgb(171,72,54)]"
+                    : "bg-[rgba(31,168,122,0.14)] text-[rgb(24,133,94)]"
+                }`}
+              >
+                {backgroundActivityStatus?.enabled === false ? <XIcon size={17} /> : <CircleCheckBigIcon size={18} />}
+              </span>
+              <div className="min-w-0">
+                <p className="text-[13px] font-semibold text-[var(--brown-strong)]">
+                  {t.settings.backgroundActivityStatus}
+                </p>
+                <p className={`mt-1 text-[12px] leading-6 ${backgroundActivityStatus?.enabled === false ? "text-[rgb(150,68,52)]" : "text-[var(--muted)]"}`}>
+                  {backgroundActivityStatus?.enabled === false ? t.settings.backgroundActivityDisabled : t.settings.backgroundActivityEnabled}
+                </p>
+              </div>
+            </div>
+            <motion.button
+              type="button"
+              data-no-window-drag="true"
+              data-tooltip={t.settings.backgroundActivityOpenSettings}
+              className="paper-button paper-button-secondary inline-flex shrink-0 items-center justify-center rounded-[14px] px-3 py-2 text-[12px] font-semibold"
+              whileHover={{ y: -1.5, scale: 1.01 }}
+              whileTap={{ scale: 0.985 }}
+              onClick={openBackgroundActivitySettings}
+            >
+              {isOpeningBackgroundActivitySettings
+                ? `${t.settings.backgroundActivityOpenSettings}...`
+                : t.settings.backgroundActivityOpenSettings}
+            </motion.button>
+          </div>
+        </div>
       </SettingSection>
 
       <SettingSection title={t.settings.defaultSection} description={t.settings.lastStoredSection(lastActiveTab === "notes" ? t.tabs.notes : t.tabs.todos)}>

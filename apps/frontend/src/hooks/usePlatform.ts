@@ -49,6 +49,18 @@ export async function getLaunchAtLoginStatus() {
   return await getFloatemBridge().getLaunchAtLoginStatus?.() ?? null;
 }
 
+export async function getBackgroundActivityStatus() {
+  return await getFloatemBridge().getBackgroundActivityStatus?.() ?? {
+    activationEpoch: 0,
+    enabled: true,
+    status: "enabled" as const,
+  };
+}
+
+export async function openBackgroundActivitySettings() {
+  await getFloatemBridge().openBackgroundActivitySettings?.();
+}
+
 export async function registerHotkey(shortcut: string) {
   await getFloatemBridge().registerHotkey(shortcut);
 }

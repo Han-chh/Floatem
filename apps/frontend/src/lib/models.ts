@@ -78,6 +78,8 @@ export type AppSettings = {
   animationSpeed: AnimationSpeed;
   launchAtLogin: boolean;
   suppressLaunchAtLoginPrompt: boolean;
+  suppressBackgroundActivityPrompt: boolean;
+  backgroundActivityActivationEpoch: number;
   suppressLanguageMismatchPrompt: boolean;
   hasSeenHelpEntryHint: boolean;
   enableParticles: boolean;
@@ -184,6 +186,8 @@ export function createDefaultSettings(): AppSettings {
     animationSpeed: "mediate",
     launchAtLogin: false,
     suppressLaunchAtLoginPrompt: false,
+    suppressBackgroundActivityPrompt: false,
+    backgroundActivityActivationEpoch: 0,
     suppressLanguageMismatchPrompt: false,
     hasSeenHelpEntryHint: false,
     enableParticles: true,
@@ -301,6 +305,14 @@ export function normalizeAppSettings(settings: Partial<AppSettings> & LegacyThem
       typeof settings.suppressLaunchAtLoginPrompt === "boolean"
         ? settings.suppressLaunchAtLoginPrompt
         : defaultSettings.suppressLaunchAtLoginPrompt,
+    suppressBackgroundActivityPrompt:
+      typeof settings.suppressBackgroundActivityPrompt === "boolean"
+        ? settings.suppressBackgroundActivityPrompt
+        : defaultSettings.suppressBackgroundActivityPrompt,
+    backgroundActivityActivationEpoch:
+      typeof settings.backgroundActivityActivationEpoch === "number" && Number.isFinite(settings.backgroundActivityActivationEpoch)
+        ? Math.max(0, Math.floor(settings.backgroundActivityActivationEpoch))
+        : defaultSettings.backgroundActivityActivationEpoch,
     suppressLanguageMismatchPrompt:
       typeof settings.suppressLanguageMismatchPrompt === "boolean"
         ? settings.suppressLanguageMismatchPrompt

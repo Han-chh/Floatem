@@ -1,16 +1,18 @@
 import AppKit
+import OSLog
 
 @MainActor
 final class AppDelegate: NSObject, NSApplicationDelegate {
     private lazy var storage = AppStorage()
-    private let hotKeyManager = GlobalHotKeyManager()
+    private let hotKeyAgentManager = HotKeyAgentManager()
     private let notificationManager = NotificationManager()
     private let launchAtLoginManager = LaunchAtLoginManager()
+    private let lifecycleDiagnostics = LifecycleDiagnostics()
     private var currentLanguage: FloatemLanguage = .simplifiedChinese
 
     private lazy var mainWindowController = MainWindowController(
         storage: storage,
-        hotKeyManager: hotKeyManager,
+        hotKeyAgentManager: hotKeyAgentManager,
         notificationManager: notificationManager,
         launchAtLoginManager: launchAtLoginManager
     )
@@ -27,6 +29,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private weak var mainMenuPasteItem: NSMenuItem?
     private weak var mainMenuSelectAllItem: NSMenuItem?
     private var languageObserver: NSObjectProtocol?
+    private var systemWillSleepObserver: NSObjectProtocol?
+    private var systemDidWakeObserver: NSObjectProtocol?
     private var launchContextResolver = LaunchContextResolver()
 
     private var localization: FloatemLocalization {
@@ -61,6 +65,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             return
         }
         classifyInitialOpenEvent()
+        lifecycleDiagnostics?.start()
         NSApp.setActivationPolicy(.accessory)
         currentLanguage = (try? storage.currentLanguage()) ?? .simplifiedChinese
         notificationManager.configure()
@@ -70,6 +75,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         configureMainMenu()
         configureStatusItem()
         installLanguageObserver()
+        installSystemPowerObservers()
         updateLocalizedMenuTitles()
 
         DispatchQueue.main.async { [weak self] in
@@ -138,6 +144,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         false
     }
 
+    func applicationWillTerminate(_ notification: Notification) {
+        lifecycleDiagnostics?.recordGracefulTermination(reason: "applicationWillTerminate")
+    }
+
     private func classifyInitialOpenEvent() {
         guard let event = NSAppleEventManager.shared().currentAppleEvent,
               event.eventID == kAEOpenApplication else {
@@ -150,6 +160,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     deinit {
         if let languageObserver {
             NotificationCenter.default.removeObserver(languageObserver)
+        }
+        if let systemWillSleepObserver {
+            NSWorkspace.shared.notificationCenter.removeObserver(systemWillSleepObserver)
+        }
+        if let systemDidWakeObserver {
+            NSWorkspace.shared.notificationCenter.removeObserver(systemDidWakeObserver)
         }
     }
 
@@ -321,6 +337,35 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
                 self.currentLanguage = FloatemLanguage(storedValue: notification.userInfo?["language"])
                 self.updateLocalizedMenuTitles()
+            }
+        }
+    }
+
+    private func installSystemPowerObservers() {
+        let workspaceNotifications = NSWorkspace.shared.notificationCenter
+        systemWillSleepObserver = workspaceNotifications.addObserver(
+            forName: NSWorkspace.willSleepNotification,
+            object: nil,
+            queue: .main
+        ) { _ in
+            Task { @MainActor [weak self] in
+                self?.lifecycleDiagnostics?.recordWillSleep()
+            }
+            Logger(subsystem: "com.floatem.app", category: "Lifecycle").notice("System will sleep.")
+        }
+        systemDidWakeObserver = workspaceNotifications.addObserver(
+            forName: NSWorkspace.didWakeNotification,
+            object: nil,
+            queue: .main
+        ) { [weak self] _ in
+            Task { @MainActor [weak self] in
+                guard let self else {
+                    return
+                }
+
+                Logger(subsystem: "com.floatem.app", category: "Lifecycle").notice("System did wake; restoring Floatem services.")
+                self.lifecycleDiagnostics?.recordDidWake()
+                self.mainWindowController.recoverAfterSystemWake()
             }
         }
     }

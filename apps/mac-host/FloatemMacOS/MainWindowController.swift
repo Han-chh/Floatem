@@ -1,5 +1,6 @@
 import AppKit
 import OSLog
+import ServiceManagement
 
 @MainActor
 final class MainWindowController: NSObject, NSWindowDelegate, FloatemNativeBridgeHandling {
@@ -33,7 +34,7 @@ final class MainWindowController: NSObject, NSWindowDelegate, FloatemNativeBridg
         return behavior
     }
     private let storage: AppStorage
-    private let hotKeyManager: GlobalHotKeyManager
+    private let hotKeyAgentManager: HotKeyAgentManager
     private let notificationManager: NotificationManager
     private let launchAtLoginManager: LaunchAtLoginManager
     private let panel: FloatingPanel
@@ -76,12 +77,12 @@ final class MainWindowController: NSObject, NSWindowDelegate, FloatemNativeBridg
 
     init(
         storage: AppStorage,
-        hotKeyManager: GlobalHotKeyManager,
+        hotKeyAgentManager: HotKeyAgentManager,
         notificationManager: NotificationManager,
         launchAtLoginManager: LaunchAtLoginManager
     ) {
         self.storage = storage
-        self.hotKeyManager = hotKeyManager
+        self.hotKeyAgentManager = hotKeyAgentManager
         self.notificationManager = notificationManager
         self.launchAtLoginManager = launchAtLoginManager
 
@@ -124,11 +125,15 @@ final class MainWindowController: NSObject, NSWindowDelegate, FloatemNativeBridg
         panel.contentViewController = webViewController
         installOverlayObservers()
 
-        hotKeyManager.onHotKeyPressed = { [weak self] in
-            self?.handleHotKeyPressed()
-        }
-        hotKeyManager.onRegistrationStateChanged = { [weak self] state in
+        hotKeyAgentManager.onRegistrationStateChanged = { [weak self] state in
             self?.webViewController.emitHotkeyRegistrationState(self?.hotKeyRegistrationStatePayload(from: state) ?? [:])
+        }
+        hotKeyAgentManager.onAgentHotKeyPressed = { [weak self] shortcut in
+            guard let self else {
+                return false
+            }
+            self.handleAgentHotKeyPressed(shortcut: shortcut)
+            return true
         }
     }
 
@@ -179,16 +184,22 @@ final class MainWindowController: NSObject, NSWindowDelegate, FloatemNativeBridg
     func installSavedHotKey() {
         do {
             let savedShortcut = try storage.currentHotkey()
-            try hotKeyManager.register(shortcut: savedShortcut)
+            try hotKeyAgentManager.configure(shortcut: savedShortcut)
         } catch {
             logger.error("Failed to restore the saved shortcut. error=\(error.localizedDescription, privacy: .public)")
+        }
+    }
 
-            do {
-                try hotKeyManager.register(shortcut: GlobalHotKeyManager.defaultShortcut)
-                try storage.updateHotkey(GlobalHotKeyManager.defaultShortcut)
-            } catch {
-                logger.error("Failed to restore the fallback shortcut. error=\(error.localizedDescription, privacy: .public)")
-            }
+    func recoverAfterSystemWake() {
+        logger.notice("Restoring Floatem services after system wake.")
+        hotKeyAgentManager.reconnectAfterSystemWake(
+            shortcut: (try? storage.currentHotkey()) ?? GlobalHotKeyManager.defaultShortcut
+        )
+        webViewController.recoverAfterSystemWake()
+        floatingCardWindowControllers.values.forEach { $0.recoverAfterSystemWake() }
+
+        if panel.isVisible {
+            bringPanelToFront(context: "System wake")
         }
     }
 
@@ -228,7 +239,7 @@ final class MainWindowController: NSObject, NSWindowDelegate, FloatemNativeBridg
         togglePanel(reason: "manual-toggle")
     }
 
-    private func handleHotKeyPressed() {
+    func handleAgentHotKeyPressed(shortcut: String) {
         let now = CFAbsoluteTimeGetCurrent()
 
         if now - lastHotKeyPressTimestamp < Self.hotKeyDebounceInterval {
@@ -242,7 +253,7 @@ final class MainWindowController: NSObject, NSWindowDelegate, FloatemNativeBridg
         togglePanel(reason: "global-hotkey")
 
         if isOpeningPanel {
-            webViewController.emitShortcutInvoked(hotKeyManager.registeredShortcut ?? GlobalHotKeyManager.defaultShortcut)
+            webViewController.emitShortcutInvoked(shortcut)
         }
     }
 
@@ -257,6 +268,15 @@ final class MainWindowController: NSObject, NSWindowDelegate, FloatemNativeBridg
 
     func currentLaunchAtLoginStatus() -> [String: Any] {
         ["enabled": launchAtLoginManager.isEnabled]
+    }
+
+    func currentBackgroundActivityStatus() -> [String: Any] {
+        let status = hotKeyAgentManager.backgroundActivityStatus()
+        return [
+            "status": status.status,
+            "enabled": status.isEnabled,
+            "activationEpoch": status.activationEpoch,
+        ]
     }
 
     func saveNotes(_ notes: Any) throws {
@@ -274,7 +294,7 @@ final class MainWindowController: NSObject, NSWindowDelegate, FloatemNativeBridg
             throw FloatemBridgeError.invalidParameters("Floatem expected settings to be a JSON object.")
         }
 
-        let fallbackShortcut = hotKeyManager.registeredShortcut ?? (try? storage.currentHotkey()) ?? GlobalHotKeyManager.defaultShortcut
+        let fallbackShortcut = hotKeyAgentManager.registeredShortcut ?? (try? storage.currentHotkey()) ?? GlobalHotKeyManager.defaultShortcut
         let candidateShortcut = settingsDictionary["hotkey"] as? String ?? fallbackShortcut
 
         settingsDictionary["hotkey"] = GlobalHotKeyManager.isShortcutValid(candidateShortcut)
@@ -288,6 +308,7 @@ final class MainWindowController: NSObject, NSWindowDelegate, FloatemNativeBridg
         settingsDictionary["launchAtLogin"] = launchAtLoginManager.isEnabled
 
         try storage.saveSettings(settingsDictionary)
+        try hotKeyAgentManager.configure(shortcut: settingsDictionary["hotkey"] as? String ?? fallbackShortcut)
         let todos = try storage.loadTodos()
         let savedSettings = try storage.loadSettings()
         syncTodoReminderNotifications(todos: todos, settings: savedSettings, requestAuthorizationIfNeeded: false)
@@ -319,6 +340,11 @@ final class MainWindowController: NSObject, NSWindowDelegate, FloatemNativeBridg
         }
 
         throw FloatemBridgeError.invalidParameters(language.localization.notificationOpenSettingsFailedMessage)
+    }
+
+    func openBackgroundActivitySettings() throws {
+        NSApp.activate(ignoringOtherApps: true)
+        SMAppService.openSystemSettingsLoginItems()
     }
 
     func checkNotificationPermission(language: FloatemLanguage) async throws -> Bool {
@@ -412,7 +438,7 @@ final class MainWindowController: NSObject, NSWindowDelegate, FloatemNativeBridg
     }
 
     func currentHotKeyRegistrationState() -> [String: Any] {
-        hotKeyRegistrationStatePayload(from: hotKeyManager.registrationState)
+        hotKeyRegistrationStatePayload(from: hotKeyAgentManager.registrationState)
     }
 
     func currentFloatingCardState() -> [String: [String]] {
@@ -442,7 +468,7 @@ final class MainWindowController: NSObject, NSWindowDelegate, FloatemNativeBridg
     }
 
     func registerHotKey(shortcut: String) throws {
-        try hotKeyManager.register(shortcut: shortcut)
+        try hotKeyAgentManager.configure(shortcut: shortcut)
     }
 
     func readClipboardText() -> String {
@@ -1840,7 +1866,7 @@ final class MainWindowController: NSObject, NSWindowDelegate, FloatemNativeBridg
         }
     }
 
-    private func hotKeyRegistrationStatePayload(from state: GlobalHotKeyManager.RegistrationState) -> [String: Any] {
+    private func hotKeyRegistrationStatePayload(from state: HotKeyAgentManager.RegistrationState) -> [String: Any] {
         var payload: [String: Any] = [
             "shortcut": state.shortcut,
             "registration": state.registration,

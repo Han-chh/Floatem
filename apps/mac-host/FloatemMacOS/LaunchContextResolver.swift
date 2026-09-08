@@ -4,6 +4,7 @@ struct LaunchContextResolver {
     enum ExplicitContext: Equatable {
         case automatic
         case loginItem
+        case agentHotKey
         case user
     }
 
@@ -14,6 +15,8 @@ struct LaunchContextResolver {
     init(arguments: [String] = ProcessInfo.processInfo.arguments, environment: [String: String] = ProcessInfo.processInfo.environment) {
         if arguments.contains("--floatem-login-item") || environment["FLOATEM_LAUNCH_CONTEXT"] == "login" {
             explicitContext = .loginItem
+        } else if arguments.contains(FloatemAgentXPC.agentLaunchArgument) {
+            explicitContext = .agentHotKey
         } else if arguments.contains("--floatem-user-launch") || environment["FLOATEM_LAUNCH_CONTEXT"] == "user" {
             explicitContext = .user
         } else {
@@ -43,6 +46,9 @@ struct LaunchContextResolver {
             }
             consumedInitialActivation = true
             return false
+        case .agentHotKey:
+            consumedInitialActivation = true
+            return true
         case .user:
             consumedInitialActivation = true
             return true
@@ -64,7 +70,7 @@ struct LaunchContextResolver {
         guard !receivedDeepLink, !consumedInitialActivation else {
             return false
         }
-        if explicitContext == .loginItem, launchAtLoginEnabled {
+        if explicitContext == .agentHotKey || (explicitContext == .loginItem && launchAtLoginEnabled) {
             consumedInitialActivation = true
             return false
         }

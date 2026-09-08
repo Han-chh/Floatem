@@ -2,8 +2,15 @@
 
 All notable repository changes are recorded here. Historical entries describe the behavior of their named release and are not statements of current platform support.
 
-## Unreleased
+## 1.0.11 (Build 62)
 
+- Improve Shift + Space recovery after extended macOS sleep with a ServiceManagement-managed background item that owns the global shortcut and uses a local XPC connection to restore or relaunch Floatem when the main host is unavailable.
+- Recover the main window and floating-card WebViews after wake if their WebContent process was terminated during sleep, with bounded retries before the panel becomes available.
+- Persist on-device lifecycle diagnostics for launch, PID, heartbeat, sleep, wake, graceful exit, and inferred unexpected termination; no user content or keyboard input is recorded or uploaded.
+- Add a Background Activity status card, direct link to the relevant macOS System Settings page, and bilingual guidance when background activity is disabled. Users can temporarily dismiss the prompt or choose not to show it again until the activity is re-enabled and later disabled.
+- Update the macOS app and companion background item to version 1.0.11, build 62.
+
+## Unreleased
 - Keep a selected desktop pin visually contained to the black circular pin indicator instead of darkening the Todo action button's outer border and background.
 - Restore desktop-pinned and reopened floating cards with frontend content dimensions that exactly match the resolved native window frame, preventing Todo pin, reminder, and close controls from being clipped after relaunch.
 - Detect the preferred macOS system language and offer to switch between the Chinese and English interfaces whenever the main panel is summoned with a mismatched language.

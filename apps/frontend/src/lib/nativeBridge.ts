@@ -51,7 +51,9 @@ export type TextColorPanelCloseDetail = {
 
 export type FloatemNativeBridge = HostBridge<RawLoadAllResult, NotesDocument, TodosDocument, Partial<AppSettings>> & {
   clearFloatingCardGuides?: () => Promise<void>;
+  getBackgroundActivityStatus?: () => Promise<BackgroundActivityStatus>;
   getSystemLanguage?: () => Promise<AppLanguage>;
+  openBackgroundActivitySettings?: () => Promise<void>;
   setFloatingCardGuide?: (card: FloatingCardReference, guide: FloatingCardGuideState | null) => Promise<void>;
   testReminderNotification: (options?: {
     soundEnabled?: boolean;
@@ -66,6 +68,12 @@ export type FloatingCardGuideState = {
   instruction: string;
   phase: "pin" | "unpin" | "close" | "drag" | "resize" | "desktop";
   title: string;
+};
+
+export type BackgroundActivityStatus = {
+  activationEpoch: number;
+  enabled: boolean;
+  status: "enabled" | "requiresApproval" | "notRegistered" | "notFound" | "unknown";
 };
 
 declare global {
@@ -157,6 +165,12 @@ const browserBridge: FloatemNativeBridge = {
   },
   async openNotificationSettings() {
     // Browser preview cannot open native notification settings.
+  },
+  async getBackgroundActivityStatus() {
+    return { activationEpoch: 0, enabled: true, status: "enabled" } satisfies BackgroundActivityStatus;
+  },
+  async openBackgroundActivitySettings() {
+    // Browser preview cannot open native background-item settings.
   },
   async checkNotificationPermission(): Promise<NotificationPermissionResult> {
     if (typeof Notification === "undefined") {
