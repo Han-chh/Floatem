@@ -22,6 +22,8 @@ final class HotKeyAgentManager {
     var onRegistrationStateChanged: ((RegistrationState) -> Void)?
     var onAgentHotKeyPressed: ((String) -> Bool)?
     var onAgentHotKeyShowRequested: ((String) -> Bool)?
+    var onAgentWindowVisibilityRestore: ((Bool) -> Bool)?
+    var currentMainWindowVisibility: (() -> Bool)?
     var onAgentWakeRecovery: (() -> Bool)?
 
     private let service = SMAppService.agent(plistName: FloatemAgentXPC.launchAgentPlistName)
@@ -39,6 +41,10 @@ final class HotKeyAgentManager {
         }
         handler(shortcut)
         return true
+    } onSetMainWindowVisible: { [weak self] visible in
+        self?.onAgentWindowVisibilityRestore?(visible) ?? false
+    } onCurrentMainWindowVisibility: { [weak self] in
+        self?.currentMainWindowVisibility?() ?? false
     } onWakeRecovery: { [weak self] in
         self?.onAgentWakeRecovery?() ?? false
     }
@@ -186,15 +192,21 @@ final class HotKeyAgentManager {
 private final class AgentHostControlCallback: NSObject, FloatemHostControlProtocol {
     private let onToggle: @MainActor (String) -> Bool
     private let onShow: @MainActor (String) -> Bool
+    private let onSetMainWindowVisible: @MainActor (Bool) -> Bool
+    private let onCurrentMainWindowVisibility: @MainActor () -> Bool
     private let onWakeRecovery: @MainActor () -> Bool
 
     init(
         onToggle: @escaping @MainActor (String) -> Bool,
         onShow: @escaping @MainActor (String) -> Bool,
+        onSetMainWindowVisible: @escaping @MainActor (Bool) -> Bool,
+        onCurrentMainWindowVisibility: @escaping @MainActor () -> Bool,
         onWakeRecovery: @escaping @MainActor () -> Bool
     ) {
         self.onToggle = onToggle
         self.onShow = onShow
+        self.onSetMainWindowVisible = onSetMainWindowVisible
+        self.onCurrentMainWindowVisibility = onCurrentMainWindowVisibility
         self.onWakeRecovery = onWakeRecovery
     }
 
@@ -207,6 +219,18 @@ private final class AgentHostControlCallback: NSObject, FloatemHostControlProtoc
     func showMainWindow(shortcut: String, withReply reply: @escaping (Bool) -> Void) {
         Task { @MainActor in
             reply(onShow(shortcut))
+        }
+    }
+
+    func setMainWindowVisible(_ visible: Bool, withReply reply: @escaping (Bool) -> Void) {
+        Task { @MainActor in
+            reply(onSetMainWindowVisible(visible))
+        }
+    }
+
+    func currentMainWindowVisibility(withReply reply: @escaping (Bool) -> Void) {
+        Task { @MainActor in
+            reply(onCurrentMainWindowVisibility())
         }
     }
 

@@ -10,9 +10,13 @@ private final class FloatemHotKeyAgent: NSObject, NSXPCListenerDelegate, Floatem
     private let hostConnectionsQueue = DispatchQueue(label: "com.hankch.floatem.hotkey-agent.host-connections")
     private var shortcut = GlobalHotKeyManager.defaultShortcut
     private var hostConnections: [NSXPCConnection] = []
+    private var systemWillSleepObserver: NSObjectProtocol?
     private var systemDidWakeObserver: NSObjectProtocol?
     private var wakeRecoveryScheduled = false
+    private var hostWasRunningBeforeSleep = false
+    private var mainWindowWasVisibleBeforeSleep = false
     private var pendingWakeRecoveryHostNotification = false
+    private var pendingWakeRecoveryWindowVisibility: Bool?
     private var pendingHotKeyShowAfterHostLaunch: String?
 
     override init() {
@@ -40,6 +44,9 @@ private final class FloatemHotKeyAgent: NSObject, NSXPCListenerDelegate, Floatem
     }
 
     deinit {
+        if let systemWillSleepObserver {
+            NSWorkspace.shared.notificationCenter.removeObserver(systemWillSleepObserver)
+        }
         if let systemDidWakeObserver {
             NSWorkspace.shared.notificationCenter.removeObserver(systemDidWakeObserver)
         }
@@ -113,12 +120,42 @@ private final class FloatemHotKeyAgent: NSObject, NSXPCListenerDelegate, Floatem
     }
 
     private func installSystemWakeObserver() {
+        systemWillSleepObserver = NSWorkspace.shared.notificationCenter.addObserver(
+            forName: NSWorkspace.willSleepNotification,
+            object: nil,
+            queue: .main
+        ) { [weak self] _ in
+            self?.captureHostPresentationBeforeSleep()
+        }
         systemDidWakeObserver = NSWorkspace.shared.notificationCenter.addObserver(
             forName: NSWorkspace.didWakeNotification,
             object: nil,
             queue: .main
         ) { [weak self] _ in
             self?.scheduleWakeRecovery()
+        }
+    }
+
+    private func captureHostPresentationBeforeSleep() {
+        let connection = hostConnectionsQueue.sync { hostConnections.last }
+        guard let connection else {
+            hostWasRunningBeforeSleep = false
+            mainWindowWasVisibleBeforeSleep = false
+            logger.notice("Floatem host was not connected before sleep; it will not be relaunched after wake.")
+            return
+        }
+
+        hostWasRunningBeforeSleep = true
+        let proxy = connection.remoteObjectProxyWithErrorHandler { [weak self] _ in
+            DispatchQueue.main.async {
+                self?.mainWindowWasVisibleBeforeSleep = false
+            }
+        } as? FloatemHostControlProtocol
+        proxy?.currentMainWindowVisibility { [weak self] visible in
+            DispatchQueue.main.async {
+                self?.mainWindowWasVisibleBeforeSleep = visible
+                self?.logger.notice("Captured Floatem presentation before sleep. visible=\(visible, privacy: .public)")
+            }
         }
     }
 
@@ -214,6 +251,11 @@ private final class FloatemHotKeyAgent: NSObject, NSXPCListenerDelegate, Floatem
     }
 
     private func recoverHostAfterSystemWake(completion: ((Bool, String?) -> Void)? = nil) {
+        guard hostWasRunningBeforeSleep else {
+            logger.notice("Floatem was not running before sleep; preserving the stopped state after wake.")
+            completion?(true, "Floatem was not running before sleep.")
+            return
+        }
         guard let appURL = containingAppBundleURL() else {
             logger.error("Unable to locate the containing Floatem.app bundle for wake recovery.")
             completion?(false, "Unable to locate the containing Floatem.app bundle.")
@@ -225,14 +267,17 @@ private final class FloatemHotKeyAgent: NSObject, NSXPCListenerDelegate, Floatem
             return
         }
 
-        logger.notice("Floatem host is missing after wake; launching a background recovery host.")
+        let windowVisibility = mainWindowWasVisibleBeforeSleep
+        logger.notice("Floatem host is missing after wake; restoring it with visible=\(windowVisibility, privacy: .public).")
         pendingWakeRecoveryHostNotification = true
+        pendingWakeRecoveryWindowVisibility = windowVisibility
         launchHost(
             appURL: appURL,
             arguments: [FloatemAgentXPC.agentWakeRecoveryLaunchArgument],
             completion: { [weak self] succeeded, detail in
                 if !succeeded {
                     self?.pendingWakeRecoveryHostNotification = false
+                    self?.pendingWakeRecoveryWindowVisibility = nil
                 }
                 completion?(succeeded, detail)
             }
@@ -301,9 +346,32 @@ private final class FloatemHotKeyAgent: NSObject, NSXPCListenerDelegate, Floatem
     }
 
     private func notifyHostOfPendingWakeRecovery(using connection: NSXPCConnection) {
-        guard pendingWakeRecoveryHostNotification else {
+        guard pendingWakeRecoveryHostNotification,
+              let visible = pendingWakeRecoveryWindowVisibility else {
             return
         }
+        let proxy = connection.remoteObjectProxyWithErrorHandler { [weak self] _ in
+            DispatchQueue.main.async {
+                self?.logger.error("Unable to restore Floatem's window state after reconnecting from wake.")
+            }
+        } as? FloatemHostControlProtocol
+        proxy?.setMainWindowVisible(visible) { [weak self] restored in
+            DispatchQueue.main.async {
+                guard let self else {
+                    return
+                }
+                guard restored else {
+                    return
+                }
+                self.pendingWakeRecoveryHostNotification = false
+                self.pendingWakeRecoveryWindowVisibility = nil
+                self.logger.notice("Restored Floatem presentation after wake. visible=\(visible, privacy: .public)")
+                self.recordWakeRecovery(using: connection)
+            }
+        }
+    }
+
+    private func recordWakeRecovery(using connection: NSXPCConnection) {
         let proxy = connection.remoteObjectProxyWithErrorHandler { [weak self] _ in
             DispatchQueue.main.async {
                 self?.logger.error("Unable to record the host wake recovery after reconnecting.")
@@ -311,12 +379,8 @@ private final class FloatemHotKeyAgent: NSObject, NSXPCListenerDelegate, Floatem
         } as? FloatemHostControlProtocol
         proxy?.recordWakeRecovery { [weak self] recorded in
             DispatchQueue.main.async {
-                guard let self else {
-                    return
-                }
                 if recorded {
-                    self.pendingWakeRecoveryHostNotification = false
-                    self.logger.notice("Floatem host recorded its wake recovery after reconnecting.")
+                    self?.logger.notice("Floatem host recorded its wake recovery after reconnecting.")
                 }
             }
         }

@@ -75,6 +75,10 @@ final class MainWindowController: NSObject, NSWindowDelegate, FloatemNativeBridg
         panel.isVisible
     }
 
+    var isMainWindowVisible: Bool {
+        panel.isVisible
+    }
+
     init(
         storage: AppStorage,
         hotKeyAgentManager: HotKeyAgentManager,

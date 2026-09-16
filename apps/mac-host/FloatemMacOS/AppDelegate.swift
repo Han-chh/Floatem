@@ -90,6 +90,20 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             self.showMainWindowForUserAction()
             return true
         }
+        hotKeyAgentManager.onAgentWindowVisibilityRestore = { [weak self] visible in
+            guard let self else {
+                return false
+            }
+            if visible {
+                self.showMainWindowForUserAction()
+            } else {
+                self.mainWindowController.hideMainWindow()
+            }
+            return true
+        }
+        hotKeyAgentManager.currentMainWindowVisibility = { [weak self] in
+            self?.mainWindowController.isMainWindowVisible ?? false
+        }
         updateLocalizedMenuTitles()
 
         DispatchQueue.main.async { [weak self] in

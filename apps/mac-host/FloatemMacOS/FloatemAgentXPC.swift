@@ -82,5 +82,7 @@ enum FloatemAgentHostLocator {
 @objc protocol FloatemHostControlProtocol {
     func toggleMainWindow(shortcut: String, withReply reply: @escaping (Bool) -> Void)
     func showMainWindow(shortcut: String, withReply reply: @escaping (Bool) -> Void)
+    func setMainWindowVisible(_ visible: Bool, withReply reply: @escaping (Bool) -> Void)
+    func currentMainWindowVisibility(withReply reply: @escaping (Bool) -> Void)
     func recordWakeRecovery(withReply reply: @escaping (Bool) -> Void)
 }

@@ -10,6 +10,14 @@ private final class AgentDiagnosticHostCallback: NSObject, FloatemHostControlPro
         reply(false)
     }
 
+    func setMainWindowVisible(_ visible: Bool, withReply reply: @escaping (Bool) -> Void) {
+        reply(false)
+    }
+
+    func currentMainWindowVisibility(withReply reply: @escaping (Bool) -> Void) {
+        reply(false)
+    }
+
     func recordWakeRecovery(withReply reply: @escaping (Bool) -> Void) {
         reply(false)
     }

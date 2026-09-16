@@ -513,7 +513,7 @@
 				CODE_SIGN_IDENTITY = "Apple Development";
 				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 64;
+				CURRENT_PROJECT_VERSION = 65;
 				DEVELOPMENT_TEAM = 85923Q9JUG;
 				ENABLE_DEBUG_DYLIB = NO;
 				ENABLE_HARDENED_RUNTIME = YES;
@@ -547,7 +547,7 @@
 				CODE_SIGN_ENTITLEMENTS = FloatemMacOS/Floatem.entitlements;
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 64;
+				CURRENT_PROJECT_VERSION = 65;
 				DEVELOPMENT_TEAM = 85923Q9JUG;
 				ENABLE_DEBUG_DYLIB = NO;
 				ENABLE_HARDENED_RUNTIME = YES;
@@ -609,7 +609,7 @@
 				CODE_SIGN_ENTITLEMENTS = FloatemHotKeyAgent/FloatemHotKeyAgent.entitlements;
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 64;
+				CURRENT_PROJECT_VERSION = 65;
 				DEVELOPMENT_TEAM = 85923Q9JUG;
 				ENABLE_HARDENED_RUNTIME = YES;
 				INFOPLIST_FILE = FloatemHotKeyAgent/Info.plist;
@@ -631,7 +631,7 @@
 				CODE_SIGN_ENTITLEMENTS = FloatemHotKeyAgent/FloatemHotKeyAgent.entitlements;
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 64;
+				CURRENT_PROJECT_VERSION = 65;
 				DEVELOPMENT_TEAM = 85923Q9JUG;
 				ENABLE_HARDENED_RUNTIME = YES;
 				INFOPLIST_FILE = FloatemHotKeyAgent/Info.plist;
