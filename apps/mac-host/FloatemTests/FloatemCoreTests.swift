@@ -2,6 +2,14 @@ import XCTest
 @testable import Floatem
 
 final class FloatemCoreTests: XCTestCase {
+    func testDebugBuildUsesTheProductShortcutWithAnIsolatedAgent() {
+        XCTAssertEqual(GlobalHotKeyManager.defaultShortcut, "Shift+Space")
+        XCTAssertEqual(
+            GlobalHotKeyManager.shortcutForCurrentBuild("Option+Shift+Space"),
+            "Shift+Space"
+        )
+    }
+
     func testSystemLanguageDetectionTreatsEveryChineseLocaleAsChinese() {
         XCTAssertEqual(FloatemLanguage.systemPreferred(from: ["zh"]), .simplifiedChinese)
         XCTAssertEqual(FloatemLanguage.systemPreferred(from: ["zh-Hans-CN"]), .simplifiedChinese)
@@ -310,6 +318,10 @@ final class FloatemCoreTests: XCTestCase {
         XCTAssertTrue(agentHotKey.shouldShowAtDidFinish(isApplicationActive: true, launchAtLoginEnabled: false))
         XCTAssertFalse(agentHotKey.shouldShowForActivation(launchAtLoginEnabled: false))
 
+        var agentWakeRecovery = LaunchContextResolver(arguments: ["Floatem", FloatemAgentXPC.agentWakeRecoveryLaunchArgument], environment: [:])
+        XCTAssertFalse(agentWakeRecovery.shouldShowAtDidFinish(isApplicationActive: true, launchAtLoginEnabled: false))
+        XCTAssertFalse(agentWakeRecovery.shouldShowForActivation(launchAtLoginEnabled: false))
+
         var user = LaunchContextResolver(arguments: ["Floatem", "--floatem-user-launch"], environment: [:])
         XCTAssertTrue(user.shouldShowAtDidFinish(isApplicationActive: false, launchAtLoginEnabled: false))
 
@@ -379,6 +391,8 @@ final class FloatemCoreTests: XCTestCase {
         currentDate.addTimeInterval(10)
         diagnostics.recordDidWake()
         currentDate.addTimeInterval(5)
+        diagnostics.recordRecoveredAfterWake()
+        currentDate.addTimeInterval(5)
         diagnostics.recordGracefulTermination(reason: "applicationWillTerminate")
 
         let session = try XCTUnwrap(diagnostics.currentSession())
@@ -390,7 +404,7 @@ final class FloatemCoreTests: XCTestCase {
         XCTAssertEqual(session.wokeAt, Date(timeIntervalSince1970: 1_700_000_040))
         XCTAssertEqual(session.exitReason, "applicationWillTerminate")
         XCTAssertTrue(session.hadGracefulTermination)
-        XCTAssertEqual(diagnostics.eventRecords().map(\.kind), [.launch, .willSleep, .didWake, .gracefulTermination])
+        XCTAssertEqual(diagnostics.eventRecords().map(\.kind), [.launch, .willSleep, .didWake, .recoveredAfterWake, .gracefulTermination])
     }
 
     @MainActor

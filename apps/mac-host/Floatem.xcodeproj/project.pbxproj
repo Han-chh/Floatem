@@ -240,6 +240,7 @@
 				A00000000000000000000015 /* Resources */,
 				A00000000000000000000037 /* Copy HotKey Agent */,
 				A00000000000000000000038 /* Copy LaunchAgent Property List */,
+				A00000000000000000000044 /* Configure LaunchAgent Identity */,
 				A00000000000000000000016 /* Build Frontend */,
 			);
 			buildRules = (
@@ -380,6 +381,21 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXShellScriptBuildPhase section */
+		A00000000000000000000044 /* Configure LaunchAgent Identity */ = {
+			isa = PBXShellScriptBuildPhase;
+			alwaysOutOfDate = 1;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+			);
+			name = "Configure LaunchAgent Identity";
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/zsh;
+			shellScript = "agent_directory=\"$TARGET_BUILD_DIR/$WRAPPER_NAME/Contents/Library/LaunchAgents\"\nsource_plist=\"$agent_directory/com.hankch.floatem.hotkey-agent.plist\"\ndestination_plist=\"$agent_directory/$FLOATEM_AGENT_SERVICE_NAME.plist\"\nmv \"$source_plist\" \"$destination_plist\"\n/usr/libexec/PlistBuddy -c \"Set :Label $FLOATEM_AGENT_SERVICE_NAME\" \"$destination_plist\"\n/usr/libexec/PlistBuddy -c \"Delete :MachServices\" \"$destination_plist\"\n/usr/libexec/PlistBuddy -c \"Add :MachServices dict\" \"$destination_plist\"\n/usr/libexec/PlistBuddy -c \"Add :MachServices:$FLOATEM_AGENT_SERVICE_NAME bool true\" \"$destination_plist\"\n";
+		};
 		A00000000000000000000016 /* Build Frontend */ = {
 			isa = PBXShellScriptBuildPhase;
 			alwaysOutOfDate = 1;
@@ -497,7 +513,7 @@
 				CODE_SIGN_IDENTITY = "Apple Development";
 				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 62;
+				CURRENT_PROJECT_VERSION = 64;
 				DEVELOPMENT_TEAM = 85923Q9JUG;
 				ENABLE_DEBUG_DYLIB = NO;
 				ENABLE_HARDENED_RUNTIME = YES;
@@ -510,9 +526,11 @@
 					"@executable_path/../Frameworks",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 14.0;
-				MARKETING_VERSION = 1.0.11;
+				MARKETING_VERSION = 1.0.12;
 				PRODUCT_BUNDLE_IDENTIFIER = com.hankch.floatem;
 				PRODUCT_NAME = Floatem;
+				FLOATEM_AGENT_SERVICE_NAME = com.hankch.floatem.debug.hotkey-agent;
+				OTHER_SWIFT_FLAGS = "$(inherited) -DFLOATEM_DEBUG_ISOLATED";
 				PROVISIONING_PROFILE_SPECIFIER = "";
 				REGISTER_APP_GROUPS = YES;
 				SDKROOT = macosx;
@@ -529,7 +547,7 @@
 				CODE_SIGN_ENTITLEMENTS = FloatemMacOS/Floatem.entitlements;
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 62;
+				CURRENT_PROJECT_VERSION = 64;
 				DEVELOPMENT_TEAM = 85923Q9JUG;
 				ENABLE_DEBUG_DYLIB = NO;
 				ENABLE_HARDENED_RUNTIME = YES;
@@ -541,9 +559,10 @@
 					"@executable_path/../Frameworks",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 14.0;
-				MARKETING_VERSION = 1.0.11;
+				MARKETING_VERSION = 1.0.12;
 				PRODUCT_BUNDLE_IDENTIFIER = com.hankch.floatem;
 				PRODUCT_NAME = Floatem;
+				FLOATEM_AGENT_SERVICE_NAME = com.hankch.floatem.hotkey-agent;
 				PROVISIONING_PROFILE_SPECIFIER = "";
 				REGISTER_APP_GROUPS = YES;
 				SDKROOT = macosx;
@@ -590,13 +609,16 @@
 				CODE_SIGN_ENTITLEMENTS = FloatemHotKeyAgent/FloatemHotKeyAgent.entitlements;
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 62;
+				CURRENT_PROJECT_VERSION = 64;
 				DEVELOPMENT_TEAM = 85923Q9JUG;
 				ENABLE_HARDENED_RUNTIME = YES;
 				INFOPLIST_FILE = FloatemHotKeyAgent/Info.plist;
 				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				MARKETING_VERSION = 1.0.12;
 				PRODUCT_BUNDLE_IDENTIFIER = com.hankch.floatem.hotkey-agent;
 				PRODUCT_NAME = FloatemHotKeyAgent;
+				FLOATEM_AGENT_SERVICE_NAME = com.hankch.floatem.debug.hotkey-agent;
+				OTHER_SWIFT_FLAGS = "$(inherited) -DFLOATEM_DEBUG_ISOLATED";
 				SKIP_INSTALL = YES;
 				SWIFT_VERSION = 5.0;
 			};
@@ -609,13 +631,15 @@
 				CODE_SIGN_ENTITLEMENTS = FloatemHotKeyAgent/FloatemHotKeyAgent.entitlements;
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 62;
+				CURRENT_PROJECT_VERSION = 64;
 				DEVELOPMENT_TEAM = 85923Q9JUG;
 				ENABLE_HARDENED_RUNTIME = YES;
 				INFOPLIST_FILE = FloatemHotKeyAgent/Info.plist;
 				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				MARKETING_VERSION = 1.0.12;
 				PRODUCT_BUNDLE_IDENTIFIER = com.hankch.floatem.hotkey-agent;
 				PRODUCT_NAME = FloatemHotKeyAgent;
+				FLOATEM_AGENT_SERVICE_NAME = com.hankch.floatem.hotkey-agent;
 				SKIP_INSTALL = YES;
 				SWIFT_VERSION = 5.0;
 			};

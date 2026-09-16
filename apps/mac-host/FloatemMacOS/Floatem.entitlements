@@ -12,7 +12,7 @@
 	</array>
 	<key>com.apple.security.temporary-exception.mach-lookup.global-name</key>
 	<array>
-		<string>com.hankch.floatem.hotkey-agent</string>
+		<string>$(FLOATEM_AGENT_SERVICE_NAME)</string>
 	</array>
 </dict>
 </plist>

@@ -5,6 +5,7 @@ struct LaunchContextResolver {
         case automatic
         case loginItem
         case agentHotKey
+        case agentWakeRecovery
         case user
     }
 
@@ -17,6 +18,8 @@ struct LaunchContextResolver {
             explicitContext = .loginItem
         } else if arguments.contains(FloatemAgentXPC.agentLaunchArgument) {
             explicitContext = .agentHotKey
+        } else if arguments.contains(FloatemAgentXPC.agentWakeRecoveryLaunchArgument) {
+            explicitContext = .agentWakeRecovery
         } else if arguments.contains("--floatem-user-launch") || environment["FLOATEM_LAUNCH_CONTEXT"] == "user" {
             explicitContext = .user
         } else {
@@ -49,6 +52,9 @@ struct LaunchContextResolver {
         case .agentHotKey:
             consumedInitialActivation = true
             return true
+        case .agentWakeRecovery:
+            consumedInitialActivation = true
+            return false
         case .user:
             consumedInitialActivation = true
             return true
@@ -70,7 +76,7 @@ struct LaunchContextResolver {
         guard !receivedDeepLink, !consumedInitialActivation else {
             return false
         }
-        if explicitContext == .agentHotKey || (explicitContext == .loginItem && launchAtLoginEnabled) {
+        if explicitContext == .agentHotKey || explicitContext == .agentWakeRecovery || (explicitContext == .loginItem && launchAtLoginEnabled) {
             consumedInitialActivation = true
             return false
         }

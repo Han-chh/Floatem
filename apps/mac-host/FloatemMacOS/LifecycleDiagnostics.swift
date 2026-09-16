@@ -15,6 +15,7 @@ final class LifecycleDiagnostics {
         case launch
         case willSleep
         case didWake
+        case recoveredAfterWake
         case gracefulTermination
         case previousSessionEndedUnexpectedly
     }
@@ -143,6 +144,10 @@ final class LifecycleDiagnostics {
         recordLifecycleEvent(.didWake)
     }
 
+    func recordRecoveredAfterWake() {
+        recordLifecycleEvent(.recoveredAfterWake)
+    }
+
     func recordGracefulTermination(reason: String) {
         heartbeatTimer?.invalidate()
         heartbeatTimer = nil
@@ -214,6 +219,8 @@ final class LifecycleDiagnostics {
             session.sleptAt = timestamp
         case .didWake:
             session.wokeAt = timestamp
+        case .recoveredAfterWake:
+            break
         case .gracefulTermination:
             session.gracefulTerminationAt = timestamp
             session.exitReason = exitReason

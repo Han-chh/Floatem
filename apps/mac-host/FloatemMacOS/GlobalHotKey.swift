@@ -4,7 +4,24 @@ import Foundation
 import OSLog
 
 final class GlobalHotKeyManager {
-    static let defaultShortcut = "Shift+Space"
+    static let defaultShortcut: String = {
+        #if FLOATEM_DEBUG_ISOLATED
+        "Shift+Space"
+        #else
+        "Shift+Space"
+        #endif
+    }()
+
+    /// The Debug artifact uses a separate background Agent identity. Its
+    /// shortcut is intentionally the product shortcut so acceptance uses the
+    /// exact key path users rely on.
+    static func shortcutForCurrentBuild(_ rawShortcut: String) -> String {
+        #if FLOATEM_DEBUG_ISOLATED
+        defaultShortcut
+        #else
+        rawShortcut
+        #endif
+    }
 
     struct RegistrationState {
         let shortcut: String

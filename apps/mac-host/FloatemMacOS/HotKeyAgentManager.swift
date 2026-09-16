@@ -21,6 +21,8 @@ final class HotKeyAgentManager {
 
     var onRegistrationStateChanged: ((RegistrationState) -> Void)?
     var onAgentHotKeyPressed: ((String) -> Bool)?
+    var onAgentHotKeyShowRequested: ((String) -> Bool)?
+    var onAgentWakeRecovery: (() -> Bool)?
 
     private let service = SMAppService.agent(plistName: FloatemAgentXPC.launchAgentPlistName)
     private let logger = Logger(subsystem: "com.floatem.app", category: "HotKeyAgent")
@@ -31,6 +33,14 @@ final class HotKeyAgentManager {
         }
         handler(shortcut)
         return true
+    } onShow: { [weak self] shortcut in
+        guard let handler = self?.onAgentHotKeyShowRequested else {
+            return false
+        }
+        handler(shortcut)
+        return true
+    } onWakeRecovery: { [weak self] in
+        self?.onAgentWakeRecovery?() ?? false
     }
 
     private(set) var registrationState = RegistrationState(
@@ -56,7 +66,9 @@ final class HotKeyAgentManager {
     }
 
     func configure(shortcut rawShortcut: String) throws {
-        let shortcut = try GlobalHotKeyManager.validShortcut(from: rawShortcut)
+        let shortcut = try GlobalHotKeyManager.validShortcut(
+            from: GlobalHotKeyManager.shortcutForCurrentBuild(rawShortcut)
+        )
         guard try ensureAgentRegistered(shortcut: shortcut) else {
             return
         }
@@ -173,14 +185,34 @@ final class HotKeyAgentManager {
 
 private final class AgentHostControlCallback: NSObject, FloatemHostControlProtocol {
     private let onToggle: @MainActor (String) -> Bool
+    private let onShow: @MainActor (String) -> Bool
+    private let onWakeRecovery: @MainActor () -> Bool
 
-    init(onToggle: @escaping @MainActor (String) -> Bool) {
+    init(
+        onToggle: @escaping @MainActor (String) -> Bool,
+        onShow: @escaping @MainActor (String) -> Bool,
+        onWakeRecovery: @escaping @MainActor () -> Bool
+    ) {
         self.onToggle = onToggle
+        self.onShow = onShow
+        self.onWakeRecovery = onWakeRecovery
     }
 
     func toggleMainWindow(shortcut: String, withReply reply: @escaping (Bool) -> Void) {
         Task { @MainActor in
             reply(onToggle(shortcut))
+        }
+    }
+
+    func showMainWindow(shortcut: String, withReply reply: @escaping (Bool) -> Void) {
+        Task { @MainActor in
+            reply(onShow(shortcut))
+        }
+    }
+
+    func recordWakeRecovery(withReply reply: @escaping (Bool) -> Void) {
+        Task { @MainActor in
+            reply(onWakeRecovery())
         }
     }
 }

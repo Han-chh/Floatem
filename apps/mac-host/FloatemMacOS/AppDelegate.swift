@@ -66,6 +66,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         }
         classifyInitialOpenEvent()
         lifecycleDiagnostics?.start()
+        if launchContextResolver.explicitContext == .agentWakeRecovery {
+            lifecycleDiagnostics?.recordRecoveredAfterWake()
+        }
         NSApp.setActivationPolicy(.accessory)
         currentLanguage = (try? storage.currentLanguage()) ?? .simplifiedChinese
         notificationManager.configure()
@@ -76,6 +79,17 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         configureStatusItem()
         installLanguageObserver()
         installSystemPowerObservers()
+        hotKeyAgentManager.onAgentWakeRecovery = { [weak self] in
+            self?.lifecycleDiagnostics?.recordRecoveredAfterWake()
+            return self != nil
+        }
+        hotKeyAgentManager.onAgentHotKeyShowRequested = { [weak self] _ in
+            guard let self else {
+                return false
+            }
+            self.showMainWindowForUserAction()
+            return true
+        }
         updateLocalizedMenuTitles()
 
         DispatchQueue.main.async { [weak self] in

@@ -2,9 +2,20 @@ import Darwin
 import Foundation
 
 enum FloatemAgentXPC {
-    static let agentServiceName = "com.hankch.floatem.hotkey-agent"
-    static let launchAgentPlistName = "com.hankch.floatem.hotkey-agent.plist"
+    static var agentServiceName: String {
+        #if FLOATEM_DEBUG_ISOLATED
+        "com.hankch.floatem.debug.hotkey-agent"
+        #else
+        "com.hankch.floatem.hotkey-agent"
+        #endif
+    }
+
+    static var launchAgentPlistName: String {
+        "\(agentServiceName).plist"
+    }
+
     static let agentLaunchArgument = "--floatem-agent-hotkey"
+    static let agentWakeRecoveryLaunchArgument = "--floatem-agent-wake-recovery"
 }
 
 enum FloatemBackgroundActivityState {
@@ -63,10 +74,13 @@ enum FloatemAgentHostLocator {
     func configureHotKey(_ shortcut: String, withReply reply: @escaping (String, String?) -> Void)
     func currentHotKeyStatus(withReply reply: @escaping (String, String, String?) -> Void)
     func triggerHostLaunchForDiagnostics(withReply reply: @escaping (Bool, String?) -> Void)
+    func triggerWakeRecoveryForDiagnostics(withReply reply: @escaping (Bool, String?) -> Void)
 }
 
 /// Deliberately minimal: a locally running Agent can only request the same
 /// panel toggle that the user invokes through the global shortcut.
 @objc protocol FloatemHostControlProtocol {
     func toggleMainWindow(shortcut: String, withReply reply: @escaping (Bool) -> Void)
+    func showMainWindow(shortcut: String, withReply reply: @escaping (Bool) -> Void)
+    func recordWakeRecovery(withReply reply: @escaping (Bool) -> Void)
 }

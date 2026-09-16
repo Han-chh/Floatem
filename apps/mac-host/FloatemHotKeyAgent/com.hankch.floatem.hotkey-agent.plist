@@ -3,12 +3,12 @@
 <plist version="1.0">
 <dict>
 	<key>Label</key>
-	<string>com.hankch.floatem.hotkey-agent</string>
+	<string>$(FLOATEM_AGENT_SERVICE_NAME)</string>
 	<key>BundleProgram</key>
 	<string>Contents/Resources/FloatemHotKeyAgent</string>
 	<key>MachServices</key>
 	<dict>
-		<key>com.hankch.floatem.hotkey-agent</key>
+		<key>$(FLOATEM_AGENT_SERVICE_NAME)</key>
 		<true/>
 	</dict>
 	<key>KeepAlive</key>
