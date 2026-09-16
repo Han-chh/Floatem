@@ -362,6 +362,21 @@ final class FloatemCoreTests: XCTestCase {
         XCTAssertFalse(deepLink.shouldShowAtDidFinish(isApplicationActive: true, launchAtLoginEnabled: false))
     }
 
+    func testWakeRecoveryOnlyRelaunchesAVisibleHost() {
+        XCTAssertFalse(FloatemWakeRecoveryPolicy.shouldRelaunchHost(
+            hostWasRunningBeforeSleep: false,
+            mainWindowWasVisibleBeforeSleep: false
+        ))
+        XCTAssertFalse(FloatemWakeRecoveryPolicy.shouldRelaunchHost(
+            hostWasRunningBeforeSleep: true,
+            mainWindowWasVisibleBeforeSleep: false
+        ))
+        XCTAssertTrue(FloatemWakeRecoveryPolicy.shouldRelaunchHost(
+            hostWasRunningBeforeSleep: true,
+            mainWindowWasVisibleBeforeSleep: true
+        ))
+    }
+
     func testAgentHostLocatorFindsContainingAppFromAbsoluteExecutablePath() {
         let executableURL = URL(fileURLWithPath: "/Applications/Floatem.app/Contents/Resources/FloatemHotKeyAgent")
 

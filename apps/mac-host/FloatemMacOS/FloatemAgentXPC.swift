@@ -18,6 +18,15 @@ enum FloatemAgentXPC {
     static let agentWakeRecoveryLaunchArgument = "--floatem-agent-wake-recovery"
 }
 
+/// The background Agent must stay available after wake, but a hidden Floatem
+/// host must not be recreated merely because macOS removed it while sleeping.
+/// The next user shortcut is the explicit request that starts a hidden host.
+enum FloatemWakeRecoveryPolicy {
+    static func shouldRelaunchHost(hostWasRunningBeforeSleep: Bool, mainWindowWasVisibleBeforeSleep: Bool) -> Bool {
+        hostWasRunningBeforeSleep && mainWindowWasVisibleBeforeSleep
+    }
+}
+
 enum FloatemBackgroundActivityState {
     static let appGroupIdentifier = "group.com.hankch.floatem"
     private static let activationEpochKey = "floatem.backgroundActivity.activationEpoch"

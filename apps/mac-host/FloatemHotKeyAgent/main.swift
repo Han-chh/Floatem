@@ -251,9 +251,15 @@ private final class FloatemHotKeyAgent: NSObject, NSXPCListenerDelegate, Floatem
     }
 
     private func recoverHostAfterSystemWake(completion: ((Bool, String?) -> Void)? = nil) {
-        guard hostWasRunningBeforeSleep else {
-            logger.notice("Floatem was not running before sleep; preserving the stopped state after wake.")
-            completion?(true, "Floatem was not running before sleep.")
+        guard FloatemWakeRecoveryPolicy.shouldRelaunchHost(
+            hostWasRunningBeforeSleep: hostWasRunningBeforeSleep,
+            mainWindowWasVisibleBeforeSleep: mainWindowWasVisibleBeforeSleep
+        ) else {
+            let detail = hostWasRunningBeforeSleep
+                ? "Floatem was hidden before sleep; preserving the hidden and stopped state after wake."
+                : "Floatem was not running before sleep."
+            logger.notice("\(detail, privacy: .public)")
+            completion?(true, detail)
             return
         }
         guard let appURL = containingAppBundleURL() else {
@@ -267,8 +273,8 @@ private final class FloatemHotKeyAgent: NSObject, NSXPCListenerDelegate, Floatem
             return
         }
 
-        let windowVisibility = mainWindowWasVisibleBeforeSleep
-        logger.notice("Floatem host is missing after wake; restoring it with visible=\(windowVisibility, privacy: .public).")
+        let windowVisibility = true
+        logger.notice("Floatem host was visible before sleep and is missing after wake; restoring it visibly.")
         pendingWakeRecoveryHostNotification = true
         pendingWakeRecoveryWindowVisibility = windowVisibility
         launchHost(
