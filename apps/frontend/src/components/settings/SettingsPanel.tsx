@@ -447,9 +447,7 @@ export function SettingsPanel({ onClose }: SettingsPanelProps) {
         id: "general" as const,
         icon: <SlidersHorizontalIcon size={18} />,
         title: t.settings.categoryGeneralTitle,
-        description: canUninstallApplication
-          ? t.settings.categoryGeneralDescriptionWithUninstall
-          : t.settings.categoryGeneralDescription,
+        description: t.settings.categoryGeneralDescription,
         meta: `${language === "en" ? t.settings.englishMode : t.settings.zhMode} / ${timeZone}`,
       },
       {
@@ -484,7 +482,9 @@ export function SettingsPanel({ onClose }: SettingsPanelProps) {
         id: "about" as const,
         icon: <NotebookPenIcon size={18} />,
         title: t.settings.categoryAboutTitle,
-        description: t.settings.categoryAboutDescription,
+        description: canUninstallApplication
+          ? t.settings.categoryAboutDescriptionWithUninstall
+          : t.settings.categoryAboutDescription,
         meta: `${t.settings.appVersionTitle} ${__FLOATEM_VERSION__}`,
       },
     ],
@@ -823,10 +823,6 @@ export function SettingsPanel({ onClose }: SettingsPanelProps) {
                     setTimeFormat={setTimeFormat}
                     launchAtLogin={launchAtLogin}
                     setLaunchAtLogin={setLaunchAtLogin}
-                    uninstallFeedback={uninstallFeedback}
-                    isRequestingUninstall={isRequestingUninstall}
-                    handleUninstallApplication={handleUninstallApplication}
-                    canUninstallApplication={canUninstallApplication}
                   />
                 ) : null}
 
@@ -876,7 +872,12 @@ export function SettingsPanel({ onClose }: SettingsPanelProps) {
                 ) : null}
 
                 {activeCategory === "about" ? (
-                  <AboutFloatemSettings />
+                  <AboutFloatemSettings
+                    uninstallFeedback={uninstallFeedback}
+                    isRequestingUninstall={isRequestingUninstall}
+                    handleUninstallApplication={handleUninstallApplication}
+                    canUninstallApplication={canUninstallApplication}
+                  />
                 ) : null}
               </div>
             </motion.div>
@@ -1198,10 +1199,6 @@ function GeneralSettings({
   setTimeFormat,
   launchAtLogin,
   setLaunchAtLogin,
-  uninstallFeedback,
-  isRequestingUninstall,
-  handleUninstallApplication,
-  canUninstallApplication,
 }: {
   language: "en" | "zh-CN";
   setLanguage: (language: "en" | "zh-CN") => void;
@@ -1211,10 +1208,6 @@ function GeneralSettings({
   setTimeFormat: (timeFormat: TimeFormat) => void;
   launchAtLogin: boolean;
   setLaunchAtLogin: (launchAtLogin: boolean) => void;
-  uninstallFeedback: HotkeyFeedback | null;
-  isRequestingUninstall: boolean;
-  handleUninstallApplication: () => Promise<void>;
-  canUninstallApplication: boolean;
 }) {
   const { t } = useI18n();
 
@@ -1259,20 +1252,6 @@ function GeneralSettings({
         setTimeZone={setTimeZone}
         setTimeFormat={setTimeFormat}
       />
-
-      {canUninstallApplication ? (
-        <SettingSection title={t.settings.uninstallSectionTitle} description={t.settings.uninstallSectionSubtitle}>
-          <FirstLevelAction
-            tone="danger"
-            title={t.settings.uninstallApplication}
-            description={t.settings.uninstallApplicationBody}
-            feedback={uninstallFeedback}
-            busy={isRequestingUninstall}
-            buttonLabel={t.settings.uninstallApplicationButton}
-            onClick={() => void handleUninstallApplication()}
-          />
-        </SettingSection>
-      ) : null}
     </>
   );
 }
@@ -1748,7 +1727,17 @@ function NotificationSettings({
   );
 }
 
-function AboutFloatemSettings() {
+function AboutFloatemSettings({
+  uninstallFeedback,
+  isRequestingUninstall,
+  handleUninstallApplication,
+  canUninstallApplication,
+}: {
+  uninstallFeedback: HotkeyFeedback | null;
+  isRequestingUninstall: boolean;
+  handleUninstallApplication: () => Promise<void>;
+  canUninstallApplication: boolean;
+}) {
   const { t } = useI18n();
 
   return (
@@ -1820,6 +1809,20 @@ function AboutFloatemSettings() {
           <span className="break-all">{FLOATEM_WEBSITE_URL}</span>
         </a>
       </SettingSection>
+
+      {canUninstallApplication ? (
+        <SettingSection title={t.settings.uninstallSectionTitle} description={t.settings.uninstallSectionSubtitle}>
+          <FirstLevelAction
+            tone="danger"
+            title={t.settings.uninstallApplication}
+            description={t.settings.uninstallApplicationBody}
+            feedback={uninstallFeedback}
+            busy={isRequestingUninstall}
+            buttonLabel={t.settings.uninstallApplicationButton}
+            onClick={() => void handleUninstallApplication()}
+          />
+        </SettingSection>
+      ) : null}
 
       <footer
         data-testid="about-copyright-footer"

@@ -11,7 +11,7 @@ All notable repository changes are recorded here. Historical entries describe th
 - Present uninstall confirmation and failure messages as sheets attached to the Floatem window, and keep the status-bar menu synchronized with Floatem's internal Chinese or English language.
 - Add a persistent macOS status-bar menu with state-aware Show Floatem or Hide Floatem actions, reload and reveal its interface, and quit the application.
 - Run Floatem as a menu-bar accessory application so its Dock icon never appears and all lifecycle actions remain available from the status bar.
-- Add a General Settings uninstall entry that opens the same native confirmation and data-retention flow as the status-bar action.
+- Add an About Floatem uninstall entry, with a first-level settings hint, that opens the same native confirmation and data-retention flow as the status-bar action.
 - Add a compact, localized Floatem context menu with a Quit Floatem action when right-clicking the main window or a floating card.
 - Preserve supported rich-text Note formatting through paste and copy, without applying the toolbar's current typing format to pasted text.
 - Suppress WebKit's default context menus in the main window and floating cards so Floatem can provide its own context actions later.

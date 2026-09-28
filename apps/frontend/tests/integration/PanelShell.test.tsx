@@ -67,7 +67,7 @@ describe("PanelShell", () => {
     }
   });
 
-  it("offers the native uninstall confirmation from General settings", async () => {
+  it("offers the native uninstall confirmation from About Floatem", async () => {
     const originalBridge = window.floatemHost;
     const uninstallApplication = vi.fn(async () => {});
     window.floatemHost = {
@@ -81,8 +81,9 @@ describe("PanelShell", () => {
     render(<SettingsPanel onClose={vi.fn()} />);
 
     try {
-      expect(screen.getByText("Startup, language, timezone, and uninstall options for the app.")).toBeInTheDocument();
-      await user.click(screen.getByRole("button", { name: /General/ }));
+      expect(screen.getByText("Startup, language, and timezone preferences for the app.")).toBeInTheDocument();
+      expect(screen.getByText("App information, local data, privacy, and uninstall options.")).toBeInTheDocument();
+      await user.click(screen.getByRole("button", { name: /About Floatem/ }));
       await user.click(screen.getByRole("button", { name: "Uninstall Floatem…" }));
 
       expect(uninstallApplication).toHaveBeenCalledOnce();

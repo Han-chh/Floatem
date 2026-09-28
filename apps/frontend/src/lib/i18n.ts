@@ -153,9 +153,9 @@ type MessageCatalog = {
     appIntro: string;
     backToSettings: string;
     categoryAboutDescription: string;
+    categoryAboutDescriptionWithUninstall: string;
     categoryAboutTitle: string;
     categoryGeneralDescription: string;
-    categoryGeneralDescriptionWithUninstall: string;
     categoryGeneralTitle: string;
     categoryMotionDescription: string;
     categoryMotionTitle: string;
@@ -554,9 +554,9 @@ const messages: Record<AppLanguage, MessageCatalog> = {
       appIntro: "Configure how the tray panel opens, switches between Notes and Todos, and how much motion feedback you want while working.",
       backToSettings: "All settings",
       categoryAboutDescription: "App overview and local-only data details.",
+      categoryAboutDescriptionWithUninstall: "App information, local data, privacy, and uninstall options.",
       categoryAboutTitle: "About Floatem",
       categoryGeneralDescription: "Startup, language, and timezone preferences for the app.",
-      categoryGeneralDescriptionWithUninstall: "Startup, language, timezone, and uninstall options for the app.",
       categoryGeneralTitle: "General",
       categoryMotionDescription: "Tab transitions, switching speed, and small completion effects.",
       categoryMotionTitle: "Motion and feedback",
@@ -955,9 +955,9 @@ const messages: Record<AppLanguage, MessageCatalog> = {
       appIntro: "配置托盘面板的打开方式、Notes 与 Todos 的切换方式，以及你希望保留多少动效反馈。",
       backToSettings: "全部设置",
       categoryAboutDescription: "应用概览和仅本地存储的数据说明。",
+      categoryAboutDescriptionWithUninstall: "应用信息、本地数据、隐私与卸载选项。",
       categoryAboutTitle: "关于 Floatem",
       categoryGeneralDescription: "开机启动、应用语言和时区偏好设置。",
-      categoryGeneralDescriptionWithUninstall: "开机启动、应用语言、时区和卸载选项。",
       categoryGeneralTitle: "通用",
       categoryMotionDescription: "标签切换、切换速度和完成反馈效果。",
       categoryMotionTitle: "动效与反馈",
