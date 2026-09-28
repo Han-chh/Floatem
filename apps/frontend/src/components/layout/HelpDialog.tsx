@@ -32,7 +32,9 @@ const SECTION_ICON_MAP: Record<HelpSection["id"], typeof SparklesIcon> = {
 
 export function HelpDialog({ isOpen, onClose, onStartInteractiveGuide }: HelpDialogProps) {
   const { language, t } = useI18n();
-  const hotkey = useSettingsStore((state) => state.hotkey);
+  const configuredHotkey = useSettingsStore((state) => state.hotkey);
+  const registeredHotkey = useSettingsStore((state) => state.hotkeyRegistrationState?.shortcut);
+  const hotkey = registeredHotkey || configuredHotkey;
   const defaultOpenSection = useSettingsStore((state) => state.defaultOpenSection);
   const timeZone = useSettingsStore((state) => state.timeZone);
   const timeFormat = useSettingsStore((state) => state.timeFormat);

@@ -182,9 +182,43 @@ describe("PanelShell", () => {
     const todosGuide = screen.getByRole("dialog", { name: "Plan tasks around a day" });
     expect(
       within(todosGuide).getByText(
-        "To create a todo, switch to Todos, press Enter to focus the quick-entry field, type the todo, then press Enter again to submit it.",
+        "On the Todos page, press Enter to focus quick entry, type the task, then press Enter again or click the submit control to create it.",
       ),
     ).toBeInTheDocument();
+  });
+
+  it("shows the shortcut currently reported by the native registration state in help", async () => {
+    const user = userEvent.setup();
+    useSettingsStore.setState({
+      hotkey: "Shift+Space",
+      hotkeyRegistrationState: {
+        shortcut: "Option+Shift+Space",
+        registration: "registered",
+      },
+      language: "en",
+    });
+
+    render(
+      <PanelShell
+        activeTab="notes"
+        animationSpeed="mediate"
+        onTabChange={vi.fn()}
+        onToggleSettings={vi.fn()}
+        settingsPanel={<div>Settings panel</div>}
+        showSettings={false}
+        transitionStyle="lift"
+      >
+        <div>Panel body</div>
+      </PanelShell>,
+    );
+
+    await user.click(screen.getByRole("button", { name: "Floatem help" }));
+    const dialog = screen.getByRole("dialog", { name: "Floatem guide" });
+    await user.click(within(dialog).getByRole("button", { name: "Overview" }));
+    const overview = screen.getByRole("dialog", { name: "Use the Floatem panel" });
+
+    expect(within(overview).getAllByText(/Option\+Shift\+Space/).length).toBeGreaterThan(0);
+    expect(within(overview).queryByText(/^Shift\+Space$/)).not.toBeInTheDocument();
   });
 
   it("highlights the help entry once on a fresh installation", async () => {
@@ -305,7 +339,7 @@ describe("PanelShell", () => {
     );
 
     await user.click(screen.getByRole("button", { name: "Floatem help" }));
-    expect(screen.getByText(/Explore 7 complete feature workflows in the real app/)).toBeInTheDocument();
+    expect(screen.getByText(/Practice seven complete workflows in the real app/)).toBeInTheDocument();
 
     await user.click(screen.getByRole("button", { name: "Start interactive guide" }));
     const guide = screen.getByRole("dialog", { name: "Floatem interactive guide" });

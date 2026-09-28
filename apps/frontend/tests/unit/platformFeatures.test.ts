@@ -9,7 +9,7 @@ describe("platformFeatures", () => {
     });
   });
 
-  it("disables floating notes and todos on Windows for v0.5.0", () => {
+  it("keeps floating notes and todos unavailable on Windows", () => {
     expect(platformFeatures.windows).toEqual({
       floatingNotes: false,
       floatingTodos: false,
