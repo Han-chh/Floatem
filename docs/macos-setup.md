@@ -47,6 +47,15 @@ open apps/mac-host/Floatem.xcodeproj
 
 Then run the `Floatem` scheme.
 
+### Daily Debug behavior
+
+The `Debug` configuration deliberately does not register the persistent macOS
+hotkey Agent. It uses a process-local `Option+Shift+Space` shortcut, which is
+released when the Debug app exits. This lets a Debug build run alongside the
+released app without opening both apps or leaving a stale background item after
+the Debug artifact is removed. `Archive` uses the `Release` configuration, so
+it retains the production background Agent and `Shift+Space` behavior.
+
 ## Native Capabilities
 
 - AppKit owns app lifecycle, menu bar item, status menu, window levels, and overlay behavior.

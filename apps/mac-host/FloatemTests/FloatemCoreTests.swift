@@ -2,11 +2,12 @@ import XCTest
 @testable import Floatem
 
 final class FloatemCoreTests: XCTestCase {
-    func testDebugBuildUsesTheProductShortcutWithAnIsolatedAgent() {
-        XCTAssertEqual(GlobalHotKeyManager.defaultShortcut, "Shift+Space")
+    func testDebugBuildUsesAProcessLocalShortcut() {
+        XCTAssertFalse(HotKeyAgentManager.usesBackgroundAgent)
+        XCTAssertEqual(GlobalHotKeyManager.defaultShortcut, "Option+Shift+Space")
         XCTAssertEqual(
-            GlobalHotKeyManager.shortcutForCurrentBuild("Option+Shift+Space"),
-            "Shift+Space"
+            GlobalHotKeyManager.shortcutForCurrentBuild("Shift+Space"),
+            "Option+Shift+Space"
         )
     }
 

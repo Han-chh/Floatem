@@ -6,15 +6,15 @@ import OSLog
 final class GlobalHotKeyManager {
     static let defaultShortcut: String = {
         #if FLOATEM_DEBUG_ISOLATED
-        "Shift+Space"
+        "Option+Shift+Space"
         #else
         "Shift+Space"
         #endif
     }()
 
-    /// The Debug artifact uses a separate background Agent identity. Its
-    /// shortcut is intentionally the product shortcut so acceptance uses the
-    /// exact key path users rely on.
+    /// Debug always uses a process-local shortcut, independent of the
+    /// persisted production preference. This keeps a development session from
+    /// competing with the released app's `Shift+Space` registration.
     static func shortcutForCurrentBuild(_ rawShortcut: String) -> String {
         #if FLOATEM_DEBUG_ISOLATED
         defaultShortcut

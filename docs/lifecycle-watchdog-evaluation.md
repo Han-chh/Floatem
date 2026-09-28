@@ -35,8 +35,8 @@ Creating or editing `~/Library/LaunchAgents/*.plist` directly bypasses ServiceMa
 
 ## Required test isolation
 
-The Debug configuration uses its own ServiceManagement label and Mach service, `com.hankch.floatem.debug.hotkey-agent`. Release continues to use `com.hankch.floatem.hotkey-agent`. Both use `Shift+Space`, so only one agent can own the shortcut at a time; disable the other background item before a simultaneous comparison.
+The Debug configuration does **not** register a ServiceManagement Agent. It registers the process-local `Option+Shift+Space` shortcut instead, so it is automatically released when the Debug host exits and can run alongside the released app without competing for `Shift+Space`. On launch, a Debug build also unregisters the legacy `com.hankch.floatem.debug.hotkey-agent` service left behind by earlier builds.
 
-The Debug artifact intentionally still shares the production bundle identifier and App Group because the available development signing profile only authorizes those identifiers. Its notes/settings data therefore is not isolated; use test data or reset the test state before comparison. The shortcut and recovery agents are isolated.
+The Debug artifact intentionally still shares the production bundle identifier and App Group because the available development signing profile only authorizes those identifiers. Its notes/settings data therefore is not isolated; use test data or reset the test state before comparison. The Debug shortcut is deliberately isolated from the shared saved shortcut preference.
 
-Quick acceptance: quit the Debug host, press `Shift+Space`, and confirm it reopens from the Debug app path. For sleep/wake testing, first hide the Debug host, sleep and wake the Mac, and confirm it stays hidden. Repeat with the panel visible and confirm it stays visible. A fully quit Debug host must remain quit after wake; pressing `Shift+Space` is then the explicit action that reopens it.
+Quick acceptance for daily development: run both apps, press `Option+Shift+Space`, and confirm that only the Debug host toggles. Press `Shift+Space`, and confirm that only the released app toggles. Agent and sleep/wake behavior must be tested with a Release-style build and only one registered background Agent.

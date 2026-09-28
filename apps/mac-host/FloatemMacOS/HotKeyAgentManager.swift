@@ -4,6 +4,14 @@ import ServiceManagement
 
 @MainActor
 final class HotKeyAgentManager {
+    static let usesBackgroundAgent: Bool = {
+        #if FLOATEM_DEBUG_ISOLATED
+        false
+        #else
+        true
+        #endif
+    }()
+
     struct RegistrationState {
         let shortcut: String
         let registration: String
@@ -27,6 +35,7 @@ final class HotKeyAgentManager {
     var onAgentWakeRecovery: (() -> Bool)?
 
     private let service = SMAppService.agent(plistName: FloatemAgentXPC.launchAgentPlistName)
+    private let localHotKeyManager = GlobalHotKeyManager()
     private let logger = Logger(subsystem: "com.floatem.app", category: "HotKeyAgent")
     private var agentConnection: NSXPCConnection?
     private lazy var hostControlCallback = AgentHostControlCallback { [weak self] shortcut in
@@ -63,6 +72,49 @@ final class HotKeyAgentManager {
         registrationState.registration == "registered" ? registrationState.shortcut : nil
     }
 
+    init() {
+        #if FLOATEM_DEBUG_ISOLATED
+        localHotKeyManager.onHotKeyPressed = { [weak self] in
+            guard let self else {
+                return
+            }
+            _ = self.onAgentHotKeyPressed?(self.registrationState.shortcut)
+        }
+        localHotKeyManager.onRegistrationStateChanged = { [weak self] state in
+            self?.publish(
+                shortcut: state.shortcut,
+                registration: state.registration,
+                message: state.message
+            )
+        }
+        #endif
+    }
+
+    /// Debug builds used to register their own ServiceManagement Agent. Remove
+    /// that legacy registration once so a deleted Debug app cannot be launched
+    /// by its stale Agent later.
+    func prepareForDevelopmentSession() {
+        #if FLOATEM_DEBUG_ISOLATED
+        switch service.status {
+        case .notRegistered, .notFound:
+            return
+        case .enabled, .requiresApproval:
+            do {
+                try service.unregister()
+                logger.notice("Removed the legacy Debug hotkey Agent registration.")
+            } catch {
+                logger.error("Unable to remove the legacy Debug hotkey Agent. error=\(error.localizedDescription, privacy: .public)")
+            }
+        @unknown default:
+            do {
+                try service.unregister()
+            } catch {
+                logger.error("Unable to remove the legacy Debug hotkey Agent. error=\(error.localizedDescription, privacy: .public)")
+            }
+        }
+        #endif
+    }
+
     func configureOnLaunch(shortcut: String) {
         do {
             try configure(shortcut: shortcut)
@@ -72,6 +124,13 @@ final class HotKeyAgentManager {
     }
 
     func configure(shortcut rawShortcut: String) throws {
+        #if FLOATEM_DEBUG_ISOLATED
+        let shortcut = try GlobalHotKeyManager.validShortcut(
+            from: GlobalHotKeyManager.shortcutForCurrentBuild(rawShortcut)
+        )
+        try localHotKeyManager.register(shortcut: shortcut)
+        return
+        #else
         let shortcut = try GlobalHotKeyManager.validShortcut(
             from: GlobalHotKeyManager.shortcutForCurrentBuild(rawShortcut)
         )
@@ -79,6 +138,7 @@ final class HotKeyAgentManager {
             return
         }
         syncShortcut(shortcut, attempt: 0)
+        #endif
     }
 
     func reconnectAfterSystemWake(shortcut: String) {
@@ -86,6 +146,12 @@ final class HotKeyAgentManager {
     }
 
     func backgroundActivityStatus() -> BackgroundActivityStatus {
+        #if FLOATEM_DEBUG_ISOLATED
+        return BackgroundActivityStatus(
+            status: "developmentLocal",
+            activationEpoch: FloatemBackgroundActivityState.activationEpoch
+        )
+        #else
         switch service.status {
         case .enabled:
             return BackgroundActivityStatus(status: "enabled", activationEpoch: FloatemBackgroundActivityState.activationEpoch)
@@ -98,6 +164,7 @@ final class HotKeyAgentManager {
         @unknown default:
             return BackgroundActivityStatus(status: "unknown", activationEpoch: FloatemBackgroundActivityState.activationEpoch)
         }
+        #endif
     }
 
     private func ensureAgentRegistered(shortcut: String) throws -> Bool {

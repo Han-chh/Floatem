@@ -64,6 +64,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         if ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] != nil {
             return
         }
+        hotKeyAgentManager.prepareForDevelopmentSession()
         classifyInitialOpenEvent()
         lifecycleDiagnostics?.start()
         if launchContextResolver.explicitContext == .agentWakeRecovery {
