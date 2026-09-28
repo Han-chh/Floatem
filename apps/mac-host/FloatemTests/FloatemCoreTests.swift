@@ -30,6 +30,8 @@ final class FloatemCoreTests: XCTestCase {
         XCTAssertEqual(english.menuReload, "Reload Interface")
         XCTAssertEqual(english.menuUninstall, "Uninstall Floatem…")
         XCTAssertEqual(english.menuQuit, "Quit")
+        XCTAssertEqual(english.uninstallConfirm, "Continue in Finder")
+        XCTAssertTrue(english.uninstallMessage.contains("Finder"))
 
         let chinese = FloatemLanguage(storedValue: "zh-CN").localization
         XCTAssertEqual(chinese.menuShow, "显示 Floatem")
@@ -37,6 +39,8 @@ final class FloatemCoreTests: XCTestCase {
         XCTAssertEqual(chinese.menuReload, "重新加载界面")
         XCTAssertEqual(chinese.menuUninstall, "卸载 Floatem…")
         XCTAssertEqual(chinese.menuQuit, "退出")
+        XCTAssertEqual(chinese.uninstallConfirm, "在 Finder 中继续")
+        XCTAssertTrue(chinese.uninstallMessage.contains("Finder"))
     }
 
     func testMacHostIsConfiguredAsADocklessMenuBarApplication() {

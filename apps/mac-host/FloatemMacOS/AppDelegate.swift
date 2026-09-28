@@ -475,27 +475,13 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
                 return
             }
 
+            // Sandboxed Mac App Store apps cannot move their own bundle to the
+            // Trash. Reveal the bundle after cleanup so the user can finish the
+            // uninstall in Finder, then terminate to release the app bundle.
             let appURL = Bundle.main.bundleURL.standardizedFileURL
-            NSWorkspace.shared.recycle([appURL]) { [weak self] movedURLs, recycleError in
-                Task { @MainActor [weak self] in
-                    guard let self else {
-                        return
-                    }
-                    if let recycleError {
-                        self.finishFailedUninstall(recycleError)
-                        return
-                    }
-                    guard movedURLs[appURL] != nil else {
-                        let error = NSError(
-                            domain: "com.hankch.floatem.uninstall",
-                            code: 1,
-                            userInfo: [NSLocalizedDescriptionKey: "macOS did not move Floatem.app to the Trash."]
-                        )
-                        self.finishFailedUninstall(error)
-                        return
-                    }
-                    NSApp.terminate(nil)
-                }
+            NSWorkspace.shared.activateFileViewerSelecting([appURL])
+            DispatchQueue.main.async {
+                NSApp.terminate(nil)
             }
         }
     }
