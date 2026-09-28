@@ -1029,6 +1029,10 @@ final class MainWindowController: NSObject, NSWindowDelegate, FloatemNativeBridg
         NSApp.terminate(nil)
     }
 
+    func uninstallApplicationFromBridge() {
+        (NSApp.delegate as? AppDelegate)?.confirmUninstallApplicationFromBridge()
+    }
+
     func startWindowDragFromBridge() throws {
         guard let currentEvent = NSApp.currentEvent else {
             throw FloatemBridgeError.invalidParameters("Floatem could not access the current mouse event for dragging.")

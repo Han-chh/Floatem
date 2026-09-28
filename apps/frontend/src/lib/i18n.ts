@@ -155,6 +155,7 @@ type MessageCatalog = {
     categoryAboutDescription: string;
     categoryAboutTitle: string;
     categoryGeneralDescription: string;
+    categoryGeneralDescriptionWithUninstall: string;
     categoryGeneralTitle: string;
     categoryMotionDescription: string;
     categoryMotionTitle: string;
@@ -234,6 +235,12 @@ type MessageCatalog = {
     quitApplicationBody: string;
     quitApplicationButton: string;
     quitApplicationFailed: string;
+    uninstallApplication: string;
+    uninstallApplicationBody: string;
+    uninstallApplicationButton: string;
+    uninstallApplicationFailed: string;
+    uninstallSectionSubtitle: string;
+    uninstallSectionTitle: string;
     restoreDefaults: string;
     restoreDefaultsBody: string;
     restoreDefaultsFailed: (shortcut: string) => string;
@@ -547,6 +554,7 @@ const messages: Record<AppLanguage, MessageCatalog> = {
       categoryAboutDescription: "App overview and local-only data details.",
       categoryAboutTitle: "About Floatem",
       categoryGeneralDescription: "Startup, language, and timezone preferences for the app.",
+      categoryGeneralDescriptionWithUninstall: "Startup, language, timezone, and uninstall options for the app.",
       categoryGeneralTitle: "General",
       categoryMotionDescription: "Tab transitions, switching speed, and small completion effects.",
       categoryMotionTitle: "Motion and feedback",
@@ -628,6 +636,12 @@ const messages: Record<AppLanguage, MessageCatalog> = {
       quitApplicationBody: "Fully terminate Floatem instead of only hiding the floating panel.",
       quitApplicationButton: "Quit Floatem",
       quitApplicationFailed: "Floatem could not quit from the current environment.",
+      uninstallApplication: "Uninstall Floatem",
+      uninstallApplicationBody: "Open the same confirmation used by the status-bar menu. You can choose whether to keep your notes, todos, and settings.",
+      uninstallApplicationButton: "Uninstall Floatem…",
+      uninstallApplicationFailed: "Floatem could not open the uninstall confirmation.",
+      uninstallSectionSubtitle: "Remove Floatem and decide whether to keep its local data.",
+      uninstallSectionTitle: "Uninstall",
       restoreDefaults: "Restore defaults",
       restoreDefaultsBody: "Reset startup, theme, language, timezone, time format, shortcut, default section, motion, reminder sound, and saved panel position.",
       restoreDefaultsFailed: (shortcut) => `Defaults were not restored. Keeping ${shortcut}.`,
@@ -939,6 +953,7 @@ const messages: Record<AppLanguage, MessageCatalog> = {
       categoryAboutDescription: "应用概览和仅本地存储的数据说明。",
       categoryAboutTitle: "关于 Floatem",
       categoryGeneralDescription: "开机启动、应用语言和时区偏好设置。",
+      categoryGeneralDescriptionWithUninstall: "开机启动、应用语言、时区和卸载选项。",
       categoryGeneralTitle: "通用",
       categoryMotionDescription: "标签切换、切换速度和完成反馈效果。",
       categoryMotionTitle: "动效与反馈",
@@ -1020,6 +1035,12 @@ const messages: Record<AppLanguage, MessageCatalog> = {
       quitApplicationBody: "完全结束 Floatem，而不只是隐藏悬浮面板。",
       quitApplicationButton: "完全退出 Floatem",
       quitApplicationFailed: "当前环境下无法退出 Floatem。",
+      uninstallApplication: "卸载 Floatem",
+      uninstallApplicationBody: "打开与状态栏菜单相同的确认窗口。你可以选择是否保留笔记、待办和设置。",
+      uninstallApplicationButton: "卸载 Floatem…",
+      uninstallApplicationFailed: "Floatem 无法打开卸载确认窗口。",
+      uninstallSectionSubtitle: "移除 Floatem，并选择是否保留本地用户数据。",
+      uninstallSectionTitle: "卸载",
       restoreDefaults: "恢复默认设置",
       restoreDefaultsBody: "重置开机启动、主题、语言、时区、时间格式、快捷键、默认分区、动效、提醒声音以及保存的窗口位置。",
       restoreDefaultsFailed: (shortcut) => `默认设置未恢复，当前仍保留 ${shortcut}。`,

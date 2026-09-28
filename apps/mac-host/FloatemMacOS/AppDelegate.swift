@@ -224,6 +224,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     }
 
     @objc private func confirmUninstallApplication(_ sender: Any?) {
+        confirmUninstallApplicationFromBridge()
+    }
+
+    func confirmUninstallApplicationFromBridge() {
         guard !isUninstalling, !isPresentingUninstallConfirmation else {
             return
         }
@@ -232,8 +236,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         showMainWindowForUserAction()
         updateToggleMenuTitles()
 
-        // Let the status or application menu close before attaching the sheet
-        // so the confirmation is visibly anchored to the Floatem window.
+        // Let the status menu close before attaching the sheet so the
+        // confirmation is visibly anchored to the Floatem window.
         DispatchQueue.main.async { [weak self] in
             guard let self else {
                 return

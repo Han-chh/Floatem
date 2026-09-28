@@ -86,6 +86,7 @@ protocol FloatemNativeBridgeHandling: AnyObject {
     func requestDesktopWidgetFromBridge(kind: String, id: String) throws -> [String: Any]
     func removeDesktopWidgetAssociationFromBridge(kind: String, id: String) throws
     func getDesktopWidgetStateFromBridge(kind: String, id: String) throws -> [String: Any]
+    func uninstallApplicationFromBridge()
     func quitApplicationFromBridge()
     func startWindowDragFromBridge() throws
 }

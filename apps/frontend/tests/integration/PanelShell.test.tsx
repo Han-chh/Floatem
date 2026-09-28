@@ -67,6 +67,30 @@ describe("PanelShell", () => {
     }
   });
 
+  it("offers the native uninstall confirmation from General settings", async () => {
+    const originalBridge = window.floatemHost;
+    const uninstallApplication = vi.fn(async () => {});
+    window.floatemHost = {
+      loadAllData: vi.fn(),
+      uninstallApplication,
+    } as unknown as NonNullable<typeof window.floatemHost>;
+    HTMLElement.prototype.scrollTo = vi.fn();
+    useSettingsStore.setState({ language: "en" });
+    const user = userEvent.setup();
+
+    render(<SettingsPanel onClose={vi.fn()} />);
+
+    try {
+      expect(screen.getByText("Startup, language, timezone, and uninstall options for the app.")).toBeInTheDocument();
+      await user.click(screen.getByRole("button", { name: /General/ }));
+      await user.click(screen.getByRole("button", { name: "Uninstall Floatem…" }));
+
+      expect(uninstallApplication).toHaveBeenCalledOnce();
+    } finally {
+      window.floatemHost = originalBridge;
+    }
+  });
+
   it("shows localized privacy details with the fixed English copyright block and contact email", async () => {
     const user = userEvent.setup();
     HTMLElement.prototype.scrollTo = vi.fn();

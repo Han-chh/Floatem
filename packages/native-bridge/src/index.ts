@@ -237,6 +237,7 @@ export type HostBridge<TLoadAllResult, TNotes, TTodos, TSettings> = {
   setTextCompositionActive: (active: boolean) => void | Promise<void>;
   setWindowTheme?: (theme: string) => void | Promise<void>;
   openDevTools: () => Promise<void>;
+  uninstallApplication?: () => Promise<void>;
   quitApplication: () => Promise<void>;
   reportFrontendReady: () => void | Promise<void>;
   reportFrontendError: (message: string, source?: string) => void | Promise<void>;
