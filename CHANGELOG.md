@@ -2,6 +2,10 @@
 
 All notable repository changes are recorded here. Historical entries describe the behavior of their named release and are not statements of current platform support.
 
+## 1.0.13 (Build 67)
+
+- Prevent the rich-text note toolbar from jumping when a long note body gains focus by removing its layout-projection animation; toolbar controls retain their individual interaction animations.
+
 ## 1.0.11 (Build 62)
 
 - Improve Shift + Space recovery after extended macOS sleep with a ServiceManagement-managed background item that owns the global shortcut and uses a local XPC connection to restore or relaunch Floatem when the main host is unavailable.

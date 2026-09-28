@@ -232,6 +232,9 @@ export function Toolbar({
   }, [noteId]);
 
   return (
+    // Slate emits a selection-only update when an editor gains focus. Keeping
+    // this toolbar out of Framer Motion's layout projection prevents those
+    // updates from repeatedly compensating its position in a long note.
     <motion.div
       data-action="note-rich-toolbar"
       className={`${attached ? "note-toolbar-attached" : "paper-card"} note-toolbar-grid relative transition-[width] duration-200 ease-out ${
@@ -243,8 +246,6 @@ export function Toolbar({
             ? "note-toolbar-attached--expanded"
             : "w-full rounded-[14px] bg-[rgba(255,250,244,0.66)] px-1 py-1"
       }`}
-      layout
-      transition={{ layout: { duration: instant ? 0 : 0.2, ease: [0.22, 1, 0.36, 1] } }}
     >
       {!isCollapsed ? toolItems.map(({ action, activeTone, disabled, format, label, icon: Icon, shortcut, tone, tooltipAlign }, index) => {
         const isActive =
