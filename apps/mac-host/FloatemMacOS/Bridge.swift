@@ -125,6 +125,7 @@ enum FloatemLanguage: String {
             return FloatemLocalization(
                 menuToggle: "Toggle",
                 menuToggleApp: "Toggle Floatem",
+                menuReload: "Reload Interface",
                 menuQuit: "Quit",
                 menuQuitApp: "Quit Floatem",
                 menuEdit: "Edit",
@@ -159,6 +160,7 @@ enum FloatemLanguage: String {
             return FloatemLocalization(
                 menuToggle: "显示或隐藏",
                 menuToggleApp: "显示或隐藏 Floatem",
+                menuReload: "重新加载界面",
                 menuQuit: "退出",
                 menuQuitApp: "退出 Floatem",
                 menuEdit: "编辑",
@@ -205,6 +207,7 @@ enum FloatemLanguage: String {
 struct FloatemLocalization {
     let menuToggle: String
     let menuToggleApp: String
+    let menuReload: String
     let menuQuit: String
     let menuQuitApp: String
     let menuEdit: String

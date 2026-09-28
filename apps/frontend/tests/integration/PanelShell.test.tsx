@@ -76,7 +76,7 @@ describe("PanelShell", () => {
     await user.click(screen.getByRole("button", { name: /关于 Floatem/ }));
 
     expect(screen.getByText("Don't lose thoughts. Float'em.")).toBeInTheDocument();
-    expect(screen.getByText(/Version 1\.0\.\d+ \(Build \d+\)/)).toBeInTheDocument();
+    expect(screen.getByText(/Version \d+\.\d+\.\d+ \(Build \d+\)/)).toBeInTheDocument();
     const copyrightFooter = screen.getByTestId("about-copyright-footer");
     expect(within(copyrightFooter).getByText("Designed and developed by Hank Chen")).toBeInTheDocument();
     expect(within(copyrightFooter).getByText("© 2026 Hank Chen. All rights reserved.")).toBeInTheDocument();

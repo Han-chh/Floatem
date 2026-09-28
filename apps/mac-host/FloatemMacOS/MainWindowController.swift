@@ -243,6 +243,13 @@ final class MainWindowController: NSObject, NSWindowDelegate, FloatemNativeBridg
         togglePanel(reason: "manual-toggle")
     }
 
+    func reloadApplicationInterface() {
+        webViewController.reloadFrontendForUserAction()
+        floatingCardWindowControllers.values.forEach { controller in
+            controller.reloadFrontendForUserAction()
+        }
+    }
+
     func handleAgentHotKeyPressed(shortcut: String) {
         let now = CFAbsoluteTimeGetCurrent()
 

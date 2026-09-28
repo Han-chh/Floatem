@@ -570,9 +570,9 @@ describe("FloatingNoteApp", () => {
 
       await waitFor(() => {
         expect(editor).toHaveTextContent("Floating body");
-        expect(editor.querySelector("strong")).not.toBeNull();
-        expect(editor.querySelector("em")).not.toBeNull();
-        expect(editor.querySelector("u")).not.toBeNull();
+        expect(editor.querySelector("strong")).toBeNull();
+        expect(editor.querySelector("em")).toBeNull();
+        expect(editor.querySelector("u")).toBeNull();
       });
       expect(bridge.startFloatingCardDrag).not.toHaveBeenCalled();
 
@@ -602,7 +602,10 @@ describe("FloatingNoteApp", () => {
           | { children?: Array<Record<string, unknown>> }
           | undefined;
         expect(firstNode?.children).toContainEqual(
-          expect.objectContaining({ color: "#FF7A59", text: " color" }),
+          expect.objectContaining({ text: "Floating body color" }),
+        );
+        expect(firstNode?.children).not.toContainEqual(
+          expect.objectContaining({ color: "#FF7A59" }),
         );
       });
 

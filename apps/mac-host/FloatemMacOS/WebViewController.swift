@@ -334,6 +334,13 @@ final class WebViewController: NSViewController, WKNavigationDelegate, WKUIDeleg
         logger.info("Started provisional WebView navigation. url=\(webView.url?.absoluteString ?? "nil", privacy: .public)")
     }
 
+    func reloadFrontendForUserAction() {
+        recoveryWorkItem?.cancel()
+        consecutiveWebContentTerminations = 0
+        logger.notice("Reloading WebView from the status menu.")
+        webView.reload()
+    }
+
     func webView(
         _ webView: WKWebView,
         decidePolicyFor navigationAction: WKNavigationAction,

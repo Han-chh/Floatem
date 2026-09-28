@@ -18,8 +18,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     )
 
     private weak var statusToggleItem: NSMenuItem?
+    private weak var statusReloadItem: NSMenuItem?
     private weak var statusQuitItem: NSMenuItem?
     private weak var mainMenuToggleItem: NSMenuItem?
+    private weak var mainMenuReloadItem: NSMenuItem?
     private weak var mainMenuQuitItem: NSMenuItem?
     private weak var mainMenuEditItem: NSMenuItem?
     private weak var mainMenuUndoItem: NSMenuItem?
@@ -44,6 +46,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         toggleItem.target = self
         menu.addItem(toggleItem)
         statusToggleItem = toggleItem
+
+        let reloadItem = NSMenuItem(title: localization.menuReload, action: #selector(reloadApplicationInterface(_:)), keyEquivalent: "r")
+        reloadItem.keyEquivalentModifierMask = [.command]
+        reloadItem.target = self
+        menu.addItem(reloadItem)
+        statusReloadItem = reloadItem
 
         menu.addItem(NSMenuItem.separator())
 
@@ -198,23 +206,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         }
     }
 
-    @objc private func statusItemClicked(_ sender: Any?) {
-        guard let event = NSApp.currentEvent else {
-            toggleMainWindow(sender)
-            return
-        }
-
-        if event.type == .rightMouseUp, let button = statusItem?.button {
-            statusItem?.menu = statusMenu
-            button.performClick(nil)
-            statusItem?.menu = nil
-        } else {
-            toggleMainWindow(sender)
-        }
-    }
-
     @objc private func toggleMainWindow(_ sender: Any?) {
         mainWindowController.toggleMainWindow()
+    }
+
+    @objc private func reloadApplicationInterface(_ sender: Any?) {
+        mainWindowController.reloadApplicationInterface()
     }
 
     @objc private func quitApplication(_ sender: Any?) {
@@ -226,11 +223,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
         if let button = statusItem.button {
             button.image = makeStatusItemImage()
-            button.target = self
-            button.action = #selector(statusItemClicked(_:))
-            button.sendAction(on: [.leftMouseUp, .rightMouseUp])
         }
 
+        statusItem.menu = statusMenu
         self.statusItem = statusItem
     }
 
@@ -294,6 +289,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         toggleItem.target = self
         appMenu.addItem(toggleItem)
         mainMenuToggleItem = toggleItem
+
+        let reloadItem = NSMenuItem(title: localization.menuReload, action: #selector(reloadApplicationInterface(_:)), keyEquivalent: "r")
+        reloadItem.keyEquivalentModifierMask = [.command]
+        reloadItem.target = self
+        appMenu.addItem(reloadItem)
+        mainMenuReloadItem = reloadItem
 
         appMenu.addItem(NSMenuItem.separator())
 
@@ -401,8 +402,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     private func updateLocalizedMenuTitles() {
         statusToggleItem?.title = localization.menuToggle
+        statusReloadItem?.title = localization.menuReload
         statusQuitItem?.title = localization.menuQuit
         mainMenuToggleItem?.title = localization.menuToggleApp
+        mainMenuReloadItem?.title = localization.menuReload
         mainMenuQuitItem?.title = localization.menuQuitApp
         mainMenuEditItem?.title = localization.menuEdit
         mainMenuEditItem?.submenu?.title = localization.menuEdit

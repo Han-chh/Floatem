@@ -2,6 +2,12 @@
 
 All notable repository changes are recorded here. Historical entries describe the behavior of their named release and are not statements of current platform support.
 
+## 1.1.0 (Build 68)
+
+- Add a persistent macOS status-bar menu with actions to show or hide Floatem, reload its interface, and quit the application.
+- Preserve supported rich-text Note formatting through paste and copy, without applying the toolbar's current typing format to pasted text.
+- Suppress WebKit's default context menus in the main window and floating cards so Floatem can provide its own context actions later.
+
 ## 1.0.13 (Build 67)
 
 - Prevent the rich-text note toolbar from jumping when a long note body gains focus by removing its layout-projection animation; toolbar controls retain their individual interaction animations.

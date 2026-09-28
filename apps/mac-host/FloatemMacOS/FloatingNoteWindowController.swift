@@ -322,6 +322,14 @@ final class FloatingNoteWindowController: NSObject, WKNavigationDelegate, WKScri
         applyPendingPayloadIfPossible()
     }
 
+    func reloadFrontendForUserAction() {
+        guard !isDestroyed else { return }
+
+        recoveryWorkItem?.cancel()
+        consecutiveWebContentTerminations = 0
+        webView.reload()
+    }
+
     func updateGuideState(_ guide: [String: Any]?) {
         pendingGuideState = guide
         guard guideDeliveryGate.canDeliver else {
