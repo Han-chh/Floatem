@@ -212,6 +212,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     @objc private func reloadApplicationInterface(_ sender: Any?) {
         mainWindowController.reloadApplicationInterface()
+        showMainWindowForUserAction()
     }
 
     @objc private func quitApplication(_ sender: Any?) {

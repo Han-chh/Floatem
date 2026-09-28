@@ -4,7 +4,7 @@ All notable repository changes are recorded here. Historical entries describe th
 
 ## 1.1.0 (Build 68)
 
-- Add a persistent macOS status-bar menu with actions to show or hide Floatem, reload its interface, and quit the application.
+- Add a persistent macOS status-bar menu with actions to show or hide Floatem, reload and reveal its interface, and quit the application.
 - Restore Floatem as a regular macOS application so its compact Floatem and Edit menus appear in the system menu bar while the app is active.
 - Preserve supported rich-text Note formatting through paste and copy, without applying the toolbar's current typing format to pasted text.
 - Suppress WebKit's default context menus in the main window and floating cards so Floatem can provide its own context actions later.
