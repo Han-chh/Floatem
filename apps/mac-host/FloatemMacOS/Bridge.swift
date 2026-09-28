@@ -128,14 +128,6 @@ enum FloatemLanguage: String {
                 menuReload: "Reload Interface",
                 menuUninstall: "Uninstall Floatem…",
                 menuQuit: "Quit",
-                menuQuitApp: "Quit Floatem",
-                menuEdit: "Edit",
-                menuUndo: "Undo",
-                menuRedo: "Redo",
-                menuCut: "Cut",
-                menuCopy: "Copy",
-                menuPaste: "Paste",
-                menuSelectAll: "Select All",
                 hotKeyRegistrationFailedTitle: "Global Shortcut Unavailable",
                 hotKeyRegistrationFailedMessage: "Floatem could not start its global shortcut Agent. You can continue using the app, but the shortcut will not work until this is resolved.",
                 hotKeyOpenSettings: "Open System Settings",
@@ -174,14 +166,6 @@ enum FloatemLanguage: String {
                 menuReload: "重新加载界面",
                 menuUninstall: "卸载 Floatem…",
                 menuQuit: "退出",
-                menuQuitApp: "退出 Floatem",
-                menuEdit: "编辑",
-                menuUndo: "撤销",
-                menuRedo: "重做",
-                menuCut: "剪切",
-                menuCopy: "复制",
-                menuPaste: "粘贴",
-                menuSelectAll: "全选",
                 hotKeyRegistrationFailedTitle: "全局快捷键不可用",
                 hotKeyRegistrationFailedMessage: "Floatem 无法启动全局快捷键 Agent。你仍可继续使用应用，但解决该问题前快捷键不会生效。",
                 hotKeyOpenSettings: "打开系统设置",
@@ -232,14 +216,6 @@ struct FloatemLocalization {
     let menuReload: String
     let menuUninstall: String
     let menuQuit: String
-    let menuQuitApp: String
-    let menuEdit: String
-    let menuUndo: String
-    let menuRedo: String
-    let menuCut: String
-    let menuCopy: String
-    let menuPaste: String
-    let menuSelectAll: String
     let hotKeyRegistrationFailedTitle: String
     let hotKeyRegistrationFailedMessage: String
     let hotKeyOpenSettings: String

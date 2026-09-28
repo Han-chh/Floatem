@@ -29,16 +29,18 @@ final class FloatemCoreTests: XCTestCase {
         XCTAssertEqual(english.menuHide, "Hide Floatem")
         XCTAssertEqual(english.menuReload, "Reload Interface")
         XCTAssertEqual(english.menuUninstall, "Uninstall Floatem…")
-        XCTAssertEqual(english.menuQuitApp, "Quit Floatem")
-        XCTAssertEqual(english.menuEdit, "Edit")
+        XCTAssertEqual(english.menuQuit, "Quit")
 
         let chinese = FloatemLanguage(storedValue: "zh-CN").localization
         XCTAssertEqual(chinese.menuShow, "显示 Floatem")
         XCTAssertEqual(chinese.menuHide, "隐藏 Floatem")
         XCTAssertEqual(chinese.menuReload, "重新加载界面")
         XCTAssertEqual(chinese.menuUninstall, "卸载 Floatem…")
-        XCTAssertEqual(chinese.menuQuitApp, "退出 Floatem")
-        XCTAssertEqual(chinese.menuEdit, "编辑")
+        XCTAssertEqual(chinese.menuQuit, "退出")
+    }
+
+    func testMacHostIsConfiguredAsADocklessMenuBarApplication() {
+        XCTAssertEqual(Bundle.main.object(forInfoDictionaryKey: "LSUIElement") as? Bool, true)
     }
 
     @MainActor

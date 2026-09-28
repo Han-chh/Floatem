@@ -21,17 +21,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     private weak var statusReloadItem: NSMenuItem?
     private weak var statusUninstallItem: NSMenuItem?
     private weak var statusQuitItem: NSMenuItem?
-    private weak var mainMenuToggleItem: NSMenuItem?
-    private weak var mainMenuReloadItem: NSMenuItem?
-    private weak var mainMenuUninstallItem: NSMenuItem?
-    private weak var mainMenuQuitItem: NSMenuItem?
-    private weak var mainMenuEditItem: NSMenuItem?
-    private weak var mainMenuUndoItem: NSMenuItem?
-    private weak var mainMenuRedoItem: NSMenuItem?
-    private weak var mainMenuCutItem: NSMenuItem?
-    private weak var mainMenuCopyItem: NSMenuItem?
-    private weak var mainMenuPasteItem: NSMenuItem?
-    private weak var mainMenuSelectAllItem: NSMenuItem?
     private var languageObserver: NSObjectProtocol?
     private var systemWillSleepObserver: NSObjectProtocol?
     private var systemDidWakeObserver: NSObjectProtocol?
@@ -91,13 +80,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         if launchContextResolver.explicitContext == .agentWakeRecovery {
             lifecycleDiagnostics?.recordRecoveredAfterWake()
         }
-        NSApp.setActivationPolicy(.regular)
+        NSApp.setActivationPolicy(.accessory)
         currentLanguage = (try? storage.currentLanguage()) ?? .simplifiedChinese
         notificationManager.configure()
         notificationManager.logCurrentAuthorizationStatus()
         launchAtLoginManager.configureOnLaunch(enabled: (try? storage.currentLaunchAtLogin()) ?? false)
 
-        configureMainMenu()
         configureStatusItem()
         installLanguageObserver()
         installSystemPowerObservers()
@@ -342,91 +330,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         return image
     }
 
-    private func configureMainMenu() {
-        let mainMenu = NSMenu()
-
-        let appMenuItem = NSMenuItem(title: "Floatem", action: nil, keyEquivalent: "")
-        mainMenu.addItem(appMenuItem)
-
-        let appMenu = NSMenu(title: "Floatem")
-        appMenu.delegate = self
-
-        let toggleItem = NSMenuItem(title: localization.menuShow, action: #selector(toggleMainWindow(_:)), keyEquivalent: "")
-        toggleItem.target = self
-        appMenu.addItem(toggleItem)
-        mainMenuToggleItem = toggleItem
-
-        let reloadItem = NSMenuItem(title: localization.menuReload, action: #selector(reloadApplicationInterface(_:)), keyEquivalent: "r")
-        reloadItem.keyEquivalentModifierMask = [.command]
-        reloadItem.target = self
-        appMenu.addItem(reloadItem)
-        mainMenuReloadItem = reloadItem
-
-        appMenu.addItem(NSMenuItem.separator())
-
-        let uninstallItem = NSMenuItem(title: localization.menuUninstall, action: #selector(confirmUninstallApplication(_:)), keyEquivalent: "")
-        uninstallItem.target = self
-        appMenu.addItem(uninstallItem)
-        mainMenuUninstallItem = uninstallItem
-
-        appMenu.addItem(NSMenuItem.separator())
-
-        let quitItem = NSMenuItem(title: localization.menuQuitApp, action: #selector(quitApplication(_:)), keyEquivalent: "q")
-        quitItem.keyEquivalentModifierMask = [.command]
-        quitItem.target = self
-        appMenu.addItem(quitItem)
-        mainMenuQuitItem = quitItem
-
-        appMenuItem.submenu = appMenu
-
-        let editMenuItem = NSMenuItem(title: localization.menuEdit, action: nil, keyEquivalent: "")
-        mainMenu.addItem(editMenuItem)
-        mainMenuEditItem = editMenuItem
-
-        let editMenu = NSMenu(title: localization.menuEdit)
-
-        let undoItem = NSMenuItem(title: localization.menuUndo, action: Selector(("undo:")), keyEquivalent: "z")
-        undoItem.keyEquivalentModifierMask = [.command]
-        editMenu.addItem(undoItem)
-        mainMenuUndoItem = undoItem
-
-        let redoItem = NSMenuItem(title: localization.menuRedo, action: Selector(("redo:")), keyEquivalent: "Z")
-        redoItem.keyEquivalentModifierMask = [.command, .shift]
-        editMenu.addItem(redoItem)
-        mainMenuRedoItem = redoItem
-
-        editMenu.addItem(NSMenuItem.separator())
-
-        let cutItem = NSMenuItem(title: localization.menuCut, action: #selector(NSText.cut(_:)), keyEquivalent: "x")
-        cutItem.keyEquivalentModifierMask = [.command]
-        editMenu.addItem(cutItem)
-        mainMenuCutItem = cutItem
-
-        let copyItem = NSMenuItem(title: localization.menuCopy, action: #selector(NSText.copy(_:)), keyEquivalent: "c")
-        copyItem.keyEquivalentModifierMask = [.command]
-        editMenu.addItem(copyItem)
-        mainMenuCopyItem = copyItem
-
-        let pasteItem = NSMenuItem(title: localization.menuPaste, action: #selector(NSText.paste(_:)), keyEquivalent: "v")
-        pasteItem.keyEquivalentModifierMask = [.command]
-        editMenu.addItem(pasteItem)
-        mainMenuPasteItem = pasteItem
-
-        editMenu.addItem(NSMenuItem.separator())
-
-        let selectAllItem = NSMenuItem(
-            title: localization.menuSelectAll,
-            action: #selector(NSResponder.selectAll(_:)),
-            keyEquivalent: "a"
-        )
-        selectAllItem.keyEquivalentModifierMask = [.command]
-        editMenu.addItem(selectAllItem)
-        mainMenuSelectAllItem = selectAllItem
-
-        editMenuItem.submenu = editMenu
-        NSApp.mainMenu = mainMenu
-    }
-
     private func installLanguageObserver() {
         languageObserver = NotificationCenter.default.addObserver(
             forName: .floatemLanguageDidChange,
@@ -478,17 +381,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         statusReloadItem?.title = localization.menuReload
         statusUninstallItem?.title = localization.menuUninstall
         statusQuitItem?.title = localization.menuQuit
-        mainMenuReloadItem?.title = localization.menuReload
-        mainMenuUninstallItem?.title = localization.menuUninstall
-        mainMenuQuitItem?.title = localization.menuQuitApp
-        mainMenuEditItem?.title = localization.menuEdit
-        mainMenuEditItem?.submenu?.title = localization.menuEdit
-        mainMenuUndoItem?.title = localization.menuUndo
-        mainMenuRedoItem?.title = localization.menuRedo
-        mainMenuCutItem?.title = localization.menuCut
-        mainMenuCopyItem?.title = localization.menuCopy
-        mainMenuPasteItem?.title = localization.menuPaste
-        mainMenuSelectAllItem?.title = localization.menuSelectAll
     }
 
     func menuWillOpen(_ menu: NSMenu) {
@@ -509,7 +401,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
             ? localization.menuHide
             : localization.menuShow
         statusToggleItem?.title = title
-        mainMenuToggleItem?.title = title
     }
 
     private func handleInitialHotKeyRegistrationState(_ state: HotKeyAgentManager.RegistrationState) {
@@ -558,7 +449,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     private func performUninstall(keepUserData: Bool) {
         isUninstalling = true
         statusUninstallItem?.isEnabled = false
-        mainMenuUninstallItem?.isEnabled = false
 
         hotKeyAgentManager.unregisterForUninstall { [weak self] agentError in
             guard let self else {
@@ -609,7 +499,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     private func finishFailedUninstall(_ error: Error) {
         isUninstalling = false
         statusUninstallItem?.isEnabled = true
-        mainMenuUninstallItem?.isEnabled = true
         mainWindowController.installSavedHotKey()
         showMainWindowForUserAction()
 
