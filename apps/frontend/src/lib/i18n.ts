@@ -165,6 +165,8 @@ type MessageCatalog = {
     categoryShortcutsTitle: string;
     categoryThemeDescription: string;
     categoryThemeTitle: string;
+    applicationContextMenu: string;
+    contextMenuQuitApplication: string;
     changeShortcut: string;
     currentShortcut: string;
     dataScopeBody: string;
@@ -564,6 +566,8 @@ const messages: Record<AppLanguage, MessageCatalog> = {
       categoryShortcutsTitle: "Shortcuts and launch",
       categoryThemeDescription: "Background, surfaces, contrast, and ambient light.",
       categoryThemeTitle: "Theme",
+      applicationContextMenu: "Floatem actions",
+      contextMenuQuitApplication: "Quit Floatem",
       changeShortcut: "Change",
       currentShortcut: "Current shortcut",
       dataScopeBody: "Notes, todos, groups, reminders, preferences, and floating-card positions are stored in Floatem’s local app data directory and auto-saved after edits.",
@@ -963,6 +967,8 @@ const messages: Record<AppLanguage, MessageCatalog> = {
       categoryShortcutsTitle: "快捷键与启动",
       categoryThemeDescription: "调整整体背景、界面层级、对比度与环境光感。",
       categoryThemeTitle: "主题",
+      applicationContextMenu: "Floatem 操作",
+      contextMenuQuitApplication: "退出 Floatem",
       changeShortcut: "更改",
       currentShortcut: "当前快捷键",
       dataScopeBody: "便签、待办、分组、提醒、偏好设置和悬浮卡片位置均保存在 Floatem 的本地应用数据目录中，并在修改后自动保存。",

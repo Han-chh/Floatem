@@ -185,7 +185,7 @@ final class FloatingNoteWindowController: NSObject, WKNavigationDelegate, WKScri
           send("setTextCompositionActive", { active: Boolean(active) });
         },
         openDevTools() { return Promise.resolve(); },
-        quitApplication() { return Promise.resolve(); },
+        quitApplication() { return send("quitApplication"); },
         reportFrontendReady() { return send("reportFrontendReady"); },
         reportFrontendError() {},
       };
@@ -930,6 +930,9 @@ final class FloatingNoteWindowController: NSObject, WKNavigationDelegate, WKScri
             } catch {
                 resolveBridgeRequest(id: requestID, ok: false, result: error.localizedDescription)
             }
+        case "quitApplication":
+            NSApp.terminate(nil)
+            resolveBridgeRequest(id: requestID, ok: true, result: NSNull())
         case "getCapabilities":
             resolveBridgeRequest(id: requestID, ok: true, result: floatingCapabilities())
         case "loadAllData":

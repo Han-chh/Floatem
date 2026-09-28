@@ -3,6 +3,7 @@ import { Component, startTransition, useEffect, useRef, useState, type ErrorInfo
 import { DragPreviewApp } from "./components/drag-preview/DragPreviewApp";
 import { TooltipLayer } from "./components/feedback/TooltipLayer";
 import { FloatingNoteApp } from "./components/floating-note/FloatingNoteApp";
+import { AppContextMenu } from "./components/layout/AppContextMenu";
 import { BackgroundActivityDialog } from "./components/layout/BackgroundActivityDialog";
 import { PanelShell } from "./components/layout/PanelShell";
 import { LaunchAtLoginDialog } from "./components/layout/LaunchAtLoginDialog";
@@ -539,6 +540,7 @@ function FloatemApp() {
       <LanguageMismatchDialog onOpenChange={setIsLanguageMismatchPromptOpen} />
       <BackgroundActivityDialog onOpenChange={setIsBackgroundActivityPromptOpen} />
       {showLaunchAtLoginPromptThisSession && !isLanguageMismatchPromptOpen && !isBackgroundActivityPromptOpen ? <LaunchAtLoginDialog /> : null}
+      <AppContextMenu />
       <TooltipLayer />
     </FrontendErrorBoundary>
   );
@@ -565,6 +567,7 @@ function App() {
     return (
       <>
         <FloatingNoteApp />
+        <AppContextMenu />
         <TooltipLayer />
       </>
     );
