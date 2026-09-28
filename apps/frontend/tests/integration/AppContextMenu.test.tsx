@@ -25,8 +25,10 @@ describe("AppContextMenu", () => {
     render(<AppContextMenu />);
     fireEvent.contextMenu(document.body, { clientX: 120, clientY: 160 });
 
-    expect(screen.getByRole("menu", { name: "Floatem actions" })).toBeInTheDocument();
-    await user.click(screen.getByRole("menuitem", { name: "Quit Floatem" }));
+    expect(screen.getByRole("menu", { name: "Floatem actions" })).toHaveClass("w-[136px]", "rounded-[12px]", "p-1");
+    const quitItem = screen.getByRole("menuitem", { name: "Quit Floatem" });
+    expect(quitItem).toHaveClass("min-h-8", "text-[11.5px]", "px-2.5", "py-1.5");
+    await user.click(quitItem);
     expect(quitApplication).toHaveBeenCalledOnce();
   });
 

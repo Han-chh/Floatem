@@ -9,8 +9,8 @@ type ContextMenuPosition = {
   y: number;
 };
 
-const MENU_WIDTH = 184;
-const MENU_HEIGHT = 52;
+const MENU_WIDTH = 136;
+const MENU_HEIGHT = 40;
 const VIEWPORT_MARGIN = 8;
 
 function clampMenuPosition(clientX: number, clientY: number): ContextMenuPosition {
@@ -81,7 +81,7 @@ export function AppContextMenu() {
       role="menu"
       aria-label={t.settings.applicationContextMenu}
       data-no-window-drag="true"
-      className="fixed z-[220] w-[184px] rounded-[15px] border border-[rgba(213,198,180,0.94)] bg-[rgba(255,252,247,0.97)] p-1.5 shadow-[0_18px_42px_rgba(30,25,21,0.24)] backdrop-blur-xl"
+      className="fixed z-[220] w-[136px] rounded-[12px] border border-[rgba(213,198,180,0.94)] bg-[rgba(255,252,247,0.97)] p-1 shadow-[0_10px_24px_rgba(30,25,21,0.18)] backdrop-blur-xl"
       style={{ left: position.x, top: position.y }}
       initial={{ opacity: 0, scale: 0.96, y: -3 }}
       animate={{ opacity: 1, scale: 1, y: 0 }}
@@ -91,7 +91,7 @@ export function AppContextMenu() {
       <button
         type="button"
         role="menuitem"
-        className="flex w-full items-center rounded-[11px] px-3 py-2.5 text-left text-[12.5px] font-semibold text-[#a84431] outline-none transition-colors hover:bg-[rgba(201,93,68,0.10)] focus-visible:bg-[rgba(201,93,68,0.12)]"
+        className="flex min-h-8 w-full items-center rounded-[9px] px-2.5 py-1.5 text-left text-[11.5px] font-semibold text-[#a84431] outline-none transition-colors hover:bg-[rgba(201,93,68,0.10)] focus-visible:bg-[rgba(201,93,68,0.12)]"
         onClick={quitApplication}
       >
         {t.settings.contextMenuQuitApplication}
