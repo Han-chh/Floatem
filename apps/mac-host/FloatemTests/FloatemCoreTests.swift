@@ -411,6 +411,17 @@ final class FloatemCoreTests: XCTestCase {
             FloatemAgentHostLocator.validContainingAppBundleURL(executableURL: agentExecutableURL)?.path,
             appURL.path
         )
+        XCTAssertEqual(
+            FloatemAgentHostLocator.validContainingAppBundleURL(
+                executableURL: agentExecutableURL,
+                bundleProvider: { _ in nil }
+            )?.path,
+            appURL.path
+        )
+        XCTAssertNil(FloatemAgentHostLocator.validContainingAppBundleURL(
+            executableURL: agentExecutableURL,
+            expectedBundleIdentifier: "com.example.not-floatem"
+        ))
 
         try FileManager.default.removeItem(at: hostExecutableURL)
         XCTAssertNil(FloatemAgentHostLocator.validContainingAppBundleURL(executableURL: agentExecutableURL))

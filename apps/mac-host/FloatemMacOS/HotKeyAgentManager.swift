@@ -38,6 +38,7 @@ final class HotKeyAgentManager {
     private let localHotKeyManager = GlobalHotKeyManager()
     private let logger = Logger(subsystem: "com.floatem.app", category: "HotKeyAgent")
     private var agentConnection: NSXPCConnection?
+    private var pendingHandshakeID: UUID?
     private var hasAttemptedRegistrationRepair = false
     private lazy var hostControlCallback = AgentHostControlCallback { [weak self] shortcut in
         guard let handler = self?.onAgentHotKeyPressed else {
@@ -135,6 +136,7 @@ final class HotKeyAgentManager {
         let shortcut = try GlobalHotKeyManager.validShortcut(
             from: GlobalHotKeyManager.shortcutForCurrentBuild(rawShortcut)
         )
+        pendingHandshakeID = nil
         hasAttemptedRegistrationRepair = false
         guard try ensureAgentRegistered(shortcut: shortcut) else {
             return
@@ -149,6 +151,7 @@ final class HotKeyAgentManager {
 
     func unregisterForUninstall(completion: @escaping (Error?) -> Void) {
         localHotKeyManager.unregister()
+        pendingHandshakeID = nil
         agentConnection?.invalidate()
         agentConnection = nil
 
@@ -227,35 +230,73 @@ final class HotKeyAgentManager {
 
     private func syncShortcut(_ shortcut: String, attempt: Int) {
         let connection = agentConnection ?? makeAgentConnection()
+        let handshakeID = UUID()
+        pendingHandshakeID = handshakeID
+        scheduleHandshakeTimeout(
+            handshakeID: handshakeID,
+            connection: connection,
+            shortcut: shortcut
+        )
 
         let proxy = connection.remoteObjectProxyWithErrorHandler { [weak self] error in
             Task { @MainActor [weak self] in
-                if self?.agentConnection === connection {
-                    self?.agentConnection = nil
+                guard let self, self.finishHandshake(handshakeID, connection: connection) else {
+                    return
                 }
-                self?.handleAgentConnectionFailure(shortcut: shortcut, attempt: attempt, error: error)
+                self.agentConnection = nil
+                self.handleAgentConnectionFailure(shortcut: shortcut, attempt: attempt, error: error)
             }
         } as? FloatemHotKeyAgentProtocol
 
+        guard let proxy else {
+            guard finishHandshake(handshakeID, connection: connection) else {
+                return
+            }
+            agentConnection = nil
+            connection.invalidate()
+            handleAgentConnectionFailure(
+                shortcut: shortcut,
+                attempt: attempt,
+                error: NSError(
+                    domain: "com.hankch.floatem.hotkey-agent",
+                    code: 1,
+                    userInfo: [NSLocalizedDescriptionKey: "Floatem could not create the Agent XPC proxy."]
+                )
+            )
+            return
+        }
+
         let expectedAppPath = Bundle.main.bundleURL.standardizedFileURL.resolvingSymlinksInPath().path
-        proxy?.validateHostApplication(atPath: expectedAppPath) { [weak self, weak connection] isValid, detail in
+        proxy.validateHostApplication(atPath: expectedAppPath) { [weak self, weak connection] isValid, detail in
             Task { @MainActor [weak self] in
-                guard let self, let connection, self.agentConnection === connection else {
+                guard let self, let connection, self.agentConnection === connection,
+                      self.pendingHandshakeID == handshakeID else {
                     return
                 }
                 guard isValid else {
+                    self.pendingHandshakeID = nil
                     self.repairAgentRegistration(shortcut: shortcut, reason: detail)
                     return
                 }
-                self.configureShortcut(shortcut, using: proxy)
+                self.configureShortcut(
+                    shortcut,
+                    using: proxy,
+                    handshakeID: handshakeID,
+                    connection: connection
+                )
             }
         }
     }
 
-    private func configureShortcut(_ shortcut: String, using proxy: FloatemHotKeyAgentProtocol?) {
-        proxy?.configureHotKey(shortcut) { [weak self] registration, message in
+    private func configureShortcut(
+        _ shortcut: String,
+        using proxy: FloatemHotKeyAgentProtocol,
+        handshakeID: UUID,
+        connection: NSXPCConnection
+    ) {
+        proxy.configureHotKey(shortcut) { [weak self] registration, message in
             Task { @MainActor [weak self] in
-                guard let self else {
+                guard let self, self.finishHandshake(handshakeID, connection: connection) else {
                     return
                 }
                 if registration == "hostMissing" {
@@ -265,6 +306,34 @@ final class HotKeyAgentManager {
                 self.publish(shortcut: shortcut, registration: registration, message: message)
             }
         }
+    }
+
+    private func scheduleHandshakeTimeout(
+        handshakeID: UUID,
+        connection: NSXPCConnection,
+        shortcut: String
+    ) {
+        DispatchQueue.main.asyncAfter(deadline: .now() + 3) { [weak self, weak connection] in
+            guard let self, let connection,
+                  self.finishHandshake(handshakeID, connection: connection) else {
+                return
+            }
+
+            self.agentConnection = nil
+            connection.invalidate()
+            self.repairAgentRegistration(
+                shortcut: shortcut,
+                reason: "The registered shortcut Agent did not respond within 3 seconds. Its application may have been moved or deleted."
+            )
+        }
+    }
+
+    private func finishHandshake(_ handshakeID: UUID, connection: NSXPCConnection) -> Bool {
+        guard pendingHandshakeID == handshakeID, agentConnection === connection else {
+            return false
+        }
+        pendingHandshakeID = nil
+        return true
     }
 
     private func makeAgentConnection() -> NSXPCConnection {
@@ -299,6 +368,7 @@ final class HotKeyAgentManager {
     }
 
     private func repairAgentRegistration(shortcut: String, reason: String?) {
+        pendingHandshakeID = nil
         guard !hasAttemptedRegistrationRepair else {
             publish(
                 shortcut: shortcut,

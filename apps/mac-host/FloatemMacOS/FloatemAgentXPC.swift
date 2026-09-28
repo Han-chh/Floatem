@@ -79,14 +79,30 @@ enum FloatemAgentHostLocator {
     static func validContainingAppBundleURL(
         executableURL: URL,
         expectedBundleIdentifier: String = "com.hankch.floatem",
-        fileManager: FileManager = .default
+        fileManager: FileManager = .default,
+        bundleProvider: (URL) -> Bundle? = { Bundle(url: $0) }
     ) -> URL? {
         guard let appURL = containingAppBundleURL(executableURL: executableURL),
-              fileManager.fileExists(atPath: appURL.path),
-              let bundle = Bundle(url: appURL),
-              bundle.bundleIdentifier == expectedBundleIdentifier,
-              let hostExecutableURL = bundle.executableURL,
-              fileManager.fileExists(atPath: hostExecutableURL.path) else {
+              fileManager.fileExists(atPath: appURL.path) else {
+            return nil
+        }
+
+        // A sandboxed ServiceManagement Agent can execute from inside its
+        // containing application while Foundation still refuses to resolve
+        // that parent directory as a Bundle (notably for local Release builds
+        // outside /Applications). Use readable metadata when available, but
+        // do not treat sandbox-limited Bundle lookup as proof that the host was
+        // deleted. The host executable itself is the authoritative liveness
+        // check because it disappears together with a removed application.
+        let bundle = bundleProvider(appURL)
+        if let bundleIdentifier = bundle?.bundleIdentifier,
+           bundleIdentifier != expectedBundleIdentifier {
+            return nil
+        }
+
+        let hostExecutableURL = bundle?.executableURL
+            ?? appURL.appendingPathComponent("Contents/MacOS/Floatem", isDirectory: false)
+        guard fileManager.fileExists(atPath: hostExecutableURL.path) else {
             return nil
         }
         return appURL.standardizedFileURL.resolvingSymlinksInPath()
