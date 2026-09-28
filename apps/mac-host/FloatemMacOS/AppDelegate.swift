@@ -2,7 +2,7 @@ import AppKit
 import OSLog
 
 @MainActor
-final class AppDelegate: NSObject, NSApplicationDelegate {
+final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     private lazy var storage = AppStorage()
     private let hotKeyAgentManager = HotKeyAgentManager()
     private let notificationManager = NotificationManager()
@@ -41,8 +41,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     private lazy var statusMenu: NSMenu = {
         let menu = NSMenu()
+        menu.delegate = self
 
-        let toggleItem = NSMenuItem(title: localization.menuToggle, action: #selector(toggleMainWindow(_:)), keyEquivalent: "")
+        let toggleItem = NSMenuItem(title: localization.menuShow, action: #selector(toggleMainWindow(_:)), keyEquivalent: "")
         toggleItem.target = self
         menu.addItem(toggleItem)
         statusToggleItem = toggleItem
@@ -208,6 +209,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     @objc private func toggleMainWindow(_ sender: Any?) {
         mainWindowController.toggleMainWindow()
+        updateToggleMenuTitles()
     }
 
     @objc private func reloadApplicationInterface(_ sender: Any?) {
@@ -285,8 +287,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         mainMenu.addItem(appMenuItem)
 
         let appMenu = NSMenu(title: "Floatem")
+        appMenu.delegate = self
 
-        let toggleItem = NSMenuItem(title: localization.menuToggleApp, action: #selector(toggleMainWindow(_:)), keyEquivalent: "")
+        let toggleItem = NSMenuItem(title: localization.menuShow, action: #selector(toggleMainWindow(_:)), keyEquivalent: "")
         toggleItem.target = self
         appMenu.addItem(toggleItem)
         mainMenuToggleItem = toggleItem
@@ -402,10 +405,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     private func updateLocalizedMenuTitles() {
-        statusToggleItem?.title = localization.menuToggle
+        updateToggleMenuTitles()
         statusReloadItem?.title = localization.menuReload
         statusQuitItem?.title = localization.menuQuit
-        mainMenuToggleItem?.title = localization.menuToggleApp
         mainMenuReloadItem?.title = localization.menuReload
         mainMenuQuitItem?.title = localization.menuQuitApp
         mainMenuEditItem?.title = localization.menuEdit
@@ -416,6 +418,18 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         mainMenuCopyItem?.title = localization.menuCopy
         mainMenuPasteItem?.title = localization.menuPaste
         mainMenuSelectAllItem?.title = localization.menuSelectAll
+    }
+
+    func menuWillOpen(_ menu: NSMenu) {
+        updateToggleMenuTitles()
+    }
+
+    private func updateToggleMenuTitles() {
+        let title = mainWindowController.isMainWindowVisible
+            ? localization.menuHide
+            : localization.menuShow
+        statusToggleItem?.title = title
+        mainMenuToggleItem?.title = title
     }
 
     private func showMainWindowForUserAction() {

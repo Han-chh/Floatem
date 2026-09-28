@@ -13,6 +13,13 @@ class FloatingPanel: NSPanel {
     override var canBecomeKey: Bool { true }
     override var canBecomeMain: Bool { false }
 
+    override func sendEvent(_ event: NSEvent) {
+        if event.type == .leftMouseDown || event.type == .rightMouseDown {
+            NSApp.activate(ignoringOtherApps: true)
+        }
+        super.sendEvent(event)
+    }
+
     deinit {
         guard Self.debugLifecycle, let lifecycleCardID else {
             return

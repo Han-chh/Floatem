@@ -123,8 +123,8 @@ enum FloatemLanguage: String {
         switch self {
         case .english:
             return FloatemLocalization(
-                menuToggle: "Toggle",
-                menuToggleApp: "Toggle Floatem",
+                menuShow: "Show Floatem",
+                menuHide: "Hide Floatem",
                 menuReload: "Reload Interface",
                 menuQuit: "Quit",
                 menuQuitApp: "Quit Floatem",
@@ -158,8 +158,8 @@ enum FloatemLanguage: String {
             )
         case .simplifiedChinese:
             return FloatemLocalization(
-                menuToggle: "显示或隐藏",
-                menuToggleApp: "显示或隐藏 Floatem",
+                menuShow: "显示 Floatem",
+                menuHide: "隐藏 Floatem",
                 menuReload: "重新加载界面",
                 menuQuit: "退出",
                 menuQuitApp: "退出 Floatem",
@@ -205,8 +205,8 @@ enum FloatemLanguage: String {
 }
 
 struct FloatemLocalization {
-    let menuToggle: String
-    let menuToggleApp: String
+    let menuShow: String
+    let menuHide: String
     let menuReload: String
     let menuQuit: String
     let menuQuitApp: String
