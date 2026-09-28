@@ -652,6 +652,9 @@ final class MainWindowController: NSObject, NSWindowDelegate, FloatemNativeBridg
         controller.onWriteClipboardText = { [weak self] text in
             self?.writeClipboardText(text)
         }
+        controller.onWriteClipboardRichText = { [weak self] html, text in
+            self?.writeClipboardRichText(html, plainText: text)
+        }
         controller.onPickScreenColor = { [weak self] in
             guard let self else {
                 return nil
@@ -919,6 +922,16 @@ final class MainWindowController: NSObject, NSWindowDelegate, FloatemNativeBridg
         let pasteboard = NSPasteboard.general
         pasteboard.clearContents()
         pasteboard.setString(text, forType: .string)
+    }
+
+    func writeClipboardRichText(_ html: String, plainText: String) {
+        let pasteboard = NSPasteboard.general
+        pasteboard.clearContents()
+        pasteboard.setString(plainText, forType: .string)
+
+        if let htmlData = html.data(using: .utf8) {
+            pasteboard.setData(htmlData, forType: .html)
+        }
     }
 
     func showMainWindowFromBridge() {

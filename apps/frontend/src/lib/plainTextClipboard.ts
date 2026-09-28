@@ -1,5 +1,45 @@
 import { getFloatemBridge, isNativeFloatemHost } from "./nativeBridge";
 
+export type RichTextClipboardContent = {
+  html: string;
+  text: string;
+};
+
+export async function writeRichTextToClipboard({ html, text }: RichTextClipboardContent) {
+  if (!text) {
+    return false;
+  }
+
+  if (isNativeFloatemHost()) {
+    try {
+      const bridge = getFloatemBridge();
+
+      if (bridge.writeClipboardRichText) {
+        await bridge.writeClipboardRichText(html, text);
+        return true;
+      }
+    } catch {
+      // Fall through to the browser clipboard helpers.
+    }
+  }
+
+  try {
+    if (typeof navigator !== "undefined" && navigator.clipboard?.write && typeof ClipboardItem !== "undefined") {
+      await navigator.clipboard.write([
+        new ClipboardItem({
+          "text/html": new Blob([html], { type: "text/html" }),
+          "text/plain": new Blob([text], { type: "text/plain" }),
+        }),
+      ]);
+      return true;
+    }
+  } catch {
+    // Fall through to the plain-text clipboard helper.
+  }
+
+  return writePlainTextToClipboard(text);
+}
+
 export async function writePlainTextToClipboard(text: string) {
   if (!text) {
     return false;

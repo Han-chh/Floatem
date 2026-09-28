@@ -8,6 +8,7 @@ import {
   insertPlainText,
   isTextFormatActive,
   selectAllText,
+  serializeRichTextToHtml,
   setTextColor,
   toggleTextFormat,
 } from "../../src/components/notes/textFormatting";
@@ -116,5 +117,24 @@ describe("textFormatting", () => {
         ],
       },
     ]);
+  });
+
+  it("serializes supported formatting to safe clipboard HTML", () => {
+    expect(
+      serializeRichTextToHtml([
+        {
+          type: "paragraph",
+          children: [
+            { text: "Bold", bold: true },
+            { text: " italic", italic: true },
+            { text: " underline", underline: true },
+            { text: " blue", color: "#2F6BFF" },
+            { text: " <safe>" },
+          ],
+        },
+      ]),
+    ).toBe(
+      '<p><strong>Bold</strong><em> italic</em><u> underline</u><span style="color: #2F6BFF"> blue</span> &lt;safe&gt;</p>',
+    );
   });
 });

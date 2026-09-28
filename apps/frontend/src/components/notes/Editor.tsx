@@ -1,4 +1,4 @@
-import { createEditor, Range, Transforms } from "slate";
+import { createEditor, Editor as SlateEditor, Range, Transforms } from "slate";
 import { HistoryEditor, withHistory } from "slate-history";
 import type { Descendant } from "slate";
 import { Editable, ReactEditor, Slate, withReact } from "slate-react";
@@ -7,7 +7,7 @@ import { useEffect, useRef, useState } from "react";
 import { isPrimaryShortcut } from "../../lib/isPrimaryShortcut";
 import { useI18n } from "../../lib/i18n";
 import { isNativeFloatemHost } from "../../lib/nativeBridge";
-import { readPlainTextFromClipboard, writePlainTextToClipboard } from "../../lib/plainTextClipboard";
+import { readPlainTextFromClipboard, writeRichTextToClipboard } from "../../lib/plainTextClipboard";
 import { cloneNoteContent } from "../../lib/models";
 import { withColorMark } from "../../lib/slate-plugins/withColorMark";
 import { Toolbar } from "./Toolbar";
@@ -22,6 +22,7 @@ import {
   isTextFormatActive,
   selectAllText,
   setTextColor,
+  serializeRichTextToHtml,
   toggleTextFormat,
   type TextFormat,
 } from "./textFormatting";
@@ -136,6 +137,16 @@ export function Editor({ content, onChange, instantToolbar = false, attachedTool
 
     return mode === "all" ? getAllPlainText(editor) : mode === "selection-or-all" ? selectedText || getAllPlainText(editor) : selectedText;
   };
+  const getCopyContent = (mode: "selection" | "all" | "selection-or-all" = "selection") => {
+    const text = getCopyText(mode);
+    const shouldCopyAll = mode === "all" || (mode === "selection-or-all" && !getSelectedPlainText(editor));
+    const richText = shouldCopyAll || !editor.selection ? editor.children : SlateEditor.fragment(editor, editor.selection);
+
+    return {
+      html: serializeRichTextToHtml(richText),
+      text,
+    };
+  };
   const handleToggleFormat = (format: TextFormat) => {
     toggleTextFormat(editor, format);
     syncToolbarState();
@@ -193,14 +204,14 @@ export function Editor({ content, onChange, instantToolbar = false, attachedTool
     restoreEditorFocus();
   };
   const handleCopy = async (mode: "selection" | "all" | "selection-or-all" = "selection") => {
-    const text = getCopyText(mode);
+    const contentToCopy = getCopyContent(mode);
 
-    if (!text) {
+    if (!contentToCopy.text) {
       restoreEditorFocus();
       return;
     }
 
-    await writePlainTextToClipboard(text);
+    await writeRichTextToClipboard(contentToCopy);
     restoreEditorFocus();
   };
   const handlePaste = async () => {
@@ -330,9 +341,9 @@ export function Editor({ content, onChange, instantToolbar = false, attachedTool
           }}
           onPointerDown={(event) => event.stopPropagation()}
           onCopy={(event) => {
-            const text = getCopyText("selection-or-all");
+            const contentToCopy = getCopyContent("selection-or-all");
 
-            if (!text) {
+            if (!contentToCopy.text) {
               return;
             }
 
@@ -342,7 +353,8 @@ export function Editor({ content, onChange, instantToolbar = false, attachedTool
               return;
             }
 
-            event.clipboardData.setData("text/plain", text);
+            event.clipboardData.setData("text/plain", contentToCopy.text);
+            event.clipboardData.setData("text/html", contentToCopy.html);
           }}
           onPaste={(event) => {
             event.preventDefault();

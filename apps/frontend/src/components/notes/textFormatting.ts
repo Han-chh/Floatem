@@ -1,4 +1,4 @@
-import { Editor as SlateEditor, Range, Transforms, type Editor as SlateEditorType } from "slate";
+import { Editor as SlateEditor, Element as SlateElement, Range, Text, Transforms, type Descendant, type Editor as SlateEditorType } from "slate";
 import { isPrimaryShortcut } from "../../lib/isPrimaryShortcut";
 
 export type TextFormat = "bold" | "italic" | "underline";
@@ -150,6 +150,66 @@ export function getSelectedPlainText(editor: SlateEditorType) {
 
 export function getAllPlainText(editor: SlateEditorType) {
   return SlateEditor.string(editor, []);
+}
+
+function escapeHtml(value: string) {
+  return value.replace(/[&<>\"']/g, (character) => {
+    switch (character) {
+      case "&":
+        return "&amp;";
+      case "<":
+        return "&lt;";
+      case ">":
+        return "&gt;";
+      case '\"':
+        return "&quot;";
+      default:
+        return "&#39;";
+    }
+  });
+}
+
+type FormattedText = Text & {
+  bold?: boolean;
+  color?: string;
+  italic?: boolean;
+  underline?: boolean;
+};
+
+function serializeTextLeaf(leaf: FormattedText) {
+  let html = escapeHtml(leaf.text).replace(/\n/g, "<br>");
+
+  if (typeof leaf.color === "string" && /^#[0-9a-f]{6}$/i.test(leaf.color)) {
+    html = `<span style="color: ${leaf.color}">${html}</span>`;
+  }
+  if (leaf.underline) {
+    html = `<u>${html}</u>`;
+  }
+  if (leaf.italic) {
+    html = `<em>${html}</em>`;
+  }
+  if (leaf.bold) {
+    html = `<strong>${html}</strong>`;
+  }
+
+  return html;
+}
+
+function serializeRichTextNode(node: Descendant): string {
+  if (Text.isText(node)) {
+    return serializeTextLeaf(node as FormattedText);
+  }
+
+  if (SlateElement.isElement(node)) {
+    const children = node.children.map((child) => serializeRichTextNode(child)).join("");
+    return `<p>${children || "<br>"}</p>`;
+  }
+
+  return "";
+}
+
+export function serializeRichTextToHtml(content: Descendant[]) {
+  return content.map((node) => serializeRichTextNode(node)).join("");
 }
 
 export function insertPlainText(editor: SlateEditorType, text: string) {

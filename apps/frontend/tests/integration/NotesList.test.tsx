@@ -13,6 +13,9 @@ describe("NotesList", () => {
     const writeClipboardText = vi.fn(async (text: string) => {
       clipboard.value = text;
     });
+    const writeClipboardRichText = vi.fn(async (_html: string, text: string) => {
+      clipboard.value = text;
+    });
     const readClipboardText = vi.fn(async () => clipboard.value);
     const pickScreenColor = vi.fn(async (): Promise<{ sRGBHex: string } | null> => null);
 
@@ -72,6 +75,7 @@ describe("NotesList", () => {
       setEditableInputActive: vi.fn(),
       setTextCompositionActive: vi.fn(),
       writeClipboardText,
+      writeClipboardRichText,
       hidePanelWindow: vi.fn(async () => {}),
       quitApplication: vi.fn(async () => {}),
       openDevTools: vi.fn(async () => {}),
@@ -88,6 +92,7 @@ describe("NotesList", () => {
         window.floatemHost = originalBridge;
       },
       writeClipboardText,
+      writeClipboardRichText,
     };
   }
 
@@ -320,7 +325,15 @@ describe("NotesList", () => {
       createNoteCard({
         id: "note-native-clipboard",
         title: "Bridge",
-        content: [{ type: "paragraph", children: [{ text: "Bridge note" }] }],
+        content: [
+          {
+            type: "paragraph",
+            children: [
+              { text: "Bridge", bold: true },
+              { text: " note", color: "#2F6BFF" },
+            ],
+          },
+        ],
       }),
     ]);
 
@@ -331,14 +344,20 @@ describe("NotesList", () => {
       await user.click(within(firstNote).getByRole("button", { name: "Copy" }));
 
       await waitFor(() => {
-        expect(bridge.writeClipboardText).toHaveBeenLastCalledWith("Bridge note");
+        expect(bridge.writeClipboardRichText).toHaveBeenLastCalledWith(
+          '<p><strong>Bridge</strong><span style="color: #2F6BFF"> note</span></p>',
+          "Bridge note",
+        );
       });
 
       const firstEditor = within(firstNote).getAllByRole("textbox")[1]!;
       fireEvent.keyDown(firstEditor, { key: "c", metaKey: true });
 
       await waitFor(() => {
-        expect(bridge.writeClipboardText).toHaveBeenLastCalledWith("Bridge note");
+        expect(bridge.writeClipboardRichText).toHaveBeenLastCalledWith(
+          '<p><strong>Bridge</strong><span style="color: #2F6BFF"> note</span></p>',
+          "Bridge note",
+        );
       });
 
       bridge.clipboard.value = "Native bridge paste";

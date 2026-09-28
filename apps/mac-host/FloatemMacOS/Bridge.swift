@@ -67,6 +67,7 @@ protocol FloatemNativeBridgeHandling: AnyObject {
     func setTextCompositionActiveFromBridge(_ active: Bool)
     func setWindowThemeFromBridge(_ theme: String)
     func writeClipboardText(_ text: String)
+    func writeClipboardRichText(_ html: String, plainText: String)
     func hideMainWindowFromBridge()
     func toggleMainWindowFromBridge()
     func minimizeMainWindowFromBridge()

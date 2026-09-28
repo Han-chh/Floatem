@@ -223,6 +223,7 @@ export type HostBridge<TLoadAllResult, TNotes, TTodos, TSettings> = {
   getHotkeyRegistrationState: () => Promise<HotkeyRegistrationState>;
   readClipboardText: () => Promise<string>;
   writeClipboardText: (text: string) => Promise<void>;
+  writeClipboardRichText?: (html: string, text: string) => Promise<void>;
   registerHotkey: (shortcut: string | ShortcutConfig) => Promise<void>;
   registerGlobalShortcut: (shortcut: string | ShortcutConfig) => Promise<void>;
   unregisterHotkey: () => Promise<void>;

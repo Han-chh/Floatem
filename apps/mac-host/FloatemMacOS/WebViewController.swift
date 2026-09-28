@@ -752,6 +752,11 @@ final class WebViewController: NSViewController, WKNavigationDelegate, WKUIDeleg
                 let text = params["text"] as? String ?? ""
                 bridgeDelegate?.writeClipboardText(text)
                 result = NSNull()
+            case "writeClipboardRichText":
+                let html = params["html"] as? String ?? ""
+                let text = params["text"] as? String ?? ""
+                bridgeDelegate?.writeClipboardRichText(html, plainText: text)
+                result = NSNull()
             case "sendNotification", "showNotification", "scheduleNotification":
                 let notificationID = params["id"] as? String
                 let title = params["title"] as? String ?? "Floatem"
@@ -1212,6 +1217,9 @@ final class WebViewController: NSViewController, WKNavigationDelegate, WKUIDeleg
         },
         writeClipboardText(text) {
           return send("writeClipboardText", { text: String(text ?? "") });
+        },
+        writeClipboardRichText(html, text) {
+          return send("writeClipboardRichText", { html: String(html ?? ""), text: String(text ?? "") });
         },
         openDevTools() {
           return send("openDevTools");

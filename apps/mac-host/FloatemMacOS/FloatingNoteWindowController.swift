@@ -113,6 +113,9 @@ final class FloatingNoteWindowController: NSObject, WKNavigationDelegate, WKScri
         writeClipboardText(text) {
           return send("writeClipboardText", { text: String(text ?? "") });
         },
+        writeClipboardRichText(html, text) {
+          return send("writeClipboardRichText", { html: String(html ?? ""), text: String(text ?? "") });
+        },
         closeFloatingCard(card) {
           return send("closeFloatingCard", { kind: String(card?.kind ?? ""), id: String(card?.id ?? "") });
         },
@@ -204,6 +207,7 @@ final class FloatingNoteWindowController: NSObject, WKNavigationDelegate, WKScri
     var onSaveSettings: ((Any) throws -> Void)?
     var onReadClipboardText: (() -> String)?
     var onWriteClipboardText: ((String) -> Void)?
+    var onWriteClipboardRichText: ((String, String) -> Void)?
     var onPickScreenColor: (() async throws -> String?)?
     var onOpenNotificationSettings: (() throws -> Void)?
     var onCheckNotificationPermission: ((FloatemLanguage) async throws -> Bool)?
@@ -388,6 +392,7 @@ final class FloatingNoteWindowController: NSObject, WKNavigationDelegate, WKScri
         onSaveSettings = nil
         onReadClipboardText = nil
         onWriteClipboardText = nil
+        onWriteClipboardRichText = nil
         onPickScreenColor = nil
         onOpenNotificationSettings = nil
         onCheckNotificationPermission = nil
@@ -939,6 +944,9 @@ final class FloatingNoteWindowController: NSObject, WKNavigationDelegate, WKScri
             resolveBridgeRequest(id: requestID, ok: true, result: onReadClipboardText?() ?? "")
         case "writeClipboardText":
             onWriteClipboardText?(params["text"] as? String ?? "")
+            resolveBridgeRequest(id: requestID, ok: true, result: NSNull())
+        case "writeClipboardRichText":
+            onWriteClipboardRichText?(params["html"] as? String ?? "", params["text"] as? String ?? "")
             resolveBridgeRequest(id: requestID, ok: true, result: NSNull())
         case "pickScreenColor":
             Task { @MainActor [weak self] in
