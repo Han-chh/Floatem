@@ -931,6 +931,22 @@ final class MainWindowController: NSObject, NSWindowDelegate, FloatemNativeBridg
 
         if let htmlData = html.data(using: .utf8) {
             pasteboard.setData(htmlData, forType: .html)
+
+            let readOptions: [NSAttributedString.DocumentReadingOptionKey: Any] = [
+                .documentType: NSAttributedString.DocumentType.html,
+                .characterEncoding: String.Encoding.utf8.rawValue,
+            ]
+
+            if let attributedText = try? NSAttributedString(
+                data: htmlData,
+                options: readOptions,
+                documentAttributes: nil
+            ), let rtfData = try? attributedText.data(
+                from: NSRange(location: 0, length: attributedText.length),
+                documentAttributes: [.documentType: NSAttributedString.DocumentType.rtf]
+            ) {
+                pasteboard.setData(rtfData, forType: .rtf)
+            }
         }
     }
 
