@@ -37,6 +37,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     private var systemDidWakeObserver: NSObjectProtocol?
     private var launchContextResolver = LaunchContextResolver()
     private var isAwaitingInitialHotKeyRegistration = false
+    private var isPresentingUninstallConfirmation = false
     private var isUninstalling = false
 
     private var localization: FloatemLocalization {
@@ -235,26 +236,47 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     }
 
     @objc private func confirmUninstallApplication(_ sender: Any?) {
-        guard !isUninstalling else {
+        guard !isUninstalling, !isPresentingUninstallConfirmation else {
             return
         }
 
-        NSApp.activate(ignoringOtherApps: true)
-        let alert = NSAlert()
-        alert.alertStyle = .warning
-        alert.messageText = localization.uninstallTitle
-        alert.informativeText = localization.uninstallMessage
-        alert.addButton(withTitle: localization.uninstallConfirm)
-        alert.addButton(withTitle: localization.uninstallCancel)
+        isPresentingUninstallConfirmation = true
+        showMainWindowForUserAction()
+        updateToggleMenuTitles()
 
-        let keepDataCheckbox = NSButton(checkboxWithTitle: localization.uninstallKeepData, target: nil, action: nil)
-        keepDataCheckbox.state = .on
-        alert.accessoryView = keepDataCheckbox
+        // Let the status or application menu close before attaching the sheet
+        // so the confirmation is visibly anchored to the Floatem window.
+        DispatchQueue.main.async { [weak self] in
+            guard let self else {
+                return
+            }
 
-        guard alert.runModal() == .alertFirstButtonReturn else {
-            return
+            let alert = NSAlert()
+            alert.alertStyle = .warning
+            alert.messageText = self.localization.uninstallTitle
+            alert.informativeText = self.localization.uninstallMessage
+            alert.addButton(withTitle: self.localization.uninstallConfirm)
+            alert.addButton(withTitle: self.localization.uninstallCancel)
+
+            let keepDataCheckbox = NSButton(
+                checkboxWithTitle: self.localization.uninstallKeepData,
+                target: nil,
+                action: nil
+            )
+            keepDataCheckbox.state = .on
+            alert.accessoryView = keepDataCheckbox
+
+            alert.beginSheetModal(for: self.mainWindowController.sheetParentWindow) { [weak self] response in
+                guard let self else {
+                    return
+                }
+                self.isPresentingUninstallConfirmation = false
+                guard response == .alertFirstButtonReturn else {
+                    return
+                }
+                self.performUninstall(keepUserData: keepDataCheckbox.state == .on)
+            }
         }
-        performUninstall(keepUserData: keepDataCheckbox.state == .on)
     }
 
     @objc private func quitApplication(_ sender: Any?) {
@@ -470,7 +492,16 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     }
 
     func menuWillOpen(_ menu: NSMenu) {
+        synchronizeLanguageFromStorage()
         updateToggleMenuTitles()
+    }
+
+    private func synchronizeLanguageFromStorage() {
+        guard let storedLanguage = try? storage.currentLanguage(), storedLanguage != currentLanguage else {
+            return
+        }
+        currentLanguage = storedLanguage
+        updateLocalizedMenuTitles()
     }
 
     private func updateToggleMenuTitles() {
@@ -580,11 +611,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         statusUninstallItem?.isEnabled = true
         mainMenuUninstallItem?.isEnabled = true
         mainWindowController.installSavedHotKey()
+        showMainWindowForUserAction()
 
         let alert = NSAlert(error: error)
         alert.alertStyle = .critical
         alert.messageText = localization.uninstallFailedTitle
-        alert.runModal()
+        alert.beginSheetModal(for: mainWindowController.sheetParentWindow)
     }
 
     private func showMainWindowForUserAction() {

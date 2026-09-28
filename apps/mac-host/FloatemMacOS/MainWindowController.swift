@@ -81,6 +81,10 @@ final class MainWindowController: NSObject, NSWindowDelegate, FloatemNativeBridg
         panel.isVisible
     }
 
+    var sheetParentWindow: NSWindow {
+        panel
+    }
+
     init(
         storage: AppStorage,
         hotKeyAgentManager: HotKeyAgentManager,

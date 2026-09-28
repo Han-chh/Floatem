@@ -8,6 +8,7 @@ All notable repository changes are recorded here. Historical entries describe th
 - Validate the registered Agent against the current Floatem installation on launch, repair stale registrations automatically, and alert the user when registration still fails.
 - Recover from an unresponsive stale Agent registration with a bounded startup handshake, and avoid rejecting valid local Release builds when sandboxing hides parent-bundle metadata.
 - Add a confirmed Uninstall Floatem action to both menus that unregisters background services, moves the application to the Trash, and lets the user keep or remove local data.
+- Present uninstall confirmation and failure messages as sheets attached to the Floatem window, and keep both application menus synchronized with Floatem's internal Chinese or English language.
 - Add a persistent macOS status-bar menu with state-aware Show Floatem or Hide Floatem actions, reload and reveal its interface, and quit the application.
 - Restore Floatem as a regular macOS application so its compact Floatem and Edit menus appear in the system menu bar while the app is active.
 - Activate Floatem's system menu when the user clicks a main or floating Floatem window.
