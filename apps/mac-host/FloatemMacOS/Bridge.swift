@@ -126,6 +126,7 @@ enum FloatemLanguage: String {
                 menuShow: "Show Floatem",
                 menuHide: "Hide Floatem",
                 menuReload: "Reload Interface",
+                menuUninstall: "Uninstall Floatem…",
                 menuQuit: "Quit",
                 menuQuitApp: "Quit Floatem",
                 menuEdit: "Edit",
@@ -135,6 +136,16 @@ enum FloatemLanguage: String {
                 menuCopy: "Copy",
                 menuPaste: "Paste",
                 menuSelectAll: "Select All",
+                hotKeyRegistrationFailedTitle: "Global Shortcut Unavailable",
+                hotKeyRegistrationFailedMessage: "Floatem could not start its global shortcut Agent. You can continue using the app, but the shortcut will not work until this is resolved.",
+                hotKeyOpenSettings: "Open System Settings",
+                hotKeyDismiss: "OK",
+                uninstallTitle: "Uninstall Floatem?",
+                uninstallMessage: "Floatem will disable its background shortcut Agent and login item, then move the application to the Trash.",
+                uninstallKeepData: "Keep notes, todos, and settings",
+                uninstallConfirm: "Uninstall Floatem",
+                uninstallCancel: "Cancel",
+                uninstallFailedTitle: "Floatem couldn't be uninstalled",
                 loadingTitle: "Loading Floatem...",
                 loadingDetail: "Preparing the local app interface.",
                 missingInterfaceTitle: "Floatem couldn't load its interface.",
@@ -161,6 +172,7 @@ enum FloatemLanguage: String {
                 menuShow: "显示 Floatem",
                 menuHide: "隐藏 Floatem",
                 menuReload: "重新加载界面",
+                menuUninstall: "卸载 Floatem…",
                 menuQuit: "退出",
                 menuQuitApp: "退出 Floatem",
                 menuEdit: "编辑",
@@ -170,6 +182,16 @@ enum FloatemLanguage: String {
                 menuCopy: "复制",
                 menuPaste: "粘贴",
                 menuSelectAll: "全选",
+                hotKeyRegistrationFailedTitle: "全局快捷键不可用",
+                hotKeyRegistrationFailedMessage: "Floatem 无法启动全局快捷键 Agent。你仍可继续使用应用，但解决该问题前快捷键不会生效。",
+                hotKeyOpenSettings: "打开系统设置",
+                hotKeyDismiss: "好",
+                uninstallTitle: "要卸载 Floatem 吗？",
+                uninstallMessage: "Floatem 将停用后台快捷键 Agent 和登录项，然后把应用移到废纸篓。",
+                uninstallKeepData: "保留笔记、待办和设置",
+                uninstallConfirm: "卸载 Floatem",
+                uninstallCancel: "取消",
+                uninstallFailedTitle: "无法卸载 Floatem",
                 loadingTitle: "正在加载 Floatem...",
                 loadingDetail: "正在准备本地应用界面。",
                 missingInterfaceTitle: "Floatem 无法加载界面。",
@@ -208,6 +230,7 @@ struct FloatemLocalization {
     let menuShow: String
     let menuHide: String
     let menuReload: String
+    let menuUninstall: String
     let menuQuit: String
     let menuQuitApp: String
     let menuEdit: String
@@ -217,6 +240,16 @@ struct FloatemLocalization {
     let menuCopy: String
     let menuPaste: String
     let menuSelectAll: String
+    let hotKeyRegistrationFailedTitle: String
+    let hotKeyRegistrationFailedMessage: String
+    let hotKeyOpenSettings: String
+    let hotKeyDismiss: String
+    let uninstallTitle: String
+    let uninstallMessage: String
+    let uninstallKeepData: String
+    let uninstallConfirm: String
+    let uninstallCancel: String
+    let uninstallFailedTitle: String
     let loadingTitle: String
     let loadingDetail: String
     let missingInterfaceTitle: String

@@ -19,9 +19,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
 
     private weak var statusToggleItem: NSMenuItem?
     private weak var statusReloadItem: NSMenuItem?
+    private weak var statusUninstallItem: NSMenuItem?
     private weak var statusQuitItem: NSMenuItem?
     private weak var mainMenuToggleItem: NSMenuItem?
     private weak var mainMenuReloadItem: NSMenuItem?
+    private weak var mainMenuUninstallItem: NSMenuItem?
     private weak var mainMenuQuitItem: NSMenuItem?
     private weak var mainMenuEditItem: NSMenuItem?
     private weak var mainMenuUndoItem: NSMenuItem?
@@ -34,6 +36,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     private var systemWillSleepObserver: NSObjectProtocol?
     private var systemDidWakeObserver: NSObjectProtocol?
     private var launchContextResolver = LaunchContextResolver()
+    private var isAwaitingInitialHotKeyRegistration = false
+    private var isUninstalling = false
 
     private var localization: FloatemLocalization {
         currentLanguage.localization
@@ -53,6 +57,13 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         reloadItem.target = self
         menu.addItem(reloadItem)
         statusReloadItem = reloadItem
+
+        menu.addItem(NSMenuItem.separator())
+
+        let uninstallItem = NSMenuItem(title: localization.menuUninstall, action: #selector(confirmUninstallApplication(_:)), keyEquivalent: "")
+        uninstallItem.target = self
+        menu.addItem(uninstallItem)
+        statusUninstallItem = uninstallItem
 
         menu.addItem(NSMenuItem.separator())
 
@@ -114,6 +125,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         hotKeyAgentManager.currentMainWindowVisibility = { [weak self] in
             self?.mainWindowController.isMainWindowVisible ?? false
         }
+        mainWindowController.onHotKeyRegistrationStateChanged = { [weak self] state in
+            self?.handleInitialHotKeyRegistrationState(state)
+        }
         updateLocalizedMenuTitles()
 
         DispatchQueue.main.async { [weak self] in
@@ -131,6 +145,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
                 )
             }
 
+            self.isAwaitingInitialHotKeyRegistration = true
             self.mainWindowController.installSavedHotKey()
             self.mainWindowController.syncSavedTodoReminders()
             // Desktop-pinned cards are application-owned NSPanel instances, so
@@ -183,7 +198,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     }
 
     func applicationWillTerminate(_ notification: Notification) {
-        lifecycleDiagnostics?.recordGracefulTermination(reason: "applicationWillTerminate")
+        if !isUninstalling {
+            lifecycleDiagnostics?.recordGracefulTermination(reason: "applicationWillTerminate")
+        }
     }
 
     private func classifyInitialOpenEvent() {
@@ -215,6 +232,29 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     @objc private func reloadApplicationInterface(_ sender: Any?) {
         mainWindowController.reloadApplicationInterface()
         showMainWindowForUserAction()
+    }
+
+    @objc private func confirmUninstallApplication(_ sender: Any?) {
+        guard !isUninstalling else {
+            return
+        }
+
+        NSApp.activate(ignoringOtherApps: true)
+        let alert = NSAlert()
+        alert.alertStyle = .warning
+        alert.messageText = localization.uninstallTitle
+        alert.informativeText = localization.uninstallMessage
+        alert.addButton(withTitle: localization.uninstallConfirm)
+        alert.addButton(withTitle: localization.uninstallCancel)
+
+        let keepDataCheckbox = NSButton(checkboxWithTitle: localization.uninstallKeepData, target: nil, action: nil)
+        keepDataCheckbox.state = .on
+        alert.accessoryView = keepDataCheckbox
+
+        guard alert.runModal() == .alertFirstButtonReturn else {
+            return
+        }
+        performUninstall(keepUserData: keepDataCheckbox.state == .on)
     }
 
     @objc private func quitApplication(_ sender: Any?) {
@@ -299,6 +339,13 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         reloadItem.target = self
         appMenu.addItem(reloadItem)
         mainMenuReloadItem = reloadItem
+
+        appMenu.addItem(NSMenuItem.separator())
+
+        let uninstallItem = NSMenuItem(title: localization.menuUninstall, action: #selector(confirmUninstallApplication(_:)), keyEquivalent: "")
+        uninstallItem.target = self
+        appMenu.addItem(uninstallItem)
+        mainMenuUninstallItem = uninstallItem
 
         appMenu.addItem(NSMenuItem.separator())
 
@@ -407,8 +454,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     private func updateLocalizedMenuTitles() {
         updateToggleMenuTitles()
         statusReloadItem?.title = localization.menuReload
+        statusUninstallItem?.title = localization.menuUninstall
         statusQuitItem?.title = localization.menuQuit
         mainMenuReloadItem?.title = localization.menuReload
+        mainMenuUninstallItem?.title = localization.menuUninstall
         mainMenuQuitItem?.title = localization.menuQuitApp
         mainMenuEditItem?.title = localization.menuEdit
         mainMenuEditItem?.submenu?.title = localization.menuEdit
@@ -430,6 +479,112 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
             : localization.menuShow
         statusToggleItem?.title = title
         mainMenuToggleItem?.title = title
+    }
+
+    private func handleInitialHotKeyRegistrationState(_ state: HotKeyAgentManager.RegistrationState) {
+        guard isAwaitingInitialHotKeyRegistration else {
+            return
+        }
+
+        switch state.registration {
+        case "starting", "repairing":
+            return
+        case "registered":
+            isAwaitingInitialHotKeyRegistration = false
+        default:
+            isAwaitingInitialHotKeyRegistration = false
+            showMainWindowForUserAction()
+            DispatchQueue.main.async { [weak self] in
+                self?.presentHotKeyRegistrationFailure(state)
+            }
+        }
+    }
+
+    private func presentHotKeyRegistrationFailure(_ state: HotKeyAgentManager.RegistrationState) {
+        let alert = NSAlert()
+        alert.alertStyle = .warning
+        alert.messageText = localization.hotKeyRegistrationFailedTitle
+        let detail = state.message?.trimmingCharacters(in: .whitespacesAndNewlines)
+        alert.informativeText = [localization.hotKeyRegistrationFailedMessage, detail]
+            .compactMap { value in
+                guard let value, !value.isEmpty else { return nil }
+                return value
+            }
+            .joined(separator: "\n\n")
+
+        if state.registration == "approvalRequired" {
+            alert.addButton(withTitle: localization.hotKeyOpenSettings)
+            alert.addButton(withTitle: localization.hotKeyDismiss)
+            if alert.runModal() == .alertFirstButtonReturn {
+                try? mainWindowController.openBackgroundActivitySettings()
+            }
+        } else {
+            alert.addButton(withTitle: localization.hotKeyDismiss)
+            alert.runModal()
+        }
+    }
+
+    private func performUninstall(keepUserData: Bool) {
+        isUninstalling = true
+        statusUninstallItem?.isEnabled = false
+        mainMenuUninstallItem?.isEnabled = false
+
+        hotKeyAgentManager.unregisterForUninstall { [weak self] agentError in
+            guard let self else {
+                return
+            }
+            if let agentError {
+                self.finishFailedUninstall(agentError)
+                return
+            }
+
+            do {
+                try self.launchAtLoginManager.unregisterForUninstall()
+                if !keepUserData {
+                    self.lifecycleDiagnostics?.stopForUninstall()
+                    self.notificationManager.removeAllNotificationsForUninstall()
+                    try self.storage.removeAllUserData()
+                }
+            } catch {
+                self.finishFailedUninstall(error)
+                return
+            }
+
+            let appURL = Bundle.main.bundleURL.standardizedFileURL
+            NSWorkspace.shared.recycle([appURL]) { [weak self] movedURLs, recycleError in
+                Task { @MainActor [weak self] in
+                    guard let self else {
+                        return
+                    }
+                    if let recycleError {
+                        self.finishFailedUninstall(recycleError)
+                        return
+                    }
+                    guard movedURLs[appURL] != nil else {
+                        let error = NSError(
+                            domain: "com.hankch.floatem.uninstall",
+                            code: 1,
+                            userInfo: [NSLocalizedDescriptionKey: "macOS did not move Floatem.app to the Trash."]
+                        )
+                        self.finishFailedUninstall(error)
+                        return
+                    }
+                    NSApp.terminate(nil)
+                }
+            }
+        }
+    }
+
+    private func finishFailedUninstall(_ error: Error) {
+        isUninstalling = false
+        statusUninstallItem?.isEnabled = true
+        mainMenuUninstallItem?.isEnabled = true
+        mainWindowController.installSavedHotKey()
+
+        let alert = NSAlert(error: error)
+        alert.alertStyle = .critical
+        alert.messageText = localization.uninstallFailedTitle
+        alert.runModal()
     }
 
     private func showMainWindowForUserAction() {

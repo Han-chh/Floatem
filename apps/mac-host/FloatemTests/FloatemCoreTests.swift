@@ -387,6 +387,38 @@ final class FloatemCoreTests: XCTestCase {
         )
     }
 
+    func testAgentHostLocatorRejectsADeletedOrIncompleteHostBundle() throws {
+        let root = try makeDirectory()
+        let appURL = root.appendingPathComponent("Floatem.app", isDirectory: true)
+        let contentsURL = appURL.appendingPathComponent("Contents", isDirectory: true)
+        let macOSURL = contentsURL.appendingPathComponent("MacOS", isDirectory: true)
+        let hostExecutableURL = macOSURL.appendingPathComponent("Floatem")
+        let agentExecutableURL = contentsURL
+            .appendingPathComponent("Resources", isDirectory: true)
+            .appendingPathComponent("FloatemHotKeyAgent")
+
+        try FileManager.default.createDirectory(at: macOSURL, withIntermediateDirectories: true)
+        try Data().write(to: hostExecutableURL)
+        let info: [String: Any] = [
+            "CFBundleExecutable": "Floatem",
+            "CFBundleIdentifier": "com.hankch.floatem",
+            "CFBundlePackageType": "APPL",
+        ]
+        let infoData = try PropertyListSerialization.data(fromPropertyList: info, format: .xml, options: 0)
+        try infoData.write(to: contentsURL.appendingPathComponent("Info.plist"))
+
+        XCTAssertEqual(
+            FloatemAgentHostLocator.validContainingAppBundleURL(executableURL: agentExecutableURL)?.path,
+            appURL.path
+        )
+
+        try FileManager.default.removeItem(at: hostExecutableURL)
+        XCTAssertNil(FloatemAgentHostLocator.validContainingAppBundleURL(executableURL: agentExecutableURL))
+        XCTAssertNil(FloatemAgentHostLocator.validContainingAppBundleURL(
+            executableURL: root.appendingPathComponent("Missing.app/Contents/Resources/FloatemHotKeyAgent")
+        ))
+    }
+
     @MainActor
     func testLifecycleDiagnosticsPersistLifecycleEventsAndHeartbeats() throws {
         let directory = try makeDirectory()

@@ -4,6 +4,8 @@ import ServiceManagement
 
 @MainActor
 final class MainWindowController: NSObject, NSWindowDelegate, FloatemNativeBridgeHandling {
+    var onHotKeyRegistrationStateChanged: ((HotKeyAgentManager.RegistrationState) -> Void)?
+
     private static let defaultPanelSize = NSSize(width: 400, height: 680)
     private static let minimumPanelSize = NSSize(width: 320, height: 480)
     static let overlayPanelLevel = NSWindow.Level.statusBar
@@ -130,7 +132,11 @@ final class MainWindowController: NSObject, NSWindowDelegate, FloatemNativeBridg
         installOverlayObservers()
 
         hotKeyAgentManager.onRegistrationStateChanged = { [weak self] state in
-            self?.webViewController.emitHotkeyRegistrationState(self?.hotKeyRegistrationStatePayload(from: state) ?? [:])
+            guard let self else {
+                return
+            }
+            self.webViewController.emitHotkeyRegistrationState(self.hotKeyRegistrationStatePayload(from: state))
+            self.onHotKeyRegistrationStateChanged?(state)
         }
         hotKeyAgentManager.onAgentHotKeyPressed = { [weak self] shortcut in
             guard let self else {

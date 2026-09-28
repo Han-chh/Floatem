@@ -136,6 +136,12 @@ final class LifecycleDiagnostics {
         logger.notice("Lifecycle session started. pid=\(self.processID, privacy: .public) session=\(newSession.sessionID, privacy: .public)")
     }
 
+    func stopForUninstall() {
+        heartbeatTimer?.invalidate()
+        heartbeatTimer = nil
+        session = nil
+    }
+
     func recordWillSleep() {
         recordLifecycleEvent(.willSleep)
     }

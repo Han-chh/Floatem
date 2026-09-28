@@ -75,11 +75,28 @@ enum FloatemAgentHostLocator {
         }
         return nil
     }
+
+    static func validContainingAppBundleURL(
+        executableURL: URL,
+        expectedBundleIdentifier: String = "com.hankch.floatem",
+        fileManager: FileManager = .default
+    ) -> URL? {
+        guard let appURL = containingAppBundleURL(executableURL: executableURL),
+              fileManager.fileExists(atPath: appURL.path),
+              let bundle = Bundle(url: appURL),
+              bundle.bundleIdentifier == expectedBundleIdentifier,
+              let hostExecutableURL = bundle.executableURL,
+              fileManager.fileExists(atPath: hostExecutableURL.path) else {
+            return nil
+        }
+        return appURL.standardizedFileURL.resolvingSymlinksInPath()
+    }
 }
 
 /// The main host can only configure the Agent. The Agent is the sole owner of
 /// the Carbon global shortcut and never delegates registration back to the host.
 @objc protocol FloatemHotKeyAgentProtocol {
+    func validateHostApplication(atPath path: String, withReply reply: @escaping (Bool, String?) -> Void)
     func configureHotKey(_ shortcut: String, withReply reply: @escaping (String, String?) -> Void)
     func currentHotKeyStatus(withReply reply: @escaping (String, String, String?) -> Void)
     func triggerHostLaunchForDiagnostics(withReply reply: @escaping (Bool, String?) -> Void)

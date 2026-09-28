@@ -38,6 +38,7 @@ final class HotKeyAgentManager {
     private let localHotKeyManager = GlobalHotKeyManager()
     private let logger = Logger(subsystem: "com.floatem.app", category: "HotKeyAgent")
     private var agentConnection: NSXPCConnection?
+    private var hasAttemptedRegistrationRepair = false
     private lazy var hostControlCallback = AgentHostControlCallback { [weak self] shortcut in
         guard let handler = self?.onAgentHotKeyPressed else {
             return false
@@ -134,6 +135,7 @@ final class HotKeyAgentManager {
         let shortcut = try GlobalHotKeyManager.validShortcut(
             from: GlobalHotKeyManager.shortcutForCurrentBuild(rawShortcut)
         )
+        hasAttemptedRegistrationRepair = false
         guard try ensureAgentRegistered(shortcut: shortcut) else {
             return
         }
@@ -143,6 +145,33 @@ final class HotKeyAgentManager {
 
     func reconnectAfterSystemWake(shortcut: String) {
         configureOnLaunch(shortcut: shortcut)
+    }
+
+    func unregisterForUninstall(completion: @escaping (Error?) -> Void) {
+        localHotKeyManager.unregister()
+        agentConnection?.invalidate()
+        agentConnection = nil
+
+        #if FLOATEM_DEBUG_ISOLATED
+        completion(nil)
+        #else
+        switch service.status {
+        case .notRegistered, .notFound:
+            completion(nil)
+        case .enabled, .requiresApproval:
+            service.unregister { error in
+                DispatchQueue.main.async {
+                    completion(error)
+                }
+            }
+        @unknown default:
+            service.unregister { error in
+                DispatchQueue.main.async {
+                    completion(error)
+                }
+            }
+        }
+        #endif
     }
 
     func backgroundActivityStatus() -> BackgroundActivityStatus {
@@ -208,9 +237,32 @@ final class HotKeyAgentManager {
             }
         } as? FloatemHotKeyAgentProtocol
 
+        let expectedAppPath = Bundle.main.bundleURL.standardizedFileURL.resolvingSymlinksInPath().path
+        proxy?.validateHostApplication(atPath: expectedAppPath) { [weak self, weak connection] isValid, detail in
+            Task { @MainActor [weak self] in
+                guard let self, let connection, self.agentConnection === connection else {
+                    return
+                }
+                guard isValid else {
+                    self.repairAgentRegistration(shortcut: shortcut, reason: detail)
+                    return
+                }
+                self.configureShortcut(shortcut, using: proxy)
+            }
+        }
+    }
+
+    private func configureShortcut(_ shortcut: String, using proxy: FloatemHotKeyAgentProtocol?) {
         proxy?.configureHotKey(shortcut) { [weak self] registration, message in
             Task { @MainActor [weak self] in
-                self?.publish(shortcut: shortcut, registration: registration, message: message)
+                guard let self else {
+                    return
+                }
+                if registration == "hostMissing" {
+                    self.repairAgentRegistration(shortcut: shortcut, reason: message)
+                    return
+                }
+                self.publish(shortcut: shortcut, registration: registration, message: message)
             }
         }
     }
@@ -236,18 +288,78 @@ final class HotKeyAgentManager {
 
     private func handleAgentConnectionFailure(shortcut: String, attempt: Int, error: Error) {
         guard attempt < 3 else {
-            publish(
-                shortcut: shortcut,
-                registration: "agentUnavailable",
-                message: "Floatem's background shortcut agent is unavailable: \(error.localizedDescription)"
-            )
-            logger.error("Unable to configure hotkey agent after retries. error=\(error.localizedDescription, privacy: .public)")
+            repairAgentRegistration(shortcut: shortcut, reason: error.localizedDescription)
             return
         }
 
         let delay = pow(2, Double(attempt)) * 0.4
         DispatchQueue.main.asyncAfter(deadline: .now() + delay) { [weak self] in
             self?.syncShortcut(shortcut, attempt: attempt + 1)
+        }
+    }
+
+    private func repairAgentRegistration(shortcut: String, reason: String?) {
+        guard !hasAttemptedRegistrationRepair else {
+            publish(
+                shortcut: shortcut,
+                registration: "agentUnavailable",
+                message: "Floatem's background shortcut agent could not be repaired: \(reason ?? "unknown error")"
+            )
+            logger.error("Unable to configure hotkey Agent after re-registration. reason=\(reason ?? "unknown", privacy: .public)")
+            return
+        }
+
+        hasAttemptedRegistrationRepair = true
+        publish(shortcut: shortcut, registration: "repairing", message: reason)
+        agentConnection?.invalidate()
+        agentConnection = nil
+        logger.notice("Repairing the registered hotkey Agent. reason=\(reason ?? "unknown", privacy: .public)")
+
+        switch service.status {
+        case .notRegistered, .notFound:
+            registerRepairedAgent(shortcut: shortcut)
+        case .enabled, .requiresApproval:
+            service.unregister { [weak self] error in
+                Task { @MainActor [weak self] in
+                    guard let self else {
+                        return
+                    }
+                    if let error {
+                        self.publish(
+                            shortcut: shortcut,
+                            registration: "agentUnavailable",
+                            message: "Floatem could not remove the stale shortcut Agent: \(error.localizedDescription)"
+                        )
+                        return
+                    }
+                    self.registerRepairedAgent(shortcut: shortcut)
+                }
+            }
+        @unknown default:
+            registerRepairedAgent(shortcut: shortcut)
+        }
+    }
+
+    private func registerRepairedAgent(shortcut: String) {
+        do {
+            try service.register()
+            guard service.status == .enabled else {
+                publish(
+                    shortcut: shortcut,
+                    registration: "approvalRequired",
+                    message: "Allow Floatem's background item in System Settings to enable the global shortcut."
+                )
+                return
+            }
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.4) { [weak self] in
+                self?.syncShortcut(shortcut, attempt: 0)
+            }
+        } catch {
+            publish(
+                shortcut: shortcut,
+                registration: "agentUnavailable",
+                message: "Floatem could not register its background shortcut Agent: \(error.localizedDescription)"
+            )
         }
     }
 

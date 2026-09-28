@@ -18,6 +18,8 @@ private final class FloatemHotKeyAgent: NSObject, NSXPCListenerDelegate, Floatem
     private var pendingWakeRecoveryHostNotification = false
     private var pendingWakeRecoveryWindowVisibility: Bool?
     private var pendingHotKeyShowAfterHostLaunch: String?
+    private var hostValidationTimer: Timer?
+    private var isShuttingDownForMissingHost = false
 
     override init() {
         listener = NSXPCListener(machServiceName: FloatemAgentXPC.agentServiceName)
@@ -29,8 +31,13 @@ private final class FloatemHotKeyAgent: NSObject, NSXPCListenerDelegate, Floatem
     }
 
     func start() {
+        guard containingAppBundleURL() != nil else {
+            shutdownForMissingHost()
+            return
+        }
         listener.resume()
         installSystemWakeObserver()
+        installHostValidationTimer()
         configureHotKey(shortcut) { [weak self] registration, message in
             self?.logger.notice("Started Agent shortcut registration=\(registration, privacy: .public) message=\(message ?? "none", privacy: .public)")
         }
@@ -50,6 +57,7 @@ private final class FloatemHotKeyAgent: NSObject, NSXPCListenerDelegate, Floatem
         if let systemDidWakeObserver {
             NSWorkspace.shared.notificationCenter.removeObserver(systemDidWakeObserver)
         }
+        hostValidationTimer?.invalidate()
     }
 
     func listener(_ listener: NSXPCListener, shouldAcceptNewConnection newConnection: NSXPCConnection) -> Bool {
@@ -85,6 +93,12 @@ private final class FloatemHotKeyAgent: NSObject, NSXPCListenerDelegate, Floatem
                 return
             }
 
+            guard self.containingAppBundleURL() != nil else {
+                reply("hostMissing", "Floatem.app is no longer installed.")
+                self.shutdownForMissingHost()
+                return
+            }
+
             let candidate = GlobalHotKeyManager.normalize(shortcut: rawShortcut)
             do {
                 try self.hotKeyManager.register(shortcut: candidate)
@@ -93,6 +107,28 @@ private final class FloatemHotKeyAgent: NSObject, NSXPCListenerDelegate, Floatem
             } catch {
                 reply("conflict", error.localizedDescription)
             }
+        }
+    }
+
+    func validateHostApplication(atPath path: String, withReply reply: @escaping (Bool, String?) -> Void) {
+        DispatchQueue.main.async { [weak self] in
+            guard let self else {
+                reply(false, "Floatem's background shortcut agent is shutting down.")
+                return
+            }
+            guard let appURL = self.containingAppBundleURL() else {
+                reply(false, "The registered Agent no longer has an installed Floatem host.")
+                self.shutdownForMissingHost()
+                return
+            }
+
+            let expectedURL = URL(fileURLWithPath: path).standardizedFileURL.resolvingSymlinksInPath()
+            guard appURL == expectedURL else {
+                reply(false, "The registered Agent belongs to a different Floatem installation.")
+                self.shutdownForMissingHost()
+                return
+            }
+            reply(true, nil)
         }
     }
 
@@ -136,6 +172,16 @@ private final class FloatemHotKeyAgent: NSObject, NSXPCListenerDelegate, Floatem
         }
     }
 
+    private func installHostValidationTimer() {
+        hostValidationTimer?.invalidate()
+        hostValidationTimer = Timer.scheduledTimer(withTimeInterval: 2, repeats: true) { [weak self] _ in
+            guard let self, self.containingAppBundleURL() == nil else {
+                return
+            }
+            self.shutdownForMissingHost()
+        }
+    }
+
     private func captureHostPresentationBeforeSleep() {
         let connection = hostConnectionsQueue.sync { hostConnections.last }
         guard let connection else {
@@ -175,6 +221,11 @@ private final class FloatemHotKeyAgent: NSObject, NSXPCListenerDelegate, Floatem
     }
 
     private func handleHotKeyPressed(completion: ((Bool, String?) -> Void)? = nil) {
+        guard containingAppBundleURL() != nil else {
+            completion?(false, "Floatem.app is no longer installed.")
+            shutdownForMissingHost()
+            return
+        }
         requestRunningHostToggle { [weak self] succeeded in
             guard let self else {
                 completion?(false, "Agent deallocated before host control request.")
@@ -326,10 +377,17 @@ private final class FloatemHotKeyAgent: NSObject, NSXPCListenerDelegate, Floatem
         arguments: [String],
         completion: ((Bool, String?) -> Void)? = nil
     ) {
-        guard let appURL = appURL ?? containingAppBundleURL() else {
+        guard let installedAppURL = containingAppBundleURL() else {
             logger.error("Unable to locate the containing Floatem.app bundle.")
             let executablePath = FloatemAgentHostLocator.currentExecutableURL()?.path ?? "unknown"
             completion?(false, "Unable to locate Floatem.app from Agent executable: \(executablePath)")
+            shutdownForMissingHost()
+            return
+        }
+        let appURL = appURL ?? installedAppURL
+        guard appURL.standardizedFileURL.resolvingSymlinksInPath() == installedAppURL else {
+            completion?(false, "The requested Floatem.app path no longer matches the registered Agent.")
+            shutdownForMissingHost()
             return
         }
 
@@ -416,7 +474,20 @@ private final class FloatemHotKeyAgent: NSObject, NSXPCListenerDelegate, Floatem
         guard let executableURL = FloatemAgentHostLocator.currentExecutableURL() else {
             return nil
         }
-        return FloatemAgentHostLocator.containingAppBundleURL(executableURL: executableURL)
+        return FloatemAgentHostLocator.validContainingAppBundleURL(executableURL: executableURL)
+    }
+
+    private func shutdownForMissingHost() {
+        guard !isShuttingDownForMissingHost else {
+            return
+        }
+        isShuttingDownForMissingHost = true
+        logger.notice("Floatem.app is missing or belongs to another installation; releasing the global shortcut and stopping the Agent.")
+        hostValidationTimer?.invalidate()
+        hotKeyManager.unregister()
+        DispatchQueue.main.async {
+            exit(EXIT_SUCCESS)
+        }
     }
 }
 
