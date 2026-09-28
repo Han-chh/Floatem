@@ -78,7 +78,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         if launchContextResolver.explicitContext == .agentWakeRecovery {
             lifecycleDiagnostics?.recordRecoveredAfterWake()
         }
-        NSApp.setActivationPolicy(.accessory)
+        NSApp.setActivationPolicy(.regular)
         currentLanguage = (try? storage.currentLanguage()) ?? .simplifiedChinese
         notificationManager.configure()
         notificationManager.logCurrentAuthorizationStatus()
@@ -280,10 +280,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private func configureMainMenu() {
         let mainMenu = NSMenu()
 
-        let appMenuItem = NSMenuItem()
+        let appMenuItem = NSMenuItem(title: "Floatem", action: nil, keyEquivalent: "")
         mainMenu.addItem(appMenuItem)
 
-        let appMenu = NSMenu()
+        let appMenu = NSMenu(title: "Floatem")
 
         let toggleItem = NSMenuItem(title: localization.menuToggleApp, action: #selector(toggleMainWindow(_:)), keyEquivalent: "")
         toggleItem.target = self
