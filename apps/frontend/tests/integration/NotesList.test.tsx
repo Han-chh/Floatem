@@ -17,6 +17,11 @@ describe("NotesList", () => {
       clipboard.value = text;
     });
     const readClipboardText = vi.fn(async () => clipboard.value);
+    const richClipboard = { html: "", text: "" };
+    const readClipboardRichText = vi.fn(async () => ({
+      html: richClipboard.html,
+      text: richClipboard.text || clipboard.value,
+    }));
     const pickScreenColor = vi.fn(async (): Promise<{ sRGBHex: string } | null> => null);
 
     window.floatemHost = {
@@ -69,6 +74,7 @@ describe("NotesList", () => {
         registration: "registered" as const,
       })),
       readClipboardText,
+      readClipboardRichText,
       registerHotkey: vi.fn(async () => {}),
       registerGlobalShortcut: vi.fn(async () => {}),
       unregisterHotkey: vi.fn(async () => {}),
@@ -88,6 +94,8 @@ describe("NotesList", () => {
       openTextColorPanel: window.floatemHost.openTextColorPanel,
       pickScreenColor,
       readClipboardText,
+      readClipboardRichText,
+      richClipboard,
       restore() {
         window.floatemHost = originalBridge;
       },
@@ -371,6 +379,48 @@ describe("NotesList", () => {
         expect(latestEditor).toHaveTextContent("Native bridge paste");
       });
 
+    } finally {
+      bridge.restore();
+    }
+  });
+
+  it("keeps rich clipboard formatting when pasting through the native bridge", async () => {
+    const bridge = installNativeBridge();
+    const user = userEvent.setup();
+    bridge.richClipboard.html = '<p><strong>Source</strong><em> italic</em><span style="color: #2F6BFF"> blue</span></p>';
+    bridge.richClipboard.text = "Source italic blue";
+    useNotesStore.getState().initialize([
+      createNoteCard({
+        id: "note-native-rich-clipboard",
+        title: "Bridge",
+        content: DEFAULT_NOTE_CONTENT,
+      }),
+    ]);
+
+    render(<NotesList />);
+
+    try {
+      const note = screen.getByTestId("note-card");
+      const editor = within(note).getAllByRole("textbox")[1]!;
+
+      await user.click(within(note).getByRole("button", { name: "Bold" }));
+      await user.click(within(note).getByRole("button", { name: "Paste" }));
+
+      await waitFor(() => {
+        expect(bridge.readClipboardRichText).toHaveBeenCalled();
+        expect(editor.querySelector("strong")).toHaveTextContent("Source");
+        expect(editor.querySelector("em")).toHaveTextContent("italic");
+        expect(editor.querySelector("span[style*='color']")).toHaveTextContent("blue");
+      });
+
+      await user.click(within(note).getByRole("button", { name: "Copy" }));
+
+      await waitFor(() => {
+        expect(bridge.writeClipboardRichText).toHaveBeenLastCalledWith(
+          '<p><strong>Source</strong><em> italic</em><span style="color: #2F6BFF"> blue</span></p>',
+          "Source italic blue",
+        );
+      });
     } finally {
       bridge.restore();
     }

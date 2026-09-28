@@ -479,6 +479,31 @@ final class MainWindowController: NSObject, NSWindowDelegate, FloatemNativeBridg
         NSPasteboard.general.string(forType: .string) ?? ""
     }
 
+    func readClipboardRichText() -> [String: Any] {
+        let pasteboard = NSPasteboard.general
+        let text = pasteboard.string(forType: .string) ?? ""
+
+        if let htmlData = pasteboard.data(forType: .html), let html = String(data: htmlData, encoding: .utf8) {
+            return ["html": html, "text": text]
+        }
+
+        guard let rtfData = pasteboard.data(forType: .rtf),
+              let attributedText = try? NSAttributedString(
+                data: rtfData,
+                options: [.documentType: NSAttributedString.DocumentType.rtf],
+                documentAttributes: nil
+              ),
+              let htmlData = try? attributedText.data(
+                from: NSRange(location: 0, length: attributedText.length),
+                documentAttributes: [.documentType: NSAttributedString.DocumentType.html]
+              ),
+              let html = String(data: htmlData, encoding: .utf8) else {
+            return ["html": "", "text": text]
+        }
+
+        return ["html": html, "text": text]
+    }
+
     func setEditableInputActiveFromBridge(_ active: Bool) {
         isEditableInputActive = active
 
@@ -648,6 +673,9 @@ final class MainWindowController: NSObject, NSWindowDelegate, FloatemNativeBridg
         }
         controller.onReadClipboardText = { [weak self] in
             self?.readClipboardText() ?? ""
+        }
+        controller.onReadClipboardRichText = { [weak self] in
+            self?.readClipboardRichText() ?? ["html": "", "text": ""]
         }
         controller.onWriteClipboardText = { [weak self] text in
             self?.writeClipboardText(text)

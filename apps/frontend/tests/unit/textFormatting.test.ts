@@ -3,9 +3,11 @@ import { describe, expect, it } from "vitest";
 import { DEFAULT_NOTE_CONTENT } from "../../src/lib/models";
 import {
   clearTextFormatting,
+  deserializeRichTextFromHtml,
   getActiveTextColor,
   getTextFormatHotkey,
   insertPlainText,
+  insertRichText,
   isTextFormatActive,
   selectAllText,
   serializeRichTextToHtml,
@@ -136,5 +138,44 @@ describe("textFormatting", () => {
     ).toBe(
       '<p><strong>Bold</strong><em> italic</em><u> underline</u><span style="color: #2F6BFF"> blue</span> &lt;safe&gt;</p>',
     );
+  });
+
+  it("parses supported clipboard HTML into Slate marks", () => {
+    expect(
+      deserializeRichTextFromHtml(
+        '<p><strong>Bold</strong><em> italic</em><u> underline</u><span style="color: #2f6bff"> blue</span></p><p>Next</p>',
+      ),
+    ).toEqual([
+      {
+        type: "paragraph",
+        children: [
+          { text: "Bold", bold: true },
+          { text: " italic", italic: true },
+          { text: " underline", underline: true },
+          { text: " blue", color: "#2F6BFF" },
+        ],
+      },
+      {
+        type: "paragraph",
+        children: [{ text: "Next" }],
+      },
+    ]);
+  });
+
+  it("inserts clipboard formatting without inheriting the active toolbar mark", () => {
+    const editor = createSlateEditor();
+
+    toggleTextFormat(editor, "bold");
+    insertRichText(editor, deserializeRichTextFromHtml('<p>Plain <em>source italic</em></p>'));
+
+    expect(editor.children).toEqual([
+      {
+        type: "paragraph",
+        children: [
+          { text: "Plain " },
+          { text: "source italic", italic: true },
+        ],
+      },
+    ]);
   });
 });

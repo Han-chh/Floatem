@@ -7,21 +7,23 @@ import { useEffect, useRef, useState } from "react";
 import { isPrimaryShortcut } from "../../lib/isPrimaryShortcut";
 import { useI18n } from "../../lib/i18n";
 import { isNativeFloatemHost } from "../../lib/nativeBridge";
-import { readPlainTextFromClipboard, writeRichTextToClipboard } from "../../lib/plainTextClipboard";
+import { readRichTextFromClipboard, writeRichTextToClipboard, type RichTextClipboardContent } from "../../lib/plainTextClipboard";
 import { cloneNoteContent } from "../../lib/models";
 import { withColorMark } from "../../lib/slate-plugins/withColorMark";
 import { Toolbar } from "./Toolbar";
 import {
   clearTextFormatting,
+  deserializeRichTextFromHtml,
   getActiveTextColor,
   getAllPlainText,
   getTextHistoryHotkey,
   getSelectedPlainText,
   getTextFormatHotkey,
-  insertPlainText,
+  insertRichText,
   isTextFormatActive,
   selectAllText,
   setTextColor,
+  plainTextToRichText,
   serializeRichTextToHtml,
   toggleTextFormat,
   type TextFormat,
@@ -215,18 +217,20 @@ export function Editor({ content, onChange, instantToolbar = false, attachedTool
     restoreEditorFocus();
   };
   const handlePaste = async () => {
-    const text = await readPlainTextFromClipboard();
+    const clipboardContent = await readRichTextFromClipboard();
 
-    insertPastedText(text);
+    insertPastedContent(clipboardContent);
   };
-  const insertPastedText = (text: string) => {
-    if (!text) {
+  const insertPastedContent = ({ html, text }: RichTextClipboardContent) => {
+    const richText = html ? deserializeRichTextFromHtml(html) : [];
+    const contentToInsert = richText.length > 0 ? richText : text ? plainTextToRichText(text) : [];
+
+    if (contentToInsert.length === 0) {
       restoreEditorFocus();
       return;
     }
 
-    commitPendingTextColor();
-    insertPlainText(editor, text);
+    insertRichText(editor, contentToInsert);
     setIsColorPaletteOpen(false);
     syncToolbarState();
     restoreEditorFocus();
@@ -358,10 +362,11 @@ export function Editor({ content, onChange, instantToolbar = false, attachedTool
           }}
           onPaste={(event) => {
             event.preventDefault();
+            const html = event.clipboardData.getData("text/html");
             const text = event.clipboardData.getData("text/plain");
 
-            if (text) {
-              insertPastedText(text);
+            if (html || text) {
+              insertPastedContent({ html, text });
               return;
             }
 

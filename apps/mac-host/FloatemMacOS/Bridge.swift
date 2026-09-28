@@ -62,6 +62,7 @@ protocol FloatemNativeBridgeHandling: AnyObject {
     func currentHotKeyRegistrationState() -> [String: Any]
     func currentFloatingCardState() -> [String: [String]]
     func readClipboardText() -> String
+    func readClipboardRichText() -> [String: Any]
     func registerHotKey(shortcut: String) throws
     func setEditableInputActiveFromBridge(_ active: Bool)
     func setTextCompositionActiveFromBridge(_ active: Bool)

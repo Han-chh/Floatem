@@ -37,6 +37,11 @@ export type NotificationPermissionResult = {
   allowed: boolean;
 };
 
+export type RichTextClipboardContent = {
+  html: string;
+  text: string;
+};
+
 export type ShortcutConfig = {
   shortcut: string;
 };
@@ -222,6 +227,7 @@ export type HostBridge<TLoadAllResult, TNotes, TTodos, TSettings> = {
   testReminderNotification: (options?: { soundEnabled?: boolean; language?: string }) => Promise<void>;
   getHotkeyRegistrationState: () => Promise<HotkeyRegistrationState>;
   readClipboardText: () => Promise<string>;
+  readClipboardRichText?: () => Promise<RichTextClipboardContent>;
   writeClipboardText: (text: string) => Promise<void>;
   writeClipboardRichText?: (html: string, text: string) => Promise<void>;
   registerHotkey: (shortcut: string | ShortcutConfig) => Promise<void>;

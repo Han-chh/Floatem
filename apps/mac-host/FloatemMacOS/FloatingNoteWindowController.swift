@@ -110,6 +110,9 @@ final class FloatingNoteWindowController: NSObject, WKNavigationDelegate, WKScri
         readClipboardText() {
           return send("readClipboardText");
         },
+        readClipboardRichText() {
+          return send("readClipboardRichText");
+        },
         writeClipboardText(text) {
           return send("writeClipboardText", { text: String(text ?? "") });
         },
@@ -206,6 +209,7 @@ final class FloatingNoteWindowController: NSObject, WKNavigationDelegate, WKScri
     var onSaveTodos: ((Any) throws -> Void)?
     var onSaveSettings: ((Any) throws -> Void)?
     var onReadClipboardText: (() -> String)?
+    var onReadClipboardRichText: (() -> [String: Any])?
     var onWriteClipboardText: ((String) -> Void)?
     var onWriteClipboardRichText: ((String, String) -> Void)?
     var onPickScreenColor: (() async throws -> String?)?
@@ -391,6 +395,7 @@ final class FloatingNoteWindowController: NSObject, WKNavigationDelegate, WKScri
         onSaveTodos = nil
         onSaveSettings = nil
         onReadClipboardText = nil
+        onReadClipboardRichText = nil
         onWriteClipboardText = nil
         onWriteClipboardRichText = nil
         onPickScreenColor = nil
@@ -942,6 +947,8 @@ final class FloatingNoteWindowController: NSObject, WKNavigationDelegate, WKScri
             }
         case "readClipboardText":
             resolveBridgeRequest(id: requestID, ok: true, result: onReadClipboardText?() ?? "")
+        case "readClipboardRichText":
+            resolveBridgeRequest(id: requestID, ok: true, result: onReadClipboardRichText?() ?? ["html": "", "text": ""])
         case "writeClipboardText":
             onWriteClipboardText?(params["text"] as? String ?? "")
             resolveBridgeRequest(id: requestID, ok: true, result: NSNull())

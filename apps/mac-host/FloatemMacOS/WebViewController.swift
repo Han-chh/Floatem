@@ -644,6 +644,8 @@ final class WebViewController: NSViewController, WKNavigationDelegate, WKUIDeleg
                 result = NSNull()
             case "readClipboardText":
                 result = bridgeDelegate?.readClipboardText() ?? ""
+            case "readClipboardRichText":
+                result = bridgeDelegate?.readClipboardRichText() ?? ["html": "", "text": ""]
             case "showWindow":
                 bridgeDelegate?.showMainWindowFromBridge()
                 result = NSNull()
@@ -1129,6 +1131,9 @@ final class WebViewController: NSViewController, WKNavigationDelegate, WKUIDeleg
         },
         readClipboardText() {
           return send("readClipboardText");
+        },
+        readClipboardRichText() {
+          return send("readClipboardRichText");
         },
         registerHotkey(shortcut) {
           const normalized = typeof shortcut === "object" && shortcut ? shortcut.shortcut : shortcut;

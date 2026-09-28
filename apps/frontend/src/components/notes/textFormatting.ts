@@ -212,6 +212,136 @@ export function serializeRichTextToHtml(content: Descendant[]) {
   return content.map((node) => serializeRichTextNode(node)).join("");
 }
 
+type RichTextMarks = Pick<FormattedText, "bold" | "color" | "italic" | "underline">;
+
+function normalizeClipboardColor(value: string | null) {
+  const hex = value?.trim().match(/^#([0-9a-f]{6})$/i);
+
+  if (hex) {
+    return `#${hex[1]!.toUpperCase()}`;
+  }
+
+  const rgb = value?.match(/^rgb\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*\)$/i);
+
+  if (!rgb) {
+    return undefined;
+  }
+
+  const channels = rgb.slice(1).map(Number);
+  return channels.every((channel) => Number.isInteger(channel) && channel >= 0 && channel <= 255)
+    ? `#${channels.map((channel) => channel.toString(16).padStart(2, "0")).join("").toUpperCase()}`
+    : undefined;
+}
+
+function marksForHtmlElement(element: HTMLElement, inherited: RichTextMarks): RichTextMarks {
+  const tagName = element.tagName.toLowerCase();
+  const fontWeight = element.style.fontWeight;
+  const textDecoration = `${element.style.textDecoration} ${element.style.textDecorationLine}`;
+  const color = normalizeClipboardColor(element.style.color || element.getAttribute("color"));
+  const marks: RichTextMarks = {};
+
+  if (inherited.bold || tagName === "b" || tagName === "strong" || fontWeight === "bold" || Number(fontWeight) >= 600) {
+    marks.bold = true;
+  }
+  if (color ?? inherited.color) {
+    marks.color = color ?? inherited.color;
+  }
+  if (inherited.italic || tagName === "i" || tagName === "em" || element.style.fontStyle === "italic") {
+    marks.italic = true;
+  }
+  if (inherited.underline || tagName === "u" || textDecoration.includes("underline")) {
+    marks.underline = true;
+  }
+
+  return marks;
+}
+
+function sameMarks(left: RichTextMarks, right: RichTextMarks) {
+  return (
+    Boolean(left.bold) === Boolean(right.bold) &&
+    left.color === right.color &&
+    Boolean(left.italic) === Boolean(right.italic) &&
+    Boolean(left.underline) === Boolean(right.underline)
+  );
+}
+
+export function deserializeRichTextFromHtml(html: string): Descendant[] {
+  if (!html || typeof DOMParser === "undefined") {
+    return [];
+  }
+
+  const document = new DOMParser().parseFromString(html, "text/html");
+  const paragraphs: Descendant[] = [];
+  let children: FormattedText[] = [];
+  const appendText = (text: string, marks: RichTextMarks) => {
+    if (!text) {
+      return;
+    }
+
+    const previous = children.at(-1);
+
+    if (previous && sameMarks(previous, marks)) {
+      previous.text += text;
+      return;
+    }
+
+    children.push({ text, ...marks });
+  };
+  const finishParagraph = () => {
+    if (children.length > 0) {
+      paragraphs.push({ type: "paragraph", children });
+      children = [];
+    }
+  };
+  const walk = (node: Node, marks: RichTextMarks) => {
+    if (node.nodeType === Node.TEXT_NODE) {
+      appendText(node.textContent ?? "", marks);
+      return;
+    }
+
+    if (!(node instanceof HTMLElement)) {
+      node.childNodes.forEach((child) => walk(child, marks));
+      return;
+    }
+
+    const tagName = node.tagName.toLowerCase();
+
+    if (tagName === "br") {
+      appendText("\n", marks);
+      return;
+    }
+
+    const isBlock = ["address", "article", "blockquote", "div", "h1", "h2", "h3", "h4", "h5", "h6", "li", "p", "pre"].includes(tagName);
+
+    if (isBlock) {
+      finishParagraph();
+    }
+
+    const elementMarks = marksForHtmlElement(node, marks);
+    node.childNodes.forEach((child) => walk(child, elementMarks));
+
+    if (isBlock) {
+      finishParagraph();
+    }
+  };
+
+  document.body.childNodes.forEach((node) => walk(node, {}));
+  finishParagraph();
+  return paragraphs;
+}
+
+export function plainTextToRichText(text: string): Descendant[] {
+  return text.split(/\r?\n/).map((line) => ({ type: "paragraph", children: [{ text: line }] }));
+}
+
+export function insertRichText(editor: SlateEditorType, content: Descendant[]) {
+  if (content.length === 0) {
+    return;
+  }
+
+  SlateEditor.insertFragment(editor, content);
+}
+
 export function insertPlainText(editor: SlateEditorType, text: string) {
   if (!text) {
     return;

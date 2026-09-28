@@ -5,6 +5,13 @@ export type RichTextClipboardContent = {
   text: string;
 };
 
+function normalizeRichTextClipboardContent(value: Partial<RichTextClipboardContent> | undefined): RichTextClipboardContent {
+  return {
+    html: typeof value?.html === "string" ? value.html : "",
+    text: typeof value?.text === "string" ? value.text : "",
+  };
+}
+
 export async function writeRichTextToClipboard({ html, text }: RichTextClipboardContent) {
   if (!text) {
     return false;
@@ -103,4 +110,41 @@ export async function readPlainTextFromClipboard() {
   }
 
   return "";
+}
+
+export async function readRichTextFromClipboard(): Promise<RichTextClipboardContent> {
+  if (isNativeFloatemHost()) {
+    try {
+      const bridge = getFloatemBridge();
+
+      if (bridge.readClipboardRichText) {
+        return normalizeRichTextClipboardContent(await bridge.readClipboardRichText());
+      }
+    } catch {
+      // Fall through to the browser clipboard helpers.
+    }
+  }
+
+  try {
+    if (typeof navigator !== "undefined" && navigator.clipboard?.read) {
+      const [item] = await navigator.clipboard.read();
+
+      if (item) {
+        const html = item.types.includes("text/html")
+          ? await (await item.getType("text/html")).text()
+          : "";
+        const text = item.types.includes("text/plain")
+          ? await (await item.getType("text/plain")).text()
+          : "";
+
+        if (html || text) {
+          return { html, text };
+        }
+      }
+    }
+  } catch {
+    // Clipboard reads can fail in preview environments without permission.
+  }
+
+  return { html: "", text: await readPlainTextFromClipboard() };
 }
