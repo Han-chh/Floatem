@@ -67,29 +67,17 @@ describe("PanelShell", () => {
     }
   });
 
-  it("offers the native uninstall confirmation from About Floatem", async () => {
-    const originalBridge = window.floatemHost;
-    const uninstallApplication = vi.fn(async () => {});
-    window.floatemHost = {
-      loadAllData: vi.fn(),
-      uninstallApplication,
-    } as unknown as NonNullable<typeof window.floatemHost>;
+  it("does not offer an uninstall action from About Floatem", async () => {
     HTMLElement.prototype.scrollTo = vi.fn();
     useSettingsStore.setState({ language: "en" });
     const user = userEvent.setup();
 
     render(<SettingsPanel onClose={vi.fn()} />);
 
-    try {
-      expect(screen.getByText("Startup, language, and timezone preferences for the app.")).toBeInTheDocument();
-      expect(screen.getByText("App information, local data, privacy, and uninstall options.")).toBeInTheDocument();
-      await user.click(screen.getByRole("button", { name: /About Floatem/ }));
-      await user.click(screen.getByRole("button", { name: "Uninstall Floatem…" }));
+    expect(screen.getByText("App overview and local-only data details.")).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: /About Floatem/ }));
 
-      expect(uninstallApplication).toHaveBeenCalledOnce();
-    } finally {
-      window.floatemHost = originalBridge;
-    }
+    expect(screen.queryByRole("button", { name: /Uninstall Floatem/i })).not.toBeInTheDocument();
   });
 
   it("shows localized privacy details with the fixed English copyright block and contact email", async () => {

@@ -153,7 +153,6 @@ type MessageCatalog = {
     appIntro: string;
     backToSettings: string;
     categoryAboutDescription: string;
-    categoryAboutDescriptionWithUninstall: string;
     categoryAboutTitle: string;
     categoryGeneralDescription: string;
     categoryGeneralTitle: string;
@@ -237,12 +236,6 @@ type MessageCatalog = {
     quitApplicationBody: string;
     quitApplicationButton: string;
     quitApplicationFailed: string;
-    uninstallApplication: string;
-    uninstallApplicationBody: string;
-    uninstallApplicationButton: string;
-    uninstallApplicationFailed: string;
-    uninstallSectionSubtitle: string;
-    uninstallSectionTitle: string;
     restoreDefaults: string;
     restoreDefaultsBody: string;
     restoreDefaultsFailed: (shortcut: string) => string;
@@ -554,7 +547,6 @@ const messages: Record<AppLanguage, MessageCatalog> = {
       appIntro: "Configure how the tray panel opens, switches between Notes and Todos, and how much motion feedback you want while working.",
       backToSettings: "All settings",
       categoryAboutDescription: "App overview and local-only data details.",
-      categoryAboutDescriptionWithUninstall: "App information, local data, privacy, and uninstall options.",
       categoryAboutTitle: "About Floatem",
       categoryGeneralDescription: "Startup, language, and timezone preferences for the app.",
       categoryGeneralTitle: "General",
@@ -640,12 +632,6 @@ const messages: Record<AppLanguage, MessageCatalog> = {
       quitApplicationBody: "Fully terminate Floatem instead of only hiding the floating panel.",
       quitApplicationButton: "Quit Floatem",
       quitApplicationFailed: "Floatem could not quit from the current environment.",
-      uninstallApplication: "Uninstall Floatem",
-      uninstallApplicationBody: "Disable Floatem's background services, choose whether to keep local data, then finish removing the app in Finder.",
-      uninstallApplicationButton: "Uninstall Floatem…",
-      uninstallApplicationFailed: "Floatem could not open the uninstall confirmation.",
-      uninstallSectionSubtitle: "Prepare Floatem for removal, then move it to the Trash in Finder.",
-      uninstallSectionTitle: "Uninstall",
       restoreDefaults: "Restore defaults",
       restoreDefaultsBody: "Reset startup, theme, language, timezone, time format, shortcut, default section, motion, reminder sound, and saved panel position.",
       restoreDefaultsFailed: (shortcut) => `Defaults were not restored. Keeping ${shortcut}.`,
@@ -955,7 +941,6 @@ const messages: Record<AppLanguage, MessageCatalog> = {
       appIntro: "配置托盘面板的打开方式、Notes 与 Todos 的切换方式，以及你希望保留多少动效反馈。",
       backToSettings: "全部设置",
       categoryAboutDescription: "应用概览和仅本地存储的数据说明。",
-      categoryAboutDescriptionWithUninstall: "应用信息、本地数据、隐私与卸载选项。",
       categoryAboutTitle: "关于 Floatem",
       categoryGeneralDescription: "开机启动、应用语言和时区偏好设置。",
       categoryGeneralTitle: "通用",
@@ -1041,12 +1026,6 @@ const messages: Record<AppLanguage, MessageCatalog> = {
       quitApplicationBody: "完全结束 Floatem，而不只是隐藏悬浮面板。",
       quitApplicationButton: "完全退出 Floatem",
       quitApplicationFailed: "当前环境下无法退出 Floatem。",
-      uninstallApplication: "卸载 Floatem",
-      uninstallApplicationBody: "停用 Floatem 的后台服务，选择是否保留本地数据，然后在 Finder 中完成应用移除。",
-      uninstallApplicationButton: "卸载 Floatem…",
-      uninstallApplicationFailed: "Floatem 无法打开卸载确认窗口。",
-      uninstallSectionSubtitle: "准备移除 Floatem，然后在 Finder 中将它移到废纸篓。",
-      uninstallSectionTitle: "卸载",
       restoreDefaults: "恢复默认设置",
       restoreDefaultsBody: "重置开机启动、主题、语言、时区、时间格式、快捷键、默认分区、动效、提醒声音以及保存的窗口位置。",
       restoreDefaultsFailed: (shortcut) => `默认设置未恢复，当前仍保留 ${shortcut}。`,

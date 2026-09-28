@@ -19,15 +19,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
 
     private weak var statusToggleItem: NSMenuItem?
     private weak var statusReloadItem: NSMenuItem?
-    private weak var statusUninstallItem: NSMenuItem?
     private weak var statusQuitItem: NSMenuItem?
     private var languageObserver: NSObjectProtocol?
     private var systemWillSleepObserver: NSObjectProtocol?
     private var systemDidWakeObserver: NSObjectProtocol?
     private var launchContextResolver = LaunchContextResolver()
     private var isAwaitingInitialHotKeyRegistration = false
-    private var isPresentingUninstallConfirmation = false
-    private var isUninstalling = false
 
     private var localization: FloatemLocalization {
         currentLanguage.localization
@@ -47,13 +44,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         reloadItem.target = self
         menu.addItem(reloadItem)
         statusReloadItem = reloadItem
-
-        menu.addItem(NSMenuItem.separator())
-
-        let uninstallItem = NSMenuItem(title: localization.menuUninstall, action: #selector(confirmUninstallApplication(_:)), keyEquivalent: "")
-        uninstallItem.target = self
-        menu.addItem(uninstallItem)
-        statusUninstallItem = uninstallItem
 
         menu.addItem(NSMenuItem.separator())
 
@@ -187,9 +177,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     }
 
     func applicationWillTerminate(_ notification: Notification) {
-        if !isUninstalling {
-            lifecycleDiagnostics?.recordGracefulTermination(reason: "applicationWillTerminate")
-        }
+        lifecycleDiagnostics?.recordGracefulTermination(reason: "applicationWillTerminate")
     }
 
     private func classifyInitialOpenEvent() {
@@ -221,54 +209,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     @objc private func reloadApplicationInterface(_ sender: Any?) {
         mainWindowController.reloadApplicationInterface()
         showMainWindowForUserAction()
-    }
-
-    @objc private func confirmUninstallApplication(_ sender: Any?) {
-        confirmUninstallApplicationFromBridge()
-    }
-
-    func confirmUninstallApplicationFromBridge() {
-        guard !isUninstalling, !isPresentingUninstallConfirmation else {
-            return
-        }
-
-        isPresentingUninstallConfirmation = true
-        showMainWindowForUserAction()
-        updateToggleMenuTitles()
-
-        // Let the status menu close before attaching the sheet so the
-        // confirmation is visibly anchored to the Floatem window.
-        DispatchQueue.main.async { [weak self] in
-            guard let self else {
-                return
-            }
-
-            let alert = NSAlert()
-            alert.alertStyle = .warning
-            alert.messageText = self.localization.uninstallTitle
-            alert.informativeText = self.localization.uninstallMessage
-            alert.addButton(withTitle: self.localization.uninstallConfirm)
-            alert.addButton(withTitle: self.localization.uninstallCancel)
-
-            let keepDataCheckbox = NSButton(
-                checkboxWithTitle: self.localization.uninstallKeepData,
-                target: nil,
-                action: nil
-            )
-            keepDataCheckbox.state = .on
-            alert.accessoryView = keepDataCheckbox
-
-            alert.beginSheetModal(for: self.mainWindowController.sheetParentWindow) { [weak self] response in
-                guard let self else {
-                    return
-                }
-                self.isPresentingUninstallConfirmation = false
-                guard response == .alertFirstButtonReturn else {
-                    return
-                }
-                self.performUninstall(keepUserData: keepDataCheckbox.state == .on)
-            }
-        }
     }
 
     @objc private func quitApplication(_ sender: Any?) {
@@ -383,7 +323,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     private func updateLocalizedMenuTitles() {
         updateToggleMenuTitles()
         statusReloadItem?.title = localization.menuReload
-        statusUninstallItem?.title = localization.menuUninstall
         statusQuitItem?.title = localization.menuQuit
     }
 
@@ -448,54 +387,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
             alert.addButton(withTitle: localization.hotKeyDismiss)
             alert.runModal()
         }
-    }
-
-    private func performUninstall(keepUserData: Bool) {
-        isUninstalling = true
-        statusUninstallItem?.isEnabled = false
-
-        hotKeyAgentManager.unregisterForUninstall { [weak self] agentError in
-            guard let self else {
-                return
-            }
-            if let agentError {
-                self.finishFailedUninstall(agentError)
-                return
-            }
-
-            do {
-                try self.launchAtLoginManager.unregisterForUninstall()
-                if !keepUserData {
-                    self.lifecycleDiagnostics?.stopForUninstall()
-                    self.notificationManager.removeAllNotificationsForUninstall()
-                    try self.storage.removeAllUserData()
-                }
-            } catch {
-                self.finishFailedUninstall(error)
-                return
-            }
-
-            // Sandboxed Mac App Store apps cannot move their own bundle to the
-            // Trash. Reveal the bundle after cleanup so the user can finish the
-            // uninstall in Finder, then terminate to release the app bundle.
-            let appURL = Bundle.main.bundleURL.standardizedFileURL
-            NSWorkspace.shared.activateFileViewerSelecting([appURL])
-            DispatchQueue.main.async {
-                NSApp.terminate(nil)
-            }
-        }
-    }
-
-    private func finishFailedUninstall(_ error: Error) {
-        isUninstalling = false
-        statusUninstallItem?.isEnabled = true
-        mainWindowController.installSavedHotKey()
-        showMainWindowForUserAction()
-
-        let alert = NSAlert(error: error)
-        alert.alertStyle = .critical
-        alert.messageText = localization.uninstallFailedTitle
-        alert.beginSheetModal(for: mainWindowController.sheetParentWindow)
     }
 
     private func showMainWindowForUserAction() {

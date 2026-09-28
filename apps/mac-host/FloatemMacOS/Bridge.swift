@@ -86,7 +86,6 @@ protocol FloatemNativeBridgeHandling: AnyObject {
     func requestDesktopWidgetFromBridge(kind: String, id: String) throws -> [String: Any]
     func removeDesktopWidgetAssociationFromBridge(kind: String, id: String) throws
     func getDesktopWidgetStateFromBridge(kind: String, id: String) throws -> [String: Any]
-    func uninstallApplicationFromBridge()
     func quitApplicationFromBridge()
     func startWindowDragFromBridge() throws
 }
@@ -127,18 +126,11 @@ enum FloatemLanguage: String {
                 menuShow: "Show Floatem",
                 menuHide: "Hide Floatem",
                 menuReload: "Reload Interface",
-                menuUninstall: "Uninstall Floatem…",
                 menuQuit: "Quit",
                 hotKeyRegistrationFailedTitle: "Global Shortcut Unavailable",
                 hotKeyRegistrationFailedMessage: "Floatem could not start its global shortcut Agent. You can continue using the app, but the shortcut will not work until this is resolved.",
                 hotKeyOpenSettings: "Open System Settings",
                 hotKeyDismiss: "OK",
-                uninstallTitle: "Prepare to uninstall Floatem?",
-                uninstallMessage: "Floatem will disable its background shortcut Agent and login item, then select Floatem.app in Finder and quit. Move the selected app to the Trash to finish uninstalling.",
-                uninstallKeepData: "Keep notes, todos, and settings",
-                uninstallConfirm: "Continue in Finder",
-                uninstallCancel: "Cancel",
-                uninstallFailedTitle: "Floatem couldn't prepare for uninstall",
                 loadingTitle: "Loading Floatem...",
                 loadingDetail: "Preparing the local app interface.",
                 missingInterfaceTitle: "Floatem couldn't load its interface.",
@@ -165,18 +157,11 @@ enum FloatemLanguage: String {
                 menuShow: "显示 Floatem",
                 menuHide: "隐藏 Floatem",
                 menuReload: "重新加载界面",
-                menuUninstall: "卸载 Floatem…",
                 menuQuit: "退出",
                 hotKeyRegistrationFailedTitle: "全局快捷键不可用",
                 hotKeyRegistrationFailedMessage: "Floatem 无法启动全局快捷键 Agent。你仍可继续使用应用，但解决该问题前快捷键不会生效。",
                 hotKeyOpenSettings: "打开系统设置",
                 hotKeyDismiss: "好",
-                uninstallTitle: "要准备卸载 Floatem 吗？",
-                uninstallMessage: "Floatem 将停用后台快捷键 Agent 和登录项，然后在 Finder 中选中 Floatem.app 并退出。请将选中的应用移到废纸篓以完成卸载。",
-                uninstallKeepData: "保留笔记、待办和设置",
-                uninstallConfirm: "在 Finder 中继续",
-                uninstallCancel: "取消",
-                uninstallFailedTitle: "无法准备卸载 Floatem",
                 loadingTitle: "正在加载 Floatem...",
                 loadingDetail: "正在准备本地应用界面。",
                 missingInterfaceTitle: "Floatem 无法加载界面。",
@@ -215,18 +200,11 @@ struct FloatemLocalization {
     let menuShow: String
     let menuHide: String
     let menuReload: String
-    let menuUninstall: String
     let menuQuit: String
     let hotKeyRegistrationFailedTitle: String
     let hotKeyRegistrationFailedMessage: String
     let hotKeyOpenSettings: String
     let hotKeyDismiss: String
-    let uninstallTitle: String
-    let uninstallMessage: String
-    let uninstallKeepData: String
-    let uninstallConfirm: String
-    let uninstallCancel: String
-    let uninstallFailedTitle: String
     let loadingTitle: String
     let loadingDetail: String
     let missingInterfaceTitle: String

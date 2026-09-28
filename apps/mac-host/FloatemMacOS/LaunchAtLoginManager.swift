@@ -45,17 +45,6 @@ final class LaunchAtLoginManager {
         }
     }
 
-    func unregisterForUninstall() throws {
-        switch service.status {
-        case .notRegistered, .notFound:
-            return
-        case .enabled, .requiresApproval:
-            try service.unregister()
-        @unknown default:
-            try service.unregister()
-        }
-    }
-
     private func promptForApprovalIfNeeded(enabled: Bool) {
         guard enabled, service.status == .requiresApproval else {
             return

@@ -79,11 +79,6 @@ final class NotificationManager: NSObject, @preconcurrency UNUserNotificationCen
 
     var onReminderResponse: ((String) -> Void)?
 
-    func removeAllNotificationsForUninstall() {
-        center.removeAllPendingNotificationRequests()
-        center.removeAllDeliveredNotifications()
-    }
-
     init(center: UNUserNotificationCenter = .current()) {
         self.center = center
         super.init()

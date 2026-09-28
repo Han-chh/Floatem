@@ -91,30 +91,6 @@ final class AppStorage {
         return settings["launchAtLogin"] as? Bool ?? false
     }
 
-    func removeAllUserData() throws {
-        let directories = [appSupportDirectory, legacyAppSupportDirectory]
-            .reduce(into: [URL]()) { result, directory in
-                let standardized = directory.standardizedFileURL
-                guard !result.contains(where: { $0.standardizedFileURL == standardized }) else {
-                    return
-                }
-                result.append(directory)
-            }
-
-        for directory in directories where fileManager.fileExists(atPath: directory.path) {
-            try fileManager.removeItem(at: directory)
-        }
-
-        if let bundleIdentifier = Bundle.main.bundleIdentifier {
-            UserDefaults.standard.removePersistentDomain(forName: bundleIdentifier)
-        }
-        if let sharedDefaults = UserDefaults(suiteName: FloatemSharedContainer.appGroupIdentifier) {
-            for key in sharedDefaults.dictionaryRepresentation().keys {
-                sharedDefaults.removeObject(forKey: key)
-            }
-        }
-    }
-
     func updateHotkey(_ shortcut: String) throws {
         var settings = try loadSettings()
         settings["hotkey"] = shortcut

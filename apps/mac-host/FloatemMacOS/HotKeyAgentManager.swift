@@ -149,34 +149,6 @@ final class HotKeyAgentManager {
         configureOnLaunch(shortcut: shortcut)
     }
 
-    func unregisterForUninstall(completion: @escaping (Error?) -> Void) {
-        localHotKeyManager.unregister()
-        pendingHandshakeID = nil
-        agentConnection?.invalidate()
-        agentConnection = nil
-
-        #if FLOATEM_DEBUG_ISOLATED
-        completion(nil)
-        #else
-        switch service.status {
-        case .notRegistered, .notFound:
-            completion(nil)
-        case .enabled, .requiresApproval:
-            service.unregister { error in
-                DispatchQueue.main.async {
-                    completion(error)
-                }
-            }
-        @unknown default:
-            service.unregister { error in
-                DispatchQueue.main.async {
-                    completion(error)
-                }
-            }
-        }
-        #endif
-    }
-
     func backgroundActivityStatus() -> BackgroundActivityStatus {
         #if FLOATEM_DEBUG_ISOLATED
         return BackgroundActivityStatus(

@@ -346,12 +346,10 @@ export function SettingsPanel({ onClose }: SettingsPanelProps) {
   const [defaultsFeedback, setDefaultsFeedback] = useState<HotkeyFeedback | null>(null);
   const [notificationFeedback, setNotificationFeedback] = useState<HotkeyFeedback | null>(null);
   const [systemFeedback, setSystemFeedback] = useState<HotkeyFeedback | null>(null);
-  const [uninstallFeedback, setUninstallFeedback] = useState<HotkeyFeedback | null>(null);
   const [isApplyingHotkey, setIsApplyingHotkey] = useState(false);
   const [isRestoringDefaults, setIsRestoringDefaults] = useState(false);
   const [isOpeningNotificationSettings, setIsOpeningNotificationSettings] = useState(false);
   const [isOpeningBackgroundActivitySettings, setIsOpeningBackgroundActivitySettings] = useState(false);
-  const [isRequestingUninstall, setIsRequestingUninstall] = useState(false);
   const [isQuittingApplication, setIsQuittingApplication] = useState(false);
   const [isTestingNotification, setIsTestingNotification] = useState(false);
 
@@ -360,7 +358,6 @@ export function SettingsPanel({ onClose }: SettingsPanelProps) {
   useAutoDismissFeedback(defaultsFeedback, setDefaultsFeedback);
   useAutoDismissFeedback(notificationFeedback, setNotificationFeedback);
   useAutoDismissFeedback(systemFeedback, setSystemFeedback);
-  useAutoDismissFeedback(uninstallFeedback, setUninstallFeedback);
 
   useEffect(() => {
     scrollRegionRef.current?.scrollTo({ top: 0 });
@@ -439,8 +436,6 @@ export function SettingsPanel({ onClose }: SettingsPanelProps) {
     };
   }, [hotkeyDialogOpen, t.settings]);
 
-  const canUninstallApplication = isNativeFloatemHost() && typeof getFloatemBridge().uninstallApplication === "function";
-
   const categories = useMemo(
     () => [
       {
@@ -482,13 +477,11 @@ export function SettingsPanel({ onClose }: SettingsPanelProps) {
         id: "about" as const,
         icon: <NotebookPenIcon size={18} />,
         title: t.settings.categoryAboutTitle,
-        description: canUninstallApplication
-          ? t.settings.categoryAboutDescriptionWithUninstall
-          : t.settings.categoryAboutDescription,
+        description: t.settings.categoryAboutDescription,
         meta: `${t.settings.appVersionTitle} ${__FLOATEM_VERSION__}`,
       },
     ],
-    [canUninstallApplication, enableReminderSound, hotkey, language, t, theme, timeZone, transitionStyle],
+    [enableReminderSound, hotkey, language, t, theme, timeZone, transitionStyle],
   );
   const showHotkeyConflictWarning = hotkeyRegistrationState?.registration === "conflict";
 
@@ -711,36 +704,6 @@ export function SettingsPanel({ onClose }: SettingsPanelProps) {
     }
   };
 
-  const handleUninstallApplication = async () => {
-    if (isRequestingUninstall) {
-      return;
-    }
-
-    const bridge = getFloatemBridge();
-    if (!isNativeFloatemHost() || !bridge.uninstallApplication) {
-      setUninstallFeedback({
-        text: t.settings.uninstallApplicationFailed,
-        tone: "info",
-      });
-      return;
-    }
-
-    setIsRequestingUninstall(true);
-    setUninstallFeedback(null);
-
-    try {
-      await bridge.uninstallApplication();
-    } catch (error) {
-      const message = error instanceof Error ? error.message : t.settings.uninstallApplicationFailed;
-      setUninstallFeedback({
-        text: message,
-        tone: "error",
-      });
-    } finally {
-      setIsRequestingUninstall(false);
-    }
-  };
-
   return (
     <section data-testid="settings-panel" data-guide="settings-overview" className="relative h-full min-h-0">
       <div
@@ -871,14 +834,7 @@ export function SettingsPanel({ onClose }: SettingsPanelProps) {
                   />
                 ) : null}
 
-                {activeCategory === "about" ? (
-                  <AboutFloatemSettings
-                    uninstallFeedback={uninstallFeedback}
-                    isRequestingUninstall={isRequestingUninstall}
-                    handleUninstallApplication={handleUninstallApplication}
-                    canUninstallApplication={canUninstallApplication}
-                  />
-                ) : null}
+                {activeCategory === "about" ? <AboutFloatemSettings /> : null}
               </div>
             </motion.div>
           ) : (
@@ -1727,17 +1683,7 @@ function NotificationSettings({
   );
 }
 
-function AboutFloatemSettings({
-  uninstallFeedback,
-  isRequestingUninstall,
-  handleUninstallApplication,
-  canUninstallApplication,
-}: {
-  uninstallFeedback: HotkeyFeedback | null;
-  isRequestingUninstall: boolean;
-  handleUninstallApplication: () => Promise<void>;
-  canUninstallApplication: boolean;
-}) {
+function AboutFloatemSettings() {
   const { t } = useI18n();
 
   return (
@@ -1809,20 +1755,6 @@ function AboutFloatemSettings({
           <span className="break-all">{FLOATEM_WEBSITE_URL}</span>
         </a>
       </SettingSection>
-
-      {canUninstallApplication ? (
-        <SettingSection title={t.settings.uninstallSectionTitle} description={t.settings.uninstallSectionSubtitle}>
-          <FirstLevelAction
-            tone="danger"
-            title={t.settings.uninstallApplication}
-            description={t.settings.uninstallApplicationBody}
-            feedback={uninstallFeedback}
-            busy={isRequestingUninstall}
-            buttonLabel={t.settings.uninstallApplicationButton}
-            onClick={() => void handleUninstallApplication()}
-          />
-        </SettingSection>
-      ) : null}
 
       <footer
         data-testid="about-copyright-footer"

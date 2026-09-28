@@ -751,9 +751,6 @@ final class WebViewController: NSViewController, WKNavigationDelegate, WKUIDeleg
                     throw FloatemBridgeError.invalidParameters("Floatem expected a Widget entity reference.")
                 }
                 result = try bridgeDelegate?.getDesktopWidgetStateFromBridge(kind: kind, id: cardID) ?? [:]
-            case "uninstallApplication":
-                bridgeDelegate?.uninstallApplicationFromBridge()
-                result = NSNull()
             case "quitApplication":
                 bridgeDelegate?.quitApplicationFromBridge()
                 result = NSNull()
@@ -1230,9 +1227,6 @@ final class WebViewController: NSViewController, WKNavigationDelegate, WKUIDeleg
         },
         hidePanelWindow() {
           return send("hideWindow");
-        },
-        uninstallApplication() {
-          return send("uninstallApplication");
         },
         quitApplication() {
           return send("quitApplication");
