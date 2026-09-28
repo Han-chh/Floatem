@@ -45,6 +45,12 @@ final class FloatingNoteWindowController: NSObject, WKNavigationDelegate, WKScri
     private static let floatingCardGuideEventName = "floatem:floating-card-guide"
     private static let bridgeBootstrapScript = """
     (() => {
+      // Suppress WebKit's default context menu but do not stop propagation, so
+      // the frontend can later provide a Floatem-specific right-click menu.
+      document.addEventListener("contextmenu", (event) => {
+        event.preventDefault();
+      }, { capture: true });
+
       if (window.floatemFloatingHost) {
         return;
       }

@@ -1046,6 +1046,13 @@ final class WebViewController: NSViewController, WKNavigationDelegate, WKUIDeleg
 
         return """
     (() => {
+      // Keep the native WebKit context menu out of Floatem. This prevents
+      // browser actions such as Reload and Inspect Element while allowing the
+      // frontend to handle the same event for a future app-specific menu.
+      document.addEventListener("contextmenu", (event) => {
+        event.preventDefault();
+      }, { capture: true });
+
       if (window.floatemHost) {
         return;
       }
