@@ -1,6 +1,6 @@
 # macOS desktop-card migration and regression guide
 
-This guide applies to the desktop-card implementation in **Floatem v1.0.10**. It documents an active compatibility path, not a current WidgetKit extension: v1.0.10 ships no WidgetKit target.
+This guide applies to the current desktop-card implementation. It documents an active compatibility path, not a current WidgetKit extension: Floatem ships no WidgetKit target.
 
 ## Migration
 
@@ -22,7 +22,7 @@ Desktop pinning uses `DesktopCardPanel`. Floatem restores these panels during bo
 
 ## Manual regression checklist
 
-1. Ordinary Finder/Dock/Spotlight launch shows the Main Window.
+1. Ordinary Finder, Spotlight, or App Store launch shows the Main Window; Floatem remains absent from the Dock.
 2. Login Item launch initializes silently, restores desktop-pinned cards, and does not show or focus the Main Window.
 3. Pin a Note to the desktop and verify it becomes a desktop-level editable panel.
 4. Pin a Todo to the desktop and verify it remains editable.

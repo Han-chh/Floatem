@@ -4,6 +4,7 @@ All notable repository changes are recorded here. Historical entries describe th
 
 ## 1.1.0 (Build 68)
 
+- Keep daily Debug builds independent from installed Release builds by using a process-local `Option+Shift+Space` shortcut and no persistent background Agent.
 - Stop the background shortcut Agent and release its global shortcut when the containing Floatem application is removed.
 - Validate the registered Agent against the current Floatem installation on launch, repair stale registrations automatically, and alert the user when registration still fails.
 - Recover from an unresponsive stale Agent registration with a bounded startup handshake, and avoid rejecting valid local Release builds when sandboxing hides parent-bundle metadata.
@@ -12,6 +13,7 @@ All notable repository changes are recorded here. Historical entries describe th
 - Add a compact, localized Floatem context menu with a Quit Floatem action when right-clicking the main window or a floating card.
 - Preserve supported rich-text Note formatting through paste and copy, without applying the toolbar's current typing format to pasted text.
 - Suppress WebKit's default context menus in the main window and floating cards so Floatem can provide its own context actions later.
+- Refresh the bilingual in-app Instructions to describe the current Notes, Todos, floating-card, menu-bar, settings, shortcut, recovery, and quit workflows without embedding release-specific version information.
 
 ## 1.0.13 (Build 67)
 

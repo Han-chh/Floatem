@@ -1,6 +1,6 @@
 # Windows Host Setup
 
-> v1.0.8 status: the Windows host is a maintained developer preview. It shares the v1.0.8 frontend and regular Notes/Todos experience, but it is not part of the current macOS App Store/TestFlight release and has not been packaged as a formal v1.0.8 Windows store build. Floating and desktop-pinned cards remain disabled on Windows.
+> Current status: the Windows host is a maintained developer preview. It shares the current frontend and regular Notes/Todos experience, but it is not part of the macOS App Store/TestFlight release and has not been packaged as a formal Windows store build. Floating and desktop-pinned cards remain disabled on Windows.
 
 For a full **Windows developer onboarding** guide (prerequisite versions, troubleshooting, Vite + WebView2 debugging), see [windows-dev-setup.md](./windows-dev-setup.md). Optional read-only checks: `powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\windows\setup-dev.ps1`.
 

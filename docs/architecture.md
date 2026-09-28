@@ -1,6 +1,6 @@
 # Floatem Cross-Platform Architecture
 
-This document describes the architecture present in **Floatem v1.0.8**. The production distribution target for v1.0.8 is macOS; the Windows host is maintained as a developer preview and is not included in the current Mac App Store/TestFlight build.
+This document describes the current Floatem architecture. The production distribution target is macOS; the Windows host is maintained as a developer preview and is not included in the current Mac App Store/TestFlight build.
 
 Floatem is split into a shared React frontend and isolated native host layers.
 
@@ -35,6 +35,8 @@ The shared frontend also owns the product-level Note/Todo data model, localizati
 
 The macOS host remains AppKit + WKWebView. `WebViewController` injects `floatemHost` and dispatches bridge requests to `MainWindowController`, `AppStorage`, `GlobalHotKeyManager`, and `NotificationManager`.
 
+Floatem runs with the AppKit accessory activation policy, so it does not appear in the Dock. `AppDelegate` owns a persistent status item whose localized menu exposes state-aware Show/Hide, interface reload, and Quit actions. Reload recreates the Web interface and reveals the Main Window. The shared frontend suppresses WebKit's default context menus and provides a compact localized Quit action inside the Main Window and floating cards.
+
 `MainWindowController` creates the AppKit shell as the visible app window: a titled, resizable `NSPanel` with native traffic-light controls, AppKit shadow, AppKit resize handling, and movable title/background regions. `WebViewController` is only the interior content view and no longer clips or rounds the outer window surface.
 
 macOS uses AppKit window levels and collection behaviors such as `canJoinAllSpaces` and `fullScreenAuxiliary` for overlay behavior.
@@ -59,7 +61,7 @@ Floating window state records display UUID, previous visible frame, normalized p
 
 ### Launch behavior
 
-`SMAppService.mainApp` login launches initialize services and recreate desktop-pinned cards without showing or activating the Main Window. Finder/Dock/Spotlight launches show on the first actual app activation, reopen always shows, and deep-link launches open only the target Floating Editing Card. Because `SMAppService.mainApp` does not expose a launch-reason API, managed builds can use `--floatem-login-item`; the normal fallback is activation-state based and contains no timing delay.
+`SMAppService.mainApp` login launches initialize services and recreate desktop-pinned cards without showing or activating the Main Window. Finder, Spotlight, and App Store launches show on the first actual app activation, reopen always shows, and deep-link launches open only the target Floating Editing Card. Because `SMAppService.mainApp` does not expose a launch-reason API, managed builds can use `--floatem-login-item`; the normal fallback is activation-state based and contains no timing delay.
 
 ## Windows Host
 

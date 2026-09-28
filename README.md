@@ -1,6 +1,6 @@
 # Floatem
 
-> Current local release candidate: **Floatem 1.0.10 (macOS build 51)**. It fixes desktop-pinned Todo selection styling and keeps restored card content aligned with its saved native window frame. Build 49 remains the latest App Store Connect submission until build 51 is uploaded. The Windows host remains a developer-preview target rather than part of the current Mac App Store release.
+> Current release: **Floatem 1.1.0 (macOS build 68)**. This release adds a Dock-free menu-bar workflow, state-aware recovery and quit controls, safer global-shortcut Agent lifecycle handling, and rich-text-preserving Note copy and paste. The Windows host remains a developer-preview target rather than part of the current Mac App Store release.
 
 Floatem is a lightweight, local-first desktop notes and todos app designed to capture and organize thoughts without interrupting the current workflow. The macOS app can be summoned with a global shortcut, float editable cards above other work, and pin app-owned cards at the desktop level.
 
@@ -8,12 +8,15 @@ Floatem is a lightweight, local-first desktop notes and todos app designed to ca
 
 ## Product capabilities
 
-- Rich-text notes and dated todos with local groups, filters, colors, reminders, and reordering.
-- A global shortcut and menu-bar controls for summoning or hiding the app.
+- Rich-text notes and dated todos with local groups, filters, colors, reminders, reordering, and bulk Todo actions.
+- Rich-text Note copy and paste that preserves supported bold, italic, underline, and text-color formatting without inheriting the active toolbar style.
+- A global shortcut and a persistent, bilingual menu-bar menu for showing or hiding Floatem, reloading and revealing the interface, and quitting the app.
+- A Dock-free macOS accessory-app workflow, plus a compact in-app right-click menu for quitting from the Main Window or a floating card.
 - Editable floating Note/Todo cards on macOS, including resize, always-on-top behavior, and drag-back.
 - Desktop-pinned macOS cards restored from local state when Floatem is running; enabling **Open Floatem at login** restores them after login without opening the Main Window.
 - English and Simplified Chinese UI, six themes, motion controls, time-zone/time-format controls, and reminder sound settings.
-- Bilingual help plus a seven-workflow action-driven interactive guide. Each step advances only after its instructed action; there are no manual previous/next controls. On a fresh installation, Floatem highlights the upper-right help entry once and asks the user to open the guide.
+- Bilingual, version-independent help aligned with current behavior, plus a seven-workflow action-driven interactive guide. Each step advances only after its instructed action; there are no manual previous/next controls. On a fresh installation, Floatem highlights the upper-right help entry once and asks the user to open the guide.
+- A ServiceManagement-managed Release shortcut Agent that validates its registered installation, repairs stale registrations, reports conflicts, and releases the shortcut when the containing app is removed. Debug uses an isolated process-local `Option+Shift+Space` shortcut with no background Agent.
 - Local persistence only. macOS data is stored in the Floatem App Group container; the app has no account or cloud-sync feature.
 
 ## Repository status
@@ -28,8 +31,8 @@ Floatem uses a shared React frontend with isolated native host layers:
 
 ## Docs
 
-- [v1.0.10 release state and release notes](docs/releases/v1.0.10.md)
-- [v1.0.10 manual release checklist](docs/releases/v1.0.10-manual-test-checklist.md)
+- [v1.1.0 release state and release notes](docs/releases/v1.1.0.md)
+- [v1.1.0 manual release checklist](docs/releases/v1.1.0-manual-test-checklist.md)
 - [Architecture](docs/architecture.md)
 - [Historical macOS prelaunch plan and current completion status](docs/four-day-prelaunch-plan.md)
 - [macOS setup](docs/macos-setup.md)

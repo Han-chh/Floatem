@@ -3,8 +3,8 @@
 Current release identity:
 
 ```text
-Version: 1.0.10
-Build: 51
+Version: 1.1.0
+Build: 68
 Bundle ID: com.hankch.floatem
 App Group: group.com.hankch.floatem
 Team: 85923Q9JUG
@@ -89,13 +89,13 @@ pnpm macos:test
 
 The Xcode suite avoids initializing production services or touching the real App Group when hosted by XCTest.
 
-## v1.0.10 Archive and export
+## 1.1.0 Archive and export
 
-Use this workflow for the v1.0.10 release candidate:
+Use this workflow for the current release candidate:
 
 ```bash
 pnpm install
-pnpm test -- --run
+pnpm exec vitest run --config apps/frontend/vite.config.ts
 pnpm macos:test
 
 xcodebuild archive \
@@ -103,12 +103,12 @@ xcodebuild archive \
   -scheme Floatem \
   -configuration Release \
   -destination 'generic/platform=macOS' \
-  -archivePath "$HOME/Library/Developer/Xcode/Archives/<date>/Floatem 1.0.10 (51).xcarchive" \
+  -archivePath "$HOME/Library/Developer/Xcode/Archives/<date>/Floatem 1.1.0 (68).xcarchive" \
   -allowProvisioningUpdates
 
 xcodebuild -exportArchive \
-  -archivePath "$HOME/Library/Developer/Xcode/Archives/<date>/Floatem 1.0.10 (51).xcarchive" \
-  -exportPath build/AppStoreExport/Floatem-1.0.10-51 \
+  -archivePath "$HOME/Library/Developer/Xcode/Archives/<date>/Floatem 1.1.0 (68).xcarchive" \
+  -exportPath build/AppStoreExport/Floatem-1.1.0-68 \
   -exportOptionsPlist apps/mac-host/ExportOptions.plist \
   -allowProvisioningUpdates
 ```
