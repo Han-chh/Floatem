@@ -1,8 +1,8 @@
 import type { DragPreviewPayload } from "@floatem/native-bridge";
 import { useEffect, useState } from "react";
 import type { Descendant } from "slate";
-import { NoteCardPreview } from "../notes/NoteCard";
-import { TodoItemPreview } from "../todos/TodoItem";
+import { FloatingNoteCard } from "../notes/NoteCard";
+import { FloatingTodoItem } from "../todos/TodoItem";
 import { DRAG_PREVIEW_STATE_EVENT } from "../../lib/dragPreview";
 import {
   createEmptyNotesDocument,
@@ -49,6 +49,50 @@ function createPreviewNoteCard(payload: Extract<DragPreviewPayload, { kind: "not
 
 export function DragPreviewApp() {
   const [payload, setPayload] = useState<DragPreviewPayload | null>(() => readInitialState());
+
+  useEffect(() => {
+    // The preview iframe is 16px larger on every side so the host can paint a
+    // shadow without clipping it. That gutter must remain fully transparent;
+    // otherwise the app's default page background reads as a second, larger
+    // card behind the preview.
+    const html = document.documentElement;
+    const body = document.body;
+    const root = document.getElementById("root");
+
+    html.dataset.floatemCardWindow = "true";
+    html.dataset.floatemFloatingCardWindow = "true";
+    html.style.background = "transparent";
+    html.style.backgroundColor = "transparent";
+    html.style.overflow = "hidden";
+    body.style.background = "transparent";
+    body.style.backgroundColor = "transparent";
+    body.style.margin = "0";
+    body.style.padding = "0";
+    body.style.overflow = "hidden";
+    if (root) {
+      root.style.background = "transparent";
+      root.style.backgroundColor = "transparent";
+      root.style.overflow = "hidden";
+    }
+
+    return () => {
+      delete html.dataset.floatemCardWindow;
+      delete html.dataset.floatemFloatingCardWindow;
+      html.style.background = "";
+      html.style.backgroundColor = "";
+      html.style.overflow = "";
+      body.style.background = "";
+      body.style.backgroundColor = "";
+      body.style.margin = "";
+      body.style.padding = "";
+      body.style.overflow = "";
+      if (root) {
+        root.style.background = "";
+        root.style.backgroundColor = "";
+        root.style.overflow = "";
+      }
+    };
+  }, []);
 
   useEffect(() => {
     if (typeof window === "undefined") {
@@ -111,9 +155,23 @@ export function DragPreviewApp() {
   return (
     <main className="flex min-h-screen w-full items-start justify-start bg-transparent p-4">
       {payload.kind === "note" ? (
-        <NoteCardPreview note={createPreviewNoteCard(payload)} width={payload.size.width} />
+        <FloatingNoteCard
+          note={createPreviewNoteCard(payload)}
+          width={payload.size.width}
+          minHeight={payload.size.height}
+          onBeginDrag={() => {}}
+          onDock={() => {}}
+        />
       ) : (
-        <TodoItemPreview todo={payload.todo} width={payload.size.width} order={payload.order} />
+        <FloatingTodoItem
+          todo={payload.todo}
+          width={payload.size.width}
+          minHeight={payload.size.height}
+          order={payload.order}
+          onBeginDrag={() => {}}
+          onDock={() => {}}
+          onToggle={() => {}}
+        />
       )}
     </main>
   );

@@ -277,7 +277,7 @@ function TodoRowBody({
 
   return (
     <>
-      {hasAssignedGroup ? (
+      {hasAssignedGroup && !isDraggingPlaceholder ? (
         <>
           <div
             className={`todo-group-card-texture pointer-events-none absolute inset-0 ${todo.done ? "opacity-[0.35]" : "opacity-[0.65]"}`}
@@ -294,9 +294,6 @@ function TodoRowBody({
             }}
           />
         </>
-      ) : null}
-      {isDraggingPlaceholder ? (
-        <div className="absolute inset-0 rounded-[22px] border border-transparent bg-[rgba(255,255,255,0.08)]" />
       ) : null}
       {isDropTargetPreview ? (
         <div className="pointer-events-none absolute inset-[2px] rounded-[18px] border-2 border-[rgba(31,168,122,0.82)] bg-[rgba(31,168,122,0.05)] shadow-[0_0_0_4px_rgba(31,168,122,0.14)]" />
@@ -867,11 +864,15 @@ export function TodoItem({
         whileHover={!isDragging ? { y: -1.5, scale: 1.006 } : undefined}
         style={{
           ...getTodoGroupStyle(groupAccentColor, hasAssignedGroup),
-          background: isDragging ? undefined : getTodoCardSurface(todo, groupAccentColor),
-          borderColor: isDragging ? undefined : `${groupAccentColor}78`,
+          background: isDragging ? "transparent" : getTodoCardSurface(todo, groupAccentColor),
+          borderColor: isDragging ? "transparent" : `${groupAccentColor}78`,
           boxShadow: isDragging
-            ? undefined
+            ? "none"
             : `0 0 0 2px ${colorWithAlpha(groupAccentColor, "14")}, 0 12px 24px ${colorWithAlpha(groupAccentColor, "12")}, 0 10px 22px rgba(61,49,34,0.08)`,
+          outline: isDragging ? "none" : undefined,
+          // Keep the sortable slot in the list, but never leave the source
+          // card's surface behind the DragOverlay while it is being moved.
+          visibility: isDragging ? "hidden" : undefined,
           transform: CSS.Transform.toString(transform),
           transition,
         }}
@@ -886,7 +887,7 @@ export function TodoItem({
         data-dragging={isDragging}
         aria-label={t.todos.reorder}
         className={`content-card-classic paper-card cq-card mx-1 relative overflow-hidden rounded-[18px] px-2 py-1.25 cursor-grab active:cursor-grabbing ${status.cardClass} ${
-          isDragging ? "border-transparent bg-[rgba(255,255,255,0.08)] shadow-none" : ""
+          isDragging ? "border-transparent bg-transparent shadow-none" : ""
         } ${selectionMode ? "cursor-pointer active:cursor-pointer" : ""}`}
         onClick={() => {
           if (selectionMode && !todo.done) {

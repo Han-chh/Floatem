@@ -111,7 +111,9 @@ function NoteCardBody({
   return (
     <>
       <div
-        className={`pointer-events-none absolute inset-0 ${hasAssignedGroup ? "opacity-60" : "opacity-38"}`}
+        className={`pointer-events-none absolute inset-0 ${
+          isDraggingPlaceholder ? "opacity-0" : hasAssignedGroup ? "opacity-60" : "opacity-38"
+        }`}
         style={{
           backgroundImage:
             `radial-gradient(${colorWithAlpha(accentColor, "18")} 0.8px, transparent 0.9px), radial-gradient(rgba(30,25,21,0.035) 0.8px, transparent 0.8px), radial-gradient(rgba(255,255,255,0.26) 0.6px, transparent 0.6px)`,
@@ -142,9 +144,6 @@ function NoteCardBody({
         </>
       ) : null}
 
-      {isDraggingPlaceholder ? (
-        <div className="absolute inset-0 rounded-[28px] border border-transparent bg-[rgba(255,255,255,0.08)]" />
-      ) : null}
       {isDropTargetPreview ? (
         <div className="pointer-events-none absolute inset-[3px] rounded-[25px] border-2 border-[rgba(31,168,122,0.82)] bg-[rgba(31,168,122,0.05)] shadow-[0_0_0_4px_rgba(31,168,122,0.14)]" />
       ) : null}
@@ -488,11 +487,15 @@ export function NoteCard({ note, onDelete, dropPreview = false, dockInsertionEdg
         transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
         style={{
           ...getNoteGroupStyle(accentColor, hasAssignedGroup),
-          background: isDragging ? undefined : getNoteCardSurface(accentColor, hasAssignedGroup),
-          borderColor: isDragging ? undefined : colorWithAlpha(accentColor, "4d"),
+          background: isDragging ? "transparent" : getNoteCardSurface(accentColor, hasAssignedGroup),
+          borderColor: isDragging ? "transparent" : colorWithAlpha(accentColor, "4d"),
           boxShadow: isDragging
-            ? undefined
+            ? "none"
             : `0 0 0 2px ${colorWithAlpha(accentColor, "10")}, 0 18px 36px rgba(61,49,34,0.10)`,
+          outline: isDragging ? "none" : undefined,
+          // Keep the sortable slot in the list, but never leave the source
+          // card's surface behind the DragOverlay while it is being moved.
+          visibility: isDragging ? "hidden" : undefined,
           transform: CSS.Transform.toString(transform),
           transition,
         }}
@@ -507,7 +510,7 @@ export function NoteCard({ note, onDelete, dropPreview = false, dockInsertionEdg
         data-note-grouped={hasAssignedGroup}
         data-dragging={isDragging}
         className={`content-card-classic paper-card cq-card mx-1 relative overflow-hidden rounded-[28px] border border-[rgba(213,198,180,0.92)] bg-[linear-gradient(180deg,rgba(255,252,248,0.98),rgba(255,247,239,0.95))] shadow-[0_18px_36px_rgba(61,49,34,0.10)] cursor-grab active:cursor-grabbing ${
-          isDragging ? "border-transparent bg-[rgba(255,255,255,0.08)] shadow-none" : ""
+          isDragging ? "border-transparent bg-transparent shadow-none" : ""
         }`}
       >
         <NoteCardBody
