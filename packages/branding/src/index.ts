@@ -1,7 +1,7 @@
 export const floatemBranding = {
   displayName: "Floatem",
   productName: "Floatem",
-  slogan: "Don't lose thoughts. Float'em.",
+  slogan: "Don't lose your thoughts. Float'em.",
   bundleIdentifier: "com.hankch.floatem",
   windowsAppUserModelId: "com.floatem.app",
   icons: {

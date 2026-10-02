@@ -4,7 +4,7 @@
 
 Floatem is a lightweight, local-first desktop notes and todos app designed to capture and organize thoughts without interrupting the current workflow. The macOS app can be summoned with a global shortcut, float editable cards above other work, and pin app-owned cards at the desktop level.
 
-“Don't lose thoughts. Float'em.”
+“Don't lose your thoughts. Float'em.”
 
 ## Product capabilities
 

@@ -88,7 +88,7 @@ describe("PanelShell", () => {
 
     await user.click(screen.getByRole("button", { name: /关于 Floatem/ }));
 
-    expect(screen.getByText("Don't lose thoughts. Float'em.")).toBeInTheDocument();
+    expect(screen.getByText("Don't lose your thoughts. Float'em.")).toBeInTheDocument();
     expect(screen.getByText(/Version \d+\.\d+\.\d+ \(Build \d+\)/)).toBeInTheDocument();
     const copyrightFooter = screen.getByTestId("about-copyright-footer");
     expect(within(copyrightFooter).getByText("Designed and developed by Hank Chen")).toBeInTheDocument();
@@ -125,7 +125,7 @@ describe("PanelShell", () => {
       </PanelShell>,
     );
 
-    expect(screen.getByText("Don't lose thoughts. Float'em.")).toHaveClass(
+    expect(screen.getByText("Don't lose your thoughts. Float'em.")).toHaveClass(
       "floatem-slogan",
       "text-[#744a38]",
       "opacity-80",
