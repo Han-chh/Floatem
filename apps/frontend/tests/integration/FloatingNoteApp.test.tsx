@@ -93,6 +93,56 @@ function createFloatingScreenPlacement(left: number, width: number, availableWid
   };
 }
 
+function installControllableResizeObserver() {
+  const originalDescriptor = Object.getOwnPropertyDescriptor(globalThis, "ResizeObserver");
+  const observers = new Map<ResizeObserver, ResizeObserverCallback>();
+
+  class ControllableResizeObserver {
+    constructor(nextCallback: ResizeObserverCallback) {
+      observers.set(this as unknown as ResizeObserver, nextCallback);
+    }
+
+    observe() {}
+    unobserve() {}
+    disconnect() {
+      observers.delete(this as unknown as ResizeObserver);
+    }
+  }
+
+  Object.defineProperty(globalThis, "ResizeObserver", {
+    configurable: true,
+    writable: true,
+    value: ControllableResizeObserver,
+  });
+
+  return {
+    trigger() {
+      observers.forEach((callback, observer) => callback([], observer));
+    },
+    restore() {
+      if (originalDescriptor) {
+        Object.defineProperty(globalThis, "ResizeObserver", originalDescriptor);
+      } else {
+        delete (globalThis as { ResizeObserver?: typeof ResizeObserver }).ResizeObserver;
+      }
+    },
+  };
+}
+
+function measuredRect(width: number, height: number): DOMRect {
+  return {
+    bottom: height,
+    height,
+    left: 0,
+    right: width,
+    top: 0,
+    width,
+    x: 0,
+    y: 0,
+    toJSON: () => ({}),
+  };
+}
+
 function installFloatingBridge(note: NoteCard, groups: NoteGroup[] = []) {
   const originalBridge = window.floatemHost;
   const clipboard = { value: "" };
@@ -825,6 +875,57 @@ describe("FloatingNoteApp", () => {
     }
   });
 
+  it("grows and restores the floating note frame when multiline content changes its measured height", async () => {
+    const note = createNoteCard({ id: "floating-note-content-growth", title: "Growing note" });
+    const bridge = installFloatingBridge(note);
+    const resizeObserver = installControllableResizeObserver();
+    let measuredHeight = 300;
+    const originalGetBoundingClientRect = HTMLElement.prototype.getBoundingClientRect;
+    const rectSpy = vi.spyOn(HTMLElement.prototype, "getBoundingClientRect").mockImplementation(function (this: HTMLElement) {
+      if (this.dataset.testid === "floating-card-shell") {
+        return measuredRect(420, measuredHeight);
+      }
+      return originalGetBoundingClientRect.call(this);
+    });
+
+    render(<FloatingNoteApp />);
+
+    try {
+      const shell = await screen.findByTestId("floating-card-shell");
+      bridge.resizeFloatingCard.mockClear();
+
+      measuredHeight = 438;
+      act(() => resizeObserver.trigger());
+
+      await waitFor(() => {
+        expect(bridge.resizeFloatingCard).toHaveBeenLastCalledWith({
+          width: 420,
+          height: 438,
+          anchor: "top",
+          horizontalAnchor: "left",
+        });
+        expect(shell.parentElement).toHaveStyle({ height: "438px" });
+      });
+
+      measuredHeight = 300;
+      act(() => resizeObserver.trigger());
+
+      await waitFor(() => {
+        expect(bridge.resizeFloatingCard).toHaveBeenLastCalledWith({
+          width: 420,
+          height: 300,
+          anchor: "top",
+          horizontalAnchor: "left",
+        });
+        expect(shell.parentElement).toHaveStyle({ height: "300px" });
+      });
+    } finally {
+      rectSpy.mockRestore();
+      resizeObserver.restore();
+      bridge.restore();
+    }
+  });
+
   it("keeps a collapsed floating note in its filled frame and restores its expanded size", async () => {
     const note = createNoteCard({ id: "floating-note-collapse-size", title: "Collapsible note" });
     const bridge = installFloatingBridge(note);
@@ -1102,6 +1203,46 @@ describe("FloatingNoteApp", () => {
         horizontalAnchor: "left",
       });
     } finally {
+      bridge.restore();
+    }
+  });
+
+  it("grows the floating todo frame when wrapped text makes the card taller", async () => {
+    const todo = createTodoItem("A todo that wraps onto several lines while it is edited", {
+      id: "floating-todo-content-growth",
+    });
+    const bridge = installFloatingTodoBridge(todo);
+    const resizeObserver = installControllableResizeObserver();
+    let measuredHeight = 72;
+    const originalGetBoundingClientRect = HTMLElement.prototype.getBoundingClientRect;
+    const rectSpy = vi.spyOn(HTMLElement.prototype, "getBoundingClientRect").mockImplementation(function (this: HTMLElement) {
+      if (this.dataset.testid === "floating-card-shell") {
+        return measuredRect(360, measuredHeight);
+      }
+      return originalGetBoundingClientRect.call(this);
+    });
+
+    render(<FloatingNoteApp />);
+
+    try {
+      const shell = await screen.findByTestId("floating-card-shell");
+      bridge.resizeFloatingCard.mockClear();
+
+      measuredHeight = 132;
+      act(() => resizeObserver.trigger());
+
+      await waitFor(() => {
+        expect(bridge.resizeFloatingCard).toHaveBeenLastCalledWith({
+          width: 360,
+          height: 132,
+          anchor: "top",
+          horizontalAnchor: "left",
+        });
+        expect(shell.parentElement).toHaveStyle({ height: "132px" });
+      });
+    } finally {
+      rectSpy.mockRestore();
+      resizeObserver.restore();
       bridge.restore();
     }
   });

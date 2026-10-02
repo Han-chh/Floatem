@@ -1,6 +1,6 @@
 # Floatem
 
-> Current release: **Floatem 1.1.0 (macOS build 68)**. This release adds a Dock-free menu-bar workflow, state-aware recovery and quit controls, safer global-shortcut Agent lifecycle handling, and rich-text-preserving Note copy and paste. The Windows host remains a developer-preview target rather than part of the current Mac App Store release.
+> Current development build: **Floatem 1.1.1 (macOS build 69)**. This maintenance build keeps floating Note and Todo windows aligned with multiline content while it is edited. The Windows host remains a developer-preview target rather than part of the current Mac App Store release.
 
 Floatem is a lightweight, local-first desktop notes and todos app designed to capture and organize thoughts without interrupting the current workflow. The macOS app can be summoned with a global shortcut, float editable cards above other work, and pin app-owned cards at the desktop level.
 

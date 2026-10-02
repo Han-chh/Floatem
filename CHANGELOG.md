@@ -2,6 +2,11 @@
 
 All notable repository changes are recorded here. Historical entries describe the behavior of their named release and are not statements of current platform support.
 
+## 1.1.1 (Build 69)
+
+- Fixed floating Note and Todo windows so multiline content grows downward without clipping or overlapping the card header.
+- Kept the native macOS window and browser sandbox frame synchronized with the card's measured content height.
+
 ## 1.1.0 (Build 68)
 
 - Keep daily Debug builds independent from installed Release builds by using a process-local `Option+Shift+Space` shortcut and no persistent background Agent.

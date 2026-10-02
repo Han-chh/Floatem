@@ -530,10 +530,14 @@ export function FloatingNoteApp() {
             ),
             height: Math.max(measuredContentSize.height, FLOATING_DIALOG_VIEWPORT_SIZE.height),
           }
-        // While no dialog is visible the card size is authoritative. Keeping a
-        // stale, larger DOM measurement here leaves a translucent WebView area
-        // around a card after it is resized smaller.
-        : cardSize;
+        // The user-controlled card size is a minimum, not a clipping boundary.
+        // Titles, rich-text notes, and wrapped todos can all become taller while
+        // they are edited. Mirror the measured card into the native/Web sandbox
+        // frame so new lines grow downward instead of being hidden inside the
+        // fixed-height WebView. When content becomes shorter, the measurement
+        // naturally settles back to cardSize because both wrappers use it as
+        // their min-height.
+        : measuredContentSize;
       const lastSize = syncedFrameSizeRef.current;
       const isUnchanged =
         Math.abs(nextSize.width - lastSize.width) < 1 && Math.abs(nextSize.height - lastSize.height) < 1;
@@ -809,7 +813,10 @@ export function FloatingNoteApp() {
       ? FLOATING_DIALOG_VIEWPORT_SIZE.width + FLOATING_DIALOG_GAP_PX
       : 0;
   const floatingCardCornerRadius = payload.kind === "todo" ? 18 : 28;
-  const visibleFrameSize = hasOpenDialog ? frameSize : cardSize;
+  // frameSize also includes content-driven growth reported by ResizeObserver.
+  // Using cardSize here would resize the host while keeping the composited
+  // surface clipped to the old height, which is the floating-editor bug.
+  const visibleFrameSize = frameSize;
 
   const handleDock = () => {
     if (completeDockTimerRef.current !== null) {
